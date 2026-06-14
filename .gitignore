@@ -1,0 +1,46 @@
+# Archives and large artifacts
+*.zip
+
+# User-requested exclusions
+rasoi_mobile/screenshots-backup-pre-v2/
+rasoi_mobile/.qa/
+
+# Dependencies and build output
+node_modules/
+.next/
+.expo/
+dist/
+web-build/
+rasoi_mobile/screenshots/dist/
+rasoi_mobile/android/app/build/
+rasoi_mobile/android/.gradle/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Python / tooling
+.venv/
+.venv-store/
+__pycache__/
+*.pyc
+
+# OS / IDE
+.DS_Store
+*.orig.*
+
+# Vercel
+.vercel/
+
+# Logs
+npm-debug.*
+*.log
+
+# MCP local secrets
+.cursor/mcp-servers/gmail-imap/.env

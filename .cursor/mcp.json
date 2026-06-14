@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=ehrwhepgdrgbvjknyaeb&features=database,docs,debugging"
+    },
+    "gmail": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/gmail-imap/run.sh",
+      "args": []
+    }
+  }
+}

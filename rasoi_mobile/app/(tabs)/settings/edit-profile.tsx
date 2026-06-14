@@ -1,0 +1,315 @@
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
+import { Mail, Phone, User } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
+import { SettingsSubHeader } from '@/components/settings/SettingsBlocks';
+import { PrimaryButton } from '@/components/ui/Primitives';
+import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
+import { isValidPhoneLength, normalizeIndianPhone } from '@/utils/storage';
+
+type FieldError = 'name' | 'phone' | 'general' | null;
+
+export default function EditProfileScreen() {
+  const router = useRouter();
+  const tabBarHeight = useBottomTabBarHeight();
+  const { userName, userPhone, userEmail, isGuest, isLoggedIn, updateProfile, loginAsGuest } =
+    useAppContext();
+
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [fieldError, setFieldError] = useState<FieldError>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (isGuest) {
+      setName('');
+      setPhone('');
+      return;
+    }
+    setName(userName);
+    setPhone(userPhone);
+  }, [isGuest, userName, userPhone]);
+
+  const handleSave = async () => {
+    if (isGuest) {
+      router.push('/(auth)/login');
+      return;
+    }
+
+    setFieldError(null);
+    setErrorMessage('');
+
+    const trimmedName = name.trim();
+    const normalizedPhone = normalizeIndianPhone(phone);
+
+    if (trimmedName.length < 2) {
+      setFieldError('name');
+      setErrorMessage('Please enter at least 2 characters for your name.');
+      return;
+    }
+
+    if (!isValidPhoneLength(normalizedPhone)) {
+      setFieldError('phone');
+      setErrorMessage('Enter your 10-digit mobile number.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await updateProfile(trimmedName, normalizedPhone);
+      router.back();
+    } catch {
+      setFieldError('general');
+      setErrorMessage('Could not save your details. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleContinueAsGuest = async () => {
+    if (!isGuest) return;
+    if (isLoggedIn) {
+      router.back();
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      void Haptics.selectionAsync();
+      await loginAsGuest();
+      router.back();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safe} edges={['top']}>
+      <SettingsSubHeader
+        title={isGuest ? 'Sign in' : 'Edit profile'}
+        onBack={() => router.back()}
+      />
+
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollViewWithFloatingIndicator
+          floatingBottomOffset={tabBarHeight}
+          floatingLabel="Scroll"
+          {...scrollIndicator}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xxxl }]}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.title}>
+            {isGuest ? 'Join Rasoi' : 'Your account'}
+          </Text>
+          <Text style={styles.subtitle}>
+            {isGuest
+              ? 'Sign in from the login screen to verify your email.'
+              : 'Update your name or mobile anytime. Email is verified at sign-in.'}
+          </Text>
+
+          <View style={styles.formCard}>
+            {!isGuest && userEmail.length > 0 && (
+              <View style={styles.field}>
+                <Text style={styles.label}>Email</Text>
+                <View style={[styles.inputRow, styles.inputRowDisabled]}>
+                  <Mail size={20} color={colors.muted} />
+                  <Text style={styles.readOnlyValue}>{userEmail}</Text>
+                </View>
+                <Text style={styles.hint}>Verified via email OTP</Text>
+              </View>
+            )}
+            <View style={styles.field}>
+              <Text style={styles.label}>Full name</Text>
+              <View style={[styles.inputRow, fieldError === 'name' && styles.inputError]}>
+                <User size={20} color={colors.muted} />
+                <TextInput
+                  value={name}
+                  onChangeText={(value) => {
+                    setName(value);
+                    if (fieldError === 'name') setFieldError(null);
+                  }}
+                  placeholder="e.g. Priya Sharma"
+                  placeholderTextColor={colors.placeholder}
+                  autoCapitalize="words"
+                  style={styles.input}
+                />
+              </View>
+            </View>
+
+            <View style={styles.field}>
+              <Text style={styles.label}>Mobile number</Text>
+              <View style={[styles.inputRow, fieldError === 'phone' && styles.inputError]}>
+                <Phone size={20} color={colors.muted} />
+                <Text style={styles.countryCode}>+91</Text>
+                <TextInput
+                  value={phone}
+                  onChangeText={(value) => {
+                    setPhone(normalizeIndianPhone(value));
+                    if (fieldError === 'phone') setFieldError(null);
+                  }}
+                  placeholder="9876543210"
+                  placeholderTextColor={colors.placeholder}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                  style={styles.input}
+                />
+              </View>
+              <Text style={styles.hint}>10-digit Indian mobile</Text>
+            </View>
+          </View>
+
+          {errorMessage.length > 0 && (
+            <View style={styles.errorBox}>
+              <Text style={styles.error}>{errorMessage}</Text>
+            </View>
+          )}
+
+          <PrimaryButton
+            label={isSubmitting ? 'Saving…' : isGuest ? 'Sign in to Rasoi' : 'Save changes'}
+            onPress={handleSave}
+            disabled={isSubmitting}
+            style={styles.cta}
+          />
+
+          {isGuest && (
+            <Pressable
+              onPress={handleContinueAsGuest}
+              disabled={isSubmitting}
+              style={styles.secondaryBtn}
+            >
+              <Text style={styles.secondaryBtnText}>Continue as Guest</Text>
+            </Pressable>
+          )}
+        </ScrollViewWithFloatingIndicator>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.cream },
+  flex: { flex: 1 },
+  content: {
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: spacing.sm,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  subtitle: {
+    marginTop: spacing.sm,
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.muted,
+  },
+  formCard: {
+    marginTop: spacing.xl,
+    borderRadius: radius.lg,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    ...shadows.card,
+  },
+  field: {
+    marginBottom: spacing.lg,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.charcoal,
+    marginBottom: spacing.sm,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.cream,
+    paddingHorizontal: spacing.lg,
+  },
+  inputRowDisabled: {
+    backgroundColor: colors.white,
+  },
+  readOnlyValue: {
+    flex: 1,
+    marginLeft: spacing.md,
+    paddingVertical: spacing.lg,
+    fontSize: 16,
+    color: colors.muted,
+  },
+  inputError: {
+    borderColor: colors.danger,
+    backgroundColor: 'rgba(229,57,53,0.04)',
+  },
+  countryCode: {
+    marginLeft: spacing.md,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.muted,
+  },
+  input: {
+    flex: 1,
+    marginLeft: spacing.md,
+    paddingVertical: spacing.lg,
+    fontSize: 16,
+    color: colors.charcoal,
+  },
+  hint: {
+    marginTop: spacing.sm,
+    fontSize: 12,
+    color: colors.muted,
+  },
+  errorBox: {
+    marginTop: spacing.md,
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(229,57,53,0.08)',
+    padding: spacing.md,
+  },
+  error: {
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.danger,
+  },
+  cta: {
+    marginTop: spacing.xxl,
+  },
+  secondaryBtn: {
+    marginTop: spacing.md,
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    paddingVertical: spacing.lg - 2,
+  },
+  secondaryBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.charcoal,
+  },
+});
