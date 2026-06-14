@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 
 import type { Recipe } from '@/generated/prisma/client';
 import type { RecipeIngredient } from '@/lib/types';
+import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
 import { PANTRY_SECTIONS } from '@/lib/pantry-sections';
 import { getPooledDatabaseUrl } from '@/lib/database-url';
 
@@ -61,25 +62,7 @@ function parseTags(tagsJson: string): string[] {
 
 function parseIngredients(ingredientsJson: string): RecipeIngredient[] {
   const parsed = parseJson<unknown>(ingredientsJson, []);
-  if (!Array.isArray(parsed)) return [];
-
-  return parsed
-    .filter((item): item is RecipeIngredient => {
-      return (
-        typeof item === 'object' &&
-        item !== null &&
-        'name' in item &&
-        typeof item.name === 'string' &&
-        'isStaple' in item &&
-        typeof item.isStaple === 'boolean'
-      );
-    })
-    .map((item) => ({
-      name: item.name.trim(),
-      isStaple: item.isStaple,
-      recommendedBrand: item.recommendedBrand,
-    }))
-    .filter((item) => item.name.length > 0);
+  return normalizeRecipeIngredients(parsed);
 }
 
 function parseSteps(stepsJson: string | null): string[] {

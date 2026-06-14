@@ -12,6 +12,7 @@ import type {
   SponsorResponse,
   UserProfileResponse,
 } from '@/lib/types';
+import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
 
 export function parseJson<T>(value: string, fallback: T): T {
   try {
@@ -39,7 +40,7 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
     description: recipe.description,
     imageUrl: recipe.imageUrl,
     tags: parseJson<RecipeTag[]>(recipe.tags, []),
-    ingredients: parseJson<RecipeIngredient[]>(recipe.ingredients, []),
+    ingredients: normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, [])),
     steps: recipe.steps ? parseJson<string[]>(recipe.steps, []) : undefined,
     published: recipe.published,
     createdAt: recipe.createdAt.toISOString(),

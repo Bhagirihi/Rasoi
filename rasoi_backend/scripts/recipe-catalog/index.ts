@@ -1,3 +1,5 @@
+import { ALL_CUISINES_BATCH3_RECIPES } from './all-cuisines-batch3';
+import { ALL_CUISINES_BATCH4_RECIPES } from './all-cuisines-batch4';
 import { ASSAMESE_BATCH2_RECIPES } from './assamese-batch2';
 import { ASSAMESE_EXTRA_RECIPES } from './assamese-extra';
 import { BASE_RECIPES } from './base-recipes';
@@ -30,6 +32,7 @@ import { SOUTH_EXTRA_RECIPES } from './south-extra';
 import { STREET_BATCH2_RECIPES } from './street-batch2';
 import { STREET_EXTRA_RECIPES } from './street-extra';
 import type { RecipeCatalogEntry } from './types';
+import { resolveRecipeSteps } from './step-builder';
 
 const VALID_KITCHEN_STYLES = new Set([
   'gujarati',
@@ -93,6 +96,8 @@ const EXTRA_RECIPES: RecipeCatalogEntry[] = [
   ...KASHMIRI_BATCH2_RECIPES,
   ...CHETTINAD_EXTRA_RECIPES,
   ...CHETTINAD_BATCH2_RECIPES,
+  ...ALL_CUISINES_BATCH3_RECIPES,
+  ...ALL_CUISINES_BATCH4_RECIPES,
 ];
 
 function resolveKitchenStyleId(styleId: string | undefined): string | undefined {
@@ -128,6 +133,7 @@ function sanitizeEntry(entry: RecipeCatalogEntry): RecipeCatalogEntry {
     ...entry,
     kitchenStyleIds: normalizeKitchenStyleIds(entry),
     tags: normalizeTags(entry),
+    steps: resolveRecipeSteps(entry),
   };
 }
 
