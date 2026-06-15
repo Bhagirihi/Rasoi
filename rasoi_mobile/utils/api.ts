@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { getAuthToken } from '@/utils/authToken';
+import { addSentryBreadcrumb, captureException } from '@/utils/sentry';
 
 function devApiDefault(): string {
   return 'http://192.168.1.27:3000';
@@ -75,26 +76,41 @@ export type ApiEnvelope<T> = {
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
 
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      Accept: 'application/json',
-      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
-      ...init?.headers,
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      ...init,
+      headers: {
+        Accept: 'application/json',
+        ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+        ...init?.headers,
+      },
+    });
 
-  const payload = (await response.json()) as ApiEnvelope<T>;
+    const payload = (await response.json()) as ApiEnvelope<T>;
 
-  if (!response.ok || !payload.ok) {
-    throw new Error(payload.error ?? `Request failed (${response.status})`);
+    if (!response.ok || !payload.ok) {
+      throw new Error(payload.error ?? `Request failed (${response.status})`);
+    }
+
+    if (payload.data === undefined) {
+      throw new Error('API returned no data');
+    }
+
+    return payload.data;
+  } catch (error) {
+    captureException(error, {
+      url,
+      method: init?.method ?? 'GET',
+    });
+    if (error instanceof Error) {
+      addSentryBreadcrumb('API request failed', 'api', {
+        url,
+        method: init?.method ?? 'GET',
+        message: error.message,
+      });
+    }
+    throw error;
   }
-
-  if (payload.data === undefined) {
-    throw new Error('API returned no data');
-  }
-
-  return payload.data;
 }
 
 export async function authApiFetch<T>(path: string, init?: RequestInit): Promise<T> {

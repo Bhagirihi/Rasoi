@@ -15,6 +15,9 @@ import { ReferenceProvider } from '@/context/ReferenceContext';
 import { RecipesProvider } from '@/context/RecipesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { isAdMobNativeAvailable } from '@/utils/admob';
+import { initSentry, Sentry } from '@/utils/sentry';
+
+initSentry();
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -24,7 +27,7 @@ export const unstable_settings = {
   initialRouteName: 'index',
 };
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   const [launchDone, setLaunchDone] = useState(false);
 
   return (
@@ -32,7 +35,7 @@ export default function RootLayout() {
       <RootLayoutInner launchDone={launchDone} setLaunchDone={setLaunchDone} />
     </ThemeProvider>
   );
-}
+});
 
 function RootLayoutInner({
   launchDone,

@@ -82,6 +82,7 @@ Admin: [http://localhost:3000/admin](http://localhost:3000/admin) (default seed 
 | `EXPO_PUBLIC_API_URL` | Rasoi backend base URL (e.g. `https://your-app.vercel.app/api`) |
 | `EXPO_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase anon/publishable key |
+| `EXPO_PUBLIC_SENTRY_DSN` | Sentry DSN for crash reporting (production builds) |
 
 ## Device QA
 
@@ -92,6 +93,24 @@ npm run qa:smoke       # smoke flows on connected device
 ```
 
 Maestro flows live in `rasoi_mobile/e2e/maestro/`.
+
+## Error monitoring (Sentry)
+
+Rasoi reports crashes and API failures to [Sentry](https://sentry.io) when DSN env vars are set.
+
+| App | Env var | Sentry project |
+|-----|---------|----------------|
+| Mobile | `EXPO_PUBLIC_SENTRY_DSN` | `rasoi-mobile` |
+| Backend | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | `rasoi-api` |
+
+Mobile captures: unhandled errors, API failures, user context after login.  
+Backend captures: unhandled API errors via `handleApiError`.
+
+See `.env.example` in each package. Set `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` on Vercel for source maps.
+
+## Marketing
+
+30 ready-to-post captions for LinkedIn, Instagram, and X: [`docs/marketing/social-posts-30.md`](docs/marketing/social-posts-30.md)
 
 ## Releases
 

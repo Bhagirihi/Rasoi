@@ -30,6 +30,7 @@ import {
 import type { UserProfileResponse } from '@/types/api';
 import { authError, authLog } from '@/utils/authLogger';
 import { clearAuthToken, getAuthToken } from '@/utils/authToken';
+import { clearSentryUser, setSentryUser } from '@/utils/sentry';
 import { resolvePlanState, type ResolvedPlan } from '@/utils/planLogic';
 import {
   syncDailyReminder,
@@ -194,6 +195,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
       setSavedRecipeIds(user.savedRecipeIds);
       applyPlanState(planFromUser(user));
+      setSentryUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isGuest: user.isGuest,
+      });
     },
     [applyPlanState],
   );
@@ -484,6 +491,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPantryIngredients([...DEFAULT_PANTRY]);
     setSavedRecipeIds([]);
     applyPlanState(DEFAULT_PLAN);
+    clearSentryUser();
   }, [applyPlanState, syncPushTokenToServer]);
 
   const resetAppFlow = useCallback(async () => {
@@ -507,6 +515,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSavedRecipeIds([]);
     setPlanState(DEFAULT_PLAN);
     await syncDailyReminder(false);
+    clearSentryUser();
   }, [syncPushTokenToServer]);
 
   const setDietChoice = useCallback(

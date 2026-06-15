@@ -50,6 +50,13 @@
           "icon": "./assets/images/icon.png",
           "color": "#FF6B35"
         }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "rasoi",
+          "project": "rasoi-mobile"
+        }
       ]
     ],
     "experiments": {
