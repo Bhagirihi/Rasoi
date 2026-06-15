@@ -1,6 +1,6 @@
 # Rasoi Backend (Next.js)
 
-Next.js API and admin dashboard for the **Rasoi** mobile app (`../004`).
+Next.js API and admin dashboard for the **Rasoi** mobile app (`../rasoi_mobile`).
 
 ## Features
 
@@ -87,7 +87,7 @@ curl -H "Authorization: Bearer your-cron-secret" https://your-app.vercel.app/api
 
 Optional GitHub Actions backup: set repository secrets `KEEP_ALIVE_URL` and `CRON_SECRET` (see `.github/workflows/supabase-keep-alive.yml`).
 
-## Mobile app integration (004)
+## Mobile app integration
 
 Set the API base URL in your Expo app, e.g. `https://your-app.vercel.app/api` (use your machine IP for local dev).
 
@@ -120,7 +120,7 @@ curl "http://localhost:3000/api/sponsors?placement=pantry"
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start dev server |
-| `npm run db:setup` | Push schema + seed data from 004 |
+| `npm run db:setup` | Push schema + seed data |
 | `npm run db:seed` | Re-seed recipes and sponsors |
 | `npm run db:push` | Apply Prisma schema to Supabase |
 | `npm run db:migrate` | Create/run migrations (uses `DIRECT_URL`) |
