@@ -94,6 +94,17 @@ npm run qa:smoke       # smoke flows on connected device
 
 Maestro flows live in `rasoi_mobile/e2e/maestro/`.
 
+## Notifications
+
+Users with notifications enabled receive:
+
+| Type | When | Source |
+|------|------|--------|
+| Meal picks (×5) | 8:00, 12:30, 16:00, 19:00, 22:00 (user timezone) | GitHub Actions → backend → Expo Push |
+| Daily nudges | 5:00 PM & 10:00 PM | Local on device |
+
+Configure GitHub secrets `CRON_SECRET` and `MEAL_NOTIFICATIONS_URL` — see [`rasoi_backend/README.md`](rasoi_backend/README.md#meal-push-notifications-5-daily).
+
 ## Error monitoring (Sentry)
 
 Rasoi reports crashes and API failures to [Sentry](https://sentry.io) when DSN env vars are set.

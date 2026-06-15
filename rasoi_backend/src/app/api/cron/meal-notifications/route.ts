@@ -17,6 +17,9 @@ function parseForceSlot(value: string | null): MealSlot | undefined {
  * Hourly cron: sends personalized meal push notifications (breakfast, lunch, snack, dinner, late-night)
  * to users with notificationsEnabled + active Expo push tokens.
  *
+ * Production schedule: GitHub Actions `.github/workflows/meal-notifications.yml` (every 15 min).
+ * Vercel Hobby only supports daily crons, so meal pushes are not triggered from vercel.json.
+ *
  * Query (manual / staging):
  *   ?forceSlot=dinner — send dinner pick regardless of clock
  *   ?userId=...       — limit to one user

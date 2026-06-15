@@ -1,0 +1,26 @@
+# Optional backup for Supabase free-tier keep-alive (Vercel also runs daily keep-alive cron).
+
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call keep-alive cron
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          KEEP_ALIVE_URL: ${{ secrets.KEEP_ALIVE_URL }}
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ -z "$KEEP_ALIVE_URL" ]; then
+            echo "Missing CRON_SECRET or KEEP_ALIVE_URL repository secret."
+            exit 1
+          fi
+          curl -fsS --retry 2 --retry-delay 5 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${KEEP_ALIVE_URL}"

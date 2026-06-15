@@ -1,0 +1,35 @@
+# Fires every 15 minutes so each user's local meal window (±15 min) is hit.
+# Vercel Hobby only allows daily crons — use this workflow for all 5 meal pushes.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   CRON_SECRET              — same value as Vercel env CRON_SECRET
+#   MEAL_NOTIFICATIONS_URL   — e.g. https://rasoiapp.vercel.app/api/cron/meal-notifications
+
+name: Meal notifications
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: meal-notifications
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call meal-notifications cron
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          MEAL_NOTIFICATIONS_URL: ${{ secrets.MEAL_NOTIFICATIONS_URL }}
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ -z "$MEAL_NOTIFICATIONS_URL" ]; then
+            echo "Missing CRON_SECRET or MEAL_NOTIFICATIONS_URL repository secret."
+            exit 1
+          fi
+          curl -fsS --retry 2 --retry-delay 5 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${MEAL_NOTIFICATIONS_URL}"

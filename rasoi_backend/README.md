@@ -87,6 +87,31 @@ curl -H "Authorization: Bearer your-cron-secret" https://your-app.vercel.app/api
 
 Optional GitHub Actions backup: set repository secrets `KEEP_ALIVE_URL` and `CRON_SECRET` (see `.github/workflows/supabase-keep-alive.yml`).
 
+### Meal push notifications (5× daily)
+
+Personalized breakfast, lunch, snack, dinner, and late-night picks are sent via **GitHub Actions** every 15 minutes (not Vercel cron — Hobby plan is daily-only).
+
+1. Set `CRON_SECRET` on Vercel (same value used below).
+2. In GitHub → **Settings → Secrets and variables → Actions**, add:
+   - `CRON_SECRET` — matches Vercel
+   - `MEAL_NOTIFICATIONS_URL` — `https://your-app.vercel.app/api/cron/meal-notifications`
+3. Enable Actions on the repo. Workflow: `.github/workflows/meal-notifications.yml`
+
+Local test:
+
+```bash
+npm run cron:meal-notifications -- --forceSlot=dinner --send
+```
+
+Manual HTTP test:
+
+```bash
+curl -H "Authorization: Bearer your-cron-secret" \
+  "https://your-app.vercel.app/api/cron/meal-notifications?forceSlot=breakfast&userId=USER_ID"
+```
+
+Meal send times (user timezone, default `Asia/Kolkata`): **8:00**, **12:30**, **16:00**, **19:00**, **22:00** (±15 min).
+
 ## Mobile app integration
 
 Set the API base URL in your Expo app, e.g. `https://your-app.vercel.app/api` (use your machine IP for local dev).
