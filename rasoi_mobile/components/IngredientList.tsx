@@ -4,7 +4,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import BrandSponsor from '@/components/BrandSponsor';
 import MissingItemsPanel from '@/components/MissingItemsPanel';
 import { colors, radius, spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { Recipe, RecipeIngredient } from '@/data/mockRecipes';
+import { ingredientKey } from '@/utils/recipeIngredients';
 
 interface IngredientListProps {
   recipe: Recipe;
@@ -18,15 +20,17 @@ function IngredientRow({
 }: {
   ingredient: RecipeIngredient;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
     <View style={styles.rowAvailable}>
       <View style={styles.checkboxDone}>
         <Check size={14} color={colors.white} strokeWidth={3} />
       </View>
-      <Text style={styles.rowTextAvailable}>{ingredient.name}</Text>
+      <Text style={[styles.rowTextAvailable, { color: themeColors.muted }]}>{ingredient.name}</Text>
       {ingredient.isStaple && (
-        <View style={styles.stapleBadge}>
-          <Text style={styles.stapleText}>Staple</Text>
+        <View style={[styles.stapleBadge, { backgroundColor: themeColors.white, borderColor: themeColors.border }]}>
+          <Text style={[styles.stapleText, { color: themeColors.muted }]}>Staple</Text>
         </View>
       )}
     </View>
@@ -39,10 +43,11 @@ export default function IngredientList({
   missing,
   onShopMissing,
 }: IngredientListProps) {
-  const availableSet = new Set(available.map((item) => item.toLowerCase()));
+  const { colors: themeColors } = useTheme();
+  const availableSet = new Set(available.map((item) => ingredientKey(item)));
 
   const availableIngredients = recipe.ingredients.filter((ingredient) =>
-    availableSet.has(ingredient.name.toLowerCase()),
+    ingredientKey(ingredient.name) && availableSet.has(ingredientKey(ingredient.name)),
   );
 
   const sponsoredIngredient = recipe.ingredients.find(
@@ -55,7 +60,7 @@ export default function IngredientList({
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Check size={18} color={colors.green} />
-            <Text style={styles.sectionTitle}>Already in your kitchen</Text>
+            <Text style={[styles.sectionTitle, { color: themeColors.charcoal }]}>Already in your kitchen</Text>
             <View style={styles.countBadgeGreen}>
               <Text style={styles.countTextGreen}>{availableIngredients.length}</Text>
             </View>
@@ -83,7 +88,7 @@ export default function IngredientList({
       )}
 
       {availableIngredients.length === 0 && missing.length > 0 && (
-        <Text style={styles.emptyHint}>
+        <Text style={[styles.emptyHint, { backgroundColor: themeColors.white, color: themeColors.muted }]}>
           Update your pantry to track what you already have at home.
         </Text>
       )}
@@ -154,7 +159,7 @@ const styles = StyleSheet.create({
   },
   stapleBadge: {
     borderRadius: radius.pill,
-    backgroundColor: colors.white,
+    borderWidth: 1,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
   },

@@ -1,11 +1,29 @@
 import { Redirect, Tabs } from 'expo-router';
 import { ActivityIndicator, Platform, View } from 'react-native';
-import { Bookmark, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
+import { Bookmark, BookOpen, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
+import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
 
+const TAB_BAR_TOP_PADDING = 8;
+const TAB_BAR_BODY_HEIGHT = Platform.OS === 'ios' ? 49 : 48;
+
+function getTabBarLayout(bottomInset: number) {
+  const paddingBottom = Math.max(bottomInset, Platform.OS === 'ios' ? 24 : 8);
+
+  return {
+    height: TAB_BAR_BODY_HEIGHT + TAB_BAR_TOP_PADDING + paddingBottom,
+    paddingBottom,
+    paddingTop: TAB_BAR_TOP_PADDING,
+  };
+}
+
 export default function TabLayout() {
+  const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const tabBarLayout = getTabBarLayout(insets.bottom);
   const {
     isHydrated,
     hasCompletedOnboarding,
@@ -43,9 +61,9 @@ export default function TabLayout() {
           backgroundColor: colors.white,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 84 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-          paddingTop: 8,
+          height: tabBarLayout.height,
+          paddingBottom: tabBarLayout.paddingBottom,
+          paddingTop: tabBarLayout.paddingTop,
         },
         tabBarLabelStyle: {
           fontSize: 11,
@@ -57,13 +75,23 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
+          tabBarButtonTestID: testIds.tabHome,
           tabBarIcon: ({ color, size }) => <ChefHat color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="recipes"
+        options={{
+          title: 'Recipe',
+          tabBarButtonTestID: testIds.tabRecipes,
+          tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size - 2} />,
         }}
       />
       <Tabs.Screen
         name="pantry"
         options={{
           title: 'Pantry',
+          tabBarButtonTestID: testIds.tabPantry,
           tabBarIcon: ({ color, size }) => <Refrigerator color={color} size={size - 2} />,
         }}
       />
@@ -71,6 +99,7 @@ export default function TabLayout() {
         name="saved"
         options={{
           title: 'Saved',
+          tabBarButtonTestID: testIds.tabSaved,
           tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size - 2} />,
         }}
       />
@@ -78,6 +107,7 @@ export default function TabLayout() {
         name="settings"
         options={{
           title: 'Settings',
+          tabBarButtonTestID: testIds.tabSettings,
           tabBarIcon: ({ color, size }) => <Settings color={color} size={size - 2} />,
         }}
       />

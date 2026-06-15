@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DIET_CHOICE_LABELS, DietChoice, colors, gradients, scrollIndicator } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 import { getDietPreferenceOption } from '@/constants/dietOptions';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { getKitchenStyleLabel, type KitchenStyle } from '@/utils/kitchenStyles';
@@ -101,9 +102,9 @@ export default function LoginScreen() {
       return null;
     }
 
-    if (normalizedPhone.length > 0 && !isValidPhoneLength(normalizedPhone)) {
+    if (!isValidPhoneLength(normalizedPhone)) {
       setFieldError('phone');
-      setErrorMessage('Enter a valid 10-digit mobile number, or leave blank for now.');
+      setErrorMessage('Enter your 10-digit mobile number for Blinkit, Zepto & delivery partners.');
       return null;
     }
 
@@ -228,7 +229,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']} testID={testIds.screenLogin}>
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -238,7 +239,6 @@ export default function LoginScreen() {
           {...scrollIndicator}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
-          floatingLabel="Scroll"
         >
           <View style={styles.topRow}>
             <Text style={styles.brand}>RASOI</Text>
@@ -332,7 +332,7 @@ export default function LoginScreen() {
                     style={styles.input}
                   />
                 </View>
-                <Text style={styles.hint}>Add now or later in Settings — needed for shop & delivery</Text>
+                <Text style={styles.hint}>Required for Blinkit, Zepto, Instamart, Zomato & Swiggy checkout</Text>
               </View>
 
               <View style={styles.field}>
@@ -401,6 +401,7 @@ export default function LoginScreen() {
           <Pressable
             onPress={step === 'details' ? handleSendOtp : handleVerifyOtp}
             disabled={isSubmitting}
+            testID={step === 'details' ? testIds.loginSendOtp : undefined}
             style={[styles.submitWrap, isSubmitting && styles.buttonDisabled]}
           >
             <LinearGradient
@@ -425,6 +426,7 @@ export default function LoginScreen() {
             <Pressable
               onPress={handleGuest}
               disabled={isSubmitting}
+              testID={testIds.loginGuest}
               style={styles.guestButton}
             >
               <Text style={styles.guestButtonText}>Explore as Guest</Text>
@@ -433,7 +435,7 @@ export default function LoginScreen() {
 
           <Text style={styles.disclaimer}>
             {step === 'details'
-              ? 'Mobile is stored on your profile. Email is verified with a Supabase OTP.'
+              ? 'Mobile is required for partner checkout. Email is verified with a Supabase OTP.'
               : 'Did not get the email? Check spam or tap Resend code.'}
           </Text>
         </View>

@@ -14,13 +14,14 @@ import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/th
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import { usePaywall } from '@/hooks/usePaywall';
+import { useTrialClock } from '@/hooks/useTrialClock';
 
 export default function PaywallScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const {
     effectiveTier,
-    trialDaysLeft,
+    trialStartedAt,
     canStartTrial,
     trialExpired,
     startTrial,
@@ -28,6 +29,7 @@ export default function PaywallScreen() {
     restorePurchases,
     refreshPlan,
   } = useAppContext();
+  const { trialTimeLabel } = useTrialClock(trialStartedAt, effectiveTier);
   const { showDialog } = useAppDialog();
 
   const paywall = usePaywall({ upgradeToPaid, restorePurchases });
@@ -82,8 +84,6 @@ export default function PaywallScreen() {
       </View>
 
       <ScrollViewWithFloatingIndicator
-        floatingBottomOffset={insets.bottom + 16}
-        floatingLabel="See plans"
         {...scrollIndicator}
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
       >
@@ -96,11 +96,11 @@ export default function PaywallScreen() {
           </Text>
         </LinearGradient>
 
-        {effectiveTier === 'trial' && trialDaysLeft !== null && trialDaysLeft > 0 && (
+        {effectiveTier === 'trial' && trialTimeLabel && trialTimeLabel !== 'Trial ended' && (
           <View style={styles.statusCard}>
             <Sparkles size={18} color={colors.primary} />
             <Text style={styles.statusText}>
-              Trial active · {trialDaysLeft} day{trialDaysLeft === 1 ? '' : 's'} left
+              Trial active · {trialTimeLabel}
             </Text>
           </View>
         )}

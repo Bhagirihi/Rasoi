@@ -43,7 +43,6 @@ export default function TrialWelcomeScreen() {
       <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
         contentContainerStyle={styles.scrollContent}
-        floatingLabel="See plans"
       >
         <TrialWelcomeContent
           onContinueTrial={finishWelcome}

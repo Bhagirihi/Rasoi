@@ -4,6 +4,7 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { colors, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { isAdMobNativeAvailable } from '@/utils/admob';
 
 const TEST_BANNER_ID =
@@ -26,6 +27,7 @@ interface AdMobBannerProps {
 
 export default function AdMobBanner({ placement }: AdMobBannerProps) {
   const { showAds } = useAppContext();
+  const { colors: themeColors, isDark } = useTheme();
   const [adsModule, setAdsModule] = useState<BannerModule | null>(null);
 
   useEffect(() => {
@@ -55,11 +57,23 @@ export default function AdMobBanner({ placement }: AdMobBannerProps) {
     return null;
   }
 
+  const adBorder = isDark ? 'rgba(255,255,255,0.28)' : themeColors.border;
+  const adBorderWidth = isDark ? 1.5 : 1;
+
   if (!isAdMobNativeAvailable()) {
     return (
-      <View style={styles.placeholder}>
-        <Text style={styles.placeholderLabel}>Ad · {placement ?? 'banner'}</Text>
-        <Text style={styles.placeholderSub}>
+      <View
+        style={[
+          styles.placeholder,
+          {
+            backgroundColor: themeColors.white,
+            borderColor: adBorder,
+            borderWidth: adBorderWidth,
+          },
+        ]}
+      >
+        <Text style={[styles.placeholderLabel, { color: themeColors.muted }]}>Ad · {placement ?? 'banner'}</Text>
+        <Text style={[styles.placeholderSub, { color: themeColors.placeholder }]}>
           Ads show in your APK build (not in Expo Go)
         </Text>
       </View>
@@ -73,7 +87,16 @@ export default function AdMobBanner({ placement }: AdMobBannerProps) {
   const { BannerAd, BannerAdSize } = adsModule;
 
   return (
-    <View style={styles.wrap}>
+    <View
+      style={[
+        styles.wrap,
+        {
+          backgroundColor: themeColors.white,
+          borderColor: adBorder,
+          borderWidth: adBorderWidth,
+        },
+      ]}
+    >
       <BannerAd
         unitId={TEST_BANNER_ID}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}

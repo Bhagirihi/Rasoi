@@ -3,9 +3,14 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useTrialClock } from '@/hooks/useTrialClock';
+import { formatTrialCompactLabel } from '@/utils/planLogic';
 
 export function PlanBadge() {
-  const { effectiveTier, planLabel, trialDaysLeft } = useAppContext();
+  const { effectiveTier, planLabel, trialStartedAt } = useAppContext();
+  const { trialTimeLabel } = useTrialClock(trialStartedAt, effectiveTier);
+  const trialCompact =
+    effectiveTier === 'trial' ? formatTrialCompactLabel(trialStartedAt) : null;
 
   if (effectiveTier === 'paid') {
     return (
@@ -16,12 +21,12 @@ export function PlanBadge() {
     );
   }
 
-  if (effectiveTier === 'trial' && trialDaysLeft !== null) {
+  if (effectiveTier === 'trial' && trialCompact && trialTimeLabel !== 'Trial ended') {
     return (
       <View style={[styles.badge, styles.trial]}>
         <Sparkles size={12} color={colors.primary} />
         <Text style={styles.trialText}>
-          Trial · {trialDaysLeft}d left
+          Trial · {trialCompact} left
         </Text>
       </View>
     );

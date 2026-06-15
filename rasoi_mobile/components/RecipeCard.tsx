@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MissingShopInline from '@/components/MissingShopInline';
 import RecipeImage from '@/components/RecipeImage';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { Recipe } from '@/data/mockRecipes';
 import type { AffiliatePartner } from '@/utils/affiliate';
@@ -15,6 +16,7 @@ export type RecipeCardVariant = 'tonight' | 'list';
 
 interface RecipeCardProps {
   recipe: Recipe;
+  testID?: string;
   variant?: RecipeCardVariant;
   /** @deprecated Use variant="tonight" */
   compact?: boolean;
@@ -27,6 +29,7 @@ interface RecipeCardProps {
 
 export default function RecipeCard({
   recipe,
+  testID,
   variant,
   compact = false,
   pickReason,
@@ -37,6 +40,7 @@ export default function RecipeCard({
 }: RecipeCardProps) {
   const resolvedVariant: RecipeCardVariant = variant ?? (compact ? 'tonight' : 'list');
   const router = useRouter();
+  const { colors: themeColors } = useTheme();
   const { pantryIngredients, isRecipeSaved, toggleSavedRecipe } = useAppContext();
   const matchPercent = pantryMatchPercent ?? getPantryMatchPercent(recipe, pantryIngredients);
   const { missing } = partitionIngredients(recipe, pantryIngredients);
@@ -75,30 +79,37 @@ export default function RecipeCard({
 
   if (isTonight) {
     return (
-      <Pressable onPress={handlePress} style={styles.tonightCard}>
+      <Pressable
+        onPress={handlePress}
+        testID={testID}
+        style={[
+          styles.tonightCard,
+          { backgroundColor: themeColors.white, borderColor: themeColors.border },
+        ]}
+      >
         <View style={styles.tonightMain}>
           <RecipeImage uri={recipe.imageUrl} style={styles.tonightImage} />
           <View style={styles.tonightBody}>
             <View style={styles.tonightTitleRow}>
-              <Text style={styles.tonightTitle} numberOfLines={2}>
+              <Text style={[styles.tonightTitle, { color: themeColors.charcoal }]} numberOfLines={2}>
                 {recipe.title}
               </Text>
               <Pressable onPress={handleSavePress} hitSlop={10} style={styles.bookmarkBtn}>
                 <Bookmark
                   size={18}
-                  color={saved ? colors.primary : colors.muted}
+                  color={saved ? colors.primary : themeColors.muted}
                   fill={saved ? colors.primary : 'transparent'}
                 />
               </Pressable>
             </View>
 
             {pickReason ? (
-              <Text style={styles.tonightReason} numberOfLines={2}>
+              <Text style={[styles.tonightReason, { color: themeColors.muted }]} numberOfLines={2}>
                 {pickReason}
               </Text>
             ) : null}
 
-            <Text style={styles.tonightMeta}>
+            <Text style={[styles.tonightMeta, { color: themeColors.muted }]}>
               {recipe.prepTime} min · {matchPercent}% pantry · {recipe.dietType}
             </Text>
 
@@ -122,30 +133,37 @@ export default function RecipeCard({
   }
 
   return (
-    <Pressable onPress={handlePress} style={styles.listCard}>
+    <Pressable
+      onPress={handlePress}
+      testID={testID}
+      style={[
+        styles.listCard,
+        { backgroundColor: themeColors.white, borderColor: themeColors.border },
+      ]}
+    >
       <RecipeImage uri={recipe.imageUrl} style={styles.listImage} />
 
       <View style={styles.listBody}>
         <View style={styles.listTitleRow}>
-          <Text style={styles.listTitle} numberOfLines={2}>
+          <Text style={[styles.listTitle, { color: themeColors.charcoal }]} numberOfLines={2}>
             {recipe.title}
           </Text>
           <Pressable onPress={handleSavePress} hitSlop={10} style={styles.bookmarkBtn}>
             <Bookmark
               size={18}
-              color={saved ? colors.primary : colors.muted}
+              color={saved ? colors.primary : themeColors.muted}
               fill={saved ? colors.primary : 'transparent'}
             />
           </Pressable>
         </View>
 
         {pickReason ? (
-          <Text style={styles.listReason} numberOfLines={2}>
+          <Text style={[styles.listReason, { color: themeColors.muted }]} numberOfLines={2}>
             {pickReason}
           </Text>
         ) : null}
 
-        <Text style={styles.listMeta}>
+        <Text style={[styles.listMeta, { color: themeColors.muted }]}>
           {recipe.prepTime} min · {matchPercent}% pantry · {recipe.region}
         </Text>
       </View>
@@ -231,11 +249,8 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   listCard: {
-    marginBottom: spacing.lg,
     borderRadius: radius.lg,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
     ...shadows.card,
   },

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 
 import { colors, radius, shadows, spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 export { FreeBadge, PlanBadge } from '@/components/PlanBadge';
 
@@ -54,22 +55,31 @@ export function EmptyState({
   title: string;
   subtitle: string;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
-    <View style={styles.empty}>
+    <View
+      style={[
+        styles.empty,
+        { backgroundColor: themeColors.white, borderColor: themeColors.border },
+      ]}
+    >
       <View style={styles.emptyIconWrap}>
         <Icon size={32} color={colors.primary} />
       </View>
-      <Text style={styles.emptyTitle}>{title}</Text>
-      <Text style={styles.emptySub}>{subtitle}</Text>
+      <Text style={[styles.emptyTitle, { color: themeColors.charcoal }]}>{title}</Text>
+      <Text style={[styles.emptySub, { color: themeColors.muted }]}>{subtitle}</Text>
     </View>
   );
 }
 
 export function InsightBanner({ title, subtitle }: { title: string; subtitle: string }) {
+  const { colors: themeColors } = useTheme();
+
   return (
     <View style={styles.insight}>
       <Text style={styles.insightTitle}>{title}</Text>
-      <Text style={styles.insightSub}>{subtitle}</Text>
+      <Text style={[styles.insightSub, { color: themeColors.muted }]}>{subtitle}</Text>
     </View>
   );
 }
@@ -99,10 +109,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.xxxl,
     borderRadius: radius.lg,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
-    marginTop: spacing.xxl,
+    marginTop: spacing.xl,
     ...shadows.card,
   },
   emptyIconWrap: {
@@ -127,7 +135,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   insight: {
-    marginTop: spacing.lg,
     borderRadius: radius.md,
     backgroundColor: 'rgba(255,107,53,0.08)',
     borderWidth: 1,

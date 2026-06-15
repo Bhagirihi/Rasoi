@@ -23,10 +23,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RecipeImage from '@/components/RecipeImage';
 
-import AdMobBanner from '@/components/AdMobBanner';
-import FloatingScrollIndicator from '@/components/FloatingScrollIndicator';
 import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
-import SponsorRail from '@/components/SponsorRail';
+import SponsorOrAd from '@/components/SponsorOrAd';
 import FoodDeliveryModal from '@/components/FoodDeliveryModal';
 import FoodDeliveryStrip from '@/components/FoodDeliveryStrip';
 import IngredientList from '@/components/IngredientList';
@@ -35,6 +33,8 @@ import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import { PlanBadge } from '@/components/ui/Primitives';
 import { SCREENSHOT_MODE } from '@/constants/screenshotMode';
 import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
+import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
 import { useRecipes } from '@/context/RecipesContext';
 import { fetchRecipeSponsor, type SponsorCardData } from '@/services/sponsors';
@@ -45,7 +45,6 @@ import { getRecipeSteps } from '@/utils/recipeSteps';
 import { getRecipeStepsHi } from '@/utils/recipeStepsHi';
 import { shareRecipeOnWhatsApp } from '@/utils/shareRecipe';
 import { PAYWALL_HREF } from '@/utils/routes';
-import { useFloatingScrollIndicator } from '@/hooks/useFloatingScrollIndicator';
 
 function normalizeRecipeId(id: string | string[] | undefined): string {
   if (Array.isArray(id)) return id[0] ?? '';
@@ -74,10 +73,11 @@ export default function RecipeDetailScreen() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [recipeLoading, setRecipeLoading] = useState(true);
   const [recipeSponsor, setRecipeSponsor] = useState<SponsorCardData | null>(null);
+  const [recipeSponsorLoading, setRecipeSponsorLoading] = useState(true);
   const [cookMode, setCookMode] = useState(startInCookMode);
   const [stepsLang, setStepsLang] = useState<'en' | 'hi'>('en');
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(() => new Set());
-  const floatingScroll = useFloatingScrollIndicator();
+  const { colors: themeColors } = useTheme();
 
   useEffect(() => {
     setCookMode(startInCookMode);
@@ -127,14 +127,18 @@ export default function RecipeDetailScreen() {
   const refreshRecipeSponsor = useCallback(async () => {
     if (!recipeId) {
       setRecipeSponsor(null);
+      setRecipeSponsorLoading(false);
       return;
     }
 
+    setRecipeSponsorLoading(true);
     try {
       const sponsor = await fetchRecipeSponsor(recipeId);
       setRecipeSponsor(sponsor);
     } catch {
       setRecipeSponsor(null);
+    } finally {
+      setRecipeSponsorLoading(false);
     }
   }, [recipeId]);
 
@@ -230,14 +234,10 @@ export default function RecipeDetailScreen() {
   };
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: themeColors.cream }]} testID={testIds.screenRecipe}>
       <ScrollView
         style={styles.scroll}
         {...scrollIndicator}
-        scrollEventThrottle={floatingScroll.scrollEventThrottle}
-        onLayout={floatingScroll.onLayout}
-        onContentSizeChange={floatingScroll.onContentSizeChange}
-        onScroll={floatingScroll.onScroll}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: stickyBarHeight + spacing.xl },
@@ -373,17 +373,12 @@ export default function RecipeDetailScreen() {
             );
           })}
 
-          {recipeSponsor && (
-            <SponsorRail
-              brandName={recipeSponsor.brandName}
-              productLabel={recipeSponsor.productLabel}
-              tagline={recipeSponsor.tagline}
-              logoUrl={recipeSponsor.logoUrl}
-              cta={recipeSponsor.cta}
-              searchQuery={recipeSponsor.searchQuery}
-              compact
-            />
-          )}
+          <SponsorOrAd
+            sponsor={recipeSponsor}
+            loading={recipeSponsorLoading}
+            placement="recipe"
+            compact
+          />
 
           <Text style={styles.sectionTitle}>Ingredients</Text>
           <IngredientList
@@ -393,15 +388,8 @@ export default function RecipeDetailScreen() {
             onShopMissing={missing.length > 0 && showPartners ? openCheckout : undefined}
           />
 
-          <AdMobBanner placement="recipe" />
         </View>
       </ScrollView>
-
-      <FloatingScrollIndicator
-        visible={floatingScroll.visible}
-        bottomOffset={stickyBarHeight + spacing.sm}
-        label="More below"
-      />
 
       <SafeAreaView
         edges={['bottom']}

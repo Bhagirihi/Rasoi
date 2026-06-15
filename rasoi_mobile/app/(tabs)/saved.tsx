@@ -8,29 +8,34 @@ import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
 import { AppTabHeader } from '@/components/AppTabHeader';
 import RecipeCard from '@/components/RecipeCard';
 import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
-import SponsorRail from '@/components/SponsorRail';
+import SponsorOrAd from '@/components/SponsorOrAd';
 import { EmptyState, InsightBanner } from '@/components/ui/Primitives';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { colors, layout, scrollIndicator, spacing } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
+import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
 import { Recipe } from '@/data/mockRecipes';
+import { ingredientKey } from '@/utils/recipeIngredients';
 
 export default function SavedScreen() {
   const tabBarHeight = useBottomTabBarHeight();
+  const { colors: themeColors } = useTheme();
   const { getSavedRecipes, pantryIngredients } = useAppContext();
   const savedRecipes = getSavedRecipes();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
-  const { sponsor: homeSponsor } = usePlacementSponsor('home');
+  const { sponsor: homeSponsor, loading: homeSponsorLoading } = usePlacementSponsor('home');
 
   const totalMissing = useMemo(() => {
     return savedRecipes.reduce((sum, recipe) => {
-      const pantrySet = new Set(pantryIngredients.map((i) => i.toLowerCase()));
-      const missing = recipe.ingredients.filter(
-        (ing) => !pantrySet.has(ing.name.toLowerCase()),
-      ).length;
+      const pantrySet = new Set(pantryIngredients.map((i) => ingredientKey(i)));
+      const missing = recipe.ingredients.filter((ing) => {
+        const key = ingredientKey(ing.name);
+        return key && !pantrySet.has(key);
+      }).length;
       return sum + missing;
     }, 0);
   }, [savedRecipes, pantryIngredients]);
@@ -42,20 +47,23 @@ export default function SavedScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      edges={['top']}
+      testID={testIds.screenSaved}
+    >
       <FlatListWithFloatingIndicator
         data={savedRecipes}
         keyExtractor={(item) => item.id}
-        floatingBottomOffset={tabBarHeight}
-        floatingLabel="More saved"
         {...scrollIndicator}
         contentContainerStyle={[
           styles.content,
-          { paddingBottom: tabBarHeight + spacing.xxxl },
+          { paddingBottom: tabBarHeight + spacing.xxxl + spacing.lg },
           savedRecipes.length === 0 && styles.contentEmpty,
         ]}
+        ItemSeparatorComponent={() => <View style={styles.itemGap} />}
         ListHeaderComponent={
-          <View>
+          <View style={styles.screenSections}>
             <AppTabHeader
               eyebrow="Saved menus"
               title="Recipes you love"
@@ -69,7 +77,18 @@ export default function SavedScreen() {
               />
             )}
 
-            {savedRecipes.length > 0 && homeSponsor && <SponsorRail {...homeSponsor} compact />}
+            {savedRecipes.length > 0 && (
+              <View style={styles.sponsorSlot}>
+                <SponsorOrAd
+                  sponsor={homeSponsor}
+                  loading={homeSponsorLoading}
+                  placement="saved"
+                  compact
+                />
+              </View>
+            )}
+
+            {savedRecipes.length > 0 && <View style={styles.listDivider} />}
           </View>
         }
         renderItem={({ item }) => (
@@ -95,11 +114,22 @@ export default function SavedScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.cream },
+  safe: { flex: 1 },
   flex: { flex: 1 },
   content: {
     paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.lg,
+  },
+  screenSections: {
+    gap: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  sponsorSlot: {},
+  listDivider: {
+    height: spacing.sm,
+  },
+  itemGap: {
+    height: spacing.md,
   },
   contentEmpty: {
     flexGrow: 1,

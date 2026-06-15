@@ -143,7 +143,8 @@ export function getMealContext(hour: number = new Date().getHours()): MealContex
 }
 
 function recipeSearchText(recipe: Recipe): string {
-  return `${recipe.title} ${recipe.description} ${recipe.tags.join(' ')}`.toLowerCase();
+  const tags = Array.isArray(recipe.tags) ? recipe.tags.join(' ') : '';
+  return `${recipe.title ?? ''} ${recipe.description ?? ''} ${tags}`.toLowerCase();
 }
 
 export function scoreRecipeForMealSlot(recipe: Recipe, slot: MealSlot): number {
@@ -160,19 +161,19 @@ export function scoreRecipeForMealSlot(recipe: Recipe, slot: MealSlot): number {
     if (recipe.prepTime <= 15) score += 18;
     else if (recipe.prepTime <= 25) score += 10;
     else if (recipe.prepTime > 40) score -= 20;
-    if (recipe.tags.includes('quick')) score += 10;
+    if (recipe.tags?.includes('quick')) score += 10;
     if (recipe.calories <= 420) score += 6;
   }
 
   if (slot === 'lunch') {
     if (recipe.prepTime >= 20 && recipe.prepTime <= 45) score += 12;
-    if (recipe.tags.includes('kids')) score += 4;
+    if (recipe.tags?.includes('kids')) score += 4;
     if (text.includes('biryani')) score -= 8;
   }
 
   if (slot === 'snack') {
     if (recipe.prepTime <= 20) score += 16;
-    if (recipe.tags.includes('quick') || recipe.tags.includes('under20')) score += 12;
+    if (recipe.tags?.includes('quick') || recipe.tags?.includes('under20')) score += 12;
     if (recipe.calories <= 400) score += 8;
     if (recipe.prepTime > 40) score -= 15;
   }
@@ -185,7 +186,7 @@ export function scoreRecipeForMealSlot(recipe: Recipe, slot: MealSlot): number {
 
   if (slot === 'lateNight') {
     if (recipe.prepTime <= 15) score += 18;
-    if (recipe.tags.includes('quick') || recipe.tags.includes('under20')) score += 14;
+    if (recipe.tags?.includes('quick') || recipe.tags?.includes('under20')) score += 14;
     if (recipe.calories <= 380) score += 8;
     if (recipe.prepTime > 35) score -= 20;
   }

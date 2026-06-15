@@ -1,5 +1,6 @@
 import type { DietType, Recipe } from '@/data/mockRecipes';
 import { apiFetch } from '@/utils/api';
+import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
 
 type ApiRecipe = {
   id: string;
@@ -46,8 +47,8 @@ function mapRecipe(recipe: ApiRecipe): Recipe {
     difficulty: recipe.difficulty,
     description: recipe.description,
     imageUrl: recipe.imageUrl,
-    tags: recipe.tags,
-    ingredients: recipe.ingredients,
+    tags: recipe.tags ?? [],
+    ingredients: normalizeRecipeIngredients(recipe.ingredients),
     steps: recipe.steps,
   };
 }

@@ -1,5 +1,6 @@
 import { ALL_CUISINES_BATCH3_RECIPES } from './all-cuisines-batch3';
 import { ALL_CUISINES_BATCH4_RECIPES } from './all-cuisines-batch4';
+import { ALL_CUISINES_BATCH5_RECIPES } from './all-cuisines-batch5';
 import { ASSAMESE_BATCH2_RECIPES } from './assamese-batch2';
 import { ASSAMESE_EXTRA_RECIPES } from './assamese-extra';
 import { BASE_RECIPES } from './base-recipes';
@@ -98,6 +99,7 @@ const EXTRA_RECIPES: RecipeCatalogEntry[] = [
   ...CHETTINAD_BATCH2_RECIPES,
   ...ALL_CUISINES_BATCH3_RECIPES,
   ...ALL_CUISINES_BATCH4_RECIPES,
+  ...ALL_CUISINES_BATCH5_RECIPES,
 ];
 
 function resolveKitchenStyleId(styleId: string | undefined): string | undefined {

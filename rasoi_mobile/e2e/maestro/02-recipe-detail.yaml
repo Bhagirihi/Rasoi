@@ -1,0 +1,19 @@
+# Requires logged-in session (run after 01-guest-smoke or with existing app state)
+appId: com.rasoi.app
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-first
+    timeout: 30000
+- tapOn:
+    id: recipe-card-first
+- extendedWaitUntil:
+    visible:
+      id: screen-recipe
+    timeout: 20000
+- back

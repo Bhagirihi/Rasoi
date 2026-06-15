@@ -29,6 +29,7 @@ import {
   gradients,
   scrollIndicator,
 } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { cuisinesToRegion, getKitchenStyleLabel } from '@/utils/kitchenStyles';
 import { dietChoiceToFilter } from '@/utils/storage';
@@ -136,7 +137,7 @@ export default function OnboardingScreen() {
         />
         <View style={styles.glowGreen} />
 
-        <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
+        <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={testIds.screenOnboarding}>
           <View style={styles.header}>
             <Text style={styles.brand}>Rasoi</Text>
           </View>
@@ -144,7 +145,6 @@ export default function OnboardingScreen() {
           <ScrollViewWithFloatingIndicator
             {...scrollIndicator}
             contentContainerStyle={styles.notifyContent}
-            floatingLabel="Scroll"
           >
             <Text style={styles.notifyTitle}>
               Never ask <Text style={styles.notifyHighlight}>&quot;What&apos;s for dinner?&quot;</Text>{' '}
@@ -189,7 +189,7 @@ export default function OnboardingScreen() {
               <Text style={styles.infoPillText}>Required for Rasoi&apos;s smart curation</Text>
             </View>
 
-            <Pressable onPress={handleSkipNotifications} disabled={isSubmitting}>
+            <Pressable onPress={handleSkipNotifications} disabled={isSubmitting} testID={testIds.onboardingSkipNotify}>
               <Text style={styles.skipNotify}>Maybe later</Text>
             </Pressable>
           </View>
@@ -206,7 +206,7 @@ export default function OnboardingScreen() {
       />
       <View style={styles.glowGreen} />
 
-      <SafeAreaView style={styles.flex} edges={['top', 'bottom']}>
+      <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={testIds.screenOnboarding}>
         {step === 'cuisine' && (
           <Pressable
             onPress={() => {
@@ -243,6 +243,7 @@ export default function OnboardingScreen() {
               <Pressable
                 onPress={handleDietContinue}
                 disabled={!selectedDiet}
+                testID={testIds.onboardingDietContinue}
                 style={[
                   styles.darkPrimaryButton,
                   !selectedDiet
@@ -272,7 +273,6 @@ export default function OnboardingScreen() {
               style={styles.flex}
               {...scrollIndicator}
               contentContainerStyle={styles.cuisineContent}
-              floatingLabel="Pick cuisines"
             >
               <Text style={styles.cuisineEyebrow}>Step 2 of 3</Text>
               <Text style={styles.darkTitle}>Shape your Rasoi feed</Text>
@@ -317,6 +317,7 @@ export default function OnboardingScreen() {
               <Pressable
                 onPress={handleCuisineContinue}
                 disabled={selectedCuisines.length === 0}
+                testID={testIds.onboardingCuisineContinue}
                 style={[
                   styles.darkPrimaryButton,
                   selectedCuisines.length === 0 && styles.darkPrimaryButtonDisabled,

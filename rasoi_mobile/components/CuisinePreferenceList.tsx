@@ -3,6 +3,7 @@ import { Check } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, type CuisineId } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
 
 type CuisinePreferenceListProps = {
@@ -21,12 +22,13 @@ export default function CuisinePreferenceList({
 
   return (
     <View style={styles.list}>
-      {kitchenStyles.map((cuisine) => {
+      {kitchenStyles.map((cuisine, index) => {
         const isSelected = selected.includes(cuisine.id);
 
         return (
           <Pressable
             key={cuisine.id}
+            testID={index === 0 ? testIds.onboardingCuisineFirst : undefined}
             onPress={() => {
               void Haptics.selectionAsync();
               onToggle(cuisine.id);

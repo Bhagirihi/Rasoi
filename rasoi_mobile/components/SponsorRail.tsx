@@ -4,6 +4,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, shadows } from '@/constants/theme';
 import { usePartners } from '@/context/PartnersContext';
+import { useTheme } from '@/context/ThemeContext';
 
 interface SponsorRailProps {
   brandName: string;
@@ -25,16 +26,27 @@ export default function SponsorRail({
   compact = false,
 }: SponsorRailProps) {
   const { openBrandSearch } = usePartners();
+  const { colors: themeColors, semantic, isDark } = useTheme();
 
   const handlePress = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     void openBrandSearch(searchQuery ?? brandName, 'blinkit', { context: 'sponsor_rail' });
   };
 
+  const cardBorder = isDark ? 'rgba(255,255,255,0.28)' : themeColors.border;
+
   return (
     <Pressable
       onPress={handlePress}
-      style={[styles.card, compact && styles.cardCompact]}
+      style={[
+        styles.card,
+        compact && styles.cardCompact,
+        {
+          backgroundColor: themeColors.white,
+          borderColor: cardBorder,
+          borderWidth: isDark ? 1.5 : 1,
+        },
+      ]}
     >
       <View style={styles.sponsorTag}>
         <Sparkles size={12} color={colors.primary} />
@@ -42,11 +54,21 @@ export default function SponsorRail({
       </View>
 
       <View style={styles.body}>
-        <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="contain" />
+        <Image
+          source={{ uri: logoUrl }}
+          style={[
+            styles.logo,
+            {
+              backgroundColor: semantic.surfaceMuted,
+              borderColor: isDark ? 'rgba(255,255,255,0.2)' : themeColors.border,
+            },
+          ]}
+          resizeMode="contain"
+        />
         <View style={styles.textCol}>
-          <Text style={styles.brand}>{brandName}</Text>
-          <Text style={styles.product}>{productLabel}</Text>
-          <Text style={styles.tagline}>{tagline}</Text>
+          <Text style={[styles.brand, { color: themeColors.muted }]}>{brandName}</Text>
+          <Text style={[styles.product, { color: themeColors.charcoal }]}>{productLabel}</Text>
+          <Text style={[styles.tagline, { color: themeColors.muted }]}>{tagline}</Text>
         </View>
         <View style={styles.ctaRow}>
           <Text style={styles.cta}>{cta}</Text>
@@ -60,11 +82,7 @@ export default function SponsorRail({
 const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
     padding: 16,
-    marginBottom: 16,
     ...shadows.card,
   },
   cardCompact: {
@@ -92,7 +110,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: radius.sm,
-    backgroundColor: colors.cream,
+    borderWidth: 1,
   },
   textCol: {
     flex: 1,
@@ -100,17 +118,14 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.muted,
   },
   product: {
     fontSize: 15,
     fontWeight: '800',
-    color: colors.charcoal,
     marginTop: 2,
   },
   tagline: {
     fontSize: 12,
-    color: colors.muted,
     marginTop: 4,
   },
   ctaRow: {

@@ -73,13 +73,36 @@ export function formatTrialTimeLabel(
     parts.push(`${remaining.days} day${remaining.days === 1 ? '' : 's'}`);
   }
   if (remaining.hours > 0) {
+    parts.push(`${remaining.hours} hr`);
+  }
+  if (remaining.days === 0 && remaining.minutes > 0) {
+    parts.push(`${remaining.minutes} min`);
+  }
+
+  return parts.length > 0 ? `${parts.join(' ')} left` : 'Less than 1 min left';
+}
+
+/** Compact label for header badges — matches formatTrialTimeLabel math (floor, not ceil). */
+export function formatTrialCompactLabel(
+  trialStartedAt: string | null,
+  now = Date.now(),
+): string | null {
+  const remaining = getTrialTimeRemaining(trialStartedAt, now);
+  if (!remaining) return null;
+  if (remaining.totalMs <= 0) return 'Ended';
+
+  const parts: string[] = [];
+  if (remaining.days > 0) {
+    parts.push(`${remaining.days}d`);
+  }
+  if (remaining.hours > 0) {
     parts.push(`${remaining.hours}h`);
   }
   if (remaining.days === 0 && remaining.minutes > 0) {
     parts.push(`${remaining.minutes}m`);
   }
 
-  return parts.length > 0 ? `${parts.join(' ')} left` : 'Less than 1m left';
+  return parts.length > 0 ? parts.join(' ') : '<1m';
 }
 
 export function formatTrialEndsAt(trialStartedAt: string | null): string | null {
@@ -101,7 +124,7 @@ export function getTrialDaysLeft(trialStartedAt: string | null, now = Date.now()
   const elapsed = now - started;
   const remainingMs = TRIAL_DURATION_DAYS * MS_PER_DAY - elapsed;
   if (remainingMs <= 0) return 0;
-  return Math.ceil(remainingMs / MS_PER_DAY);
+  return Math.floor(remainingMs / MS_PER_DAY);
 }
 
 export function resolvePlanState(stored: StoredPlanState, now = Date.now()): ResolvedPlan {

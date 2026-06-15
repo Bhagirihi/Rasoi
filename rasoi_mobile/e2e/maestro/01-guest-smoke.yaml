@@ -1,0 +1,51 @@
+# Fresh install → onboarding → guest login → all tabs
+appId: com.rasoi.app
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible:
+      id: screen-onboarding
+    timeout: 45000
+- tapOn:
+    id: onboarding-diet-veg
+- tapOn:
+    id: onboarding-diet-continue
+- extendedWaitUntil:
+    visible:
+      id: onboarding-cuisine-first
+    timeout: 20000
+- tapOn:
+    id: onboarding-cuisine-first
+- tapOn:
+    id: onboarding-cuisine-continue
+- tapOn:
+    id: onboarding-skip-notify
+- extendedWaitUntil:
+    visible:
+      id: screen-login
+    timeout: 20000
+- tapOn:
+    id: login-guest
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 45000
+- tapOn:
+    id: tab-pantry
+- assertVisible:
+    id: screen-pantry
+- tapOn:
+    id: tab-saved
+- assertVisible:
+    id: screen-saved
+- tapOn:
+    id: tab-settings
+- assertVisible:
+    id: screen-settings
+- tapOn:
+    id: tab-home
+- assertVisible:
+    id: screen-home

@@ -109,6 +109,12 @@ export const affiliateEventSchema = z.object({
   query: z.string().max(240).optional(),
 });
 
+export const recipeSearchSchema = z.object({
+  query: z.string().trim().min(1).max(120),
+  sourceScreen: z.string().trim().min(2).max(40).default('home'),
+  resultCount: z.number().int().min(0).optional(),
+});
+
 export const savedRecipesSchema = z.object({
   recipeIds: z.array(z.string().min(1)),
 });

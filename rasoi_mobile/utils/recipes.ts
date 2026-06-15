@@ -1,14 +1,16 @@
 import { DietType, Recipe } from '@/data/mockRecipes';
+import { ingredientKey } from '@/utils/recipeIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
 export type FastFilter = 'all' | 'under20' | 'leftover' | 'kids';
+export type ToggleableFastFilter = Exclude<FastFilter, 'all'>;
 export type PantryMatchMode = 'any' | 'full';
 
 export function isRecipeFullyStocked(recipe: Recipe, pantryIngredients: string[]): boolean {
   if (pantryIngredients.length === 0) return false;
-  const pantrySet = new Set(pantryIngredients.map((item) => item.toLowerCase()));
+  const pantrySet = new Set(pantryIngredients.map((item) => ingredientKey(item)));
   return recipe.ingredients.every((ingredient) =>
-    pantrySet.has(ingredient.name.toLowerCase()),
+    ingredientKey(ingredient.name) && pantrySet.has(ingredientKey(ingredient.name)),
   );
 }
 
@@ -22,7 +24,7 @@ export function countFullyStockedRecipes(
 ): number {
   return filterRecipes(recipes, {
     ...options,
-    fastFilter: 'all',
+    fastFilters: [],
     requirePantryMatch: true,
     pantryMatchMode: 'full',
   }).length;
@@ -63,6 +65,20 @@ export function recipeMatchesFavoriteCuisines(
   return styleIds.some((styleId) => favoriteCuisines.includes(styleId));
 }
 
+export function recipeMatchesSearch(recipe: Recipe, query: string): boolean {
+  const normalized = query.trim().toLowerCase();
+  if (!normalized) return true;
+
+  if (recipe.title.toLowerCase().includes(normalized)) return true;
+  if (recipe.description.toLowerCase().includes(normalized)) return true;
+  if (recipe.region.toLowerCase().includes(normalized)) return true;
+  if (recipe.dietType.toLowerCase().includes(normalized)) return true;
+
+  return recipe.ingredients.some((ingredient) =>
+    ingredient.name.toLowerCase().includes(normalized),
+  );
+}
+
 export function filterRecipes(
   recipes: Recipe[],
   options: {
@@ -70,7 +86,9 @@ export function filterRecipes(
     regionalCuisine: string;
     favoriteCuisines?: string[];
     pantryIngredients: string[];
-    fastFilter: FastFilter;
+    fastFilters?: FastFilter[];
+    /** @deprecated Use fastFilters */
+    fastFilter?: FastFilter;
     requirePantryMatch?: boolean;
     pantryMatchMode?: PantryMatchMode;
   },
@@ -80,10 +98,17 @@ export function filterRecipes(
     regionalCuisine,
     favoriteCuisines = [],
     pantryIngredients,
+    fastFilters,
     fastFilter,
     requirePantryMatch = false,
     pantryMatchMode = 'full',
   } = options;
+
+  const activeFastFilters: ToggleableFastFilter[] = fastFilters?.length
+    ? fastFilters.filter((filter): filter is ToggleableFastFilter => filter !== 'all')
+    : fastFilter && fastFilter !== 'all'
+      ? [fastFilter]
+      : [];
 
   return recipes.filter((recipe) => {
     if (recipe.dietType !== dietPreference) return false;
@@ -99,18 +124,20 @@ export function filterRecipes(
       return false;
     }
 
-    if (fastFilter === 'under20' && recipe.prepTime > 20) return false;
-    if (fastFilter === 'leftover' && !recipe.tags.includes('leftover')) return false;
-    if (fastFilter === 'kids' && !recipe.tags.includes('kids')) return false;
+    const tags = Array.isArray(recipe.tags) ? recipe.tags : [];
+    if (activeFastFilters.includes('under20') && recipe.prepTime > 20) return false;
+    if (activeFastFilters.includes('leftover') && !tags.includes('leftover')) return false;
+    if (activeFastFilters.includes('kids') && !tags.includes('kids')) return false;
 
     if (requirePantryMatch && pantryIngredients.length > 0) {
       if (pantryMatchMode === 'full') {
         if (!isRecipeFullyStocked(recipe, pantryIngredients)) return false;
       } else {
-        const pantrySet = new Set(pantryIngredients.map((item) => item.toLowerCase()));
-        const hasMatch = recipe.ingredients.some((ingredient) =>
-          pantrySet.has(ingredient.name.toLowerCase()),
-        );
+        const pantrySet = new Set(pantryIngredients.map((item) => ingredientKey(item)));
+        const hasMatch = recipe.ingredients.some((ingredient) => {
+          const key = ingredientKey(ingredient.name);
+          return key && pantrySet.has(key);
+        });
         if (!hasMatch) return false;
       }
     }
@@ -123,16 +150,18 @@ export function partitionIngredients(
   recipe: Recipe,
   pantryIngredients: string[],
 ): { available: string[]; missing: string[] } {
-  const pantrySet = new Set(pantryIngredients.map((item) => item.toLowerCase()));
+  const pantrySet = new Set(pantryIngredients.map((item) => ingredientKey(item)));
 
   const available: string[] = [];
   const missing: string[] = [];
 
   recipe.ingredients.forEach((ingredient) => {
-    if (pantrySet.has(ingredient.name.toLowerCase())) {
-      available.push(ingredient.name);
+    const name = ingredient.name?.trim();
+    if (!name) return;
+    if (pantrySet.has(ingredientKey(name))) {
+      available.push(name);
     } else {
-      missing.push(ingredient.name);
+      missing.push(name);
     }
   });
 

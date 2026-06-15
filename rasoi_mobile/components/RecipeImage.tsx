@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Image, StyleSheet, View, type ImageStyle, type StyleProp } from 'react-native';
 
 import { colors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type RecipeImageProps = {
   uri: string;
@@ -10,11 +11,12 @@ type RecipeImageProps = {
 };
 
 export default function RecipeImage({ uri, style }: RecipeImageProps) {
+  const { semantic } = useTheme();
   const [failed, setFailed] = useState(false);
 
   if (!uri || failed) {
     return (
-      <View style={[style, styles.fallback]}>
+      <View style={[style, styles.fallback, { backgroundColor: semantic.surfaceMuted }]}>
         <ChefHat size={28} color={colors.primary} />
       </View>
     );
@@ -34,6 +36,5 @@ const styles = StyleSheet.create({
   fallback: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cream,
   },
 });

@@ -54,7 +54,6 @@ export default function TrialCountdownBanner() {
 
 const styles = StyleSheet.create({
   wrap: {
-    marginTop: spacing.lg,
     borderRadius: radius.md,
     overflow: 'hidden',
   },

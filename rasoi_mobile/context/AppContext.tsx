@@ -256,7 +256,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         showTrialWelcome = await maybeStartTrialAfterAuth(syncedUser, { showWelcome: true });
       }
 
-      await syncPushTokenToServer(syncedUser.notificationsEnabled);
+      void syncPushTokenToServer(syncedUser.notificationsEnabled);
       return showTrialWelcome;
     },
     [applyUserProfile, maybeStartTrialAfterAuth, syncPendingOnboarding, syncPushTokenToServer],

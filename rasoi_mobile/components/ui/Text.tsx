@@ -6,6 +6,7 @@ import {
   type ColorScheme,
   type TypographyVariant,
 } from '@/constants/designSystem';
+import { useTheme } from '@/context/ThemeContext';
 
 type TextColor = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'inverse';
 
@@ -29,13 +30,15 @@ const COLOR_KEY: Record<TextColor, keyof (typeof semanticColors)['light']> = {
 export default function Text({
   variant = 'body',
   color = 'primary',
-  scheme = 'light',
+  scheme,
   align = 'left',
   style,
   maxFontSizeMultiplier = 1.4,
   ...rest
 }: TextProps) {
-  const palette = semanticColors[scheme];
+  const { colorScheme } = useTheme();
+  const activeScheme = scheme ?? colorScheme;
+  const palette = semanticColors[activeScheme];
   const tone = palette[COLOR_KEY[color]];
 
   return (

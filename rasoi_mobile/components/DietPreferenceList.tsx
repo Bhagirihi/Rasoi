@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DIET_PREFERENCE_OPTIONS } from '@/constants/dietOptions';
+import { testIds } from '@/constants/testIds';
 import { colors, radius, type DietChoice } from '@/constants/theme';
 
 type DietPreferenceListProps = {
@@ -26,6 +27,7 @@ export default function DietPreferenceList({
         return (
           <Pressable
             key={option.value}
+            testID={option.value === 'Veg' ? testIds.onboardingDietVeg : undefined}
             onPress={() => {
               void Haptics.selectionAsync();
               onSelect(option.value);

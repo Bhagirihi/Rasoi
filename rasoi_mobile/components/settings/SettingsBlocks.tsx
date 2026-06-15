@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 
 import { usePartners } from '@/context/PartnersContext';
+import { useTheme } from '@/context/ThemeContext';
 import { colors, layout, radius, shadows, spacing } from '@/constants/theme';
 import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
 
@@ -22,16 +23,18 @@ export function SettingsSubHeader({
   title: string;
   onBack: () => void;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
     <View style={styles.subHeader}>
       <Pressable onPress={onBack} style={styles.subBack} hitSlop={10}>
         <ChevronRight
           size={22}
-          color={colors.charcoal}
+          color={themeColors.charcoal}
           style={{ transform: [{ rotate: '180deg' }] }}
         />
       </Pressable>
-      <Text style={styles.subTitle}>{title}</Text>
+      <Text style={[styles.subTitle, { color: themeColors.charcoal }]}>{title}</Text>
       <View style={styles.subBack} />
     </View>
   );
@@ -46,9 +49,11 @@ export function SettingsGroupLabel({
   action?: string;
   onAction?: () => void;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
     <View style={styles.groupHeader}>
-      <Text style={styles.groupLabel}>{label}</Text>
+      <Text style={[styles.groupLabel, { color: themeColors.muted }]}>{label}</Text>
       {action && onAction ? (
         <Pressable onPress={onAction} hitSlop={8}>
           <Text style={styles.groupAction}>{action}</Text>
@@ -79,20 +84,32 @@ export function KitchenPrefsCard({
   onEdit: () => void;
   onNotificationsChange: (next: boolean) => void;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
-    <View style={styles.kitchenCard}>
+    <View
+      style={[
+        styles.kitchenCard,
+        { backgroundColor: themeColors.white, borderColor: themeColors.border },
+      ]}
+    >
       <Pressable onPress={onEdit} style={({ pressed }) => [pressed && styles.rowPressed]}>
         <View style={styles.kitchenTop}>
           <View style={[styles.kitchenDietBadge, { backgroundColor: dietBg }]}>
             <DietIcon size={16} color={dietTint} />
             <Text style={[styles.kitchenDietText, { color: dietTint }]}>{dietLabel}</Text>
           </View>
-          <View style={styles.kitchenRegionPill}>
-            <Text style={styles.kitchenRegionText}>{region}</Text>
+          <View
+            style={[
+              styles.kitchenRegionPill,
+              { backgroundColor: themeColors.cream, borderColor: themeColors.border },
+            ]}
+          >
+            <Text style={[styles.kitchenRegionText, { color: themeColors.charcoal }]}>{region}</Text>
           </View>
         </View>
 
-        <Text style={styles.kitchenCuisineTitle}>Favourite cuisines</Text>
+        <Text style={[styles.kitchenCuisineTitle, { color: themeColors.muted }]}>Favourite cuisines</Text>
         <View style={styles.kitchenChipWrap}>
           {cuisineLabels.length > 0 ? (
             cuisineLabels.map((label) => (
@@ -101,7 +118,7 @@ export function KitchenPrefsCard({
               </View>
             ))
           ) : (
-            <Text style={styles.kitchenEmpty}>Tap to pick cuisines</Text>
+            <Text style={[styles.kitchenEmpty, { color: themeColors.muted }]}>Tap to pick cuisines</Text>
           )}
         </View>
       </Pressable>
@@ -109,12 +126,13 @@ export function KitchenPrefsCard({
       <View
         style={[
           styles.kitchenNotify,
+          { backgroundColor: themeColors.cream },
           notificationsEnabled && styles.kitchenNotifyOn,
         ]}
       >
         <View style={styles.kitchenNotifyLeft}>
-          <Text style={styles.kitchenNotifyLabel}>Daily reminders</Text>
-          <Text style={styles.kitchenNotifySub}>
+          <Text style={[styles.kitchenNotifyLabel, { color: themeColors.charcoal }]}>Daily reminders</Text>
+          <Text style={[styles.kitchenNotifySub, { color: themeColors.muted }]}>
             {notificationsEnabled
               ? `${DAILY_REMINDER_TIME_LABEL} dinner nudges are on`
               : 'Off — tap to enable'}
@@ -123,8 +141,8 @@ export function KitchenPrefsCard({
         <Switch
           value={notificationsEnabled}
           onValueChange={onNotificationsChange}
-          trackColor={{ false: colors.border, true: 'rgba(0,168,107,0.35)' }}
-          thumbColor={notificationsEnabled ? colors.green : colors.white}
+          trackColor={{ false: themeColors.border, true: 'rgba(0,168,107,0.35)' }}
+          thumbColor={notificationsEnabled ? colors.green : themeColors.white}
         />
       </View>
     </View>
@@ -144,6 +162,8 @@ export function AccountActionsCard({
   onLogout: () => void;
   onReset: () => void;
 }) {
+  const { colors: themeColors } = useTheme();
+
   if (isGuest) {
     return (
       <View style={styles.accountWrap}>
@@ -169,7 +189,7 @@ export function AccountActionsCard({
           </LinearGradient>
         </Pressable>
         <Pressable onPress={onReset} style={styles.accountResetLink}>
-          <Text style={styles.accountResetText}>Reset full flow (testing)</Text>
+          <Text style={[styles.accountResetText, { color: themeColors.muted }]}>Reset full flow (testing)</Text>
         </Pressable>
       </View>
     );
@@ -187,14 +207,19 @@ export function AccountActionsCard({
         </Pressable>
         <Pressable
           onPress={onLogout}
-          style={({ pressed }) => [styles.accountBtn, styles.accountBtnOutline, pressed && styles.rowPressed]}
+          style={({ pressed }) => [
+            styles.accountBtn,
+            styles.accountBtnOutline,
+            { backgroundColor: themeColors.white, borderColor: themeColors.border },
+            pressed && styles.rowPressed,
+          ]}
         >
           <Text style={styles.accountBtnOutlineText}>Log out</Text>
-          <Text style={styles.accountBtnOutlineSub}>Return to login</Text>
+          <Text style={[styles.accountBtnOutlineSub, { color: themeColors.muted }]}>Return to login</Text>
         </Pressable>
       </View>
       <Pressable onPress={onReset} style={styles.accountResetLink}>
-        <Text style={styles.accountResetText}>Reset full flow (testing)</Text>
+        <Text style={[styles.accountResetText, { color: themeColors.muted }]}>Reset full flow (testing)</Text>
       </Pressable>
     </View>
   );
@@ -207,7 +232,18 @@ export function SettingsCard({
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
 }) {
-  return <View style={[styles.card, style]}>{children}</View>;
+  const { colors: themeColors } = useTheme();
+  return (
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: themeColors.white, borderColor: themeColors.border },
+        style,
+      ]}
+    >
+      {children}
+    </View>
+  );
 }
 
 export function SettingsNavRow({
@@ -229,12 +265,14 @@ export function SettingsNavRow({
   destructive?: boolean;
   isLast?: boolean;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,
-        !isLast && styles.rowBorder,
+        !isLast && [styles.rowBorder, { borderBottomColor: themeColors.border }],
         pressed && styles.rowPressed,
       ]}
     >
@@ -242,14 +280,16 @@ export function SettingsNavRow({
         <Icon size={18} color={iconColor} />
       </View>
       <View style={styles.rowBody}>
-        <Text style={[styles.rowLabel, destructive && styles.destructiveText]}>{label}</Text>
+        <Text style={[styles.rowLabel, { color: themeColors.charcoal }, destructive && styles.destructiveText]}>
+          {label}
+        </Text>
         {value ? (
-          <Text style={styles.rowValue} numberOfLines={2}>
+          <Text style={[styles.rowValue, { color: themeColors.muted }]} numberOfLines={2}>
             {value}
           </Text>
         ) : null}
       </View>
-      <ChevronRight size={18} color={colors.muted} />
+      <ChevronRight size={18} color={themeColors.muted} />
     </Pressable>
   );
 }
@@ -273,20 +313,22 @@ export function SettingsToggleRow({
   onValueChange: (next: boolean) => void;
   isLast?: boolean;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
-    <View style={[styles.row, !isLast && styles.rowBorder]}>
+    <View style={[styles.row, !isLast && [styles.rowBorder, { borderBottomColor: themeColors.border }]]}>
       <View style={[styles.rowIcon, { backgroundColor: iconBg }]}>
         <Icon size={18} color={iconColor} />
       </View>
       <View style={styles.rowBody}>
-        <Text style={styles.rowLabel}>{label}</Text>
-        <Text style={styles.rowValue}>{subtitle}</Text>
+        <Text style={[styles.rowLabel, { color: themeColors.charcoal }]}>{label}</Text>
+        <Text style={[styles.rowValue, { color: themeColors.muted }]}>{subtitle}</Text>
       </View>
       <Switch
         value={value}
         onValueChange={onValueChange}
-        trackColor={{ false: colors.border, true: 'rgba(0,168,107,0.35)' }}
-        thumbColor={value ? colors.green : colors.white}
+        trackColor={{ false: themeColors.border, true: 'rgba(0,168,107,0.35)' }}
+        thumbColor={value ? colors.green : themeColors.white}
       />
     </View>
   );
@@ -305,11 +347,22 @@ export function SettingsProfileHero({
   isGuest: boolean;
   onPress: () => void;
 }) {
+  const { colors: themeColors, semantic } = useTheme();
+  const heroGradient = (
+    isGuest
+      ? [semantic.primarySoft, semantic.surface]
+      : [semantic.surface, semantic.surfaceMuted]
+  ) as [string, string];
+
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [pressed && { opacity: 0.92 }]}>
       <LinearGradient
-        colors={isGuest ? ['#FFF5F0', '#FFFFFF'] : ['#FFFFFF', '#FFFFFF']}
-        style={[styles.hero, isGuest && styles.heroGuest]}
+        colors={heroGradient}
+        style={[
+          styles.hero,
+          { borderColor: themeColors.border },
+          isGuest && styles.heroGuest,
+        ]}
       >
         <View style={styles.heroTopAccent} />
         <View style={styles.heroContent}>
@@ -317,8 +370,8 @@ export function SettingsProfileHero({
             <Text style={styles.avatarLetter}>{initial}</Text>
           </View>
           <View style={styles.heroText}>
-            <Text style={styles.heroName}>{name}</Text>
-            <Text style={styles.heroSub}>{subtitle}</Text>
+            <Text style={[styles.heroName, { color: themeColors.charcoal }]}>{name}</Text>
+            <Text style={[styles.heroSub, { color: themeColors.muted }]}>{subtitle}</Text>
           </View>
           <View style={[styles.heroPill, isGuest && styles.heroPillGuest]}>
             <Text style={[styles.heroPillText, isGuest && styles.heroPillTextGuest]}>
@@ -342,29 +395,42 @@ export function SettingsQuickTile({
   icon: LucideIcon;
   onPress: () => void;
 }) {
+  const { colors: themeColors } = useTheme();
+
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.tile, pressed && styles.rowPressed]}
+      style={({ pressed }) => [
+        styles.tile,
+        { backgroundColor: themeColors.white, borderColor: themeColors.border },
+        pressed && styles.rowPressed,
+      ]}
     >
       <View style={styles.tileIcon}>
         <Icon size={20} color={colors.primary} />
       </View>
-      <Text style={styles.tileLabel}>{label}</Text>
-      <Text style={styles.tileSub}>{sublabel}</Text>
+      <Text style={[styles.tileLabel, { color: themeColors.charcoal }]}>{label}</Text>
+      <Text style={[styles.tileSub, { color: themeColors.muted }]}>{sublabel}</Text>
     </Pressable>
   );
 }
 
 export function PartnerStrip() {
   const { groceryPartners } = usePartners();
+  const { colors: themeColors } = useTheme();
 
   return (
     <View style={styles.partnerRow}>
       {groceryPartners.map((partner) => (
-        <View key={partner.id} style={styles.partnerChip}>
+        <View
+          key={partner.id}
+          style={[
+            styles.partnerChip,
+            { backgroundColor: themeColors.cream, borderColor: themeColors.border },
+          ]}
+        >
           <View style={[styles.partnerDot, { backgroundColor: partner.accent }]} />
-          <Text style={styles.partnerLabel}>{partner.label}</Text>
+          <Text style={[styles.partnerLabel, { color: themeColors.charcoal }]}>{partner.label}</Text>
         </View>
       ))}
     </View>
@@ -372,8 +438,10 @@ export function PartnerStrip() {
 }
 
 export function SettingsFooter() {
+  const { colors: themeColors } = useTheme();
+
   return (
-    <Text style={styles.footer}>Rasoi v1.0 · Made for Indian home cooks</Text>
+    <Text style={[styles.footer, { color: themeColors.muted }]}>Rasoi v1.0 · Made for Indian home cooks</Text>
   );
 }
 
@@ -760,7 +828,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderRadius: radius.pill,
-    backgroundColor: colors.cream,
+    borderWidth: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },

@@ -3,6 +3,7 @@ import { Package, ShoppingCart } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, shadows, spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 interface MissingItemsPanelProps {
   missing: string[];
@@ -17,6 +18,8 @@ export default function MissingItemsPanel({
   onShopAll,
   title = 'Need to buy',
 }: MissingItemsPanelProps) {
+  const { colors: themeColors } = useTheme();
+
   if (missing.length === 0) {
     return (
       <View style={styles.allSetCard}>
@@ -25,7 +28,7 @@ export default function MissingItemsPanel({
         </View>
         <View style={styles.allSetText}>
           <Text style={styles.allSetTitle}>Pantry complete</Text>
-          <Text style={styles.allSetSub}>You have every ingredient — happy cooking!</Text>
+          <Text style={[styles.allSetSub, { color: themeColors.muted }]}>You have every ingredient — happy cooking!</Text>
         </View>
       </View>
     );
@@ -35,15 +38,20 @@ export default function MissingItemsPanel({
   const progress = totalCount > 0 ? stockedCount / totalCount : 0;
 
   return (
-    <View style={styles.card}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: themeColors.white, borderColor: 'rgba(255,107,53,0.28)' },
+      ]}
+    >
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.iconWrap}>
             <ShoppingCart size={18} color={colors.primary} />
           </View>
           <View>
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: themeColors.charcoal }]}>{title}</Text>
+            <Text style={[styles.subtitle, { color: themeColors.muted }]}>
               {missing.length} item{missing.length !== 1 ? 's' : ''} to order
             </Text>
           </View>
@@ -56,7 +64,7 @@ export default function MissingItemsPanel({
       <View style={styles.progressTrack}>
         <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
       </View>
-      <Text style={styles.progressLabel}>
+      <Text style={[styles.progressLabel, { color: themeColors.muted }]}>
         {stockedCount} of {totalCount} ingredients in your pantry
       </Text>
 
@@ -64,7 +72,7 @@ export default function MissingItemsPanel({
         {missing.map((item) => (
           <View key={item} style={styles.chip}>
             <View style={styles.chipDot} />
-            <Text style={styles.chipText}>{item}</Text>
+            <Text style={[styles.chipText, { color: themeColors.charcoal }]}>{item}</Text>
           </View>
         ))}
       </View>
@@ -82,7 +90,7 @@ export default function MissingItemsPanel({
         </Pressable>
       )}
 
-      <Text style={styles.partnerHint}>Blinkit · Zepto · Instamart</Text>
+      <Text style={[styles.partnerHint, { color: themeColors.muted }]}>Blinkit · Zepto · Instamart</Text>
     </View>
   );
 }

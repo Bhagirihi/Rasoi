@@ -89,9 +89,10 @@ async function main() {
   const baseCount = 150;
   const batch3Count = 50;
   const batch4Count = 1500;
+  const batch5Count = 1500;
 
   console.log(
-    `Catalog: ${ALL_CATALOG_RECIPES.length} recipes (${baseCount} base + ${ALL_CATALOG_RECIPES.length - baseCount - batch3Count - batch4Count} expanded + ${batch3Count} batch3 + ${batch4Count} batch4)`,
+    `Catalog: ${ALL_CATALOG_RECIPES.length} recipes (${baseCount} base + ${ALL_CATALOG_RECIPES.length - baseCount - batch3Count - batch4Count - batch5Count} expanded + ${batch3Count} batch3 + ${batch4Count} batch4 + ${batch5Count} batch5)`,
   );
   console.log('Per cuisine (includes multi-cuisine):', countByKitchenStyle());
 

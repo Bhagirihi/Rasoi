@@ -2,13 +2,14 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
-  Bell,
   Crown,
   Drumstick,
   Egg,
   Hand,
   Leaf,
+  Moon,
   SlidersHorizontal,
+  Sun,
   User,
 } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -35,8 +36,10 @@ import {
   PAID_PLAN_YEARLY_SAVINGS_LABEL,
   PLAN_LABELS,
 } from '@/constants/plans';
-import { DIET_CHOICE_LABELS, DietChoice, colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
+import { DIET_CHOICE_LABELS, DietChoice, colors as brandColors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
+import { useTheme } from '@/context/ThemeContext';
 import { getKitchenStyleLabel, type KitchenStyle } from '@/utils/kitchenStyles';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
@@ -47,10 +50,10 @@ const DIET_META: Record<
   DietChoice,
   { icon: typeof Leaf; tint: string; bg: string }
 > = {
-  Veg: { icon: Leaf, tint: colors.green, bg: 'rgba(0,168,107,0.12)' },
-  Egg: { icon: Egg, tint: colors.egg, bg: 'rgba(244,196,48,0.15)' },
-  'Non-Veg': { icon: Drumstick, tint: colors.danger, bg: 'rgba(229,57,53,0.1)' },
-  Jain: { icon: Hand, tint: colors.saffron, bg: 'rgba(255,153,51,0.12)' },
+  Veg: { icon: Leaf, tint: brandColors.green, bg: 'rgba(0,168,107,0.12)' },
+  Egg: { icon: Egg, tint: brandColors.egg, bg: 'rgba(244,196,48,0.15)' },
+  'Non-Veg': { icon: Drumstick, tint: brandColors.danger, bg: 'rgba(229,57,53,0.1)' },
+  Jain: { icon: Hand, tint: brandColors.saffron, bg: 'rgba(255,153,51,0.12)' },
 };
 
 function formatCuisineLabels(ids: string[], kitchenStyles: KitchenStyle[]): string[] {
@@ -61,6 +64,7 @@ function formatCuisineLabels(ids: string[], kitchenStyles: KitchenStyle[]): stri
 export default function SettingsScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
+  const { colors, colorScheme, setColorScheme } = useTheme();
   const { kitchenStyles } = useReferenceData();
   const {
     userName,
@@ -170,11 +174,18 @@ export default function SettingsScreen() {
     });
   };
 
+  const handleAppearanceChange = async (next: 'light' | 'dark') => {
+    void Haptics.selectionAsync();
+    await setColorScheme(next);
+  };
+
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: colors.cream }]}
+      edges={['top']}
+      testID={testIds.screenSettings}
+    >
       <ScrollViewWithFloatingIndicator
-        floatingBottomOffset={tabBarHeight}
-        floatingLabel="More settings"
         {...scrollIndicator}
         contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xxxl }]}
       >
@@ -206,6 +217,42 @@ export default function SettingsScreen() {
           />
         </View>
 
+        <SettingsGroupLabel label="Appearance" />
+        <SettingsCard style={styles.appearanceCard}>
+          <Text style={[styles.appearanceTitle, { color: colors.charcoal }]}>Theme</Text>
+          <Text style={[styles.appearanceBody, { color: colors.muted }]}>
+            Choose light or dark mode for the app.
+          </Text>
+          <View style={styles.appearanceRow}>
+            {(['light', 'dark'] as const).map((mode) => {
+              const active = colorScheme === mode;
+              const Icon = mode === 'light' ? Sun : Moon;
+              return (
+                <Pressable
+                  key={mode}
+                  testID={mode === 'light' ? testIds.settingsThemeLight : testIds.settingsThemeDark}
+                  onPress={() => void handleAppearanceChange(mode)}
+                  style={[
+                    styles.appearanceOption,
+                    { borderColor: colors.border, backgroundColor: colors.white },
+                    active && styles.appearanceOptionActive,
+                  ]}
+                >
+                  <Icon size={18} color={active ? colors.primary : colors.muted} />
+                  <Text
+                    style={[
+                      styles.appearanceOptionText,
+                      { color: active ? colors.primary : colors.charcoal },
+                    ]}
+                  >
+                    {mode === 'light' ? 'Light' : 'Dark'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </SettingsCard>
+
         <SettingsGroupLabel label="Your plan" />
         <SettingsCard style={styles.planCard}>
           <Pressable onPress={openPaywall} style={styles.planRow}>
@@ -213,22 +260,22 @@ export default function SettingsScreen() {
               <Crown size={20} color={colors.primary} />
             </View>
             <View style={styles.planCopy}>
-              <Text style={styles.planTitle}>{PLAN_LABELS[effectiveTier]}</Text>
-              <Text style={styles.planSub}>{planStatusLine}</Text>
+              <Text style={[styles.planTitle, { color: colors.charcoal }]}>{PLAN_LABELS[effectiveTier]}</Text>
+              <Text style={[styles.planSub, { color: colors.muted }]}>{planStatusLine}</Text>
             </View>
-            <Text style={styles.planCta}>Manage →</Text>
+            <Text style={[styles.planCta, { color: colors.primary }]}>Manage →</Text>
           </Pressable>
-          <View style={styles.planMeta}>
-            <Text style={styles.planMetaText}>
+          <View style={[styles.planMeta, { borderTopColor: colors.border }]}>
+            <Text style={[styles.planMetaText, { color: colors.muted }]}>
               {showAds ? 'AdMob enabled' : 'No ads'} ·{' '}
               {showPartners ? 'Partners unlocked' : 'Partners locked'}
             </Text>
             {effectiveTier !== 'paid' && (
               <>
-                <Text style={styles.planPrice}>
+                <Text style={[styles.planPrice, { color: colors.primary }]}>
                   Rasoi Plus · {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE}
                 </Text>
-                <Text style={styles.planSavings}>{PAID_PLAN_YEARLY_DETAIL}</Text>
+                <Text style={[styles.planSavings, { color: colors.muted }]}>{PAID_PLAN_YEARLY_DETAIL}</Text>
               </>
             )}
           </View>
@@ -255,10 +302,10 @@ export default function SettingsScreen() {
 
         <SettingsGroupLabel label="Partner checkout" />
         <SettingsCard style={styles.revenueCard}>
-          <Text style={styles.revenueTitle}>
+          <Text style={[styles.revenueTitle, { color: colors.charcoal }]}>
             {showPartners ? 'Shop & delivery partners active' : 'Partners require Rasoi Plus'}
           </Text>
-          <Text style={styles.revenueBody}>
+          <Text style={[styles.revenueBody, { color: colors.muted }]}>
             {effectiveTier === 'trial'
               ? 'Trial access to Blinkit, Zepto, Instamart, Zomato & Swiggy. Subscribe before trial ends to keep checkout without ads.'
               : effectiveTier === 'paid'
@@ -284,10 +331,45 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.cream },
+  safe: { flex: 1 },
   flex: { flex: 1 },
   content: {
     paddingHorizontal: layout.screenPadding,
+  },
+  appearanceCard: {
+    padding: spacing.lg,
+  },
+  appearanceTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  appearanceBody: {
+    marginTop: spacing.sm,
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  appearanceRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  appearanceOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    paddingVertical: spacing.md,
+  },
+  appearanceOptionActive: {
+    borderColor: brandColors.primary,
+    backgroundColor: 'rgba(255,107,53,0.08)',
+  },
+  appearanceOptionText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   tileRow: {
     flexDirection: 'row',
@@ -316,40 +398,33 @@ const styles = StyleSheet.create({
   planTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.charcoal,
   },
   planSub: {
     marginTop: 2,
     fontSize: 13,
-    color: colors.muted,
   },
   planCta: {
     fontSize: 13,
     fontWeight: '800',
-    color: colors.primary,
   },
   planMeta: {
     marginTop: spacing.md,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
     gap: 4,
   },
   planMetaText: {
     fontSize: 12,
-    color: colors.muted,
   },
   planPrice: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.primary,
   },
   planSavings: {
     marginTop: 4,
     fontSize: 11,
     lineHeight: 16,
     fontWeight: '600',
-    color: colors.muted,
   },
   revenueCard: {
     padding: spacing.lg,
@@ -357,12 +432,10 @@ const styles = StyleSheet.create({
   revenueTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.charcoal,
   },
   revenueBody: {
     marginTop: spacing.sm,
     fontSize: 14,
     lineHeight: 22,
-    color: colors.muted,
   },
 });

@@ -20,6 +20,7 @@ import { SettingsSubHeader } from '@/components/settings/SettingsBlocks';
 import { PrimaryButton } from '@/components/ui/Primitives';
 import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { isValidPhoneLength, normalizeIndianPhone } from '@/utils/storage';
 
 type FieldError = 'name' | 'phone' | 'general' | null;
@@ -27,6 +28,7 @@ type FieldError = 'name' | 'phone' | 'general' | null;
 export default function EditProfileScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
+  const { colors: themeColors } = useTheme();
   const { userName, userPhone, userEmail, isGuest, isLoggedIn, updateProfile, loginAsGuest } =
     useAppContext();
 
@@ -100,7 +102,7 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
       <SettingsSubHeader
         title={isGuest ? 'Sign in' : 'Edit profile'}
         onBack={() => router.back()}
@@ -112,36 +114,51 @@ export default function EditProfileScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
         <ScrollViewWithFloatingIndicator
-          floatingBottomOffset={tabBarHeight}
-          floatingLabel="Scroll"
           {...scrollIndicator}
           contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xxxl }]}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>
+          <Text style={[styles.title, { color: themeColors.charcoal }]}>
             {isGuest ? 'Join Rasoi' : 'Your account'}
           </Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.subtitle, { color: themeColors.muted }]}>
             {isGuest
               ? 'Sign in from the login screen to verify your email.'
               : 'Update your name or mobile anytime. Email is verified at sign-in.'}
           </Text>
 
-          <View style={styles.formCard}>
+          <View
+            style={[
+              styles.formCard,
+              { backgroundColor: themeColors.white, borderColor: themeColors.border },
+            ]}
+          >
             {!isGuest && userEmail.length > 0 && (
               <View style={styles.field}>
-                <Text style={styles.label}>Email</Text>
-                <View style={[styles.inputRow, styles.inputRowDisabled]}>
-                  <Mail size={20} color={colors.muted} />
-                  <Text style={styles.readOnlyValue}>{userEmail}</Text>
+                <Text style={[styles.label, { color: themeColors.charcoal }]}>Email</Text>
+                <View
+                  style={[
+                    styles.inputRow,
+                    styles.inputRowDisabled,
+                    { borderColor: themeColors.border, backgroundColor: themeColors.cream },
+                  ]}
+                >
+                  <Mail size={20} color={themeColors.muted} />
+                  <Text style={[styles.readOnlyValue, { color: themeColors.muted }]}>{userEmail}</Text>
                 </View>
-                <Text style={styles.hint}>Verified via email OTP</Text>
+                <Text style={[styles.hint, { color: themeColors.muted }]}>Verified via email OTP</Text>
               </View>
             )}
             <View style={styles.field}>
-              <Text style={styles.label}>Full name</Text>
-              <View style={[styles.inputRow, fieldError === 'name' && styles.inputError]}>
-                <User size={20} color={colors.muted} />
+              <Text style={[styles.label, { color: themeColors.charcoal }]}>Full name</Text>
+              <View
+                style={[
+                  styles.inputRow,
+                  { borderColor: themeColors.border, backgroundColor: themeColors.cream },
+                  fieldError === 'name' && styles.inputError,
+                ]}
+              >
+                <User size={20} color={themeColors.muted} />
                 <TextInput
                   value={name}
                   onChangeText={(value) => {
@@ -149,18 +166,24 @@ export default function EditProfileScreen() {
                     if (fieldError === 'name') setFieldError(null);
                   }}
                   placeholder="e.g. Priya Sharma"
-                  placeholderTextColor={colors.placeholder}
+                  placeholderTextColor={themeColors.placeholder}
                   autoCapitalize="words"
-                  style={styles.input}
+                  style={[styles.input, { color: themeColors.charcoal }]}
                 />
               </View>
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Mobile number</Text>
-              <View style={[styles.inputRow, fieldError === 'phone' && styles.inputError]}>
-                <Phone size={20} color={colors.muted} />
-                <Text style={styles.countryCode}>+91</Text>
+              <Text style={[styles.label, { color: themeColors.charcoal }]}>Mobile number</Text>
+              <View
+                style={[
+                  styles.inputRow,
+                  { borderColor: themeColors.border, backgroundColor: themeColors.cream },
+                  fieldError === 'phone' && styles.inputError,
+                ]}
+              >
+                <Phone size={20} color={themeColors.muted} />
+                <Text style={[styles.countryCode, { color: themeColors.muted }]}>+91</Text>
                 <TextInput
                   value={phone}
                   onChangeText={(value) => {
@@ -168,13 +191,13 @@ export default function EditProfileScreen() {
                     if (fieldError === 'phone') setFieldError(null);
                   }}
                   placeholder="9876543210"
-                  placeholderTextColor={colors.placeholder}
+                  placeholderTextColor={themeColors.placeholder}
                   keyboardType="phone-pad"
                   maxLength={10}
-                  style={styles.input}
+                  style={[styles.input, { color: themeColors.charcoal }]}
                 />
               </View>
-              <Text style={styles.hint}>10-digit Indian mobile</Text>
+              <Text style={[styles.hint, { color: themeColors.muted }]}>10-digit Indian mobile</Text>
             </View>
           </View>
 
@@ -195,9 +218,12 @@ export default function EditProfileScreen() {
             <Pressable
               onPress={handleContinueAsGuest}
               disabled={isSubmitting}
-              style={styles.secondaryBtn}
+              style={[
+                styles.secondaryBtn,
+                { backgroundColor: themeColors.white, borderColor: themeColors.border },
+              ]}
             >
-              <Text style={styles.secondaryBtnText}>Continue as Guest</Text>
+              <Text style={[styles.secondaryBtnText, { color: themeColors.charcoal }]}>Continue as Guest</Text>
             </Pressable>
           )}
         </ScrollViewWithFloatingIndicator>
@@ -207,7 +233,7 @@ export default function EditProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.cream },
+  safe: { flex: 1 },
   flex: { flex: 1 },
   content: {
     paddingHorizontal: layout.screenPadding,

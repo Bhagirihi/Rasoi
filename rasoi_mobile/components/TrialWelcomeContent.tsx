@@ -16,6 +16,7 @@ import {
 } from '@/constants/plans';
 import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS } from '@/constants/payments';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 
 type TrialWelcomeContentProps = {
   onContinueTrial: () => void;
@@ -109,6 +110,7 @@ export default function TrialWelcomeContent({
         <Pressable
           onPress={handleContinue}
           disabled={loading !== null}
+          testID={testIds.trialContinue}
           style={[styles.skipBtn, loading !== null && styles.btnDisabled]}
         >
           <Text style={styles.skipBtnText}>Continue with trial</Text>

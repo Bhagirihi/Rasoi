@@ -3,6 +3,7 @@ import { ExternalLink, Sparkles } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, shadows } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { openBrandSearch } from '@/utils/affiliate';
 
 interface BrandSponsorProps {
@@ -20,27 +21,45 @@ export default function BrandSponsor({
   tagline = 'Recommended for this dish',
   searchQuery,
 }: BrandSponsorProps) {
+  const { colors: themeColors, semantic, isDark } = useTheme();
+
   const handlePress = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     void openBrandSearch(searchQuery ?? brandName);
   };
 
   return (
-    <Pressable onPress={handlePress} style={({ pressed }) => [styles.card, pressed && { opacity: 0.92 }]}>
-      <View style={styles.header}>
+    <Pressable
+      onPress={handlePress}
+      style={({ pressed }) => [
+        styles.card,
+        { backgroundColor: semantic.surfaceMuted, borderColor: isDark ? 'rgba(255,255,255,0.28)' : 'rgba(255,107,53,0.2)' },
+        isDark && { borderWidth: 1.5 },
+        pressed && { opacity: 0.92 },
+      ]}
+    >
+      <View style={[styles.header, { backgroundColor: semantic.primarySoft }]}>
         <Sparkles size={14} color={colors.primary} />
         <Text style={styles.headerText}>Sponsored</Text>
         <ExternalLink size={12} color={colors.primary} style={styles.headerLink} />
       </View>
 
       <View style={styles.body}>
-        <View style={styles.logoWrap}>
+        <View
+          style={[
+            styles.logoWrap,
+            {
+              backgroundColor: themeColors.white,
+              borderColor: isDark ? 'rgba(255,255,255,0.22)' : themeColors.border,
+            },
+          ]}
+        >
           <Image source={{ uri: logoUrl }} style={styles.logo} resizeMode="contain" />
         </View>
 
         <View style={styles.textWrap}>
-          <Text style={styles.productLabel}>{productLabel}</Text>
-          <Text style={styles.tagline}>{tagline}</Text>
+          <Text style={[styles.productLabel, { color: themeColors.charcoal }]}>{productLabel}</Text>
+          <Text style={[styles.tagline, { color: themeColors.muted }]}>{tagline}</Text>
           <Text style={styles.brandName}>Shop {brandName} on Blinkit</Text>
         </View>
       </View>
@@ -92,7 +111,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 14,
-    backgroundColor: colors.white,
+    borderWidth: 1,
     marginRight: 14,
   },
   logo: {

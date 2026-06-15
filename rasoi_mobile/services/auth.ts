@@ -32,7 +32,13 @@ export async function syncSupabaseAccount(
     return response;
   } catch (error) {
     authError('syncSupabaseAccount:failed', error, { apiUrl: getApiBaseUrl() });
-    throw error;
+    const message = error instanceof Error ? error.message : 'Account sync failed';
+    if (message.includes('not configured') || message.includes('503')) {
+      throw new Error(
+        'Email login is not fully set up on the server. Add SUPABASE_SERVICE_ROLE_KEY to the backend (Vercel).',
+      );
+    }
+    throw error instanceof Error ? error : new Error(message);
   }
 }
 

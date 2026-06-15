@@ -25,12 +25,15 @@ import {
 import { PrimaryButton } from '@/components/ui/Primitives';
 import { CuisineId, DietChoice, colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
 
 export default function EditPreferencesScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
+  const { colors: themeColors, colorScheme } = useTheme();
+  const prefVariant = colorScheme === 'dark' ? 'dark' : 'light';
   const {
     dietChoice,
     regionalCuisine,
@@ -104,17 +107,15 @@ export default function EditPreferencesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
       <SettingsSubHeader title="Food preferences" onBack={() => router.back()} />
 
       <ScrollViewWithFloatingIndicator
-        floatingBottomOffset={tabBarHeight}
-        floatingLabel="More options"
         {...scrollIndicator}
         contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xxxl }]}
         keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.intro}>
+        <Text style={[styles.intro, { color: themeColors.muted }]}>
           Diet and region are set during signup — update them here anytime. Home only uses these
           for recipe picks.
         </Text>
@@ -123,7 +124,7 @@ export default function EditPreferencesScreen() {
         <DietPreferenceList
           selected={draftDiet}
           onSelect={setDraftDiet}
-          variant="light"
+          variant={prefVariant}
         />
 
         <SettingsGroupLabel label="Region" />
@@ -141,39 +142,51 @@ export default function EditPreferencesScreen() {
                   void Haptics.selectionAsync();
                   setDraftRegion(region);
                 }}
-                style={[styles.chip, active && styles.chipActive]}
+                style={[
+                  styles.chip,
+                  { backgroundColor: themeColors.white, borderColor: themeColors.border },
+                  active && styles.chipActive,
+                ]}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive]}>{region}</Text>
+                <Text style={[styles.chipText, { color: themeColors.charcoal }, active && styles.chipTextActive]}>
+                  {region}
+                </Text>
               </Pressable>
             );
           })}
         </ScrollView>
 
         <SettingsGroupLabel label="Favourite cuisines" />
-        <Text style={styles.sectionHint}>Pick one or more — same as onboarding</Text>
+        <Text style={[styles.sectionHint, { color: themeColors.muted }]}>Pick one or more — same as onboarding</Text>
         <CuisinePreferenceList
           selected={draftCuisines}
           onToggle={toggleCuisine}
-          variant="light"
+          variant={prefVariant}
         />
 
         <SettingsGroupLabel label="Notifications" />
         <SettingsCard>
           <View style={styles.notifyRow}>
-            <View style={[styles.notifyIconWrap, draftNotifications && styles.notifyIconWrapOn]}>
-              <Bell size={20} color={draftNotifications ? colors.green : colors.muted} />
+            <View
+              style={[
+                styles.notifyIconWrap,
+                { backgroundColor: themeColors.cream },
+                draftNotifications && styles.notifyIconWrapOn,
+              ]}
+            >
+              <Bell size={20} color={draftNotifications ? colors.green : themeColors.muted} />
             </View>
             <View style={styles.notifyText}>
-              <Text style={styles.notifyTitle}>Daily reminders</Text>
-              <Text style={styles.notifySub}>
+              <Text style={[styles.notifyTitle, { color: themeColors.charcoal }]}>Daily reminders</Text>
+              <Text style={[styles.notifySub, { color: themeColors.muted }]}>
                 {DAILY_REMINDER_TIME_LABEL} nudges — &quot;What&apos;s for dinner?&quot;
               </Text>
             </View>
             <Switch
               value={draftNotifications}
               onValueChange={handleNotificationsToggle}
-              trackColor={{ false: colors.border, true: 'rgba(0,168,107,0.35)' }}
-              thumbColor={draftNotifications ? colors.green : colors.white}
+              trackColor={{ false: themeColors.border, true: 'rgba(0,168,107,0.35)' }}
+              thumbColor={draftNotifications ? colors.green : themeColors.white}
             />
           </View>
         </SettingsCard>
@@ -190,7 +203,7 @@ export default function EditPreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.cream },
+  safe: { flex: 1 },
   flex: { flex: 1 },
   content: {
     paddingHorizontal: layout.screenPadding,

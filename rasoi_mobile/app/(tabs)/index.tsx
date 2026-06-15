@@ -1,115 +1,65 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Baby, Recycle, SlidersHorizontal, Sparkles, Timer } from 'lucide-react-native';
-import { useMemo, useState, useEffect } from 'react';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Moon, Timer } from 'lucide-react-native';
+import { useMemo, useState } from 'react';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import AdMobBanner from '@/components/AdMobBanner';
 import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
 import CookTonightSheet from '@/components/CookTonightSheet';
 import MissingShopInline from '@/components/MissingShopInline';
 import { AppTabHeader } from '@/components/AppTabHeader';
 import RecipeCard from '@/components/RecipeCard';
-import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
-import SponsorRail from '@/components/SponsorRail';
+import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import TrialCountdownBanner from '@/components/TrialCountdownBanner';
 import { EmptyState } from '@/components/ui/Primitives';
-import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
+import { useRecipeDiscovery } from '@/hooks/useRecipeDiscovery';
 import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
+import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
-import { useRecipes } from '@/context/RecipesContext';
 import { Recipe } from '@/data/mockRecipes';
 import type { AffiliatePartner } from '@/utils/affiliate';
 import { getLocalizedGreeting } from '@/utils/greeting';
-import { getMealContext } from '@/utils/mealTime';
-import { FastFilter, filterRecipes, getPantryMatchPercent, getRecipePickReason, partitionIngredients, sortRecipesForTonight } from '@/utils/recipes';
+import {
+  getPantryMatchPercent,
+  getRecipePickReason,
+  partitionIngredients,
+} from '@/utils/recipes';
 import { hasValidProfilePhone, PHONE_REQUIRED_FOR_PARTNERS_MESSAGE } from '@/utils/phoneGate';
-import { dietChoiceToFilter } from '@/utils/storage';
-
-const QUICK_FILTERS: Array<{
-  value: FastFilter;
-  label: string;
-  icon: typeof Timer;
-}> = [
-  { value: 'all', label: 'All picks', icon: Sparkles },
-  { value: 'under20', label: 'Under 20 mins', icon: Timer },
-  { value: 'leftover', label: 'Leftover', icon: Recycle },
-  { value: 'kids', label: 'Kids', icon: Baby },
-];
 
 export default function HomeScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
+  const { colors: themeColors, semantic, isDark } = useTheme();
   const { showDialog } = useAppDialog();
+  const { userName, showPartners, userPhone } = useAppContext();
   const {
-    userName,
-    dietChoice,
-    regionalCuisine,
-    favoriteCuisines,
-    pantryIngredients,
+    meal,
+    recipes,
+    recipesLoading,
+    recipesError,
+    rankedRecipes,
+    topPick,
+    tonightCards,
     pantryFilterActive,
     setPantryFilterActive,
-    showPartners,
-    userPhone,
-  } = useAppContext();
-  const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes } = useRecipes();
-  const [activeFilter, setActiveFilter] = useState<FastFilter>('all');
+    pantryIngredients,
+    dietChoice,
+    regionalCuisine,
+  } = useRecipeDiscovery();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
   const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
-  const { sponsor: homeSponsor } = usePlacementSponsor('home');
-  const [showAllRecipes, setShowAllRecipes] = useState(false);
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
   const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
 
   const { greeting, subtitle } = getLocalizedGreeting();
-  const meal = getMealContext();
-
-  const filteredRecipes = useMemo(
-    () =>
-      filterRecipes(recipes, {
-        dietPreference: dietChoiceToFilter(dietChoice),
-        regionalCuisine,
-        favoriteCuisines,
-        pantryIngredients,
-        fastFilter: activeFilter,
-        requirePantryMatch: pantryFilterActive,
-        pantryMatchMode: pantryFilterActive ? 'any' : 'full',
-      }),
-    [recipes, dietChoice, regionalCuisine, favoriteCuisines, pantryIngredients, activeFilter, pantryFilterActive],
-  );
-
-  useEffect(() => {
-    if (!pantryFilterActive || recipesLoading || recipes.length === 0) return;
-    if (filteredRecipes.length > 0) return;
-    setPantryFilterActive(false);
-  }, [filteredRecipes.length, pantryFilterActive, recipes.length, recipesLoading, setPantryFilterActive]);
-
-  const rankedRecipes = useMemo(
-    () =>
-      sortRecipesForTonight(filteredRecipes, {
-        regionalCuisine,
-        pantryIngredients,
-        mealSlot: meal.slot,
-      }),
-    [filteredRecipes, regionalCuisine, pantryIngredients, meal.slot],
-  );
-
-  const topPick = rankedRecipes[0];
-  const tonightCards = rankedRecipes.slice(1, 4);
-  const moreRecipes = rankedRecipes.slice(4);
-  const listData = showAllRecipes ? moreRecipes : [];
+  const isLateNight = meal.slot === 'lateNight';
 
   const topPickMissing = useMemo(() => {
     if (!topPick) return [];
@@ -186,89 +136,90 @@ export default function HomeScreen() {
     setModalVisible(true);
   };
 
-  const handleFilterToggle = (filter: FastFilter) => {
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setActiveFilter((current) => (current === filter ? 'all' : filter));
-  };
-
-  const renderItem = ({ item, index }: { item: Recipe; index: number }) => (
-    <View>
-      {index === 1 && homeSponsor && <SponsorRail {...homeSponsor} />}
-      <RecipeCard
-        recipe={item}
-        variant="list"
-        pickReason={getRecipePickReason(item, {
-          regionalCuisine,
-          pantryIngredients,
-          dietChoice,
-          mealSlot: meal.slot,
-        })}
-        pantryMatchPercent={getPantryMatchPercent(item, pantryIngredients)}
-        onShopMissing={openShopModal}
-        onCookTonight={openCookTonight}
-        cookCtaLabel={meal.cookCta}
-      />
-    </View>
-  );
-
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <FlatListWithFloatingIndicator
-        data={listData}
-        keyExtractor={(item) => item.id}
-        floatingBottomOffset={tabBarHeight}
-        floatingLabel="More recipes"
-        showFloatingIndicator={showAllRecipes && listData.length > 0}
+    <SafeAreaView
+      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      edges={['top']}
+      testID={testIds.screenHome}
+    >
+      <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
         contentContainerStyle={[
-          styles.listContent,
-          { paddingBottom: tabBarHeight + spacing.xxxl + (showAllRecipes ? 0 : spacing.lg) },
+          styles.scrollContent,
+          { paddingBottom: tabBarHeight + spacing.xxxl + spacing.lg },
         ]}
-        ListHeaderComponent={
-          <View>
-            <AppTabHeader
-              title={
-                userName
-                  ? `${greeting.replace('!', '')}, ${userName.split(' ')[0]}!`
-                  : greeting
-              }
-              subtitle={subtitle}
+      >
+        <View style={styles.screenSections}>
+          <AppTabHeader
+            title={
+              userName
+                ? `${greeting.replace('!', '')}, ${userName.split(' ')[0]}!`
+                : greeting
+            }
+            subtitle={subtitle}
+          />
+
+          <TrialCountdownBanner />
+
+          {recipesLoading && recipes.length === 0 && (
+            <EmptyState
+              icon={Timer}
+              title="Loading recipes"
+              subtitle="Fetching tonight's dishes from Rasoi…"
             />
+          )}
 
-            <TrialCountdownBanner />
+          {recipesError && (
+            <EmptyState
+              icon={Timer}
+              title="Could not load recipes"
+              subtitle={recipesError}
+            />
+          )}
 
-            {topPick ? null : !recipesLoading && !recipesError && recipes.length > 0 ? (
-              <View style={styles.noMatchCard}>
-                <Text style={styles.noMatchTitle}>No recipes match your filters</Text>
-                <Text style={styles.noMatchSub}>
-                  Try turning off pantry mode, switching diet, or setting region to All India in Settings.
-                </Text>
-                {pantryFilterActive && (
-                  <Pressable
-                    onPress={() => setPantryFilterActive(false)}
-                    style={styles.noMatchBtn}
-                  >
-                    <Text style={styles.noMatchBtnText}>Show all recipes</Text>
-                  </Pressable>
-                )}
-              </View>
-            ) : null}
-
-            {topPick && (
-              <Pressable
-                style={styles.heroCard}
-                onPress={() => {
-                  void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                  router.push(`/recipe/${topPick.id}`);
-                }}
+          {topPick && (
+            <Pressable
+              style={[styles.heroCard, isLateNight && styles.heroCardLateNight]}
+              onPress={() => {
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                router.push(`/recipe/${topPick.id}`);
+              }}
+            >
+              <LinearGradient
+                colors={
+                  isLateNight
+                    ? (['#2A1810', '#1A1A2E', '#14110F'] as const)
+                    : ([colors.charcoal, colors.charcoal] as const)
+                }
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroGradient}
               >
                 <View style={styles.heroMain}>
                   <View style={styles.heroCopy}>
                     <View style={styles.heroTopRow}>
-                      <Text style={styles.heroEyebrow}>{meal.topPickEyebrow}</Text>
+                      <View
+                        style={[
+                          styles.heroEyebrowPill,
+                          isLateNight && styles.heroEyebrowPillLateNight,
+                        ]}
+                      >
+                        {isLateNight && <Moon size={12} color={colors.saffron} fill={colors.saffron} />}
+                        <Text
+                          style={[
+                            styles.heroEyebrow,
+                            isLateNight && styles.heroEyebrowLateNight,
+                          ]}
+                        >
+                          {meal.topPickEyebrow}
+                        </Text>
+                      </View>
                       <Text style={styles.heroMatchText}>{topPickPantryMatch}% pantry</Text>
                     </View>
-                    <Text style={styles.heroTitle} numberOfLines={2}>
+                    <Text
+                      style={[styles.heroTitle, isLateNight && styles.heroTitleLateNight]}
+                      numberOfLines={2}
+                    >
                       {topPick.title}
                     </Text>
                     <Text style={styles.heroReason} numberOfLines={2}>
@@ -283,14 +234,21 @@ export default function HomeScreen() {
                         void Haptics.selectionAsync();
                         if (topPick) openCookTonight(topPick);
                       }}
-                      style={styles.cookTonightBtn}
+                      style={[
+                        styles.cookTonightBtn,
+                        isLateNight && styles.cookTonightBtnLateNight,
+                      ]}
                     >
                       <Text style={styles.cookTonightBtnText}>{meal.cookCta} →</Text>
                     </Pressable>
                   </View>
                   <Image
                     source={{ uri: topPick.imageUrl }}
-                    style={styles.heroImage}
+                    style={[
+                      styles.heroImage,
+                      isLateNight && styles.heroImageLateNight,
+                      { backgroundColor: semantic.surfaceMuted },
+                    ]}
                     resizeMode="cover"
                   />
                 </View>
@@ -301,128 +259,81 @@ export default function HomeScreen() {
                       missing={topPickMissing}
                       variant="hero"
                       onShopPress={() => openShopModal(topPick, topPickMissing)}
-                      onPartnerPress={(partner) => openShopModal(topPick, topPickMissing, partner)}
+                      onPartnerPress={(partner) =>
+                        openShopModal(topPick, topPickMissing, partner)
+                      }
                     />
                   </View>
                 )}
-              </Pressable>
-            )}
+              </LinearGradient>
+            </Pressable>
+          )}
 
-            {tonightCards.length > 0 && (
-              <View style={styles.tonightCards}>
-                <Text style={styles.tonightSectionLabel}>{meal.alsoLabel}</Text>
-                {tonightCards.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    variant="tonight"
-                    cookCtaLabel={meal.cookCta}
-                    pickReason={getRecipePickReason(recipe, {
-                      regionalCuisine,
-                      pantryIngredients,
-                      dietChoice,
-                      mealSlot: meal.slot,
-                    })}
-                    pantryMatchPercent={getPantryMatchPercent(recipe, pantryIngredients)}
-                    onShopMissing={openShopModal}
-                    onCookTonight={openCookTonight}
-                  />
-                ))}
+          {tonightCards.length > 0 && (
+            <View style={styles.tonightCards}>
+              <View style={styles.tonightSectionHeader}>
+                {isLateNight && <Moon size={14} color={themeColors.muted} />}
+                <Text style={[styles.tonightSectionLabel, { color: themeColors.muted }]}>
+                  {meal.alsoLabel}
+                </Text>
               </View>
-            )}
+              {tonightCards.map((recipe) => (
+                <RecipeCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  variant="tonight"
+                  cookCtaLabel={meal.cookCta}
+                  pickReason={getRecipePickReason(recipe, {
+                    regionalCuisine,
+                    pantryIngredients,
+                    dietChoice,
+                    mealSlot: meal.slot,
+                  })}
+                  pantryMatchPercent={getPantryMatchPercent(recipe, pantryIngredients)}
+                  onShopMissing={openShopModal}
+                  onCookTonight={openCookTonight}
+                />
+              ))}
+            </View>
+          )}
 
-            <AdMobBanner placement="home" />
-
-            <View style={styles.quickFiltersSection}>
-              <View style={styles.quickFiltersHeader}>
-                <SlidersHorizontal size={16} color={colors.primary} />
-                <Text style={styles.quickFiltersTitle}>Quick filters</Text>
-              </View>
-
+          {!recipesLoading && !recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
+            <View
+              style={[
+                styles.noMatchCard,
+                { backgroundColor: themeColors.white, borderColor: themeColors.border },
+              ]}
+            >
+              <Text style={[styles.noMatchTitle, { color: themeColors.charcoal }]}>No recipes match</Text>
+              <Text style={[styles.noMatchSub, { color: themeColors.muted }]}>
+                No matches for your diet, region, or pantry settings. Update preferences in Settings
+                or browse dishes on the Recipe tab.
+              </Text>
               {pantryFilterActive && (
                 <Pressable
-                  onPress={() => {
-                    void Haptics.selectionAsync();
-                    setPantryFilterActive(false);
-                  }}
-                  style={styles.pantryBanner}
+                  onPress={() => setPantryFilterActive(false)}
+                  style={styles.noMatchBtn}
                 >
-                  <Text style={styles.pantryBannerTitle}>
-                    Pantry mode · {pantryIngredients.length} items
-                  </Text>
-                  <Text style={styles.pantryBannerSub}>Tap to show all recipes</Text>
+                  <Text style={styles.noMatchBtnText}>Show all recipes</Text>
                 </Pressable>
               )}
-
-              <View style={styles.filterChipRow}>
-                {QUICK_FILTERS.map(({ value, label, icon: Icon }) => {
-                  const isActive = activeFilter === value;
-                  return (
-                    <Pressable
-                      key={value}
-                      onPress={() => handleFilterToggle(value)}
-                      style={[styles.filterChip, isActive && styles.filterChipActive]}
-                    >
-                      <Icon size={14} color={isActive ? colors.white : colors.primary} />
-                      <Text style={[styles.filterText, isActive && styles.filterTextActive]}>
-                        {label}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
             </View>
+          )}
 
-            {!showAllRecipes && moreRecipes.length > 0 && (
-              <Pressable
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  setShowAllRecipes(true);
-                }}
-                style={styles.showAllBtn}
-              >
-                <Text style={styles.showAllBtnText}>
-                  View all {rankedRecipes.length} recipes
-                </Text>
-              </Pressable>
-            )}
-
-            {showAllRecipes && (
-              <View style={styles.listHeader}>
-                <Text style={styles.listTitle}>More ideas</Text>
-                <Text style={styles.listCount}>{moreRecipes.length} dishes</Text>
-              </View>
-            )}
-          </View>
-        }
-        renderItem={renderItem}
-        ListEmptyComponent={
-          recipesLoading ? (
-            <EmptyState
-              icon={Timer}
-              title="Loading recipes"
-              subtitle="Fetching tonight's dishes from Rasoi…"
-            />
-          ) : recipesError ? (
-            <View style={styles.errorBox}>
-              <EmptyState
-                icon={Timer}
-                title="Could not load recipes"
-                subtitle={recipesError}
-              />
-              <Pressable onPress={() => void refreshRecipes()} style={styles.retryBtn}>
-                <Text style={styles.retryBtnText}>Retry</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <EmptyState
-              icon={Timer}
-              title="No recipes match"
-              subtitle="Try changing diet, region, or pantry filters on Home."
-            />
-          )
-        }
-      />
+          <Pressable
+            onPress={() => router.push('/(tabs)/recipes')}
+            style={[
+              styles.browseCard,
+              { backgroundColor: themeColors.white, borderColor: themeColors.border },
+            ]}
+          >
+            <Text style={[styles.browseTitle, { color: themeColors.charcoal }]}>More ideas</Text>
+            <Text style={[styles.browseSub, { color: themeColors.muted }]}>
+              Browse {Math.max(rankedRecipes.length - 4, 0)} more dishes on the Recipe tab →
+            </Text>
+          </Pressable>
+        </View>
+      </ScrollViewWithFloatingIndicator>
 
       <AffiliateCheckoutModal
         visible={modalVisible}
@@ -455,18 +366,34 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.cream },
-  flex: { flex: 1 },
-  listContent: { paddingHorizontal: layout.screenPadding },
+  safe: { flex: 1 },
+  scrollContent: {
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: spacing.lg,
+  },
+  screenSections: {
+    gap: spacing.xxl,
+  },
   heroCard: {
-    marginTop: spacing.lg,
-    borderRadius: radius.md,
-    backgroundColor: colors.charcoal,
-    padding: spacing.md,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
-    overflow: 'hidden',
     ...shadows.card,
+  },
+  heroCardLateNight: {
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,53,0.45)',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.28,
+    shadowRadius: 14,
+    elevation: 8,
+  },
+  heroGradient: {
+    padding: spacing.lg,
   },
   heroMain: {
     flexDirection: 'row',
@@ -477,10 +404,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   heroImage: {
-    width: 72,
-    height: 72,
+    width: 80,
+    height: 80,
     borderRadius: radius.sm,
     backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
+  },
+  heroImageLateNight: {
+    width: 96,
+    height: 96,
+    borderRadius: radius.md,
+    borderColor: 'rgba(255,153,51,0.35)',
   },
   heroTopRow: {
     flexDirection: 'row',
@@ -493,6 +428,19 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.green,
   },
+  heroEyebrowPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  heroEyebrowPillLateNight: {
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(255,107,53,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,153,51,0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
   heroEyebrow: {
     fontSize: 10,
     fontWeight: '700',
@@ -500,12 +448,22 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textTransform: 'uppercase',
   },
+  heroEyebrowLateNight: {
+    fontSize: 11,
+    letterSpacing: 0.8,
+    color: colors.saffron,
+  },
   heroTitle: {
-    marginTop: 4,
-    fontSize: 17,
+    marginTop: spacing.sm,
+    fontSize: 18,
     fontWeight: '800',
-    lineHeight: 22,
+    lineHeight: 24,
     color: colors.white,
+  },
+  heroTitleLateNight: {
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: -0.2,
   },
   heroReason: {
     marginTop: 4,
@@ -520,12 +478,20 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
   cookTonightBtn: {
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
     alignSelf: 'flex-start',
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  cookTonightBtnLateNight: {
+    backgroundColor: colors.primary,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
   },
   cookTonightBtnText: {
     fontSize: 12,
@@ -539,8 +505,13 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.1)',
   },
   tonightCards: {
-    marginTop: spacing.lg,
+    gap: spacing.md,
+  },
+  tonightSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
   tonightSectionLabel: {
     fontSize: 12,
@@ -548,50 +519,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: 'uppercase',
     color: colors.muted,
-    marginBottom: spacing.xs,
-  },
-  quickFiltersSection: {
-    marginTop: spacing.lg,
-    borderRadius: radius.lg,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...shadows.card,
-  },
-  quickFiltersHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  quickFiltersTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.charcoal,
-  },
-  filterChipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  showAllBtn: {
-    marginTop: spacing.lg,
-    alignItems: 'center',
-    alignSelf: 'stretch',
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-    paddingVertical: spacing.md,
-  },
-  showAllBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.charcoal,
   },
   noMatchCard: {
-    marginTop: spacing.lg,
     padding: spacing.lg,
     borderRadius: radius.lg,
     backgroundColor: colors.white,
@@ -622,153 +551,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-  heroCta: {
-    marginTop: 12,
-    fontSize: 14,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  heroCtaGreen: {
-    marginTop: 12,
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.green,
-  },
-  heroCtaMuted: {
-    marginTop: 12,
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.55)',
-  },
-  pantryBanner: {
-    marginBottom: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(0,168,107,0.1)',
-    padding: 14,
-  },
-  pantryBannerTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.green,
-  },
-  pantryBannerSub: {
-    marginTop: 2,
-    fontSize: 12,
-    color: colors.muted,
-  },
-  sectionTitle: {
-    marginTop: spacing.xxl,
-    marginBottom: spacing.md,
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.charcoal,
-  },
-  dietRow: {
-    flexDirection: 'row',
-    gap: 6,
-    backgroundColor: colors.white,
-    borderRadius: radius.md,
-    padding: spacing.xs,
+  browseCard: {
+    padding: spacing.lg,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    ...shadows.card,
   },
-  dietChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    borderRadius: 12,
-    paddingVertical: 10,
-  },
-  dietChipActive: {
-    backgroundColor: colors.charcoal,
-  },
-  dietDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  dietChipText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: colors.muted,
-  },
-  dietChipTextActive: {
-    color: colors.white,
-  },
-  chipScroll: { gap: 8, paddingRight: 8 },
-  chip: {
-    borderRadius: 999,
-    backgroundColor: colors.white,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  chipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.charcoal,
-  },
-  chipTextActive: { color: colors.white },
-  filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.cream,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  filterChipActive: {
-    backgroundColor: colors.charcoal,
-    borderColor: colors.charcoal,
-  },
-  filterText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.charcoal,
-  },
-  filterTextActive: {
-    color: colors.white,
-  },
-  listHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 24,
-    marginBottom: 12,
-  },
-  listTitle: {
-    fontSize: 20,
+  browseTitle: {
+    fontSize: 18,
     fontWeight: '800',
-    color: colors.charcoal,
   },
-  listCount: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  errorBox: {
-    gap: spacing.md,
-  },
-  retryBtn: {
-    alignSelf: 'center',
-    borderRadius: radius.pill,
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-  },
-  retryBtnText: {
+  browseSub: {
+    marginTop: spacing.xs,
     fontSize: 14,
-    fontWeight: '800',
-    color: colors.white,
+    lineHeight: 20,
   },
 });

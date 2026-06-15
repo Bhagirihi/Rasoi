@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GROCERY_PARTNER_UI } from '@/constants/monetization';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 import { usePartners } from '@/context/PartnersContext';
 import type { AffiliatePartner } from '@/utils/affiliate';
 import { PAYWALL_HREF } from '@/utils/routes';
@@ -30,6 +31,7 @@ export default function MissingShopInline({
   const router = useRouter();
   const { showPartners } = useAppContext();
   const { groceryPartners } = usePartners();
+  const { colors: themeColors } = useTheme();
 
   if (missing.length === 0) {
     return null;
@@ -65,7 +67,10 @@ export default function MissingShopInline({
     <View
       style={[
         styles.wrap,
-        isFooter && styles.wrapFooter,
+        isFooter && [
+          styles.wrapFooter,
+          { backgroundColor: themeColors.white, borderTopColor: themeColors.border },
+        ],
         isHero && styles.wrapHero,
       ]}
     >
@@ -77,11 +82,11 @@ export default function MissingShopInline({
           </Text>
         </View>
         <View style={styles.summaryCopy}>
-          <Text style={[styles.summaryTitle, isHero && styles.summaryTitleHero]}>
+          <Text style={[styles.summaryTitle, isHero && styles.summaryTitleHero, !isHero && { color: themeColors.charcoal }]}>
             {missing.length === 1 ? 'Item missing' : 'Items missing'}
           </Text>
           <Text
-            style={[styles.summarySub, isHero && styles.summarySubHero]}
+            style={[styles.summarySub, isHero && styles.summarySubHero, !isHero && { color: themeColors.muted }]}
             numberOfLines={1}
           >
             {ingredientPreview}
@@ -104,6 +109,7 @@ export default function MissingShopInline({
               style={[
                 styles.partnerChip,
                 isHero && styles.partnerChipHero,
+                !isHero && { backgroundColor: themeColors.white, borderColor: themeColors.border },
                 { borderColor: `${ui.accent}55` },
               ]}
             >
@@ -112,13 +118,14 @@ export default function MissingShopInline({
                 style={[
                   styles.partnerLabel,
                   isHero && styles.partnerLabelHero,
+                  !isHero && { color: themeColors.charcoal },
                   id === 'blinkit' && !isHero && styles.partnerLabelDark,
                 ]}
                 numberOfLines={1}
               >
                 {label}
               </Text>
-              <Text style={[styles.partnerEta, isHero && styles.partnerEtaHero]} numberOfLines={1}>
+              <Text style={[styles.partnerEta, isHero && styles.partnerEtaHero, !isHero && { color: themeColors.muted }]} numberOfLines={1}>
                 {delivery.replace('~', '')}
               </Text>
             </Pressable>
@@ -137,8 +144,6 @@ const styles = StyleSheet.create({
   wrapFooter: {
     marginTop: 0,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.cream,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
