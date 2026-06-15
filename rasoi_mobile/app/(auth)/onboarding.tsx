@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CuisinePreferenceList from '@/components/CuisinePreferenceList';
 import DietPreferenceList from '@/components/DietPreferenceList';
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   CuisineId,
@@ -121,7 +122,7 @@ export default function OnboardingScreen() {
       });
 
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(auth)/login');
+      router.replace('/(auth)/register');
     } catch {
       finishingRef.current = false;
       throw new Error('Could not save onboarding. Please try again.');
@@ -131,6 +132,11 @@ export default function OnboardingScreen() {
   if (step === 'notifications') {
     return (
       <View style={styles.darkRoot}>
+        <AppSavingOverlay
+          visible={isSubmitting}
+          message="Setting up your Rasoi…"
+          subtitle="Saving tastes and reminders"
+        />
         <LinearGradient
           colors={['#0A0908', '#0F1210', '#0A0908']}
           style={StyleSheet.absoluteFillObject}

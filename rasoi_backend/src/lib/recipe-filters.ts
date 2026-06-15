@@ -99,6 +99,7 @@ export interface UserFilterParams {
   region?: string;
   memberType?: string;
   plan?: string;
+  accountStatus?: string;
 }
 
 export function buildUserWhere(params: UserFilterParams): Prisma.UserWhereInput {
@@ -124,6 +125,13 @@ export function buildUserWhere(params: UserFilterParams): Prisma.UserWhereInput 
   const plan = params.plan?.trim();
   if (plan && plan !== 'all') {
     where.planTier = plan;
+  }
+
+  const accountStatus = params.accountStatus?.trim();
+  if (accountStatus === 'active') {
+    where.isActive = true;
+  } else if (accountStatus === 'inactive') {
+    where.isActive = false;
   }
 
   return where;

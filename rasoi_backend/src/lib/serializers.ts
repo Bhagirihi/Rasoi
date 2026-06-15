@@ -71,6 +71,7 @@ export function serializeUser(user: User): UserProfileResponse {
     phone: user.phone,
     name: user.name,
     isGuest: user.isGuest,
+    isActive: user.isActive ?? true,
     hasCompletedOnboarding: user.hasCompletedOnboarding,
     dietPreference: user.dietPreference as DietType,
     dietChoice: user.dietChoice as DietChoice,

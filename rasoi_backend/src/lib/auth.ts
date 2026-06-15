@@ -48,7 +48,9 @@ export async function getUserFromRequest(request: NextRequest) {
   const payload = await verifyToken(token);
   if (!payload || payload.type !== 'user') return null;
 
-  return prisma.user.findUnique({ where: { id: payload.sub } });
+  const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+  if (!user || !user.isActive) return null;
+  return user;
 }
 
 export async function getAdminFromRequest(request: NextRequest) {

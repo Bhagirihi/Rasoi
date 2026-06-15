@@ -4,10 +4,12 @@ import { ShoppingBag, Sparkles, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { REVENUE_DISCLOSURE } from '@/constants/monetization';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
@@ -37,6 +39,7 @@ export default function AffiliateCheckoutModal({
   const [loading, setLoading] = useState<AffiliatePartner | null>(null);
   const { partnersInTrialMode } = useAppContext();
   const { groceryPartners, openGroceryCheckout } = usePartners();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     if (!visible) setLoading(null);
@@ -90,7 +93,17 @@ export default function AffiliateCheckoutModal({
             )}
           </LinearGradient>
 
-          <View style={styles.body}>
+          <ScrollView
+            style={styles.bodyScroll}
+            contentContainerStyle={[
+              styles.body,
+              { paddingBottom: insets.bottom + spacing.lg },
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces
+            nestedScrollEnabled
+            keyboardShouldPersistTaps="handled"
+          >
             {partnersInTrialMode && <TrialPartnerBanner />}
 
             {missingIngredients.length > 0 && (
@@ -144,7 +157,7 @@ export default function AffiliateCheckoutModal({
             ))}
 
             <Text style={styles.disclosure}>{REVENUE_DISCLOSURE}</Text>
-          </View>
+          </ScrollView>
         </View>
     </SmoothModal>
   );
@@ -156,11 +169,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.xl + 4,
     overflow: 'hidden',
     backgroundColor: colors.cream,
-    maxHeight: '88%',
+    maxHeight: '90%',
+    flexDirection: 'column',
   },
   sheetHero: {
     paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.xl,
+    paddingBottom: spacing.lg,
     paddingTop: spacing.sm,
   },
   handle: {
@@ -196,7 +210,7 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     marginTop: spacing.md,
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
     color: colors.white,
   },
@@ -222,10 +236,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: 'rgba(255,255,255,0.9)',
   },
+  bodyScroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
   body: {
     paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.xxxl,
+    paddingTop: spacing.lg,
   },
   pickLabel: {
     fontSize: 13,
@@ -239,7 +256,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   missingChip: {
     flexDirection: 'row',
@@ -266,9 +283,9 @@ const styles = StyleSheet.create({
   },
   partnerBtn: {
     borderRadius: radius.md,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
     alignItems: 'center',
     ...shadows.cardLifted,
   },
@@ -282,7 +299,7 @@ const styles = StyleSheet.create({
     opacity: 0.45,
   },
   partnerBtnLabel: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: '800',
   },
   partnerBtnSub: {

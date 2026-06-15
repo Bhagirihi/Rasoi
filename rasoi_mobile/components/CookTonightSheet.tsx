@@ -6,6 +6,8 @@ import SmoothModal from '@/components/ui/SmoothModal';
 import type { Recipe } from '@/data/mockRecipes';
 import { colors, radius, spacing } from '@/constants/theme';
 
+const LOW_PANTRY_MATCH_THRESHOLD = 60;
+
 type CookTonightSheetProps = {
   visible: boolean;
   recipe: Recipe | null;
@@ -32,6 +34,63 @@ export default function CookTonightSheet({
   onShopMissing,
 }: CookTonightSheetProps) {
   if (!recipe) return null;
+
+  const canShop = missing.length > 0 && showShop && Boolean(onShopMissing);
+  const prioritizeShop = pantryMatchPercent < LOW_PANTRY_MATCH_THRESHOLD && canShop;
+
+  const startCookingButton = (
+    <Pressable
+      key="cook"
+      onPress={onStartCooking}
+      style={prioritizeShop ? styles.secondaryBtn : styles.primaryWrap}
+    >
+      {prioritizeShop ? (
+        <>
+          <ChefHat size={16} color={colors.primary} />
+          <Text style={styles.secondaryText}>Start cooking</Text>
+        </>
+      ) : (
+        <LinearGradient
+          colors={[colors.primary, colors.saffron]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.primaryBtn}
+        >
+          <ChefHat size={18} color={colors.white} />
+          <Text style={styles.primaryText}>Start cooking</Text>
+        </LinearGradient>
+      )}
+    </Pressable>
+  );
+
+  const shopButton = canShop ? (
+    <Pressable
+      key="shop"
+      onPress={onShopMissing}
+      style={prioritizeShop ? styles.primaryWrap : styles.secondaryBtn}
+    >
+      {prioritizeShop ? (
+        <LinearGradient
+          colors={[colors.primary, colors.saffron]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={styles.primaryBtn}
+        >
+          <ShoppingCart size={18} color={colors.white} />
+          <Text style={styles.primaryText}>Shop missing items</Text>
+        </LinearGradient>
+      ) : (
+        <>
+          <ShoppingCart size={16} color={colors.primary} />
+          <Text style={styles.secondaryText}>Shop missing items</Text>
+        </>
+      )}
+    </Pressable>
+  ) : null;
+
+  const actionButtons = prioritizeShop
+    ? [shopButton, startCookingButton]
+    : [startCookingButton, shopButton];
 
   return (
     <SmoothModal visible={visible} onClose={onClose} variant="sheet">
@@ -62,24 +121,7 @@ export default function CookTonightSheet({
           </View>
         )}
 
-        <Pressable onPress={onStartCooking} style={styles.primaryWrap}>
-          <LinearGradient
-            colors={[colors.primary, colors.saffron]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.primaryBtn}
-          >
-            <ChefHat size={18} color={colors.white} />
-            <Text style={styles.primaryText}>Start cooking</Text>
-          </LinearGradient>
-        </Pressable>
-
-        {missing.length > 0 && showShop && onShopMissing && (
-          <Pressable onPress={onShopMissing} style={styles.secondaryBtn}>
-            <ShoppingCart size={16} color={colors.primary} />
-            <Text style={styles.secondaryText}>Shop missing items</Text>
-          </Pressable>
-        )}
+        <View style={styles.actions}>{actionButtons}</View>
       </View>
     </SmoothModal>
   );
@@ -149,8 +191,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.green,
   },
-  primaryWrap: {
+  actions: {
     marginTop: spacing.xl,
+    gap: spacing.md,
+  },
+  primaryWrap: {
     borderRadius: radius.md,
     overflow: 'hidden',
   },
@@ -167,7 +212,6 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
   secondaryBtn: {
-    marginTop: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

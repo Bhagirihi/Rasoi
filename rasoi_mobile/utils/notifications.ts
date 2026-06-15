@@ -1,6 +1,9 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+
+const LAST_HANDLED_NOTIFICATION_KEY = '@rasoi/last_handled_notification_response';
 
 const REMINDER_THANK_YOU_ID = 'rasoi-reminder-thank-you';
 
@@ -60,6 +63,58 @@ export type MealPushData = {
   actions?: { cook?: string; more?: string; save?: string };
 };
 
+export type NotificationNavigationTarget =
+  | { type: 'recipe'; recipeId: string; cook?: boolean; save?: boolean }
+  | { type: 'recipes_tab' };
+
+function responseFingerprint(response: Notifications.NotificationResponse): string {
+  const { notification, actionIdentifier } = response;
+  return `${notification.request.identifier}:${actionIdentifier}:${notification.date}`;
+}
+
+export async function markNotificationResponseHandled(
+  response: Notifications.NotificationResponse,
+): Promise<void> {
+  await AsyncStorage.setItem(LAST_HANDLED_NOTIFICATION_KEY, responseFingerprint(response));
+}
+
+export async function isNewNotificationResponse(
+  response: Notifications.NotificationResponse,
+): Promise<boolean> {
+  const last = await AsyncStorage.getItem(LAST_HANDLED_NOTIFICATION_KEY);
+  return last !== responseFingerprint(response);
+}
+
+export function getNavigationFromNotificationResponse(
+  response: Notifications.NotificationResponse,
+): NotificationNavigationTarget | null {
+  const data = response.notification.request.content.data as MealPushData | undefined;
+  const actionId = response.actionIdentifier;
+
+  if (data?.type === 'daily_reminder') {
+    return { type: 'recipes_tab' };
+  }
+
+  if (data?.type === 'admin_message') {
+    return { type: 'recipes_tab' };
+  }
+
+  if (data?.type === 'meal_pick' && data.recipeId) {
+    if (actionId === 'cook') {
+      return { type: 'recipe', recipeId: data.recipeId, cook: true };
+    }
+    if (actionId === 'save') {
+      return { type: 'recipe', recipeId: data.recipeId, save: true };
+    }
+    if (actionId === 'more') {
+      return { type: 'recipes_tab' };
+    }
+    return { type: 'recipe', recipeId: data.recipeId };
+  }
+
+  return null;
+}
+
 export async function setupRemoteMealNotifications(): Promise<void> {
   if (Platform.OS === 'web') return;
 
@@ -108,6 +163,7 @@ export async function scheduleDailyReminder(): Promise<boolean> {
           title: slot.title,
           body: slot.body,
           sound: true,
+          data: { type: 'daily_reminder' },
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,

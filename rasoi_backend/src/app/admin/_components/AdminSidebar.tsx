@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import { useToast } from '@/app/admin/_components/Toast';
 
-const navItems = [
+export const adminNavItems = [
   { href: '/admin', label: 'Overview', exact: true },
   { href: '/admin/recipes', label: 'Recipes' },
   { href: '/admin/sponsors', label: 'Sponsors' },
@@ -14,30 +14,48 @@ const navItems = [
   { href: '/admin/partners', label: 'Partner links' },
   { href: '/admin/kitchen-styles', label: 'Kitchen styles' },
   { href: '/admin/users', label: 'Users' },
-];
+] as const;
 
-export default function AdminSidebar({
+export function AdminSidebarNav({
   adminName,
   logoutAction,
+  onNavigate,
+  showCollapse,
+  onCollapse,
 }: {
   adminName: string;
   logoutAction: () => Promise<void>;
+  onNavigate?: () => void;
+  showCollapse?: boolean;
+  onCollapse?: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const toast = useToast();
 
   return (
-    <aside className="admin-sidebar-grain flex w-full shrink-0 flex-col border-b border-[#2a2218] text-admin-cream lg:w-[17.5rem] lg:border-b-0 lg:border-r">
+    <>
       <div className="border-b border-[#2a2218] px-6 py-8">
-        <div className="flex items-center gap-3">
-          <RasoiLogo size="md" />
-          <div>
-            <p className="font-display text-2xl font-semibold tracking-tight">Rasoi</p>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-admin-sidebar-muted">
-              Admin Studio
-            </p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <RasoiLogo size="md" />
+            <div>
+              <p className="font-display text-2xl font-semibold tracking-tight">Rasoi</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-admin-sidebar-muted">
+                Admin Studio
+              </p>
+            </div>
           </div>
+          {showCollapse && onCollapse && (
+            <button
+              type="button"
+              onClick={onCollapse}
+              aria-label="Collapse sidebar"
+              className="rounded-full border border-[#3a312a] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-[#d8d0c6] transition hover:border-admin-gold/40 hover:text-admin-gold-soft"
+            >
+              Hide
+            </button>
+          )}
         </div>
       </div>
 
@@ -46,15 +64,17 @@ export default function AdminSidebar({
           Manage
         </p>
         <ul className="mt-4 space-y-1">
-          {navItems.map((item) => {
-            const active = item.exact
-              ? pathname === item.href
-              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+          {adminNavItems.map((item) => {
+            const active =
+              'exact' in item && item.exact
+                ? pathname === item.href
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
             return (
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={onNavigate}
                   className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                     active
                       ? 'border border-admin-gold/30 bg-[#221c18] text-admin-gold-soft'
@@ -93,6 +113,27 @@ export default function AdminSidebar({
           </button>
         </form>
       </div>
+    </>
+  );
+}
+
+export default function AdminSidebar({
+  adminName,
+  logoutAction,
+  onCollapse,
+}: {
+  adminName: string;
+  logoutAction: () => Promise<void>;
+  onCollapse?: () => void;
+}) {
+  return (
+    <aside className="admin-sidebar-grain flex h-full w-[17.5rem] shrink-0 flex-col border-r border-[#2a2218] text-admin-cream">
+      <AdminSidebarNav
+        adminName={adminName}
+        logoutAction={logoutAction}
+        showCollapse={Boolean(onCollapse)}
+        onCollapse={onCollapse}
+      />
     </aside>
   );
 }

@@ -12,11 +12,13 @@ export const testIds = {
   screenSaved: 'screen-saved',
   screenSettings: 'screen-settings',
   screenLogin: 'screen-login',
+  screenRegister: 'screen-register',
   screenOnboarding: 'screen-onboarding',
   screenRecipe: 'screen-recipe',
 
   loginGuest: 'login-guest',
   loginSendOtp: 'login-send-otp',
+  registerSendOtp: 'register-send-otp',
 
   onboardingDietVeg: 'onboarding-diet-veg',
   onboardingDietContinue: 'onboarding-diet-continue',

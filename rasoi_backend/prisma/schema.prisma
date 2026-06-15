@@ -23,6 +23,7 @@ model User {
   name                   String
   isGuest                Boolean   @default(false)
   role                   UserRole  @default(USER)
+  isActive               Boolean   @default(true)
   hasCompletedOnboarding Boolean   @default(false)
   dietPreference         String    @default("Veg")
   dietChoice             String    @default("Veg")

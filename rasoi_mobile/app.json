@@ -54,7 +54,7 @@
       [
         "@sentry/react-native/expo",
         {
-          "organization": "rasoi",
+          "organization": "rasoi-app",
           "project": "rasoi-mobile"
         }
       ]

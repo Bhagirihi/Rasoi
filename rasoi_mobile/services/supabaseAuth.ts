@@ -54,6 +54,36 @@ export async function sendEmailOtp(name: string, phone: string, email: string): 
   });
 }
 
+export async function sendLoginEmailOtp(email: string): Promise<void> {
+  const normalizedEmail = email.trim().toLowerCase();
+  authLog('sendLoginEmailOtp:start', { email: maskEmail(normalizedEmail) });
+
+  const supabase = requireSupabaseClient();
+  const { error } = await supabase.auth.signInWithOtp({
+    email: normalizedEmail,
+    options: {
+      shouldCreateUser: false,
+    },
+  });
+
+  if (error) {
+    authError('sendLoginEmailOtp:supabase_error', error, {
+      email: maskEmail(normalizedEmail),
+      status: error.status,
+      code: error.code,
+    });
+    if (error.message.toLowerCase().includes('signups not allowed')) {
+      throw new Error('No account found for this email. Create an account first.');
+    }
+    if (error.message.toLowerCase().includes('rate limit')) {
+      throw new Error('Too many attempts. Wait a minute and try again.');
+    }
+    throw new Error(error.message || 'Could not send verification code. Try again.');
+  }
+
+  authLog('sendLoginEmailOtp:success', { email: maskEmail(normalizedEmail) });
+}
+
 export async function verifyEmailOtp(email: string, otp: string): Promise<Session> {
   const normalizedEmail = email.trim().toLowerCase();
   const token = otp.replace(/\D/g, '').trim();

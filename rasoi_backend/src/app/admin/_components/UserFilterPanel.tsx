@@ -64,6 +64,16 @@ export default function UserFilterPanel() {
           ]}
         />
       </div>
+
+      <FilterChipBar
+        param="accountStatus"
+        label="Account status"
+        options={[
+          { value: 'all', label: 'All statuses' },
+          { value: 'active', label: 'Active' },
+          { value: 'inactive', label: 'Deactivated' },
+        ]}
+      />
     </div>
   );
 }

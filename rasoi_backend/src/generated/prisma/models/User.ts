@@ -31,6 +31,7 @@ export type UserMinAggregateOutputType = {
   name: string | null
   isGuest: boolean | null
   role: $Enums.UserRole | null
+  isActive: boolean | null
   hasCompletedOnboarding: boolean | null
   dietPreference: string | null
   dietChoice: string | null
@@ -54,6 +55,7 @@ export type UserMaxAggregateOutputType = {
   name: string | null
   isGuest: boolean | null
   role: $Enums.UserRole | null
+  isActive: boolean | null
   hasCompletedOnboarding: boolean | null
   dietPreference: string | null
   dietChoice: string | null
@@ -77,6 +79,7 @@ export type UserCountAggregateOutputType = {
   name: number
   isGuest: number
   role: number
+  isActive: number
   hasCompletedOnboarding: number
   dietPreference: number
   dietChoice: number
@@ -102,6 +105,7 @@ export type UserMinAggregateInputType = {
   name?: true
   isGuest?: true
   role?: true
+  isActive?: true
   hasCompletedOnboarding?: true
   dietPreference?: true
   dietChoice?: true
@@ -125,6 +129,7 @@ export type UserMaxAggregateInputType = {
   name?: true
   isGuest?: true
   role?: true
+  isActive?: true
   hasCompletedOnboarding?: true
   dietPreference?: true
   dietChoice?: true
@@ -148,6 +153,7 @@ export type UserCountAggregateInputType = {
   name?: true
   isGuest?: true
   role?: true
+  isActive?: true
   hasCompletedOnboarding?: true
   dietPreference?: true
   dietChoice?: true
@@ -244,6 +250,7 @@ export type UserGroupByOutputType = {
   name: string
   isGuest: boolean
   role: $Enums.UserRole
+  isActive: boolean
   hasCompletedOnboarding: boolean
   dietPreference: string
   dietChoice: string
@@ -288,6 +295,7 @@ export type UserWhereInput = {
   name?: Prisma.StringFilter<"User"> | string
   isGuest?: Prisma.BoolFilter<"User"> | boolean
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  isActive?: Prisma.BoolFilter<"User"> | boolean
   hasCompletedOnboarding?: Prisma.BoolFilter<"User"> | boolean
   dietPreference?: Prisma.StringFilter<"User"> | string
   dietChoice?: Prisma.StringFilter<"User"> | string
@@ -314,6 +322,7 @@ export type UserOrderByWithRelationInput = {
   name?: Prisma.SortOrder
   isGuest?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   hasCompletedOnboarding?: Prisma.SortOrder
   dietPreference?: Prisma.SortOrder
   dietChoice?: Prisma.SortOrder
@@ -343,6 +352,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   name?: Prisma.StringFilter<"User"> | string
   isGuest?: Prisma.BoolFilter<"User"> | boolean
   role?: Prisma.EnumUserRoleFilter<"User"> | $Enums.UserRole
+  isActive?: Prisma.BoolFilter<"User"> | boolean
   hasCompletedOnboarding?: Prisma.BoolFilter<"User"> | boolean
   dietPreference?: Prisma.StringFilter<"User"> | string
   dietChoice?: Prisma.StringFilter<"User"> | string
@@ -369,6 +379,7 @@ export type UserOrderByWithAggregationInput = {
   name?: Prisma.SortOrder
   isGuest?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   hasCompletedOnboarding?: Prisma.SortOrder
   dietPreference?: Prisma.SortOrder
   dietChoice?: Prisma.SortOrder
@@ -398,6 +409,7 @@ export type UserScalarWhereWithAggregatesInput = {
   name?: Prisma.StringWithAggregatesFilter<"User"> | string
   isGuest?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   role?: Prisma.EnumUserRoleWithAggregatesFilter<"User"> | $Enums.UserRole
+  isActive?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   hasCompletedOnboarding?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   dietPreference?: Prisma.StringWithAggregatesFilter<"User"> | string
   dietChoice?: Prisma.StringWithAggregatesFilter<"User"> | string
@@ -421,6 +433,7 @@ export type UserCreateInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -447,6 +460,7 @@ export type UserUncheckedCreateInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -473,6 +487,7 @@ export type UserUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -499,6 +514,7 @@ export type UserUncheckedUpdateInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -525,6 +541,7 @@ export type UserCreateManyInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -548,6 +565,7 @@ export type UserUpdateManyMutationInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -571,6 +589,7 @@ export type UserUncheckedUpdateManyInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -594,6 +613,7 @@ export type UserCountOrderByAggregateInput = {
   name?: Prisma.SortOrder
   isGuest?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   hasCompletedOnboarding?: Prisma.SortOrder
   dietPreference?: Prisma.SortOrder
   dietChoice?: Prisma.SortOrder
@@ -617,6 +637,7 @@ export type UserMaxOrderByAggregateInput = {
   name?: Prisma.SortOrder
   isGuest?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   hasCompletedOnboarding?: Prisma.SortOrder
   dietPreference?: Prisma.SortOrder
   dietChoice?: Prisma.SortOrder
@@ -640,6 +661,7 @@ export type UserMinOrderByAggregateInput = {
   name?: Prisma.SortOrder
   isGuest?: Prisma.SortOrder
   role?: Prisma.SortOrder
+  isActive?: Prisma.SortOrder
   hasCompletedOnboarding?: Prisma.SortOrder
   dietPreference?: Prisma.SortOrder
   dietChoice?: Prisma.SortOrder
@@ -741,6 +763,7 @@ export type UserCreateWithoutMealNotificationLogsInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -766,6 +789,7 @@ export type UserUncheckedCreateWithoutMealNotificationLogsInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -807,6 +831,7 @@ export type UserUpdateWithoutMealNotificationLogsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -832,6 +857,7 @@ export type UserUncheckedUpdateWithoutMealNotificationLogsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -857,6 +883,7 @@ export type UserCreateWithoutAffiliateEventsInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -882,6 +909,7 @@ export type UserUncheckedCreateWithoutAffiliateEventsInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -923,6 +951,7 @@ export type UserUpdateWithoutAffiliateEventsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -948,6 +977,7 @@ export type UserUncheckedUpdateWithoutAffiliateEventsInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -973,6 +1003,7 @@ export type UserCreateWithoutPushTokensInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -998,6 +1029,7 @@ export type UserUncheckedCreateWithoutPushTokensInput = {
   name: string
   isGuest?: boolean
   role?: $Enums.UserRole
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: string
   dietChoice?: string
@@ -1039,6 +1071,7 @@ export type UserUpdateWithoutPushTokensInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1064,6 +1097,7 @@ export type UserUncheckedUpdateWithoutPushTokensInput = {
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
   role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
   dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
   dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1138,6 +1172,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   name?: boolean
   isGuest?: boolean
   role?: boolean
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: boolean
   dietChoice?: boolean
@@ -1165,6 +1200,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   isGuest?: boolean
   role?: boolean
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: boolean
   dietChoice?: boolean
@@ -1188,6 +1224,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   name?: boolean
   isGuest?: boolean
   role?: boolean
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: boolean
   dietChoice?: boolean
@@ -1211,6 +1248,7 @@ export type UserSelectScalar = {
   name?: boolean
   isGuest?: boolean
   role?: boolean
+  isActive?: boolean
   hasCompletedOnboarding?: boolean
   dietPreference?: boolean
   dietChoice?: boolean
@@ -1227,7 +1265,7 @@ export type UserSelectScalar = {
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "phone" | "name" | "isGuest" | "role" | "hasCompletedOnboarding" | "dietPreference" | "dietChoice" | "regionalCuisine" | "favoriteCuisines" | "notificationsEnabled" | "timezone" | "pantryIngredients" | "savedRecipeIds" | "planTier" | "trialStartedAt" | "hasUsedTrial" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "phone" | "name" | "isGuest" | "role" | "isActive" | "hasCompletedOnboarding" | "dietPreference" | "dietChoice" | "regionalCuisine" | "favoriteCuisines" | "notificationsEnabled" | "timezone" | "pantryIngredients" | "savedRecipeIds" | "planTier" | "trialStartedAt" | "hasUsedTrial" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   affiliateEvents?: boolean | Prisma.User$affiliateEventsArgs<ExtArgs>
@@ -1251,6 +1289,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     name: string
     isGuest: boolean
     role: $Enums.UserRole
+    isActive: boolean
     hasCompletedOnboarding: boolean
     dietPreference: string
     dietChoice: string
@@ -1697,6 +1736,7 @@ export interface UserFieldRefs {
   readonly name: Prisma.FieldRef<"User", 'String'>
   readonly isGuest: Prisma.FieldRef<"User", 'Boolean'>
   readonly role: Prisma.FieldRef<"User", 'UserRole'>
+  readonly isActive: Prisma.FieldRef<"User", 'Boolean'>
   readonly hasCompletedOnboarding: Prisma.FieldRef<"User", 'Boolean'>
   readonly dietPreference: Prisma.FieldRef<"User", 'String'>
   readonly dietChoice: Prisma.FieldRef<"User", 'String'>

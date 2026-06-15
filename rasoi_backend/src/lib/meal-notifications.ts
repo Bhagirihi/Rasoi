@@ -25,7 +25,17 @@ export interface MealNotificationRunOptions {
   userId?: string;
   dryRun?: boolean;
   toleranceMinutes?: number;
+  /** Admin manual send — still requires an active push token. */
+  adminOverride?: boolean;
+  /** Admin manual send — allow re-sending the same meal slot today. */
+  skipDedup?: boolean;
 }
+
+export type UserNotificationEligibility = {
+  eligible: boolean;
+  reasons: string[];
+  pushTokenCount: number;
+};
 
 export interface MealNotificationRunResult {
   ok: boolean;
@@ -59,12 +69,52 @@ async function loadPublishedRecipes(): Promise<RecipeResponse[]> {
   return rows.map(serializeRecipe);
 }
 
-async function loadEligibleUsers(userId?: string): Promise<UserWithTokens[]> {
+export async function getUserNotificationEligibility(
+  userId: string,
+): Promise<UserNotificationEligibility> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      isGuest: true,
+      isActive: true,
+      hasCompletedOnboarding: true,
+      notificationsEnabled: true,
+      pushTokens: { where: { active: true }, select: { id: true } },
+    },
+  });
+
+  if (!user) {
+    return { eligible: false, reasons: ['User not found'], pushTokenCount: 0 };
+  }
+
+  const reasons: string[] = [];
+  if (user.isGuest) reasons.push('Guest account');
+  if (!user.isActive) reasons.push('Account deactivated');
+  if (!user.hasCompletedOnboarding) reasons.push('Onboarding incomplete');
+  if (!user.notificationsEnabled) reasons.push('Notifications disabled');
+  if (user.pushTokens.length === 0) reasons.push('No active push token');
+
+  return {
+    eligible: reasons.length === 0,
+    reasons,
+    pushTokenCount: user.pushTokens.length,
+  };
+}
+
+async function loadEligibleUsers(
+  userId?: string,
+  adminOverride?: boolean,
+): Promise<UserWithTokens[]> {
   return prisma.user.findMany({
     where: {
-      notificationsEnabled: true,
-      isGuest: false,
-      hasCompletedOnboarding: true,
+      ...(adminOverride
+        ? {}
+        : {
+            isActive: true,
+            notificationsEnabled: true,
+            isGuest: false,
+            hasCompletedOnboarding: true,
+          }),
       ...(userId ? { id: userId } : {}),
       pushTokens: { some: { active: true } },
     },
@@ -143,8 +193,10 @@ export async function runMealNotifications(
     samples: [],
   };
 
+  const skipDedup = options.skipDedup ?? false;
+
   const [users, recipes] = await Promise.all([
-    loadEligibleUsers(options.userId),
+    loadEligibleUsers(options.userId, options.adminOverride),
     loadPublishedRecipes(),
   ]);
 
@@ -180,19 +232,21 @@ export async function runMealNotifications(
     for (const mealSlot of slotsDue) {
       slotSet.add(mealSlot);
 
-      const existing = await prisma.mealNotificationLog.findUnique({
-        where: {
-          userId_mealSlot_dayKey: {
-            userId: user.id,
-            mealSlot,
-            dayKey,
+      if (!skipDedup) {
+        const existing = await prisma.mealNotificationLog.findUnique({
+          where: {
+            userId_mealSlot_dayKey: {
+              userId: user.id,
+              mealSlot,
+              dayKey,
+            },
           },
-        },
-      });
+        });
 
-      if (existing) {
-        result.skippedAlreadySent += 1;
-        continue;
+        if (existing) {
+          result.skippedAlreadySent += 1;
+          continue;
+        }
       }
 
       const sentTodayIds = await getSentRecipeIdsToday(user.id, mealSlot, dayKey);
@@ -240,11 +294,21 @@ export async function runMealNotifications(
         continue;
       }
 
-      await prisma.mealNotificationLog.create({
-        data: {
+      await prisma.mealNotificationLog.upsert({
+        where: {
+          userId_mealSlot_dayKey: {
+            userId: user.id,
+            mealSlot,
+            dayKey,
+          },
+        },
+        create: {
           userId: user.id,
           mealSlot,
           dayKey,
+          recipeId: recipe.id,
+        },
+        update: {
           recipeId: recipe.id,
         },
       });

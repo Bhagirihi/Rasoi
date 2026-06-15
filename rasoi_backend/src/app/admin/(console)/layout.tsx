@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'Manage recipes, sponsors, partner links, and members.',
 };
 
-import AdminSidebar from '@/app/admin/_components/AdminSidebar';
+import AdminConsoleShell from '@/app/admin/_components/AdminConsoleShell';
 import RealtimeRefresh from '@/app/admin/_components/RealtimeRefresh';
 import { clearAdminToken } from '@/app/admin/actions';
 import { getAdminFromCookies } from '@/lib/auth';
@@ -24,12 +24,9 @@ export default async function AdminConsoleLayout({
   return (
     <div className="admin-grain min-h-screen">
       <RealtimeRefresh />
-      <div className="flex min-h-screen flex-col lg:flex-row">
-        <AdminSidebar adminName={admin.name} logoutAction={clearAdminToken} />
-        <div className="flex-1 overflow-auto">
-          <main className="mx-auto max-w-6xl px-5 py-8 sm:px-6 lg:px-10 lg:py-10">{children}</main>
-        </div>
-      </div>
+      <AdminConsoleShell adminName={admin.name} logoutAction={clearAdminToken}>
+        {children}
+      </AdminConsoleShell>
     </div>
   );
 }

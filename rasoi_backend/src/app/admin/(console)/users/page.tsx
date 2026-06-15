@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 
-import { DataTable } from '@/app/admin/_components/DataTable';
 import UserFilterPanel from '@/app/admin/_components/UserFilterPanel';
-import { Badge, PageHeader } from '@/app/admin/_components/ui';
+import UsersManagementClient from '@/app/admin/_components/UsersManagementClient';
+import type { AdminUserRow } from '@/app/admin/_components/admin-users-types';
+import { PageHeader } from '@/app/admin/_components/ui';
 import { buildUserWhere, DIET_CHOICE_LABELS, type DietChoice } from '@/lib/recipe-filters';
 import { prisma } from '@/lib/prisma';
 import { serializeUser } from '@/lib/serializers';
@@ -16,6 +17,55 @@ function param(value: string | string[] | undefined): string | undefined {
   return value;
 }
 
+function toAdminUserRow(
+  user: Awaited<ReturnType<typeof loadUsers>>[number],
+): AdminUserRow {
+  const serialized = serializeUser(user);
+  const dietLabel =
+    DIET_CHOICE_LABELS[serialized.dietChoice as DietChoice] ?? serialized.dietChoice;
+  const pushTokenCount = user._count.pushTokens;
+  const ineligibleReasons: string[] = [];
+
+  if (serialized.isGuest) ineligibleReasons.push('Guest account');
+  if (!serialized.isActive) ineligibleReasons.push('Account deactivated');
+  if (!serialized.hasCompletedOnboarding) ineligibleReasons.push('Onboarding incomplete');
+  if (!serialized.notificationsEnabled) ineligibleReasons.push('Notifications disabled');
+  if (pushTokenCount === 0) ineligibleReasons.push('No active push token');
+
+  return {
+    id: serialized.id,
+    name: serialized.name,
+    email: serialized.email,
+    phone: serialized.phone,
+    dietLabel,
+    regionalCuisine: serialized.regionalCuisine,
+    favoriteCuisines: serialized.favoriteCuisines,
+    isGuest: serialized.isGuest,
+    isActive: serialized.isActive,
+    planTier: serialized.plan.planTier,
+    hasCompletedOnboarding: serialized.hasCompletedOnboarding,
+    notificationsEnabled: serialized.notificationsEnabled,
+    pushTokenCount,
+    timezone: user.timezone || 'Asia/Kolkata',
+    ineligibleReasons,
+  };
+}
+
+async function loadUsers(where: ReturnType<typeof buildUserWhere>) {
+  return prisma.user.findMany({
+    where,
+    orderBy: { createdAt: 'desc' },
+    take: 200,
+    include: {
+      _count: {
+        select: {
+          pushTokens: { where: { active: true } },
+        },
+      },
+    },
+  });
+}
+
 export default async function AdminUsersPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const filterParams = {
@@ -23,21 +73,21 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     region: param(params.region),
     memberType: param(params.memberType),
     plan: param(params.plan),
+    accountStatus: param(params.accountStatus),
   };
 
   const where = buildUserWhere(filterParams);
-  const users = await prisma.user.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    take: 200,
-  });
+  const users = await loadUsers(where);
   const totalCount = await prisma.user.count();
+  const rows = users.map(toAdminUserRow);
+  const pushReadyCount = rows.filter((user) => user.pushTokenCount > 0).length;
 
   const hasFilters =
     filterParams.dietChoice ||
     (filterParams.region && filterParams.region !== 'all') ||
     (filterParams.memberType && filterParams.memberType !== 'all') ||
-    (filterParams.plan && filterParams.plan !== 'all');
+    (filterParams.plan && filterParams.plan !== 'all') ||
+    (filterParams.accountStatus && filterParams.accountStatus !== 'all');
 
   return (
     <div className="space-y-8">
@@ -45,8 +95,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         title="Members"
         description={
           hasFilters
-            ? `Showing ${users.length} of ${totalCount} accounts with current filters.`
-            : 'Registered accounts and guest sessions from the Rasoi mobile app.'
+            ? `Showing ${rows.length} of ${totalCount} accounts. Open a member to send notifications or manage account status. ${pushReadyCount} have active push tokens.`
+            : `Registered accounts and guest sessions. Open a member drawer to send meal picks, custom messages, or activate/deactivate. ${pushReadyCount} of ${rows.length} shown users can receive push.`
         }
       />
 
@@ -54,43 +104,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         <UserFilterPanel />
       </Suspense>
 
-      <DataTable
-        columns={['Name', 'Email', 'Phone', 'Diet', 'Region', 'Type', 'Plan', 'Onboarding']}
-        emptyMessage="No members match these filters."
-      >
-        {users.map((user) => {
-          const serialized = serializeUser(user);
-          const dietLabel =
-            DIET_CHOICE_LABELS[serialized.dietChoice as DietChoice] ?? serialized.dietChoice;
-
-          return (
-            <tr key={user.id} className="transition hover:bg-[#f7f2ea]">
-              <td className="px-5 py-4 font-medium text-admin-ink">{serialized.name}</td>
-              <td className="px-5 py-4 text-sm text-admin-muted">
-                {serialized.email ?? '—'}
-              </td>
-              <td className="px-5 py-4 text-admin-muted">{serialized.phone ?? '—'}</td>
-              <td className="px-5 py-4">
-                <Badge tone="gold">{dietLabel}</Badge>
-              </td>
-              <td className="px-5 py-4 text-sm text-admin-muted">{serialized.regionalCuisine}</td>
-              <td className="px-5 py-4">
-                <Badge tone={serialized.isGuest ? 'neutral' : 'gold'}>
-                  {serialized.isGuest ? 'Guest' : 'Member'}
-                </Badge>
-              </td>
-              <td className="px-5 py-4">
-                <Badge tone="neutral">{serialized.plan.planTier}</Badge>
-              </td>
-              <td className="px-5 py-4">
-                <Badge tone={serialized.hasCompletedOnboarding ? 'success' : 'warning'}>
-                  {serialized.hasCompletedOnboarding ? 'Complete' : 'Pending'}
-                </Badge>
-              </td>
-            </tr>
-          );
-        })}
-      </DataTable>
+      <UsersManagementClient users={rows} />
     </div>
   );
 }

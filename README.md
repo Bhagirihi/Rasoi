@@ -107,17 +107,15 @@ Configure GitHub secrets `CRON_SECRET` and `MEAL_NOTIFICATIONS_URL` — see [`ra
 
 ## Error monitoring (Sentry)
 
-Rasoi reports crashes and API failures to [Sentry](https://sentry.io) when DSN env vars are set.
+Rasoi reports mobile crashes to [Sentry](https://sentry.io) when `EXPO_PUBLIC_SENTRY_DSN` is set.
 
 | App | Env var | Sentry project |
 |-----|---------|----------------|
 | Mobile | `EXPO_PUBLIC_SENTRY_DSN` | `rasoi-mobile` |
-| Backend | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | `rasoi-api` |
 
-Mobile captures: unhandled errors, API failures, user context after login.  
-Backend captures: unhandled API errors via `handleApiError`.
+Mobile captures: unhandled errors, API failures, user context, session replays on error, console warn/error logs, screenshots, and view hierarchy.
 
-See `.env.example` in each package. Set `SENTRY_ORG`, `SENTRY_PROJECT`, and `SENTRY_AUTH_TOKEN` on Vercel for source maps.
+See `rasoi_mobile/.env.example`. Set `SENTRY_AUTH_TOKEN` in EAS/CI for source map uploads.
 
 ## Marketing
 

@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { SettingsSubHeader } from '@/components/settings/SettingsBlocks';
 import { PrimaryButton } from '@/components/ui/Primitives';
 import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
@@ -103,6 +104,7 @@ export default function EditProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
+      <AppSavingOverlay visible={isSubmitting} message="Saving your profile…" />
       <SettingsSubHeader
         title={isGuest ? 'Sign in' : 'Edit profile'}
         onBack={() => router.back()}
@@ -208,7 +210,7 @@ export default function EditProfileScreen() {
           )}
 
           <PrimaryButton
-            label={isSubmitting ? 'Saving…' : isGuest ? 'Sign in to Rasoi' : 'Save changes'}
+            label={isGuest ? 'Sign in to Rasoi' : 'Save changes'}
             onPress={handleSave}
             disabled={isSubmitting}
             style={styles.cta}

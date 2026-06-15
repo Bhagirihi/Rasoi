@@ -1349,6 +1349,7 @@ export const UserScalarFieldEnum = {
   name: 'name',
   isGuest: 'isGuest',
   role: 'role',
+  isActive: 'isActive',
   hasCompletedOnboarding: 'hasCompletedOnboarding',
   dietPreference: 'dietPreference',
   dietChoice: 'dietChoice',

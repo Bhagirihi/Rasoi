@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import CuisinePreferenceList from '@/components/CuisinePreferenceList';
 import DietPreferenceList from '@/components/DietPreferenceList';
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   SettingsCard,
@@ -39,10 +40,7 @@ export default function EditPreferencesScreen() {
     regionalCuisine,
     favoriteCuisines,
     notificationsEnabled,
-    setDietChoice,
-    setRegionalCuisine,
-    setFavoriteCuisines,
-    setNotificationsEnabled,
+    saveFoodPreferences,
   } = useAppContext();
   const { regionalCuisines, kitchenStyles, refreshReference } = useReferenceData();
 
@@ -95,11 +93,13 @@ export default function EditPreferencesScreen() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      await saveFoodPreferences({
+        dietChoice: draftDiet,
+        regionalCuisine: draftRegion,
+        favoriteCuisines: draftCuisines,
+        notificationsEnabled: draftNotifications,
+      });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await setDietChoice(draftDiet);
-      await setFavoriteCuisines(draftCuisines);
-      setRegionalCuisine(draftRegion);
-      await setNotificationsEnabled(draftNotifications);
       router.back();
     } finally {
       setIsSaving(false);
@@ -108,6 +108,7 @@ export default function EditPreferencesScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
+      <AppSavingOverlay visible={isSaving} message="Saving your preferences…" />
       <SettingsSubHeader title="Food preferences" onBack={() => router.back()} />
 
       <ScrollViewWithFloatingIndicator
@@ -192,7 +193,7 @@ export default function EditPreferencesScreen() {
         </SettingsCard>
 
         <PrimaryButton
-          label={isSaving ? 'Saving…' : 'Save preferences'}
+          label="Save preferences"
           onPress={handleSave}
           disabled={isSaving}
           style={styles.saveBtnWrap}

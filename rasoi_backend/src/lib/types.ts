@@ -66,6 +66,7 @@ export interface UserProfileResponse {
   phone: string | null;
   name: string;
   isGuest: boolean;
+  isActive: boolean;
   hasCompletedOnboarding: boolean;
   dietPreference: DietType;
   dietChoice: DietChoice;

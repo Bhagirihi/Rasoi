@@ -19,9 +19,16 @@ export function initSentry(): void {
     tracesSampleRate: __DEV__ ? 1.0 : 0.2,
     enableAutoSessionTracking: true,
     attachStacktrace: true,
+    enableLogs: true,
+    replaysSessionSampleRate: __DEV__ ? 0 : 1.0,
+    replaysOnErrorSampleRate: 1.0,
     integrations: [
       Sentry.reactNativeTracingIntegration(),
       Sentry.expoRouterIntegration(),
+      Sentry.mobileReplayIntegration(),
+      Sentry.consoleLoggingIntegration({ levels: ['warn', 'error'] }),
+      Sentry.screenshotIntegration(),
+      Sentry.viewHierarchyIntegration(),
     ],
   });
 }

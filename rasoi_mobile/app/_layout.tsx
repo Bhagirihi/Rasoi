@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import LaunchSplash, { LAUNCH_SPLASH_DURATION_MS } from '@/components/LaunchSplash';
 import AppDialogHost from '@/components/AppDialogHost';
+import NotificationNavigationBridge from '@/components/NotificationNavigationBridge';
 import { AppProvider } from '@/context/AppContext';
 import { AppDialogProvider } from '@/context/AppDialogContext';
 import { PartnersProvider } from '@/context/PartnersContext';
@@ -93,6 +94,7 @@ function RootLayoutInner({
                     />
                   </Stack>
                   {!launchDone && <LaunchSplash />}
+                  <NotificationNavigationBridge />
                   <AppDialogHost />
                 </View>
               </PartnersProvider>

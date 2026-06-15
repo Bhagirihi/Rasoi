@@ -31,6 +31,12 @@ export function isValidExpoPushToken(token: string): boolean {
   return Expo.isExpoPushToken(token);
 }
 
+export interface CustomPushPayload {
+  type: 'admin_message';
+  title: string;
+  body: string;
+}
+
 export function buildMealPushMessage(
   expoPushToken: string,
   options: {
@@ -48,9 +54,34 @@ export function buildMealPushMessage(
     data: options.payload as unknown as Record<string, unknown>,
     priority: 'high',
     channelId: 'meal-picks',
+    categoryId: 'meal_pick',
     richContent: options.payload.imageUrl
       ? { image: options.payload.imageUrl }
       : undefined,
+  };
+}
+
+export function buildCustomPushMessage(
+  expoPushToken: string,
+  options: {
+    title: string;
+    body: string;
+  },
+): ExpoPushMessage {
+  const payload: CustomPushPayload = {
+    type: 'admin_message',
+    title: options.title,
+    body: options.body,
+  };
+
+  return {
+    to: expoPushToken,
+    sound: 'default',
+    title: options.title.trim() || 'Rasoi',
+    body: options.body.trim(),
+    data: payload as unknown as Record<string, unknown>,
+    priority: 'high',
+    channelId: 'rasoi-updates',
   };
 }
 
