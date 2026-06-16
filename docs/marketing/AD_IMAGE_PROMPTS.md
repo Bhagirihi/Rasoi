@@ -1,5 +1,6 @@
 # Rasoi — 29 Instagram Ad Image Prompts
 
+**Generated images:** [`ad-images/`](./ad-images/) — all 29 ads ready to use  
 **Format:** 4:5 Instagram Feed (1080 × 1350 px) unless noted  
 **Use with:** Rasoi logo from `rasoi_mobile/assets/store/rasoi-app-icon-source.png` + `rasoi-kadai-transparent.png` as reference images  
 **Brand colors:** `#FF6B35` · `#FF9933` · `#FFF9F6` · `#00A86B` · `#1A1A2E`  
