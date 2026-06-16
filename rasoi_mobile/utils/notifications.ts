@@ -1,11 +1,43 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+
+import type { NotificationResponse } from 'expo-notifications';
+
+import { isRemotePushAvailable } from '@/utils/notificationCapability';
 
 const LAST_HANDLED_NOTIFICATION_KEY = '@rasoi/last_handled_notification_response';
 
 const REMINDER_THANK_YOU_ID = 'rasoi-reminder-thank-you';
+
+type ExpoNotifications = typeof import('expo-notifications');
+
+let notificationsModule: ExpoNotifications | null = null;
+let notificationsLoad: Promise<ExpoNotifications> | null = null;
+
+async function getNotifications(): Promise<ExpoNotifications | null> {
+  if (Platform.OS === 'web') return null;
+
+  if (notificationsModule) return notificationsModule;
+
+  if (!notificationsLoad) {
+    notificationsLoad = import('expo-notifications').then((mod) => {
+      mod.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: true,
+          shouldShowList: true,
+        }),
+      });
+      notificationsModule = mod;
+      return mod;
+    });
+  }
+
+  return notificationsLoad;
+}
 
 export const DAILY_REMINDER_SLOTS = [
   {
@@ -28,18 +60,11 @@ export const DAILY_REMINDER_SLOTS = [
 
 export const DAILY_REMINDER_TIME_LABEL = DAILY_REMINDER_SLOTS.map((slot) => slot.label).join(' & ');
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 export async function ensureMealPushChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
 
   await Notifications.setNotificationChannelAsync('meal-picks', {
     name: 'Meal picks',
@@ -67,26 +92,26 @@ export type NotificationNavigationTarget =
   | { type: 'recipe'; recipeId: string; cook?: boolean; save?: boolean }
   | { type: 'recipes_tab' };
 
-function responseFingerprint(response: Notifications.NotificationResponse): string {
+function responseFingerprint(response: NotificationResponse): string {
   const { notification, actionIdentifier } = response;
   return `${notification.request.identifier}:${actionIdentifier}:${notification.date}`;
 }
 
 export async function markNotificationResponseHandled(
-  response: Notifications.NotificationResponse,
+  response: NotificationResponse,
 ): Promise<void> {
   await AsyncStorage.setItem(LAST_HANDLED_NOTIFICATION_KEY, responseFingerprint(response));
 }
 
 export async function isNewNotificationResponse(
-  response: Notifications.NotificationResponse,
+  response: NotificationResponse,
 ): Promise<boolean> {
   const last = await AsyncStorage.getItem(LAST_HANDLED_NOTIFICATION_KEY);
   return last !== responseFingerprint(response);
 }
 
 export function getNavigationFromNotificationResponse(
-  response: Notifications.NotificationResponse,
+  response: NotificationResponse,
 ): NotificationNavigationTarget | null {
   const data = response.notification.request.content.data as MealPushData | undefined;
   const actionId = response.actionIdentifier;
@@ -116,7 +141,10 @@ export function getNavigationFromNotificationResponse(
 }
 
 export async function setupRemoteMealNotifications(): Promise<void> {
-  if (Platform.OS === 'web') return;
+  if (Platform.OS === 'web' || !isRemotePushAvailable()) return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
 
   await ensureMealPushChannel();
 
@@ -130,6 +158,9 @@ export async function setupRemoteMealNotifications(): Promise<void> {
 export async function ensureNotificationPermissions(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
 
+  const Notifications = await getNotifications();
+  if (!Notifications) return false;
+
   const { status: existing } = await Notifications.getPermissionsAsync();
   if (existing === 'granted') return true;
 
@@ -139,6 +170,10 @@ export async function ensureNotificationPermissions(): Promise<boolean> {
 
 export async function cancelDailyReminder(): Promise<void> {
   if (Platform.OS === 'web') return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
+
   await Notifications.cancelScheduledNotificationAsync('rasoi-daily-dinner');
   await Promise.all(
     DAILY_REMINDER_SLOTS.map((slot) =>
@@ -149,6 +184,9 @@ export async function cancelDailyReminder(): Promise<void> {
 
 export async function scheduleDailyReminder(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return false;
 
   const granted = await ensureNotificationPermissions();
   if (!granted) return false;
@@ -181,6 +219,9 @@ export async function scheduleDailyReminder(): Promise<boolean> {
 export async function sendDailyReminderThankYouNotification(): Promise<void> {
   if (Platform.OS === 'web') return;
 
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
+
   const granted = await ensureNotificationPermissions();
   if (!granted) return;
 
@@ -198,6 +239,9 @@ export async function sendDailyReminderThankYouNotification(): Promise<void> {
 /** Immediate confirmation when a recipe is saved. */
 export async function sendRecipeSavedNotification(recipeTitle: string): Promise<void> {
   if (Platform.OS === 'web') return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
 
   const granted = await ensureNotificationPermissions();
   if (!granted) return;
@@ -222,9 +266,12 @@ export async function syncDailyReminder(enabled: boolean): Promise<boolean> {
 }
 
 export async function getExpoPushToken(): Promise<string | null> {
-  if (Platform.OS === 'web') return null;
+  if (Platform.OS === 'web' || !isRemotePushAvailable()) return null;
 
   await setupRemoteMealNotifications();
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return null;
 
   const granted = await ensureNotificationPermissions();
   if (!granted) return null;
@@ -254,12 +301,19 @@ const TRIAL_REMINDER_ID = 'rasoi-trial-day-2';
 
 export async function cancelTrialReminder(): Promise<void> {
   if (Platform.OS === 'web') return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
+
   await Notifications.cancelScheduledNotificationAsync(TRIAL_REMINDER_ID);
 }
 
 /** Nudge on day 2 of the free trial (24h after trial start). */
 export async function scheduleTrialDayTwoReminder(trialStartedAt: string): Promise<void> {
   if (Platform.OS === 'web') return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
 
   const granted = await ensureNotificationPermissions();
   if (!granted) return;
@@ -285,4 +339,26 @@ export async function scheduleTrialDayTwoReminder(trialStartedAt: string): Promi
       seconds: secondsUntil,
     },
   });
+}
+
+/** Subscribe to notification taps (local + remote). Returns unsubscribe. */
+export async function subscribeToNotificationResponses(
+  handler: (response: NotificationResponse) => void,
+): Promise<() => void> {
+  if (Platform.OS === 'web') return () => undefined;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return () => undefined;
+
+  const subscription = Notifications.addNotificationResponseReceivedListener(handler);
+  return () => subscription.remove();
+}
+
+export async function getLastNotificationResponse(): Promise<NotificationResponse | null> {
+  if (Platform.OS === 'web') return null;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return null;
+
+  return Notifications.getLastNotificationResponseAsync();
 }

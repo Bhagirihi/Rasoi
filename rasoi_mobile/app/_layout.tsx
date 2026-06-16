@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { LogBox, View } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
@@ -19,6 +19,13 @@ import { isAdMobNativeAvailable } from '@/utils/admob';
 import { initSentry, Sentry } from '@/utils/sentry';
 
 initSentry();
+
+if (__DEV__) {
+  LogBox.ignoreLogs([
+    '`expo-notifications` functionality is not fully supported in Expo Go',
+    'expo-notifications: Android Push notifications (remote notifications) functionality',
+  ]);
+}
 
 export { ErrorBoundary } from 'expo-router';
 

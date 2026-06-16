@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import SponsorApplyForm from '@/app/_components/SponsorApplyForm';
+import { APP_DOWNLOAD_PATH } from '@/lib/app-download';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -23,6 +24,12 @@ export default async function HomePage() {
             </div>
           </div>
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#6b6560] md:flex">
+            <Link
+              href={APP_DOWNLOAD_PATH}
+              className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+            >
+              Download app
+            </Link>
             <a href="#features" className="hover:text-[#c45c2a]">Features</a>
             <a href="#partners" className="hover:text-[#c45c2a]">Partners</a>
             <a href="#sponsor" className="hover:text-[#c45c2a]">Sponsor with us</a>
@@ -57,17 +64,17 @@ export default async function HomePage() {
                 ingredients from Blinkit, Zepto, Instamart, Zomato, or Swiggy in one tap.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <a
-                  href="#features"
+                <Link
+                  href={APP_DOWNLOAD_PATH}
                   className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
                 >
-                  Explore the app
-                </a>
+                  Download Android app
+                </Link>
                 <a
-                  href="#partners"
+                  href="#features"
                   className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-[#c9a227]/50"
                 >
-                  Partner checkout
+                  Explore features
                 </a>
               </div>
               <p className="mt-8 text-sm text-[#6b6560]">
@@ -258,9 +265,17 @@ export default async function HomePage() {
       <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[#6b6560] lg:px-8">
           <p>Rasoi — Indian recipes for modern home cooks.</p>
-          <Link href="/admin/login" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
-            Admin console
-          </Link>
+          <div className="flex flex-wrap items-center gap-6">
+            <Link
+              href={APP_DOWNLOAD_PATH}
+              className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+            >
+              Download Android app
+            </Link>
+            <Link href="/admin/login" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+              Admin console
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

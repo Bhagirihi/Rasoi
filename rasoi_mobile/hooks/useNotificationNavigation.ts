@@ -1,13 +1,15 @@
-import * as Notifications from 'expo-notifications';
+import type { NotificationResponse } from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { useAppContext } from '@/context/AppContext';
 import {
+  getLastNotificationResponse,
   getNavigationFromNotificationResponse,
   isNewNotificationResponse,
   markNotificationResponseHandled,
+  subscribeToNotificationResponses,
   type NotificationNavigationTarget,
 } from '@/utils/notifications';
 
@@ -42,7 +44,7 @@ export function useNotificationNavigation(): void {
   );
 
   const handleResponse = useCallback(
-    async (response: Notifications.NotificationResponse) => {
+    async (response: NotificationResponse) => {
       const isNew = await isNewNotificationResponse(response);
       if (!isNew) return;
 
@@ -58,14 +60,23 @@ export function useNotificationNavigation(): void {
   useEffect(() => {
     if (Platform.OS === 'web' || !appReady) return;
 
-    void Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) void handleResponse(response);
-    });
+    let unsubscribe = () => undefined;
+    let cancelled = false;
 
-    const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
-      void handleResponse(response);
-    });
+    void (async () => {
+      const response = await getLastNotificationResponse();
+      if (!cancelled && response) {
+        await handleResponse(response);
+      }
 
-    return () => subscription.remove();
+      unsubscribe = await subscribeToNotificationResponses((nextResponse) => {
+        void handleResponse(nextResponse);
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [appReady, handleResponse]);
 }

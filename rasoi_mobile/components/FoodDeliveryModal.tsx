@@ -7,6 +7,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +37,8 @@ export default function FoodDeliveryModal({
   const { partnersInTrialMode } = useAppContext();
   const { deliveryPartners, openFoodDelivery: openDeliveryPartner } = usePartners();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const maxBodyScrollHeight = windowHeight * 0.52;
 
   const handleOrder = async (partner: FoodDeliveryPartner) => {
     setLoading(partner);
@@ -50,7 +53,7 @@ export default function FoodDeliveryModal({
 
   return (
     <SmoothModal visible={visible} onClose={onClose} variant="sheet">
-      <View style={styles.sheet}>
+      <View style={[styles.sheet, { paddingBottom: insets.bottom }]}>
           <LinearGradient
             colors={['#1A1A2E', '#2D1B4E']}
             start={{ x: 0, y: 0 }}
@@ -80,11 +83,8 @@ export default function FoodDeliveryModal({
           </LinearGradient>
 
           <ScrollView
-            style={styles.bodyScroll}
-            contentContainerStyle={[
-              styles.body,
-              { paddingBottom: insets.bottom + spacing.lg },
-            ]}
+            style={[styles.bodyScroll, { maxHeight: maxBodyScrollHeight }]}
+            contentContainerStyle={styles.body}
             showsVerticalScrollIndicator={false}
             bounces
             nestedScrollEnabled
@@ -125,12 +125,11 @@ export default function FoodDeliveryModal({
 
 const styles = StyleSheet.create({
   sheet: {
+    width: '100%',
     borderTopLeftRadius: radius.xl + 4,
     borderTopRightRadius: radius.xl + 4,
     overflow: 'hidden',
     backgroundColor: colors.cream,
-    maxHeight: '90%',
-    flexDirection: 'column',
   },
   sheetHero: {
     paddingHorizontal: spacing.xxl,
@@ -198,11 +197,11 @@ const styles = StyleSheet.create({
   },
   bodyScroll: {
     flexGrow: 0,
-    flexShrink: 1,
   },
   body: {
     paddingHorizontal: spacing.xxl,
     paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   pickLabel: {
     fontSize: 13,

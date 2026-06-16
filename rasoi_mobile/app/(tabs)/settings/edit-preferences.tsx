@@ -1,6 +1,5 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
-import * as Notifications from 'expo-notifications';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Bell } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
@@ -28,7 +27,7 @@ import { CuisineId, DietChoice, colors, layout, radius, scrollIndicator, spacing
 import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useReferenceData } from '@/context/ReferenceContext';
-import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
+import { DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions } from '@/utils/notifications';
 
 export default function EditPreferencesScreen() {
   const router = useRouter();
@@ -78,13 +77,8 @@ export default function EditPreferencesScreen() {
   const handleNotificationsToggle = async (next: boolean) => {
     void Haptics.selectionAsync();
     if (next) {
-      const { status: existing } = await Notifications.getPermissionsAsync();
-      let finalStatus = existing;
-      if (existing !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-      setDraftNotifications(finalStatus === 'granted');
+      const granted = await ensureNotificationPermissions();
+      setDraftNotifications(granted);
       return;
     }
     setDraftNotifications(false);

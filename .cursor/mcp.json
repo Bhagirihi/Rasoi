@@ -9,6 +9,10 @@
     "gmail": {
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/gmail-imap/run.sh",
       "args": []
+    },
+    "instagram": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/instagram/run.sh",
+      "args": []
     }
   }
 }

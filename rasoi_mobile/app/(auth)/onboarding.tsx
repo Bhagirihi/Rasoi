@@ -1,6 +1,5 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Notifications from 'expo-notifications';
 import { useRouter, useFocusEffect } from 'expo-router';
 import {
   ArrowLeft,
@@ -34,7 +33,7 @@ import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { cuisinesToRegion, getKitchenStyleLabel } from '@/utils/kitchenStyles';
 import { dietChoiceToFilter } from '@/utils/storage';
-import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
+import { DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions } from '@/utils/notifications';
 import { useAppContext } from '@/context/AppContext';
 
 type OnboardingStep = 'diet' | 'cuisine' | 'notifications';
@@ -83,16 +82,7 @@ export default function OnboardingScreen() {
   const handleEnableNotifications = async () => {
     setIsSubmitting(true);
     try {
-      let enabled = false;
-      if (Platform.OS !== 'web') {
-        const { status: existing } = await Notifications.getPermissionsAsync();
-        let finalStatus = existing;
-        if (existing !== 'granted') {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
-        }
-        enabled = finalStatus === 'granted';
-      }
+      const enabled = Platform.OS !== 'web' ? await ensureNotificationPermissions() : false;
       await finishOnboarding(enabled);
     } finally {
       setIsSubmitting(false);

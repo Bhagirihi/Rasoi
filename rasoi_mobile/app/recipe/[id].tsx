@@ -391,6 +391,7 @@ export default function RecipeDetailScreen() {
         </View>
       </ScrollView>
 
+      {!(deliveryModalVisible || modalVisible) && (
       <SafeAreaView
         edges={['bottom']}
         style={styles.stickyBar}
@@ -428,6 +429,7 @@ export default function RecipeDetailScreen() {
           </Pressable>
         )}
       </SafeAreaView>
+      )}
 
       {showPartners && (
         <>
