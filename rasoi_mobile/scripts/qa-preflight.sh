@@ -43,7 +43,7 @@ else
   fail "App $APP_ID not installed. Build and install: npm run android"
 fi
 
-if curl -sf --max-time 8 "https://rasoiapp.vercel.app/api/recipes" >/dev/null 2>&1; then
+if curl -sf --max-time 8 "https://rasoiapplication.in/api/recipes" >/dev/null 2>&1; then
   ok "Backend API reachable"
 else
   echo "⚠ Backend API not reachable — recipe flows may fail if cache is empty"

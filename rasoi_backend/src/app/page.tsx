@@ -1,10 +1,20 @@
 import Link from 'next/link';
 
+import JsonLd from '@/app/_components/JsonLd';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import SponsorApplyForm from '@/app/_components/SponsorApplyForm';
 import { APP_DOWNLOAD_PATH } from '@/lib/app-download';
+import {
+  FAQ_ITEMS,
+  faqJsonLd,
+  homeMetadata,
+  mobileAppJsonLd,
+  organizationJsonLd,
+  webSiteJsonLd,
+} from '@/lib/seo';
 import { prisma } from '@/lib/prisma';
 
+export const metadata = homeMetadata;
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
@@ -12,6 +22,7 @@ export default async function HomePage() {
 
   return (
     <div className="landing-grain min-h-screen text-[#1a1a2e]">
+      <JsonLd data={[organizationJsonLd(), webSiteJsonLd(), mobileAppJsonLd(), faqJsonLd()]} />
       <header className="border-b border-[#e8dfd3] bg-[#fcf9f4]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 lg:px-8">
           <div className="flex items-center gap-3">
@@ -31,6 +42,7 @@ export default async function HomePage() {
               Download app
             </Link>
             <a href="#features" className="hover:text-[#c45c2a]">Features</a>
+            <a href="#faq" className="hover:text-[#c45c2a]">FAQ</a>
             <a href="#partners" className="hover:text-[#c45c2a]">Partners</a>
             <a href="#sponsor" className="hover:text-[#c45c2a]">Sponsor with us</a>
             <a href="#plans" className="hover:text-[#c45c2a]">Rasoi Plus</a>
@@ -49,17 +61,17 @@ export default async function HomePage() {
           <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
-                Cook tonight, effortlessly
+                Aaj kya banaye? · Cook tonight, effortlessly
               </p>
               <h1 className="font-display mt-4 text-5xl font-semibold leading-[1.05] tracking-tight lg:text-6xl">
-                Your pantry.
+                Indian recipe app for
                 <br />
-                <span className="text-[#c45c2a]">Your region.</span>
+                <span className="text-[#c45c2a]">your pantry</span>
                 <br />
-                Your perfect dish.
+                and your region.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#6b6560]">
-                Rasoi is a beautifully simple Indian recipe app. Discover regional dishes,
+                Rasoi is a free Indian home-cooking app on Android. Discover regional dishes,
                 match recipes to what you already have, save favourites, and order missing
                 ingredients from Blinkit, Zepto, Instamart, Zomato, or Swiggy in one tap.
               </p>
@@ -260,11 +272,29 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+
+        <section id="faq" className="mx-auto max-w-6xl px-5 py-16 lg:px-8">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
+            FAQ
+          </p>
+          <h2 className="font-display mt-3 text-4xl font-semibold">About Rasoi app</h2>
+          <div className="mt-10 space-y-6">
+            {FAQ_ITEMS.map((item) => (
+              <article
+                key={item.question}
+                className="rounded-[1.25rem] border border-[#e8dfd3] bg-white p-6"
+              >
+                <h3 className="font-display text-xl font-semibold">{item.question}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-[#6b6560]">{item.answer}</p>
+              </article>
+            ))}
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[#6b6560] lg:px-8">
-          <p>Rasoi — Indian recipes for modern home cooks.</p>
+          <p>Rasoi — Indian recipe app for home cooks · rasoiapplication.in</p>
           <div className="flex flex-wrap items-center gap-6">
             <Link
               href={APP_DOWNLOAD_PATH}

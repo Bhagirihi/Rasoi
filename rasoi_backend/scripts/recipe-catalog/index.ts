@@ -22,6 +22,7 @@ import { KERALA_BATCH2_RECIPES } from './kerala-batch2';
 import { KERALA_EXTRA_RECIPES } from './kerala-extra';
 import { MAHARASHTRIAN_BATCH2_RECIPES } from './maharashtrian-batch2';
 import { MAHARASHTRIAN_EXTRA_RECIPES } from './maharashtrian-extra';
+import { MARKETING_AD_MISSING_RECIPES } from './marketing-ad-missing-batch';
 import { NORTH_BATCH2_RECIPES } from './north-batch2';
 import { NORTH_EXTRA_RECIPES } from './north-extra';
 import { PUNJABI_BATCH2_RECIPES } from './punjabi-batch2';
@@ -100,6 +101,7 @@ const EXTRA_RECIPES: RecipeCatalogEntry[] = [
   ...ALL_CUISINES_BATCH3_RECIPES,
   ...ALL_CUISINES_BATCH4_RECIPES,
   ...ALL_CUISINES_BATCH5_RECIPES,
+  ...MARKETING_AD_MISSING_RECIPES,
 ];
 
 function resolveKitchenStyleId(styleId: string | undefined): string | undefined {

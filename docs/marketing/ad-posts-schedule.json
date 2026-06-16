@@ -1,0 +1,429 @@
+{
+  "version": 1,
+  "timezone": "Asia/Kolkata",
+  "startDate": "2026-06-17",
+  "publishTime": "19:00",
+  "cadenceDays": 1,
+  "imageDir": "docs/marketing/ad-images",
+  "defaultHashtags": [
+    "#AajKyaBanaye",
+    "#RasoiApp",
+    "#IndianHomeCooking"
+  ],
+  "ctaLine": "Download Rasoi Free — link in bio.",
+  "posts": [
+    {
+      "id": 1,
+      "image": "01-housewives-aaj-kya-banaye.png",
+      "segment": "Housewives",
+      "headline": "Aaj Kya Banaye?",
+      "subheadline": "Cook from what you already have."
+    },
+    {
+      "id": 2,
+      "image": "02-working-women-dinner-sorted.png",
+      "segment": "Working Women",
+      "headline": "Office Se Ghar Tak. Dinner Sorted.",
+      "subheadline": "Dinner decided in 30 seconds."
+    },
+    {
+      "id": 3,
+      "image": "03-families-sabki-pasand.png",
+      "segment": "Families",
+      "headline": "Sabki Pasand. Ek App.",
+      "subheadline": "Rasoi recommends dishes everyone will enjoy."
+    },
+    {
+      "id": 4,
+      "image": "04-newlyweds-pehli-rasoi.png",
+      "segment": "Newly Married Couples",
+      "headline": "Pehli Rasoi, Zero Stress.",
+      "subheadline": "Start your kitchen journey with confidence."
+    },
+    {
+      "id": 5,
+      "image": "05-bachelors-pg-hostel.png",
+      "segment": "Bachelors / PG Hostel",
+      "headline": "Sirf 3 Ingredient. Poora Dinner.",
+      "subheadline": "Hostel cooking made simple."
+    },
+    {
+      "id": 6,
+      "image": "06-jain-meal-sorted.png",
+      "segment": "Jain Household",
+      "headline": "Jain Meal. Sorted.",
+      "subheadline": "Recipes that respect your diet."
+    },
+    {
+      "id": 7,
+      "image": "07-gujarati-regional.png",
+      "segment": "Gujarati Regional Pride",
+      "headline": "Gujarati Rasoi. Aapdi Recipe.",
+      "subheadline": "15 cuisines — yours first."
+    },
+    {
+      "id": 8,
+      "image": "08-south-indian-breakfast.png",
+      "segment": "South Indian Morning",
+      "headline": "Subah Ka Sawal. Rasoi Ka Jawab.",
+      "subheadline": "Dosa, idli, upma — pick in seconds."
+    },
+    {
+      "id": 9,
+      "image": "09-punjabi-hearty-dinner.png",
+      "segment": "Punjabi Hearty Dinner",
+      "headline": "Ghar Ka Khana. Grand Taste.",
+      "subheadline": "Rich gravies from your pantry."
+    },
+    {
+      "id": 10,
+      "image": "10-dual-income-couple.png",
+      "segment": "Dual-Income No Time",
+      "headline": "Dono Thake. Dinner Ready.",
+      "subheadline": "Decide together in one tap."
+    },
+    {
+      "id": 11,
+      "image": "11-leftovers-transformation.png",
+      "segment": "Leftover Transformation",
+      "headline": "Kal Ka Chawal. Aaj Ka Feast.",
+      "subheadline": "Turn leftovers into new dinners."
+    },
+    {
+      "id": 12,
+      "image": "12-under-20-minutes.png",
+      "segment": "Under 20 Minutes",
+      "headline": "20 Minute Mein. Dinner Taiyar.",
+      "subheadline": "Quick filters for busy nights."
+    },
+    {
+      "id": 13,
+      "image": "13-kids-picky-eaters.png",
+      "segment": "Kids & Picky Eaters",
+      "headline": "Bachhon Ko Bhi. Ghar Ko Bhi.",
+      "subheadline": "Kid-friendly picks they'll actually eat."
+    },
+    {
+      "id": 14,
+      "image": "14-monsoon-evening.png",
+      "segment": "Monsoon Evening",
+      "headline": "Baarish Aur Bhuk. Rasoi Sambhale.",
+      "subheadline": "Perfect rainy-evening recipes."
+    },
+    {
+      "id": 15,
+      "image": "15-notification-nudge.png",
+      "segment": "7 PM Notification Nudge",
+      "headline": "7 Baje. Dinner Ka Signal.",
+      "subheadline": "Daily nudges when you need them."
+    },
+    {
+      "id": 16,
+      "image": "16-pantry-match-92.png",
+      "segment": "92% Pantry Match Hero",
+      "headline": "92% Match. Poora Dinner.",
+      "subheadline": "Cook from what's already home."
+    },
+    {
+      "id": 17,
+      "image": "17-order-missing-ingredients.png",
+      "segment": "Order Missing Ingredients",
+      "headline": "Kya Missing? Ek Tap Mein Order.",
+      "subheadline": "Blinkit, Zepto, Instamart from recipe."
+    },
+    {
+      "id": 18,
+      "image": "18-grandmother-granddaughter.png",
+      "segment": "Grandmother + Granddaughter",
+      "headline": "Dadi Ki Rasoi. Nayi Tech.",
+      "subheadline": "Traditional taste, modern ease."
+    },
+    {
+      "id": 19,
+      "image": "19-first-time-cook.png",
+      "segment": "First-Time Independent Cook",
+      "headline": "Pehli Baar? Koi Baat Nahi.",
+      "subheadline": "Simple recipes, clear steps."
+    },
+    {
+      "id": 20,
+      "image": "20-husband-cooks.png",
+      "segment": "Husband in the Kitchen",
+      "headline": "Aaj Main Banaunga.",
+      "subheadline": "Rasoi guides every step."
+    },
+    {
+      "id": 21,
+      "image": "21-mumbai-commute.png",
+      "segment": "Mumbai Local Train Commuter",
+      "headline": "Train Se Seedha. Dinner Decide.",
+      "subheadline": "Browse picks on your commute."
+    },
+    {
+      "id": 22,
+      "image": "22-wfh-lunch-break.png",
+      "segment": "WFH Lunch Break",
+      "headline": "Lunch Break. 15 Minute Fix.",
+      "subheadline": "Midday picks, not just dinner."
+    },
+    {
+      "id": 23,
+      "image": "23-late-night-craving.png",
+      "segment": "Late Night 10 PM Craving",
+      "headline": "Raat Ke 10. Kuch Toh Banao.",
+      "subheadline": "Late-night recipe picks."
+    },
+    {
+      "id": 24,
+      "image": "24-bengali-fish-curry.png",
+      "segment": "Bengali Fish Curry (Non-Veg)",
+      "headline": "Machh Bhaat. Mood Set.",
+      "subheadline": "Non-veg picks for your region."
+    },
+    {
+      "id": 25,
+      "image": "25-roommates-flatmates.png",
+      "segment": "Roommates Sharing Kitchen",
+      "headline": "Flatmates. Alag Taste. Ek App.",
+      "subheadline": "Everyone picks from the same pantry."
+    },
+    {
+      "id": 26,
+      "image": "26-sunday-special.png",
+      "segment": "Festival / Sunday Special",
+      "headline": "Sunday Special. Decide Ho Gaya.",
+      "subheadline": "Extra time? Make something memorable."
+    },
+    {
+      "id": 27,
+      "image": "27-tier2-city.png",
+      "segment": "Tier-2 City Middle Class",
+      "headline": "Aapke Sheher. Aapki Rasoi.",
+      "subheadline": "Indian recipes for real Indian homes."
+    },
+    {
+      "id": 28,
+      "image": "28-empty-fridge-rescue.png",
+      "segment": "Food Waste / Empty Fridge Rescue",
+      "headline": "Kam Saman. Zyada Options.",
+      "subheadline": "Fewer items, smarter picks."
+    },
+    {
+      "id": 29,
+      "image": "29-before-after-split.png",
+      "segment": "Before / After Split (Universal)",
+      "headline": "Pehle Confusion. Phir Dinner.",
+      "subheadline": "Never ask \"Aaj Kya Banaye?\" again."
+    },
+    {
+      "id": 30,
+      "image": "30-post-gym-protein.png",
+      "segment": "Post-Gym Protein Dinner",
+      "headline": "Workout Ke Baad. Protein Sorted.",
+      "subheadline": "High-protein Indian dinners from your pantry."
+    },
+    {
+      "id": 31,
+      "image": "31-senior-living-alone.png",
+      "segment": "Senior Living Alone",
+      "headline": "Akele? Khana Nahi Rukega.",
+      "subheadline": "Simple, nourishing meals made easy."
+    },
+    {
+      "id": 32,
+      "image": "32-diabetic-friendly.png",
+      "segment": "Diabetic-Friendly Meals",
+      "headline": "Sugar Control. Taste Full.",
+      "subheadline": "Diabetic-friendly picks that still feel like home."
+    },
+    {
+      "id": 33,
+      "image": "33-maharashtrian-regional.png",
+      "segment": "Maharashtrian Regional Pride",
+      "headline": "Maharashtra Chi Rasoi. Tumchi Recipe.",
+      "subheadline": "Misal, poha, puran poli — home style."
+    },
+    {
+      "id": 34,
+      "image": "34-rajasthani-regional.png",
+      "segment": "Rajasthani Regional Pride",
+      "headline": "Rajasthan Ki Rasoi. Apna Swad.",
+      "subheadline": "Dal baati, gatte, ker sangri — yours first."
+    },
+    {
+      "id": 35,
+      "image": "35-hyderabadi-biryani.png",
+      "segment": "Hyderabadi Dum Biryani",
+      "headline": "Dum Biryani. Ghar Pe.",
+      "subheadline": "Hyderabadi classics from what you have."
+    },
+    {
+      "id": 36,
+      "image": "36-navratri-vrat.png",
+      "segment": "Navratri Fasting / Vrat",
+      "headline": "Vrat Ka Khana. Easy.",
+      "subheadline": "Fasting recipes that respect your rules."
+    },
+    {
+      "id": 37,
+      "image": "37-summer-garmi.png",
+      "segment": "Summer Heat / Garmi",
+      "headline": "Garmi Mein. Halka Khana.",
+      "subheadline": "Cooling, light meals for hot days."
+    },
+    {
+      "id": 38,
+      "image": "38-winter-comfort.png",
+      "segment": "Winter Comfort",
+      "headline": "Sardi Mein. Garam Garam.",
+      "subheadline": "Warming dishes for cold evenings."
+    },
+    {
+      "id": 39,
+      "image": "39-unexpected-guests.png",
+      "segment": "Unexpected Guests",
+      "headline": "Mehman Aaye? Jaldi Taiyar.",
+      "subheadline": "Impress without panic-shopping."
+    },
+    {
+      "id": 40,
+      "image": "40-maid-day-off.png",
+      "segment": "Maid Day Off",
+      "headline": "Kaamwali Nahi Aayi? Koi Baat Nahi.",
+      "subheadline": "Dinner still sorted in minutes."
+    },
+    {
+      "id": 41,
+      "image": "41-exam-season.png",
+      "segment": "Exam Season Brain Food",
+      "headline": "Exam Chal Raha. Khana Ready.",
+      "subheadline": "Quick nourishing meals during study season."
+    },
+    {
+      "id": 42,
+      "image": "42-pregnancy-nutrition.png",
+      "segment": "Pregnancy Nutrition",
+      "headline": "Maa Banne Wali. Khana Soch Liya.",
+      "subheadline": "Nutritious meals for you and baby."
+    },
+    {
+      "id": 43,
+      "image": "43-recovery-light-diet.png",
+      "segment": "Recovery / Light Diet",
+      "headline": "Tabiyat Theek Nahi? Halka Khana.",
+      "subheadline": "Soft, easy meals for recovery days."
+    },
+    {
+      "id": 44,
+      "image": "44-one-pot-cooker.png",
+      "segment": "One-Pot Pressure Cooker",
+      "headline": "Ek Cooker. Poora Khana.",
+      "subheadline": "One-pot recipes, zero mess stress."
+    },
+    {
+      "id": 45,
+      "image": "45-air-fryer-healthy.png",
+      "segment": "Air Fryer Healthy Indian",
+      "headline": "Kam Tel. Same Swad.",
+      "subheadline": "Air-fryer Indian recipes that crunch."
+    },
+    {
+      "id": 46,
+      "image": "46-single-parent.png",
+      "segment": "Single Parent Weeknight",
+      "headline": "Akela Parent. Double Kaam.",
+      "subheadline": "Dinner sorted while you manage everything."
+    },
+    {
+      "id": 47,
+      "image": "47-weekend-dad.png",
+      "segment": "Father Weekend Custody",
+      "headline": "Weekend Pe Bacchon Ke Saath. Rasoi Saath.",
+      "subheadline": "Kid-approved meals dad can nail."
+    },
+    {
+      "id": 48,
+      "image": "48-impress-saas.png",
+      "segment": "Impress Mother-in-Law",
+      "headline": "Saas Ko Impress. Rasoi Se.",
+      "subheadline": "Traditional dishes, perfect steps."
+    },
+    {
+      "id": 49,
+      "image": "49-office-tiffin.png",
+      "segment": "Office Tiffin Tomorrow",
+      "headline": "Kal Ka Tiffin. Aaj Hi Decide.",
+      "subheadline": "Packable lunches from tonight's plan."
+    },
+    {
+      "id": 50,
+      "image": "50-nri-homecoming.png",
+      "segment": "NRI Homecoming",
+      "headline": "Ghar Wapas. Swad Wapas.",
+      "subheadline": "Recreate the tastes you missed abroad."
+    },
+    {
+      "id": 51,
+      "image": "51-kerala-onam-sadya.png",
+      "segment": "Kerala Onam / Sadya",
+      "headline": "Onam Sadya. Ghar Pe.",
+      "subheadline": "Kerala classics from your pantry."
+    },
+    {
+      "id": 52,
+      "image": "52-andhra-spicy.png",
+      "segment": "Andhra Spicy Lovers",
+      "headline": "Teekha Pasand? Rasoi Samjhe.",
+      "subheadline": "Andhra spice, matched to your pantry."
+    },
+    {
+      "id": 53,
+      "image": "53-kashmiri-regional.png",
+      "segment": "Kashmiri Dum Aloo",
+      "headline": "Kashmiri Swad. Ghar Ki Rasoi.",
+      "subheadline": "Dum aloo, rajma, kahwa — home style."
+    },
+    {
+      "id": 54,
+      "image": "54-goan-coastal.png",
+      "segment": "Goan Coastal Coconut",
+      "headline": "Kokum Aur Nariyal. Rasoi Laaye.",
+      "subheadline": "Coastal Goan dishes from home ingredients."
+    },
+    {
+      "id": 55,
+      "image": "55-street-chaat-home.png",
+      "segment": "Street Chaat at Home",
+      "headline": "Chaat Ka Mood. Ghar Pe Safe.",
+      "subheadline": "Pani puri, bhel, dahi puri — DIY."
+    },
+    {
+      "id": 56,
+      "image": "56-budget-under-50.png",
+      "segment": "Budget Under ₹50",
+      "headline": "₹50 Mein. Pet Bhar.",
+      "subheadline": "Budget-friendly dinners that fill you up."
+    },
+    {
+      "id": 57,
+      "image": "57-tiny-studio-kitchen.png",
+      "segment": "Tiny Studio Kitchen",
+      "headline": "Chhoti Kitchen. Bade Options.",
+      "subheadline": "Big recipe ideas for small spaces."
+    },
+    {
+      "id": 58,
+      "image": "58-party-eight-guests.png",
+      "segment": "Party for Eight Guests",
+      "headline": "8 Mehman. Ek Plan.",
+      "subheadline": "Scale recipes for your guest count."
+    },
+    {
+      "id": 59,
+      "image": "59-tamil-sattvik.png",
+      "segment": "Tamil Brahmin Sattvik",
+      "headline": "Sattvik Meal. Pure Swad.",
+      "subheadline": "Traditional Tamil Brahmin recipes, filtered."
+    }
+  ]
+}

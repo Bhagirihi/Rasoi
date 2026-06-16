@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -7,12 +6,9 @@ import {
   ANDROID_APK_URL,
   APP_FEATURES,
 } from '@/lib/app-download';
+import { downloadMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Download Rasoi — Android APK',
-  description:
-    'Thank you for your interest in Rasoi. We are not on the Play Store yet — download the Android APK and explore app features.',
-};
+export const metadata = downloadMetadata;
 
 export default function DownloadPage() {
   return (

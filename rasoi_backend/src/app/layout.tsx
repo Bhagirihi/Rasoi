@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
 
 import './globals.css';
+import { rootMetadata } from '@/lib/seo';
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -15,14 +16,7 @@ const cormorant = Cormorant_Garamond({
   weight: ['400', '500', '600', '700'],
 });
 
-export const metadata: Metadata = {
-  title: 'Rasoi — Indian home cooking',
-  description: 'Discover regional Indian recipes, smart pantry matching, and one-tap partner checkout.',
-  icons: {
-    icon: '/favicon.png',
-    apple: '/apple-icon.png',
-  },
-};
+export const metadata: Metadata = rootMetadata;
 
 export default function RootLayout({
   children,
@@ -30,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${dmSans.variable} ${cormorant.variable} h-full`}>
+    <html lang="en-IN" className={`${dmSans.variable} ${cormorant.variable} h-full`}>
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );

@@ -55,7 +55,7 @@ function resolveDevApiUrl(configured?: string): string {
   return base;
 }
 
-const PROD_API_URL = 'https://rasoiapp.vercel.app';
+const PROD_API_URL = 'https://rasoiapplication.in';
 
 export function getApiBaseUrl(): string {
   const configured = process.env.EXPO_PUBLIC_API_URL?.trim();

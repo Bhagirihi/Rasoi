@@ -3,7 +3,7 @@
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   CRON_SECRET              — same value as Vercel env CRON_SECRET
-#   MEAL_NOTIFICATIONS_URL   — e.g. https://rasoiapp.vercel.app/api/cron/meal-notifications
+#   MEAL_NOTIFICATIONS_URL   — e.g. https://rasoiapplication.in/api/cron/meal-notifications
 
 name: Meal notifications
 
