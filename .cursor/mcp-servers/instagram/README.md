@@ -27,7 +27,7 @@ If Instagram asks for 2FA or a challenge, set `INSTAGRAM_VERIFICATION_CODE` in `
 | `instagram_publish_due_custom_posts` | Publish due custom posts |
 
 Campaign images: `docs/marketing/ad-images/`  
-Schedule starts **17 Jun 2026, 7 PM IST**, one post per day.
+Schedule starts **17 Jun 2026, 10 AM IST**, one post per day.
 
 ## CLI (cron)
 

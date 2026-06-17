@@ -16,9 +16,9 @@ STATE_FILE = SERVER_ROOT / "schedule-state.json"
 CUSTOM_FILE = SERVER_ROOT / "custom-schedule.json"
 
 IST = timezone(timedelta(hours=5, minutes=30))
-CAMPAIGN_START = datetime(2026, 6, 17, 19, 0, tzinfo=IST)
+CAMPAIGN_START = datetime(2026, 6, 17, 10, 0, tzinfo=IST)
 POST_INTERVAL = timedelta(days=1)
-POST_HOUR = 19  # 7 PM IST daily
+POST_HOUR = 10  # 10 AM IST daily
 
 APK_DOWNLOAD_URL = "https://rasoiapplication.in/download"
 

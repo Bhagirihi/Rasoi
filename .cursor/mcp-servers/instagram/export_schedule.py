@@ -19,7 +19,7 @@ def export_schedule() -> dict:
     payload = {
         "apk_download_url": "https://rasoiapplication.in/download",
         "timezone": "Asia/Kolkata",
-        "publish_time": "19:00 IST daily",
+        "publish_time": "10:00 IST daily",
         "published_count": sum(1 for r in rows if r["published"]),
         "scheduled_count": sum(1 for r in rows if r.get("instagram_scheduled")),
         "pending_count": len(pending),

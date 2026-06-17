@@ -1,4 +1,4 @@
-# Fires daily at 7:00 PM IST (13:30 UTC) to publish the next due Rasoi ad post.
+# Fires daily at 10:00 AM IST (04:30 UTC) to publish the next due Rasoi ad post.
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   INSTAGRAM_USERNAME
@@ -8,7 +8,7 @@ name: Instagram campaign
 
 on:
   schedule:
-    - cron: '30 13 * * *'
+    - cron: '30 4 * * *'
   workflow_dispatch:
 
 concurrency:

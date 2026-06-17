@@ -34,7 +34,7 @@ Configured in `.cursor/mcp-servers/instagram/instagram_seo.py` and applied by th
 
 ## What still helps ranking (manual)
 
-1. **Consistency** — daily posts (GitHub Action at 7 PM IST) build keyword + engagement signals.
+1. **Consistency** — daily posts (GitHub Action at 10 AM IST) build keyword + engagement signals.
 2. **Reels** — Instagram prioritizes Reels in search; post `docs/AI_influence/rasoi_reel_v1.mp4` with same keywords in caption.
 3. **Engagement** — reply to comments, share to Stories, ask “Jamvanu?” in Stories polls.
 4. **Gujarat geo** — run Ad 7 (Gujarati) early; use `#Jamvanu` heavily in Gujarat-targeted Stories.

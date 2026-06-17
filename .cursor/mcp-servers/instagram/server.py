@@ -121,7 +121,7 @@ def instagram_schedule_custom_post(
     caption: str,
     scheduled_at: str,
 ) -> str:
-    """Queue a one-off Instagram post. scheduled_at must be ISO datetime, e.g. 2026-06-17T19:00:00+05:30."""
+    """Queue a one-off Instagram post. scheduled_at must be ISO datetime, e.g. 2026-06-17T10:00:00+05:30."""
     try:
         resolve_repo_path(image_path)
         row = add_custom_post(image_path, caption, scheduled_at)
