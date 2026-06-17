@@ -1,8 +1,11 @@
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
 
-/** Served from /public/rasoi-release.apk on Vercel (rasoiapplication.in). */
-export const ANDROID_APK_URL = `${SITE_URL}/rasoi-release.apk`;
+/**
+ * Download button target. Resolves to Expo EAS artifact when ANDROID_APK_EXPO_URL is set on Vercel,
+ * otherwise falls back to the APK in /public on this site.
+ */
+export const ANDROID_APK_URL = `${SITE_URL}/api/download/apk`;
 
 export const APP_DOWNLOAD_PATH = '/download';
 
