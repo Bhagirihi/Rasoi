@@ -1,5 +1,8 @@
-export const ANDROID_APK_URL =
-  'https://github.com/Bhagirihi/Rasoi/releases/latest/download/rasoi-release.apk';
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
+
+/** Served from /public/rasoi-release.apk on Vercel (rasoiapplication.in). */
+export const ANDROID_APK_URL = `${SITE_URL}/rasoi-release.apk`;
 
 export const APP_DOWNLOAD_PATH = '/download';
 

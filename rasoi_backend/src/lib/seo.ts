@@ -31,8 +31,7 @@ export const DEFAULT_KEYWORDS = [
 
 export const TWITTER_HANDLE = '@rasoiapp';
 
-export const ANDROID_APK_URL =
-  'https://github.com/Bhagirihi/Rasoi/releases/latest/download/rasoi-release.apk';
+import { ANDROID_APK_URL } from '@/lib/app-download';
 
 export const FAQ_ITEMS = [
   {

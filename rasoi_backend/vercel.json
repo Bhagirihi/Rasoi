@@ -4,5 +4,20 @@
       "path": "/api/cron/keep-alive",
       "schedule": "0 0 * * *"
     }
+  ],
+  "headers": [
+    {
+      "source": "/rasoi-release.apk",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"rasoi-release.apk\""
+        }
+      ]
+    }
   ]
 }
