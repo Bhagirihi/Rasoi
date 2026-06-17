@@ -266,28 +266,63 @@ export async function syncDailyReminder(enabled: boolean): Promise<boolean> {
 }
 
 export async function getExpoPushToken(): Promise<string | null> {
-  if (Platform.OS === 'web' || !isRemotePushAvailable()) return null;
+  const result = await getExpoPushTokenDetailed();
+  return result.ok ? result.token : null;
+}
+
+export type ExpoPushTokenResult =
+  | { ok: true; token: string }
+  | { ok: false; reason: string };
+
+export async function getExpoPushTokenDetailed(): Promise<ExpoPushTokenResult> {
+  if (Platform.OS === 'web') {
+    return { ok: false, reason: 'Push tokens are not supported on web' };
+  }
+
+  if (!isRemotePushAvailable()) {
+    return { ok: false, reason: 'Remote push is unavailable in Expo Go on Android — use a release APK' };
+  }
 
   await setupRemoteMealNotifications();
 
   const Notifications = await getNotifications();
-  if (!Notifications) return null;
+  if (!Notifications) {
+    return { ok: false, reason: 'Notifications module failed to load' };
+  }
 
   const granted = await ensureNotificationPermissions();
-  if (!granted) return null;
+  if (!granted) {
+    return { ok: false, reason: 'Notification permission not granted' };
+  }
+
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId?.trim() ||
+    Constants.easConfig?.projectId?.trim() ||
+    '';
+
+  if (!projectId) {
+    return {
+      ok: false,
+      reason: 'Missing EXPO_PUBLIC_EAS_PROJECT_ID — run npm run setup:push and rebuild the APK',
+    };
+  }
 
   try {
-    const projectId =
-      Constants.expoConfig?.extra?.eas?.projectId ??
-      Constants.easConfig?.projectId;
-
-    const tokenResult = projectId
-      ? await Notifications.getExpoPushTokenAsync({ projectId })
-      : await Notifications.getExpoPushTokenAsync();
-
-    return tokenResult.data || null;
-  } catch {
-    return null;
+    const tokenResult = await Notifications.getExpoPushTokenAsync({ projectId });
+    const token = tokenResult.data?.trim();
+    if (!token) {
+      return { ok: false, reason: 'Expo returned an empty push token' };
+    }
+    return { ok: true, token };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/google-services|FirebaseApp|FCM/i.test(message)) {
+      return {
+        ok: false,
+        reason: 'Missing google-services.json — add Firebase config and rebuild (see docs/PUSH_SETUP.md)',
+      };
+    }
+    return { ok: false, reason: message || 'Failed to get Expo push token' };
   }
 }
 

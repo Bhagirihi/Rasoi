@@ -2,7 +2,8 @@
   "expo": {
     "name": "Rasoi",
     "slug": "rasoi",
-    "version": "1.0.2",
+    "owner": "takeyshi",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rasoi",
@@ -12,7 +13,7 @@
     },
     "android": {
       "package": "com.rasoi.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "backgroundColor": "#FF6B35",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -61,6 +62,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "01de1672-85ce-4ad7-83d7-7fc958fc5659"
+      }
     }
   }
 }

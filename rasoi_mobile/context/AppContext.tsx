@@ -8,6 +8,7 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
+import { AppState } from 'react-native';
 
 import { PlanTier, type BillingInterval } from '@/constants/plans';
 import { CuisineId, DietChoice } from '@/constants/theme';
@@ -30,14 +31,14 @@ import {
 import type { UserProfileResponse } from '@/types/api';
 import { authError, authLog } from '@/utils/authLogger';
 import { clearAuthToken, getAuthToken } from '@/utils/authToken';
-import { clearSentryUser, setSentryUser } from '@/utils/sentry';
+import { clearSentryUser, captureException, captureMessage, setSentryUser } from '@/utils/sentry';
 import { resolvePlanState, type ResolvedPlan } from '@/utils/planLogic';
 import {
   syncDailyReminder,
   sendDailyReminderThankYouNotification,
   sendRecipeSavedNotification,
   scheduleTrialDayTwoReminder,
-  getExpoPushToken,
+  getExpoPushTokenDetailed,
   getPushPlatform,
 } from '@/utils/notifications';
 import {
@@ -156,16 +157,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const expoPushToken = await getExpoPushToken();
-      if (!expoPushToken) return;
+      const tokenResult = await getExpoPushTokenDetailed();
+      if (!tokenResult.ok) {
+        captureMessage(`push_token_failed: ${tokenResult.reason}`, 'warning');
+        return;
+      }
 
       await registerPushToken({
-        expoPushToken,
+        expoPushToken: tokenResult.token,
         platform: getPushPlatform(),
         active: true,
       });
-    } catch {
-      // Push token sync is best-effort; local reminders still work.
+    } catch (error) {
+      captureException(error, { scope: 'syncPushTokenToServer' });
     }
   }, []);
 
@@ -350,6 +354,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (isLoggedIn) {
       void syncPushTokenToServer(notificationsEnabled);
     }
+  }, [isHydrated, isLoggedIn, notificationsEnabled, syncPushTokenToServer]);
+
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || !notificationsEnabled) return;
+
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        void syncPushTokenToServer(true);
+      }
+    });
+
+    return () => sub.remove();
   }, [isHydrated, isLoggedIn, notificationsEnabled, syncPushTokenToServer]);
 
   const startTrial = useCallback(
