@@ -2,6 +2,7 @@
 *.zip
 
 # User-requested exclusions
+docs/AI_influence/
 rasoi_mobile/screenshots-backup-pre-v2/
 rasoi_mobile/.qa/
 

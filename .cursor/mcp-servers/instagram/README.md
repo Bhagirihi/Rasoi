@@ -1,22 +1,43 @@
-# Instagram MCP (meta-mcp)
+# Instagram MCP (username/password)
 
-Uses [@exileum/meta-mcp](https://github.com/exileum/meta-mcp) for posting and managing a Business/Creator Instagram account via Meta's official API.
+Posts to `@rasoi_app` using [instagrapi](https://github.com/subzeroid/instagrapi) with credentials stored in a local `.env` file.
 
 ## Setup
 
-1. Switch your Instagram account to **Business** or **Creator** (Settings → Account type).
-2. Create a Meta app at [developers.facebook.com](https://developers.facebook.com).
-3. Add product: **Instagram → API setup with Instagram business login**.
-4. Under **Generate access tokens**, add your Instagram account and copy the long-lived token.
-5. Copy `.env.example` → `.env` and set:
-   - `INSTAGRAM_ACCESS_TOKEN` — your `IGAA…` token
-   - `INSTAGRAM_USER_ID` — numeric user ID from `/me`, or `me`
-6. Reload MCP in Cursor (Settings → MCP → refresh, or restart Cursor).
+1. Copy env template:
+   ```bash
+   cp .cursor/mcp-servers/instagram/.env.example .cursor/mcp-servers/instagram/.env
+   ```
+2. Set `INSTAGRAM_USERNAME` and `INSTAGRAM_PASSWORD` in `.env`.
+3. Reload MCP in Cursor (Settings → MCP → refresh).
 
-## What you can do
+If Instagram asks for 2FA or a challenge, set `INSTAGRAM_VERIFICATION_CODE` in `.env` and retry once.
 
-- **Publish:** photos, reels, carousels, stories
-- **Manage:** comments, DMs (needs App Review), insights, hashtags
-- **Analytics:** account and post-level metrics
+## Tools
 
-Tokens expire in ~60 days. Use the `meta_refresh_token` tool with `platform: "instagram"` before expiry.
+| Tool | Description |
+|------|-------------|
+| `instagram_account_status` | Verify login + account info |
+| `instagram_publish_photo` | Post a local image now |
+| `instagram_campaign_overview` | List 59 ad posts + schedule |
+| `instagram_publish_campaign_post` | Publish one ad by id (1–59) |
+| `instagram_publish_due_campaign_posts` | Auto-post due ads |
+| `instagram_schedule_custom_post` | Queue a one-off post |
+| `instagram_list_custom_schedule` | View custom queue |
+| `instagram_publish_due_custom_posts` | Publish due custom posts |
+
+Campaign images: `docs/marketing/ad-images/`  
+Schedule starts **17 Jun 2026, 7 PM IST**, one post per day.
+
+## CLI (cron)
+
+```bash
+.cursor/mcp-servers/instagram/run.sh run-due
+.cursor/mcp-servers/instagram/run.sh run-due --dry-run
+```
+
+## Notes
+
+- Uses unofficial Instagram login — may break if Meta changes auth.
+- Session is cached in `instagram_session.json` (gitignored).
+- Never commit `.env` or session files.
