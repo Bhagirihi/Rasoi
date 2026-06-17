@@ -395,6 +395,7 @@ export const ModelName = {
   KitchenStyle: 'KitchenStyle',
   RegionalCuisineOption: 'RegionalCuisineOption',
   PantrySection: 'PantrySection',
+  AppSettings: 'AppSettings',
   SponsorApplication: 'SponsorApplication'
 } as const
 
@@ -411,7 +412,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "mealNotificationLog" | "affiliateEvent" | "pushToken" | "admin" | "recipe" | "sponsor" | "partnerLink" | "kitchenStyle" | "regionalCuisineOption" | "pantrySection" | "sponsorApplication"
+    modelProps: "user" | "mealNotificationLog" | "affiliateEvent" | "pushToken" | "admin" | "recipe" | "sponsor" | "partnerLink" | "kitchenStyle" | "regionalCuisineOption" | "pantrySection" | "appSettings" | "sponsorApplication"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1229,6 +1230,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AppSettings: {
+      payload: Prisma.$AppSettingsPayload<ExtArgs>
+      fields: Prisma.AppSettingsFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AppSettingsFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AppSettingsFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>
+        }
+        findFirst: {
+          args: Prisma.AppSettingsFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AppSettingsFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>
+        }
+        findMany: {
+          args: Prisma.AppSettingsFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>[]
+        }
+        create: {
+          args: Prisma.AppSettingsCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>
+        }
+        createMany: {
+          args: Prisma.AppSettingsCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AppSettingsCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>[]
+        }
+        delete: {
+          args: Prisma.AppSettingsDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>
+        }
+        update: {
+          args: Prisma.AppSettingsUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>
+        }
+        deleteMany: {
+          args: Prisma.AppSettingsDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AppSettingsUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AppSettingsUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>[]
+        }
+        upsert: {
+          args: Prisma.AppSettingsUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppSettingsPayload>
+        }
+        aggregate: {
+          args: Prisma.AppSettingsAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAppSettings>
+        }
+        groupBy: {
+          args: Prisma.AppSettingsGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppSettingsGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AppSettingsCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppSettingsCountAggregateOutputType> | number
+        }
+      }
+    }
     SponsorApplication: {
       payload: Prisma.$SponsorApplicationPayload<ExtArgs>
       fields: Prisma.SponsorApplicationFieldRefs
@@ -1510,6 +1585,15 @@ export const PantrySectionScalarFieldEnum = {
 export type PantrySectionScalarFieldEnum = (typeof PantrySectionScalarFieldEnum)[keyof typeof PantrySectionScalarFieldEnum]
 
 
+export const AppSettingsScalarFieldEnum = {
+  id: 'id',
+  paymentsEnabled: 'paymentsEnabled',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AppSettingsScalarFieldEnum = (typeof AppSettingsScalarFieldEnum)[keyof typeof AppSettingsScalarFieldEnum]
+
+
 export const SponsorApplicationScalarFieldEnum = {
   id: 'id',
   companyName: 'companyName',
@@ -1756,6 +1840,7 @@ export type GlobalOmitConfig = {
   kitchenStyle?: Prisma.KitchenStyleOmit
   regionalCuisineOption?: Prisma.RegionalCuisineOptionOmit
   pantrySection?: Prisma.PantrySectionOmit
+  appSettings?: Prisma.AppSettingsOmit
   sponsorApplication?: Prisma.SponsorApplicationOmit
 }
 

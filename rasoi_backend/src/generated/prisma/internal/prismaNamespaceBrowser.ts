@@ -62,6 +62,7 @@ export const ModelName = {
   KitchenStyle: 'KitchenStyle',
   RegionalCuisineOption: 'RegionalCuisineOption',
   PantrySection: 'PantrySection',
+  AppSettings: 'AppSettings',
   SponsorApplication: 'SponsorApplication'
 } as const
 
@@ -247,6 +248,15 @@ export const PantrySectionScalarFieldEnum = {
 } as const
 
 export type PantrySectionScalarFieldEnum = (typeof PantrySectionScalarFieldEnum)[keyof typeof PantrySectionScalarFieldEnum]
+
+
+export const AppSettingsScalarFieldEnum = {
+  id: 'id',
+  paymentsEnabled: 'paymentsEnabled',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AppSettingsScalarFieldEnum = (typeof AppSettingsScalarFieldEnum)[keyof typeof AppSettingsScalarFieldEnum]
 
 
 export const SponsorApplicationScalarFieldEnum = {

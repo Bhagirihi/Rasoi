@@ -73,6 +73,11 @@ export type RegionalCuisineOption = Prisma.RegionalCuisineOptionModel
  */
 export type PantrySection = Prisma.PantrySectionModel
 /**
+ * Model AppSettings
+ * 
+ */
+export type AppSettings = Prisma.AppSettingsModel
+/**
  * Model SponsorApplication
  * 
  */
