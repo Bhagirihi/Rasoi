@@ -22,10 +22,7 @@ POST_HOUR = 19  # 7 PM IST daily
 
 APK_DOWNLOAD_URL = "https://rasoiapplication.in/download"
 
-BASE_HASHTAGS = (
-    "#Rasoi #RasoiApp #IndianFood #HomeCooking #DesiFood #IndianKitchen "
-    "#WhatsForDinner #FoodTech #IndianStartup #AndroidApp"
-)
+from instagram_seo import BASE_HASHTAGS, CAPTION_SEO_LINE, PROFILE_BIO, PROFILE_FULL_NAME
 
 SEGMENT_HASHTAGS: dict[str, str] = {
     "Housewives": "#AajKyaBanaye #Homemaker #IndianMom #DinnerIdeas",
@@ -38,8 +35,8 @@ SEGMENT_HASHTAGS: dict[str, str] = {
     "Bachelors/PG": "#PGlife #HostelCooking #BachelorPad #EasyRecipes",
     "Jain Household": "#JainFood #PureVeg #Satvik #JainRecipes",
     "Jain": "#JainFood #PureVeg #Satvik #JainRecipes",
-    "Gujarati Regional Pride": "#GujaratiFood #Ahmedabad #Surat #Handvo",
-    "Gujarati": "#GujaratiFood #Ahmedabad #Surat #Handvo",
+    "Gujarati Regional Pride": "#Jamvanu #GujaratiFood #Ahmedabad #Surat #Handvo #JamvanuRecipe",
+    "Gujarati": "#Jamvanu #GujaratiFood #Ahmedabad #Surat #Handvo #JamvanuRecipe",
     "South Indian Morning": "#SouthIndianFood #Dosa #Idli #Breakfast",
     "South Indian": "#SouthIndianFood #Dosa #Idli #Breakfast",
     "Punjabi Hearty Dinner": "#PunjabiFood #NorthIndian #DalTadka #Paneer",
@@ -181,6 +178,8 @@ def build_caption(ad: dict[str, Any]) -> str:
     segment_tags = _segment_tags(segment)
 
     lines = [
+        CAPTION_SEO_LINE,
+        "",
         headline,
         "",
         subheadline,
@@ -189,9 +188,9 @@ def build_caption(ad: dict[str, Any]) -> str:
         "",
         result,
         "",
-        "Rasoi — your Indian kitchen companion. 1,200+ recipes, pantry match, meal reminders & more.",
+        "Rasoi recipe app — 4,000+ Indian recipes, pantry match, meal reminders.",
         "",
-        "📲 Download free on Android (APK):",
+        "📲 Download Rasoi app free (Android APK):",
         APK_DOWNLOAD_URL,
         "",
         f"{BASE_HASHTAGS} {segment_tags}",

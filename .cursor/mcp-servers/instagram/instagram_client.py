@@ -120,3 +120,31 @@ class InstagramClient:
             "url": url,
             "scheduled_at": schedule_at.isoformat(),
         }
+
+    def update_profile_seo(self) -> dict[str, Any]:
+        from instagram_seo import APK_DOWNLOAD_URL, PROFILE_BIO, PROFILE_FULL_NAME
+
+        self.login()
+        try:
+            account = self._client.account_edit(
+                biography=PROFILE_BIO,
+                full_name=PROFILE_FULL_NAME,
+                external_url=APK_DOWNLOAD_URL,
+            )
+        except Exception as exc:
+            raise InstagramError(f"Failed to update profile: {exc}") from exc
+
+        return {
+            "username": account.username,
+            "full_name": account.full_name,
+            "biography": getattr(account, "biography", PROFILE_BIO),
+            "external_url": APK_DOWNLOAD_URL,
+        }
+
+    def edit_caption(self, media_id: str, caption: str) -> dict[str, Any]:
+        self.login()
+        try:
+            self._client.media_edit(media_id, caption)
+        except Exception as exc:
+            raise InstagramError(f"Failed to edit caption: {exc}") from exc
+        return {"media_id": media_id, "caption_updated": True}
