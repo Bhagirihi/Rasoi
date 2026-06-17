@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -91,4 +92,31 @@ class InstagramClient:
             "media_id": str(media.pk),
             "code": media.code,
             "url": f"https://www.instagram.com/p/{media.code}/",
+        }
+
+    def schedule_photo(self, image_path: Path, caption: str, schedule_at: datetime) -> dict[str, Any]:
+        self.login()
+        if not image_path.is_file():
+            raise InstagramError(f"Image not found: {image_path}")
+
+        now = datetime.now(tz=schedule_at.tzinfo)
+        if schedule_at <= now + timedelta(minutes=10):
+            raise InstagramError("Scheduled time must be at least 10 minutes in the future.")
+
+        try:
+            media = self._client.photo_upload(str(image_path), caption, schedule_at=schedule_at)
+        except LoginRequired as exc:
+            SESSION_FILE.unlink(missing_ok=True)
+            self._logged_in = False
+            raise InstagramError("Session expired. Retry after re-login.") from exc
+        except Exception as exc:
+            raise InstagramError(f"Failed to schedule photo: {exc}") from exc
+
+        code = media.code or ""
+        url = f"https://www.instagram.com/p/{code}/" if code else None
+        return {
+            "media_id": str(media.pk),
+            "code": code,
+            "url": url,
+            "scheduled_at": schedule_at.isoformat(),
         }

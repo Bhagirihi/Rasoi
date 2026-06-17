@@ -1,5 +1,5 @@
 .env
 .venv/
 instagram_session.json
-schedule-state.json
+campaign-schedule.json
 custom-schedule.json
