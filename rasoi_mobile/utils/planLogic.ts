@@ -4,6 +4,7 @@ import {
   TRIAL_DURATION_DAYS,
   type PlanTier,
 } from '@/constants/plans';
+import { MONETIZATION_LIVE } from '@/constants/monetizationConfig';
 import { StoredPlanState } from '@/utils/planStorage';
 
 export interface ResolvedPlan {
@@ -128,6 +129,20 @@ export function getTrialDaysLeft(trialStartedAt: string | null, now = Date.now()
 }
 
 export function resolvePlanState(stored: StoredPlanState, now = Date.now()): ResolvedPlan {
+  const resolved = resolveStoredPlanState(stored, now);
+  if (MONETIZATION_LIVE) {
+    return resolved;
+  }
+
+  return {
+    ...resolved,
+    showAds: false,
+    showPartners: true,
+    partnersInTrialMode: false,
+  };
+}
+
+function resolveStoredPlanState(stored: StoredPlanState, now = Date.now()): ResolvedPlan {
   if (stored.planTier === 'paid') {
     const features = PLAN_FEATURES.paid;
     return {

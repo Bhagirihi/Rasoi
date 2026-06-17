@@ -6,6 +6,7 @@ import {
   PAYMENT_DISCLAIMERS,
   PAYMENT_PROVIDER_LABELS,
 } from '@/constants/payments';
+import { MONETIZATION_LIVE } from '@/constants/monetizationConfig';
 import { getPaymentProvider } from '@/services/payments';
 import type { PurchaseFlowResult } from '@/services/payments/types';
 
@@ -24,6 +25,12 @@ export function usePaywall({ upgradeToPaid, restorePurchases }: UsePaywallOption
 
   const purchasePlus = useCallback(
     async (interval: BillingInterval = 'monthly'): Promise<PurchaseFlowResult> => {
+      if (!MONETIZATION_LIVE) {
+        const message =
+          'Subscriptions are not open yet during early access. Partner links are unlocked for free.';
+        setLastError(message);
+        return { ok: false, error: message };
+      }
       setIsPurchasing(true);
       setLastError(null);
       try {

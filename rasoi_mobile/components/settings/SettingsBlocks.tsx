@@ -1,7 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import Constants from 'expo-constants';
 import { ChevronRight, LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import {
+  Linking,
   Pressable,
   StyleSheet,
   Switch,
@@ -15,6 +17,13 @@ import { usePartners } from '@/context/PartnersContext';
 import { useTheme } from '@/context/ThemeContext';
 import { colors, layout, radius, shadows, spacing } from '@/constants/theme';
 import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
+
+const LEGAL_BASE_URL = 'https://rasoiapplication.in';
+const APP_VERSION = Constants.expoConfig?.version ?? '1.0.3';
+
+function openLegalUrl(path: '/privacy' | '/terms') {
+  void Linking.openURL(`${LEGAL_BASE_URL}${path}`);
+}
 
 export function SettingsSubHeader({
   title,
@@ -441,7 +450,20 @@ export function SettingsFooter() {
   const { colors: themeColors } = useTheme();
 
   return (
-    <Text style={[styles.footer, { color: themeColors.muted }]}>Rasoi v1.0 · Made for Indian home cooks</Text>
+    <View style={styles.footerWrap}>
+      <View style={styles.footerLinks}>
+        <Pressable onPress={() => openLegalUrl('/privacy')} hitSlop={8}>
+          <Text style={[styles.footerLink, { color: themeColors.primary }]}>Privacy Policy</Text>
+        </Pressable>
+        <Text style={[styles.footerDot, { color: themeColors.muted }]}>·</Text>
+        <Pressable onPress={() => openLegalUrl('/terms')} hitSlop={8}>
+          <Text style={[styles.footerLink, { color: themeColors.primary }]}>Terms</Text>
+        </Pressable>
+      </View>
+      <Text style={[styles.footer, { color: themeColors.muted }]}>
+        Rasoi v{APP_VERSION} · Made for Indian home cooks
+      </Text>
+    </View>
   );
 }
 
@@ -842,9 +864,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.charcoal,
   },
-  footer: {
+  footerWrap: {
     marginTop: spacing.xxxl,
     marginBottom: spacing.lg,
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  footerLinks: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  footerLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  footerDot: {
+    fontSize: 12,
+    color: colors.muted,
+  },
+  footer: {
     textAlign: 'center',
     fontSize: 11,
     color: colors.muted,

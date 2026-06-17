@@ -9,6 +9,7 @@ import {
   TRIAL_DURATION_DAYS,
   type BillingInterval,
 } from '@/constants/plans';
+import { MONETIZATION_LIVE, MONETIZATION_BETA_NOTE } from '@/constants/monetizationConfig';
 import { colors, radius, spacing } from '@/constants/theme';
 
 type PaywallActionsProps = {
@@ -40,11 +41,20 @@ export default function PaywallActions({
 }: PaywallActionsProps) {
   return (
     <View style={styles.wrap}>
-      <View style={styles.providerPill}>
-        <Text style={styles.providerText}>Billing · {providerLabel}</Text>
-      </View>
+      {!MONETIZATION_LIVE && (
+        <View style={styles.betaCard}>
+          <Text style={styles.betaTitle}>Early access</Text>
+          <Text style={styles.betaBody}>{MONETIZATION_BETA_NOTE}</Text>
+        </View>
+      )}
 
-      {canStartTrial && (
+      {MONETIZATION_LIVE && (
+        <View style={styles.providerPill}>
+          <Text style={styles.providerText}>Billing · {providerLabel}</Text>
+        </View>
+      )}
+
+      {MONETIZATION_LIVE && canStartTrial && (
         <Pressable
           onPress={onStartTrial}
           disabled={isBusy}
@@ -54,13 +64,13 @@ export default function PaywallActions({
         </Pressable>
       )}
 
-      {trialExpired && effectiveTier === 'free' && (
+      {MONETIZATION_LIVE && trialExpired && effectiveTier === 'free' && (
         <Text style={styles.expiredNote}>
           Your trial has ended. Subscribe to Rasoi Plus to restore partner checkout.
         </Text>
       )}
 
-      {effectiveTier !== 'paid' && (
+      {MONETIZATION_LIVE && effectiveTier !== 'paid' && (
         <>
           <Pressable
             onPress={() => onSubscribe('yearly')}
@@ -94,7 +104,7 @@ export default function PaywallActions({
         </>
       )}
 
-      {supportsRestore && onRestore && (
+      {MONETIZATION_LIVE && supportsRestore && onRestore && (
         <Pressable onPress={onRestore} disabled={isBusy} style={styles.restoreBtn}>
           <Text style={styles.restoreText}>Restore purchases</Text>
         </Pressable>
@@ -106,7 +116,9 @@ export default function PaywallActions({
         </View>
       )}
 
-      <Text style={styles.disclaimer}>{paymentDisclaimer}</Text>
+      <Text style={styles.disclaimer}>
+        {MONETIZATION_LIVE ? paymentDisclaimer : MONETIZATION_BETA_NOTE}
+      </Text>
     </View>
   );
 }
@@ -114,6 +126,26 @@ export default function PaywallActions({
 const styles = StyleSheet.create({
   wrap: {
     gap: spacing.md,
+  },
+  betaCard: {
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,107,53,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,53,0.2)',
+    padding: spacing.lg,
+  },
+  betaTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  betaBody: {
+    marginTop: spacing.sm,
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.muted,
   },
   providerPill: {
     alignSelf: 'flex-start',

@@ -302,6 +302,12 @@ export default async function HomePage() {
             >
               Download Android app
             </Link>
+            <Link href="/privacy" className="font-semibold hover:text-[#c45c2a]">
+              Privacy
+            </Link>
+            <Link href="/terms" className="font-semibold hover:text-[#c45c2a]">
+              Terms
+            </Link>
             <Link href="/admin/login" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
               Admin console
             </Link>

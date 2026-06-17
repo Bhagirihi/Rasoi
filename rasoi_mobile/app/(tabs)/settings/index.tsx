@@ -16,6 +16,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AdMobBanner from '@/components/AdMobBanner';
+import { MONETIZATION_LIVE, MONETIZATION_BETA_NOTE } from '@/constants/monetizationConfig';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   AccountActionsCard,
@@ -114,13 +115,15 @@ export default function SettingsScreen() {
   };
 
   const planStatusLine =
-    effectiveTier === 'trial' && trialTimeLabel
-      ? `${trialTimeLabel}${trialEndsAtLabel ? ` · Ends ${trialEndsAtLabel}` : ''}`
-      : effectiveTier === 'paid'
-        ? 'All partners · No ads'
-        : showAds
-          ? 'Free · Ads on · Partners locked'
-          : planLabel;
+    !MONETIZATION_LIVE
+      ? MONETIZATION_BETA_NOTE
+      : effectiveTier === 'trial' && trialTimeLabel
+        ? `${trialTimeLabel}${trialEndsAtLabel ? ` · Ends ${trialEndsAtLabel}` : ''}`
+        : effectiveTier === 'paid'
+          ? 'All partners · No ads'
+          : showAds
+            ? 'Free · Ads on · Partners locked'
+            : planLabel;
 
   const openLogin = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -267,10 +270,11 @@ export default function SettingsScreen() {
           </Pressable>
           <View style={[styles.planMeta, { borderTopColor: colors.border }]}>
             <Text style={[styles.planMetaText, { color: colors.muted }]}>
-              {showAds ? 'AdMob enabled' : 'No ads'} ·{' '}
-              {showPartners ? 'Partners unlocked' : 'Partners locked'}
+              {MONETIZATION_LIVE
+                ? `${showAds ? 'AdMob enabled' : 'No ads'} · ${showPartners ? 'Partners unlocked' : 'Partners locked'}`
+                : 'Early access · No ads · Partners unlocked'}
             </Text>
-            {effectiveTier !== 'paid' && (
+            {MONETIZATION_LIVE && effectiveTier !== 'paid' && (
               <>
                 <Text style={[styles.planPrice, { color: colors.primary }]}>
                   Rasoi Plus · {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE}

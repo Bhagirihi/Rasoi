@@ -122,9 +122,17 @@ export default function DownloadPage() {
       <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[#6b6560] lg:px-8">
           <p>Rasoi — Indian recipes for modern home cooks.</p>
-          <Link href="/" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
-            Back to home
-          </Link>
+          <div className="flex flex-wrap items-center gap-6">
+            <Link href="/privacy" className="font-semibold hover:text-[#c45c2a]">
+              Privacy
+            </Link>
+            <Link href="/terms" className="font-semibold hover:text-[#c45c2a]">
+              Terms
+            </Link>
+            <Link href="/" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+              Back to home
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
