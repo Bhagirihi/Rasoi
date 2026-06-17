@@ -6,6 +6,10 @@ export type PlanTier = 'free' | 'trial' | 'paid';
 export type DietChoice = 'Veg' | 'Egg' | 'Non-Veg' | 'Jain';
 export type CuisineId = string;
 
+export interface AppConfigResponse {
+  paymentsEnabled: boolean;
+}
+
 export interface KitchenStyleResponse {
   id: string;
   label: string;

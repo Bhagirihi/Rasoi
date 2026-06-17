@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,6 +25,7 @@ export default function PaywallScreen() {
     trialStartedAt,
     canStartTrial,
     trialExpired,
+    showPaywall,
     startTrial,
     upgradeToPaid,
     restorePurchases,
@@ -31,6 +33,12 @@ export default function PaywallScreen() {
   } = useAppContext();
   const { trialTimeLabel } = useTrialClock(trialStartedAt, effectiveTier);
   const { showDialog } = useAppDialog();
+
+  useEffect(() => {
+    if (!showPaywall) {
+      router.back();
+    }
+  }, [router, showPaywall]);
 
   const paywall = usePaywall({ upgradeToPaid, restorePurchases });
 

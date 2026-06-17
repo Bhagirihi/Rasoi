@@ -1,7 +1,3 @@
-/** Set EXPO_PUBLIC_MONETIZATION_LIVE=1 when AdMob + real billing are wired for store launch. */
-export const MONETIZATION_LIVE =
-  process.env.EXPO_PUBLIC_MONETIZATION_LIVE === '1' ||
-  process.env.EXPO_PUBLIC_MONETIZATION_LIVE === 'true';
-
-export const MONETIZATION_BETA_NOTE =
-  'Early access — partner links unlocked, ads and subscriptions coming with Play Store launch.';
+/** Copy shown when server has payments disabled (early access). */
+export const PAYMENTS_DISABLED_NOTE =
+  'Early access — partner links unlocked. Ads and sponsors still show. Paywall is off until admin enables payments.';

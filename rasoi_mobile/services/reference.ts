@@ -12,12 +12,20 @@ export type ReferenceData = {
   regionalCuisines: string[];
   pantrySections: PantrySection[];
   kitchenStyles: KitchenStyle[];
+  appConfig: {
+    paymentsEnabled: boolean;
+  };
+};
+
+const DEFAULT_APP_CONFIG = {
+  paymentsEnabled: false,
 };
 
 const EMPTY_REFERENCE: ReferenceData = {
   regionalCuisines: [],
   pantrySections: [],
   kitchenStyles: [],
+  appConfig: DEFAULT_APP_CONFIG,
 };
 
 let cachedReference: ReferenceData | null = null;
@@ -34,8 +42,11 @@ export async function loadReferenceData(force = false): Promise<ReferenceData> {
 
   loadPromise = apiFetch<ReferenceData>('/api/reference')
     .then((data) => {
-      cachedReference = data;
-      return data;
+      cachedReference = {
+        ...data,
+        appConfig: data.appConfig ?? DEFAULT_APP_CONFIG,
+      };
+      return cachedReference;
     })
     .catch((error) => {
       if (cachedReference && !force) {

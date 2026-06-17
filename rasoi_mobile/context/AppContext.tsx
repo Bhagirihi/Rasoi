@@ -63,6 +63,7 @@ export type FoodPreferencesPayload = {
 };
 
 interface AppContextValue extends ResolvedPlan {
+  paymentsEnabled: boolean;
   isHydrated: boolean;
   hasCompletedOnboarding: boolean;
   isLoggedIn: boolean;
@@ -123,7 +124,7 @@ function planFromUser(user: UserProfileResponse): StoredPlanState {
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const { recipes, getRecipeById } = useRecipes();
-  const { kitchenStyles } = useReferenceData();
+  const { kitchenStyles, paymentsEnabled } = useReferenceData();
   const [isHydrated, setIsHydrated] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -174,15 +175,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dietPreference = useMemo(() => dietChoiceToFilter(dietChoice), [dietChoice]);
-  const resolvedPlan = useMemo(() => resolvePlanState(planState), [planState]);
+  const resolvedPlan = useMemo(
+    () => resolvePlanState(planState, paymentsEnabled),
+    [planState, paymentsEnabled],
+  );
 
-  const applyPlanState = useCallback((next: StoredPlanState) => {
-    setPlanState(next);
-    const resolved = resolvePlanState(next);
-    if (resolved.effectiveTier === 'free' && next.planTier === 'trial' && resolved.trialExpired) {
-      setPlanState((current) => ({ ...current, planTier: 'free' }));
-    }
-  }, []);
+  const applyPlanState = useCallback(
+    (next: StoredPlanState) => {
+      setPlanState(next);
+      const resolved = resolvePlanState(next, paymentsEnabled);
+      if (resolved.effectiveTier === 'free' && next.planTier === 'trial' && resolved.trialExpired) {
+        setPlanState((current) => ({ ...current, planTier: 'free' }));
+      }
+    },
+    [paymentsEnabled],
+  );
 
   const applyLocalOnboarding = useCallback((local: Awaited<ReturnType<typeof loadLocalOnboardingState>>) => {
     setHasCompletedOnboarding(local.hasCompletedOnboarding);
@@ -238,7 +245,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const maybeStartTrialAfterAuth = useCallback(
     async (user: UserProfileResponse, options?: { showWelcome?: boolean }) => {
-      if (!user.hasCompletedOnboarding || user.plan.hasUsedTrial) return false;
+      if (!paymentsEnabled || !user.hasCompletedOnboarding || user.plan.hasUsedTrial) return false;
       const startedAt = new Date().toISOString();
       const plan = await updateUserPlan({
         planTier: 'trial',
@@ -259,7 +266,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return false;
     },
-    [applyPlanState, setPendingTrialWelcome],
+    [applyPlanState, paymentsEnabled, setPendingTrialWelcome],
   );
 
   const finishAuthAfterSync = useCallback(
@@ -370,7 +377,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const startTrial = useCallback(
     async (options?: { showWelcome?: boolean }) => {
-      if (planState.hasUsedTrial) return false;
+      if (!paymentsEnabled || planState.hasUsedTrial) return false;
 
       if (isLoggedIn) {
         const startedAt = new Date().toISOString();
@@ -402,7 +409,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return true;
     },
-    [applyPlanState, isLoggedIn, planState.hasUsedTrial, setPendingTrialWelcome],
+    [applyPlanState, isLoggedIn, paymentsEnabled, planState.hasUsedTrial, setPendingTrialWelcome],
   );
 
   const dismissTrialWelcome = useCallback(() => {
@@ -410,6 +417,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [setPendingTrialWelcome]);
 
   const upgradeToPaid = useCallback(async (interval: BillingInterval = 'monthly') => {
+    if (!paymentsEnabled) {
+      throw new Error('Payments are disabled in admin settings.');
+    }
     const result = await purchaseRasoiPlusDefault(
       {
         isLoggedIn,
@@ -421,9 +431,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw new Error(result.error);
     }
     applyPlanState(result.planState);
-  }, [applyPlanState, isLoggedIn, planState.trialStartedAt]);
-
-  const restorePurchases = useCallback(async () => {
+  }, [applyPlanState, isLoggedIn, paymentsEnabled, planState.trialStartedAt]);
     const result = await restoreRasoiPlus({
       isLoggedIn,
       trialStartedAt: planState.trialStartedAt,
@@ -727,6 +735,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppContextValue>(
     () => ({
       ...resolvedPlan,
+      paymentsEnabled,
       isHydrated,
       hasCompletedOnboarding,
       isLoggedIn,
@@ -770,6 +779,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }),
     [
       resolvedPlan,
+      paymentsEnabled,
       isHydrated,
       hasCompletedOnboarding,
       isLoggedIn,

@@ -11,13 +11,13 @@ import { PAYWALL_HREF } from '@/utils/routes';
 
 export default function TrialCountdownBanner() {
   const router = useRouter();
-  const { effectiveTier, trialStartedAt } = useAppContext();
+  const { effectiveTier, trialStartedAt, showPaywall } = useAppContext();
   const { trialTimeLabel, trialEndsAtLabel, trialDaysLeft } = useTrialClock(
     trialStartedAt,
     effectiveTier,
   );
 
-  if (effectiveTier !== 'trial' || trialDaysLeft === null || trialDaysLeft <= 0) {
+  if (!showPaywall || effectiveTier !== 'trial' || trialDaysLeft === null || trialDaysLeft <= 0) {
     return null;
   }
 

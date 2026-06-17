@@ -185,6 +185,14 @@ model PantrySection {
   @@schema("rasoi")
 }
 
+model AppSettings {
+  id              String   @id @default("default")
+  paymentsEnabled Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  @@schema("rasoi")
+}
+
 model SponsorApplication {
   id                 String   @id @default(cuid())
   companyName        String

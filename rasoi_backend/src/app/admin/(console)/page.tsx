@@ -1,14 +1,17 @@
 import { prisma } from '@/lib/prisma';
+import { getAppConfig } from '@/lib/app-settings';
 
+import PaymentsToggle from '@/app/admin/_components/PaymentsToggle';
 import StatCard from '@/app/admin/_components/StatCard';
 import { AdminCard, GhostButton, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 
 export default async function AdminDashboardPage() {
-  const [recipeCount, sponsorCount, userCount, guestCount] = await Promise.all([
+  const [recipeCount, sponsorCount, userCount, guestCount, appConfig] = await Promise.all([
     prisma.recipe.count(),
     prisma.sponsor.count({ where: { active: true } }),
     prisma.user.count(),
     prisma.user.count({ where: { isGuest: true } }),
+    getAppConfig(),
   ]);
 
   return (
@@ -61,24 +64,10 @@ export default async function AdminDashboardPage() {
 
         <AdminCard className="p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-            Service health
+            Payment
           </p>
-          <h2 className="font-display mt-2 text-2xl font-semibold text-admin-ink">
-            API ready
-          </h2>
-          <div className="mt-6 space-y-4 text-sm">
-            <div className="rounded-xl border border-admin-border bg-white/50 px-4 py-3">
-              <p className="text-admin-muted">Mobile auth</p>
-              <p className="mt-1 font-medium">Phone login & guest sessions</p>
-            </div>
-            <div className="rounded-xl border border-admin-border bg-white/50 px-4 py-3">
-              <p className="text-admin-muted">Content delivery</p>
-              <p className="mt-1 font-medium">Recipes & sponsors API live</p>
-            </div>
-            <div className="rounded-xl border border-admin-border bg-white/50 px-4 py-3">
-              <p className="text-admin-muted">Member data</p>
-              <p className="mt-1 font-medium">Pantry, saved recipes, plan sync</p>
-            </div>
+          <div className="mt-4">
+            <PaymentsToggle paymentsEnabled={appConfig.paymentsEnabled} />
           </div>
         </AdminCard>
       </div>

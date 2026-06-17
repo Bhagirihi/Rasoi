@@ -1,13 +1,15 @@
 import { jsonOk, handleApiError } from '@/lib/api';
+import { getAppConfig } from '@/lib/app-settings';
 import { getActiveKitchenStyles } from '@/lib/kitchen-styles';
 import { getActivePantrySections, getActiveRegionalCuisines } from '@/lib/reference-data';
 
 export async function GET() {
   try {
-    const [kitchenStyles, regionalCuisines, pantrySections] = await Promise.all([
+    const [kitchenStyles, regionalCuisines, pantrySections, appConfig] = await Promise.all([
       getActiveKitchenStyles(),
       getActiveRegionalCuisines(),
       getActivePantrySections(),
+      getAppConfig(),
     ]);
 
     return jsonOk({
@@ -24,6 +26,7 @@ export async function GET() {
         region: style.region,
         heroImage: style.heroImage,
       })),
+      appConfig,
     });
   } catch (error) {
     return handleApiError(error);

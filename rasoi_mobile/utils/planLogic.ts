@@ -4,7 +4,6 @@ import {
   TRIAL_DURATION_DAYS,
   type PlanTier,
 } from '@/constants/plans';
-import { MONETIZATION_LIVE } from '@/constants/monetizationConfig';
 import { StoredPlanState } from '@/utils/planStorage';
 
 export interface ResolvedPlan {
@@ -13,6 +12,7 @@ export interface ResolvedPlan {
   planLabel: string;
   showAds: boolean;
   showPartners: boolean;
+  showPaywall: boolean;
   partnersInTrialMode: boolean;
   trialStartedAt: string | null;
   trialEndsAt: string | null;
@@ -128,16 +128,21 @@ export function getTrialDaysLeft(trialStartedAt: string | null, now = Date.now()
   return Math.floor(remainingMs / MS_PER_DAY);
 }
 
-export function resolvePlanState(stored: StoredPlanState, now = Date.now()): ResolvedPlan {
+export function resolvePlanState(
+  stored: StoredPlanState,
+  paymentsEnabled: boolean,
+  now = Date.now(),
+): ResolvedPlan {
   const resolved = resolveStoredPlanState(stored, now);
-  if (MONETIZATION_LIVE) {
-    return resolved;
+  if (paymentsEnabled) {
+    return { ...resolved, showPaywall: true };
   }
 
   return {
     ...resolved,
-    showAds: false,
+    showAds: true,
     showPartners: true,
+    showPaywall: false,
     partnersInTrialMode: false,
   };
 }
@@ -151,6 +156,7 @@ function resolveStoredPlanState(stored: StoredPlanState, now = Date.now()): Reso
       planLabel: PLAN_LABELS.paid,
       showAds: features.ads,
       showPartners: features.partners,
+      showPaywall: true,
       partnersInTrialMode: features.partnersTrialMode,
       trialStartedAt: stored.trialStartedAt,
       trialEndsAt: null,
@@ -171,6 +177,7 @@ function resolveStoredPlanState(stored: StoredPlanState, now = Date.now()): Reso
         planLabel: PLAN_LABELS.trial,
         showAds: features.ads,
         showPartners: features.partners,
+        showPaywall: true,
         partnersInTrialMode: features.partnersTrialMode,
         trialStartedAt: stored.trialStartedAt,
         trialEndsAt: getTrialEndsAt(stored.trialStartedAt),
@@ -188,6 +195,7 @@ function resolveStoredPlanState(stored: StoredPlanState, now = Date.now()): Reso
       planLabel: PLAN_LABELS.free,
       showAds: features.ads,
       showPartners: features.partners,
+      showPaywall: true,
       partnersInTrialMode: features.partnersTrialMode,
       trialStartedAt: stored.trialStartedAt,
       trialEndsAt: getTrialEndsAt(stored.trialStartedAt),
@@ -205,6 +213,7 @@ function resolveStoredPlanState(stored: StoredPlanState, now = Date.now()): Reso
     planLabel: PLAN_LABELS.free,
     showAds: features.ads,
     showPartners: features.partners,
+    showPaywall: true,
     partnersInTrialMode: features.partnersTrialMode,
     trialStartedAt: stored.trialStartedAt,
     trialEndsAt: null,

@@ -9,8 +9,9 @@ import {
   TRIAL_DURATION_DAYS,
   type BillingInterval,
 } from '@/constants/plans';
-import { MONETIZATION_LIVE, MONETIZATION_BETA_NOTE } from '@/constants/monetizationConfig';
+import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import { colors, radius, spacing } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
 
 type PaywallActionsProps = {
   effectiveTier: 'free' | 'trial' | 'paid';
@@ -39,22 +40,24 @@ export default function PaywallActions({
   onSubscribe,
   onRestore,
 }: PaywallActionsProps) {
+  const { paymentsEnabled } = useAppContext();
+
   return (
     <View style={styles.wrap}>
-      {!MONETIZATION_LIVE && (
+      {!paymentsEnabled && (
         <View style={styles.betaCard}>
-          <Text style={styles.betaTitle}>Early access</Text>
-          <Text style={styles.betaBody}>{MONETIZATION_BETA_NOTE}</Text>
+          <Text style={styles.betaTitle}>Payments disabled</Text>
+          <Text style={styles.betaBody}>{PAYMENTS_DISABLED_NOTE}</Text>
         </View>
       )}
 
-      {MONETIZATION_LIVE && (
+      {paymentsEnabled && (
         <View style={styles.providerPill}>
           <Text style={styles.providerText}>Billing · {providerLabel}</Text>
         </View>
       )}
 
-      {MONETIZATION_LIVE && canStartTrial && (
+      {paymentsEnabled && canStartTrial && (
         <Pressable
           onPress={onStartTrial}
           disabled={isBusy}
@@ -64,13 +67,13 @@ export default function PaywallActions({
         </Pressable>
       )}
 
-      {MONETIZATION_LIVE && trialExpired && effectiveTier === 'free' && (
+      {paymentsEnabled && trialExpired && effectiveTier === 'free' && (
         <Text style={styles.expiredNote}>
           Your trial has ended. Subscribe to Rasoi Plus to restore partner checkout.
         </Text>
       )}
 
-      {MONETIZATION_LIVE && effectiveTier !== 'paid' && (
+      {paymentsEnabled && effectiveTier !== 'paid' && (
         <>
           <Pressable
             onPress={() => onSubscribe('yearly')}
@@ -104,7 +107,7 @@ export default function PaywallActions({
         </>
       )}
 
-      {MONETIZATION_LIVE && supportsRestore && onRestore && (
+      {paymentsEnabled && supportsRestore && onRestore && (
         <Pressable onPress={onRestore} disabled={isBusy} style={styles.restoreBtn}>
           <Text style={styles.restoreText}>Restore purchases</Text>
         </Pressable>
@@ -117,7 +120,7 @@ export default function PaywallActions({
       )}
 
       <Text style={styles.disclaimer}>
-        {MONETIZATION_LIVE ? paymentDisclaimer : MONETIZATION_BETA_NOTE}
+        {paymentsEnabled ? paymentDisclaimer : PAYMENTS_DISABLED_NOTE}
       </Text>
     </View>
   );

@@ -27,6 +27,7 @@ type ReferenceContextValue = {
   regionalCuisines: string[];
   pantrySections: PantrySection[];
   kitchenStyles: KitchenStyle[];
+  paymentsEnabled: boolean;
   loading: boolean;
   error: string | null;
   refreshReference: () => Promise<void>;
@@ -84,6 +85,7 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
       regionalCuisines: reference.regionalCuisines,
       pantrySections: reference.pantrySections,
       kitchenStyles: reference.kitchenStyles,
+      paymentsEnabled: reference.appConfig.paymentsEnabled,
       loading,
       error,
       refreshReference,

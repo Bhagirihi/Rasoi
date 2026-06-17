@@ -16,7 +16,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AdMobBanner from '@/components/AdMobBanner';
-import { MONETIZATION_LIVE, MONETIZATION_BETA_NOTE } from '@/constants/monetizationConfig';
+import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   AccountActionsCard,
@@ -85,6 +85,8 @@ export default function SettingsScreen() {
     trialDaysLeft,
     showAds,
     showPartners,
+    showPaywall,
+    paymentsEnabled,
   } = useAppContext();
   const { trialTimeLabel, trialEndsAtLabel } = useTrialClock(trialStartedAt, effectiveTier);
   const { showDialog } = useAppDialog();
@@ -110,20 +112,20 @@ export default function SettingsScreen() {
   };
 
   const openPaywall = () => {
+    if (!showPaywall) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push(PAYWALL_HREF);
   };
 
-  const planStatusLine =
-    !MONETIZATION_LIVE
-      ? MONETIZATION_BETA_NOTE
-      : effectiveTier === 'trial' && trialTimeLabel
-        ? `${trialTimeLabel}${trialEndsAtLabel ? ` · Ends ${trialEndsAtLabel}` : ''}`
-        : effectiveTier === 'paid'
-          ? 'All partners · No ads'
-          : showAds
-            ? 'Free · Ads on · Partners locked'
-            : planLabel;
+  const planStatusLine = !paymentsEnabled
+    ? PAYMENTS_DISABLED_NOTE
+    : effectiveTier === 'trial' && trialTimeLabel
+      ? `${trialTimeLabel}${trialEndsAtLabel ? ` · Ends ${trialEndsAtLabel}` : ''}`
+      : effectiveTier === 'paid'
+        ? 'All partners · No ads'
+        : showAds
+          ? 'Free · Ads on · Partners locked'
+          : planLabel;
 
   const openLogin = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -258,23 +260,31 @@ export default function SettingsScreen() {
 
         <SettingsGroupLabel label="Your plan" />
         <SettingsCard style={styles.planCard}>
-          <Pressable onPress={openPaywall} style={styles.planRow}>
+          <Pressable
+            onPress={openPaywall}
+            disabled={!showPaywall}
+            style={[styles.planRow, !showPaywall && styles.planRowStatic]}
+          >
             <View style={styles.planIcon}>
               <Crown size={20} color={colors.primary} />
             </View>
             <View style={styles.planCopy}>
-              <Text style={[styles.planTitle, { color: colors.charcoal }]}>{PLAN_LABELS[effectiveTier]}</Text>
+              <Text style={[styles.planTitle, { color: colors.charcoal }]}>
+                {!paymentsEnabled ? 'Early access' : PLAN_LABELS[effectiveTier]}
+              </Text>
               <Text style={[styles.planSub, { color: colors.muted }]}>{planStatusLine}</Text>
             </View>
-            <Text style={[styles.planCta, { color: colors.primary }]}>Manage →</Text>
+            {showPaywall ? (
+              <Text style={[styles.planCta, { color: colors.primary }]}>Manage →</Text>
+            ) : null}
           </Pressable>
           <View style={[styles.planMeta, { borderTopColor: colors.border }]}>
             <Text style={[styles.planMetaText, { color: colors.muted }]}>
-              {MONETIZATION_LIVE
+              {paymentsEnabled
                 ? `${showAds ? 'AdMob enabled' : 'No ads'} · ${showPartners ? 'Partners unlocked' : 'Partners locked'}`
-                : 'Early access · No ads · Partners unlocked'}
+                : `${showAds ? 'AdMob enabled' : 'No ads'} · Partners unlocked · Paywall off`}
             </Text>
-            {MONETIZATION_LIVE && effectiveTier !== 'paid' && (
+            {paymentsEnabled && effectiveTier !== 'paid' && (
               <>
                 <Text style={[styles.planPrice, { color: colors.primary }]}>
                   Rasoi Plus · {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE}
@@ -387,6 +397,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
+  },
+  planRowStatic: {
+    opacity: 1,
   },
   planIcon: {
     width: 44,

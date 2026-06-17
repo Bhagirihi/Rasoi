@@ -11,7 +11,7 @@ Track release readiness for sideload beta and Play Store launch.
 | 4 | `google-services.json` + FCM v1 on EAS | ✅ Done | FCM v1 linked to `com.rasoi.app` on @takeyshi/rasoi; `google-services.json` in local build env |
 | 5 | `npm run qa:preflight` + `qa:device` | ⚠️ Blocked | No Android device connected for Maestro; API 200 + guest auth 200 verified |
 | 6 | Privacy policy live + Settings link | ✅ Code ready | `/privacy` + `/terms` pages + Settings footer — **deploy backend to Vercel** |
-| 7 | Monetization decision | ✅ Beta mode | Ads + stub billing hidden; set `EXPO_PUBLIC_MONETIZATION_LIVE=1` at store launch |
+| 7 | Monetization decision | ✅ Admin toggle | `/admin/payments` — OFF = no paywall, partners unlocked, ads + sponsors on |
 | 8 | Production keystore (Play Store) | ✅ Done | EAS production keystore `def8a336-40b7-46f1-a6f9-a61bcfc89cc1` |
 | 9 | `buildType: app-bundle` (Play Store) | ✅ Configured | `eas.json` production profile → `app-bundle`; use `preview` profile for sideload APK |
 
@@ -55,9 +55,9 @@ npm run setup:push                       # Full push checklist
 
 ## Enable monetization at launch
 
-1. Create real AdMob app + ad units; replace test IDs in `app.json` and `AdMobBanner.tsx`
-2. Wire RevenueCat or Razorpay; set `EXPO_PUBLIC_PAYMENT_PROVIDER`
-3. Set `EXPO_PUBLIC_MONETIZATION_LIVE=1` in release `.env`
+1. Turn **Payment** toggle **ON** in admin (`/admin/payments`)
+2. Create real AdMob app + ad units; replace test IDs in `app.json` and `AdMobBanner.tsx`
+3. Wire RevenueCat or Razorpay; set `EXPO_PUBLIC_PAYMENT_PROVIDER`
 4. Rebuild and resubmit to Play Store
 
 ## Deploy order (this batch)
