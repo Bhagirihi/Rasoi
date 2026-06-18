@@ -20,6 +20,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -28,6 +30,7 @@ jobs:
           python-version: '3.12'
 
       - name: Publish due campaign post
+        id: publish
         env:
           INSTAGRAM_USERNAME: ${{ secrets.INSTAGRAM_USERNAME }}
           INSTAGRAM_PASSWORD: ${{ secrets.INSTAGRAM_PASSWORD }}
@@ -50,3 +53,16 @@ jobs:
           fi
           pip install -q -r requirements.txt
           python3 server.py --run-due --max-posts=1
+
+      - name: Commit publish state
+        if: success()
+        run: |
+          if git diff --quiet -- .cursor/mcp-servers/instagram/schedule-state.json; then
+            echo "No schedule-state changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .cursor/mcp-servers/instagram/schedule-state.json
+          git commit -m "chore(instagram): record published campaign post [skip ci]"
+          git push
