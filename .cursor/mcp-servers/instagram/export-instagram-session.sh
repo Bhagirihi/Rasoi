@@ -19,5 +19,6 @@ if ! command -v gh >/dev/null 2>&1; then
   exit 1
 fi
 
-base64 < "$SESSION" | gh secret set INSTAGRAM_SESSION_JSON
+# Single-line base64 avoids decode issues in Actions.
+base64 < "$SESSION" | tr -d '\n' | gh secret set INSTAGRAM_SESSION_JSON
 echo "Uploaded INSTAGRAM_SESSION_JSON to GitHub repository secrets."

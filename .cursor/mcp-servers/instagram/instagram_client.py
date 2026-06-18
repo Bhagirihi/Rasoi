@@ -37,6 +37,9 @@ class InstagramClient:
             )
         return value
 
+    def _is_ci(self) -> bool:
+        return os.environ.get("GITHUB_ACTIONS", "").strip() == "true"
+
     def _restore_session_from_env(self) -> None:
         """Materialize instagram_session.json from CI secret (base64 JSON)."""
         if SESSION_FILE.is_file():
@@ -47,11 +50,16 @@ class InstagramClient:
             return
 
         try:
-            SESSION_FILE.write_bytes(base64.b64decode(encoded))
+            SESSION_FILE.write_bytes(base64.b64decode(encoded, validate=False))
         except Exception as exc:
             raise InstagramError(
                 "Invalid INSTAGRAM_SESSION_JSON secret (expected base64 session file)."
             ) from exc
+
+    def _apply_session_identity(self) -> None:
+        username = os.environ.get("INSTAGRAM_USERNAME", "").strip()
+        if username:
+            self._client.username = username
 
     def _load_cached_session(self) -> bool:
         if not SESSION_FILE.is_file():
@@ -62,6 +70,7 @@ class InstagramClient:
             SESSION_FILE.unlink(missing_ok=True)
             return False
 
+        self._apply_session_identity()
         self._logged_in = True
         return True
 
@@ -72,6 +81,13 @@ class InstagramClient:
         self._restore_session_from_env()
         if self._load_cached_session():
             return
+
+        if self._is_ci():
+            raise InstagramError(
+                "Instagram session missing or expired in GitHub Actions. "
+                "Log in locally, then run export-instagram-session.sh to refresh "
+                "INSTAGRAM_SESSION_JSON."
+            )
 
         username = self._require_env("INSTAGRAM_USERNAME")
         password = self._require_env("INSTAGRAM_PASSWORD")

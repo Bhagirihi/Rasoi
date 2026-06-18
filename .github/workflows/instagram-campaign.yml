@@ -43,5 +43,10 @@ jobs:
             exit 1
           fi
           cd .cursor/mcp-servers/instagram
+          echo "$INSTAGRAM_SESSION_JSON" | tr -d '\n' | base64 -d > instagram_session.json
+          if [ ! -s instagram_session.json ]; then
+            echo "Failed to decode INSTAGRAM_SESSION_JSON into instagram_session.json"
+            exit 1
+          fi
           pip install -q -r requirements.txt
-          python server.py --run-due --max-posts=1
+          python3 server.py --run-due --max-posts=1
