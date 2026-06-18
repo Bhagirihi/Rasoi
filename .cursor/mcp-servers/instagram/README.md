@@ -13,6 +13,20 @@ Posts to `@rasoi_app` using [instagrapi](https://github.com/subzeroid/instagrapi
 
 If Instagram asks for 2FA or a challenge, set `INSTAGRAM_VERIFICATION_CODE` in `.env` and retry once.
 
+### GitHub Actions (scheduled posts)
+
+CI cannot complete a fresh Instagram login (Meta flags datacenter IPs). Use a cached session:
+
+```bash
+# 1. Log in locally once (creates instagram_session.json)
+.cursor/mcp-servers/instagram/run.sh
+
+# 2. Upload session to GitHub secrets
+.cursor/mcp-servers/instagram/export-instagram-session.sh
+```
+
+Re-run the export script if the workflow fails with "session expired" or login challenge.
+
 ## Tools
 
 | Tool | Description |

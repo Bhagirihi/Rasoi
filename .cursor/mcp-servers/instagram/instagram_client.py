@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -12,6 +13,11 @@ from instagrapi.exceptions import ChallengeRequired, LoginRequired, TwoFactorReq
 
 SERVER_ROOT = Path(__file__).resolve().parent
 SESSION_FILE = SERVER_ROOT / "instagram_session.json"
+CHALLENGE_HELP = (
+    "Instagram blocked login from this environment. Log in locally once "
+    "(npm run setup:instagram-session or run.sh), then upload the session "
+    "secret for GitHub Actions — see .cursor/mcp-servers/instagram/README.md"
+)
 
 
 class InstagramError(RuntimeError):
@@ -31,8 +37,40 @@ class InstagramClient:
             )
         return value
 
+    def _restore_session_from_env(self) -> None:
+        """Materialize instagram_session.json from CI secret (base64 JSON)."""
+        if SESSION_FILE.is_file():
+            return
+
+        encoded = os.environ.get("INSTAGRAM_SESSION_JSON", "").strip()
+        if not encoded:
+            return
+
+        try:
+            SESSION_FILE.write_bytes(base64.b64decode(encoded))
+        except Exception as exc:
+            raise InstagramError(
+                "Invalid INSTAGRAM_SESSION_JSON secret (expected base64 session file)."
+            ) from exc
+
+    def _load_cached_session(self) -> bool:
+        if not SESSION_FILE.is_file():
+            return False
+
+        self._client.load_settings(SESSION_FILE)
+        if not self._client.user_id:
+            SESSION_FILE.unlink(missing_ok=True)
+            return False
+
+        self._logged_in = True
+        return True
+
     def login(self) -> None:
         if self._logged_in:
+            return
+
+        self._restore_session_from_env()
+        if self._load_cached_session():
             return
 
         username = self._require_env("INSTAGRAM_USERNAME")
@@ -49,10 +87,7 @@ class InstagramClient:
                 "Instagram requires 2FA. Set INSTAGRAM_VERIFICATION_CODE in .env and retry."
             ) from exc
         except ChallengeRequired as exc:
-            raise InstagramError(
-                "Instagram login challenge required. Open instagram.com in a browser, "
-                "approve the login, then retry — or set INSTAGRAM_VERIFICATION_CODE."
-            ) from exc
+            raise InstagramError(CHALLENGE_HELP) from exc
         except Exception as exc:
             raise InstagramError(f"Instagram login failed: {exc}") from exc
 
