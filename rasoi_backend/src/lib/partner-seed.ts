@@ -5,7 +5,12 @@ export async function ensurePartnerLinks() {
   for (const link of DEFAULT_PARTNER_LINKS) {
     await prisma.partnerLink.upsert({
       where: { partnerId: link.partnerId },
-      update: {},
+      update: {
+        label: link.label,
+        category: link.category,
+        deepLinkUrl: link.deepLinkUrl,
+        webUrl: link.webUrl,
+      },
       create: link,
     });
   }

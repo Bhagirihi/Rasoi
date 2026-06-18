@@ -7,6 +7,7 @@ import SponsorApplicationFilterPanel from '@/app/admin/_components/SponsorApplic
 import { Badge, PageHeader } from '@/app/admin/_components/ui';
 import { deleteSponsorApplicationAction } from '@/app/admin/sponsor-application-actions';
 import { prisma } from '@/lib/prisma';
+import { getSponsorPlacementLabel } from '@/lib/sponsor-placements';
 
 const statusTone = {
   pending: 'warning',
@@ -66,7 +67,7 @@ export default async function SponsorApplicationsPage({ searchParams }: PageProp
             </td>
             <td className="px-5 py-4 text-sm text-admin-muted">{application.companyName}</td>
             <td className="px-5 py-4">
-              <Badge tone="gold">{application.placementInterest}</Badge>
+              <Badge tone="gold">{getSponsorPlacementLabel(application.placementInterest)}</Badge>
             </td>
             <td className="px-5 py-4">
               <Badge tone={statusTone[application.status as keyof typeof statusTone] ?? 'neutral'}>

@@ -42,6 +42,11 @@ import {
   getPushPlatform,
 } from '@/utils/notifications';
 import {
+  addPantryIngredient,
+  pantryHasIngredient,
+  removePantryIngredient,
+} from '@/utils/recipeIngredients';
+import {
   DEFAULT_PANTRY,
   OnboardingPayload,
   clearAuthState,
@@ -432,6 +437,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     applyPlanState(result.planState);
   }, [applyPlanState, isLoggedIn, paymentsEnabled, planState.trialStartedAt]);
+
+  const restorePurchases = useCallback(async () => {
     const result = await restoreRasoiPlus({
       isLoggedIn,
       trialStartedAt: planState.trialStartedAt,
@@ -688,9 +695,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const togglePantryIngredient = useCallback(
     (ingredient: string) => {
       setPantryIngredients((current) => {
-        const next = current.includes(ingredient)
-          ? current.filter((item) => item !== ingredient)
-          : [...current, ingredient];
+        const next = pantryHasIngredient(current, ingredient)
+          ? removePantryIngredient(current, ingredient)
+          : addPantryIngredient(current, ingredient);
         if (isLoggedIn) {
           void updatePantryIngredients(next).then(applyUserProfile);
         }

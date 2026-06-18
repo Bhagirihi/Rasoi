@@ -1,10 +1,12 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChefHat } from 'lucide-react-native';
 
 import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
+import CookTonightSheet from '@/components/CookTonightSheet';
 import { AppTabHeader } from '@/components/AppTabHeader';
 import RecipeCard from '@/components/RecipeCard';
 import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
@@ -16,31 +18,77 @@ import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
 import { Recipe } from '@/data/mockRecipes';
-import { ingredientKey } from '@/utils/recipeIngredients';
+import type { AffiliatePartner } from '@/utils/affiliate';
+import { getMealContext } from '@/utils/mealTime';
+import {
+  getPantryMatchPercent,
+  getRecipePickReason,
+  partitionIngredients,
+} from '@/utils/recipes';
+import { pantryHasIngredient } from '@/utils/recipeIngredients';
 
 export default function SavedScreen() {
+  const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
+  const meal = getMealContext();
   const { colors: themeColors } = useTheme();
-  const { getSavedRecipes, pantryIngredients } = useAppContext();
+  const { getSavedRecipes, pantryIngredients, dietChoice, regionalCuisine, showPartners } =
+    useAppContext();
   const savedRecipes = getSavedRecipes();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
-  const { sponsor: homeSponsor, loading: homeSponsorLoading } = usePlacementSponsor('home');
+  const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
+  const [cookTonightVisible, setCookTonightVisible] = useState(false);
+  const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
+  const { sponsor: savedSponsor, loading: savedSponsorLoading } = usePlacementSponsor('saved');
 
   const totalMissing = useMemo(() => {
     return savedRecipes.reduce((sum, recipe) => {
-      const pantrySet = new Set(pantryIngredients.map((i) => ingredientKey(i)));
       const missing = recipe.ingredients.filter((ing) => {
-        const key = ingredientKey(ing.name);
-        return key && !pantrySet.has(key);
+        const name = ing.name?.trim();
+        return name && !pantryHasIngredient(pantryIngredients, name);
       }).length;
       return sum + missing;
     }, 0);
   }, [savedRecipes, pantryIngredients]);
 
-  const openShopModal = (recipe: Recipe, missing: string[]) => {
+  const sheetRecipe = cookTonightTarget;
+  const sheetMissing = useMemo(() => {
+    if (!sheetRecipe) return [];
+    return partitionIngredients(sheetRecipe, pantryIngredients).missing;
+  }, [sheetRecipe, pantryIngredients]);
+  const sheetPickReason = useMemo(() => {
+    if (!sheetRecipe) return '';
+    return getRecipePickReason(sheetRecipe, {
+      regionalCuisine,
+      pantryIngredients,
+      dietChoice,
+      mealSlot: meal.slot,
+    });
+  }, [sheetRecipe, regionalCuisine, pantryIngredients, dietChoice, meal.slot]);
+  const sheetPantryMatch = useMemo(() => {
+    if (!sheetRecipe) return 0;
+    return getPantryMatchPercent(sheetRecipe, pantryIngredients);
+  }, [sheetRecipe, pantryIngredients]);
+
+  const openCookTonight = (recipe: Recipe) => {
+    setCookTonightTarget(recipe);
+    setCookTonightVisible(true);
+  };
+
+  const closeCookTonight = () => {
+    setCookTonightVisible(false);
+    setCookTonightTarget(null);
+  };
+
+  const openShopModal = (
+    recipe: Recipe,
+    missing: string[],
+    partner: AffiliatePartner = 'blinkit',
+  ) => {
+    setModalPartner(partner);
     setModalRecipe(recipe);
     setModalMissing(missing);
     setModalVisible(true);
@@ -78,21 +126,32 @@ export default function SavedScreen() {
             )}
 
             {savedRecipes.length > 0 && (
-              <View style={styles.sponsorSlot}>
-                <SponsorOrAd
-                  sponsor={homeSponsor}
-                  loading={homeSponsorLoading}
-                  placement="saved"
-                  compact
-                />
-              </View>
+              <SponsorOrAd
+                sponsor={savedSponsor}
+                loading={savedSponsorLoading}
+                placement="saved"
+                compact
+              />
             )}
 
             {savedRecipes.length > 0 && <View style={styles.listDivider} />}
           </View>
         }
         renderItem={({ item }) => (
-          <RecipeCard recipe={item} compact onShopMissing={openShopModal} />
+          <RecipeCard
+            recipe={item}
+            variant="list"
+            pickReason={getRecipePickReason(item, {
+              regionalCuisine,
+              pantryIngredients,
+              dietChoice,
+              mealSlot: meal.slot,
+            })}
+            pantryMatchPercent={getPantryMatchPercent(item, pantryIngredients)}
+            onShopMissing={openShopModal}
+            onCookTonight={openCookTonight}
+            cookCtaLabel={meal.cookCta}
+          />
         )}
         ListEmptyComponent={
           <EmptyState
@@ -108,6 +167,26 @@ export default function SavedScreen() {
         onClose={() => setModalVisible(false)}
         recipeTitle={modalRecipe?.title}
         missingIngredients={modalMissing}
+        initialPartner={modalPartner}
+      />
+
+      <CookTonightSheet
+        visible={cookTonightVisible}
+        recipe={sheetRecipe}
+        missing={sheetMissing}
+        pickReason={sheetPickReason}
+        pantryMatchPercent={sheetPantryMatch}
+        showShop={showPartners}
+        title={meal.sheetTitle}
+        onClose={closeCookTonight}
+        onStartCooking={() => {
+          closeCookTonight();
+          if (sheetRecipe) router.push(`/recipe/${sheetRecipe.id}?cook=1`);
+        }}
+        onShopMissing={() => {
+          closeCookTonight();
+          if (sheetRecipe) openShopModal(sheetRecipe, sheetMissing);
+        }}
       />
     </SafeAreaView>
   );
@@ -124,7 +203,6 @@ const styles = StyleSheet.create({
     gap: spacing.xl,
     marginBottom: spacing.lg,
   },
-  sponsorSlot: {},
   listDivider: {
     height: spacing.sm,
   },

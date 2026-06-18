@@ -112,11 +112,14 @@ function buildCards(links: PartnerLinkResponse[]) {
 }
 
 async function openPartnerUrls(deepLink: string, webUrl: string) {
+  // Prefer verified https app links — placeholder custom schemes (blinkit://cart/…) fail silently.
+  const url = deepLink.startsWith('http') ? deepLink : webUrl;
   try {
-    const canOpen = await Linking.canOpenURL(deepLink);
-    await Linking.openURL(canOpen ? deepLink : webUrl);
+    await Linking.openURL(url);
   } catch {
-    await Linking.openURL(webUrl);
+    if (url !== webUrl) {
+      await Linking.openURL(webUrl);
+    }
   }
 }
 
@@ -192,14 +195,14 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
       options?: { context?: string; recipeId?: string },
     ) => {
       if (items.length === 0 || !ensurePartnerPhone()) return;
-      const query = buildGroceryCheckoutQuery(items);
-      const urls = buildPartnerUrls(partnerId, query, partnerLinks);
+      const searchQuery = buildGroceryCheckoutQuery(items);
+      const urls = buildPartnerUrls(partnerId, searchQuery, partnerLinks);
       if (!urls) return;
       void logAffiliateEvent({
         partner: partnerId,
         context: options?.context ?? 'grocery_checkout',
         recipeId: options?.recipeId,
-        query,
+        query: items.map((item) => item.trim()).filter(Boolean).join(', '),
       });
       await openPartnerUrls(urls.deepLink, urls.webUrl);
     },

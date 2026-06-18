@@ -5,17 +5,22 @@ import { useCallback, useEffect, useState } from 'react';
 import { LogBox, View } from 'react-native';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
+import { enableScreens } from 'react-native-screens';
+
+enableScreens(true);
 
 import LaunchSplash, { LAUNCH_SPLASH_DURATION_MS } from '@/components/LaunchSplash';
 import AppDialogHost from '@/components/AppDialogHost';
+import TrialExpiredPaywallModal from '@/components/paywall/TrialExpiredPaywallModal';
 import NotificationNavigationBridge from '@/components/NotificationNavigationBridge';
 import { AppProvider } from '@/context/AppContext';
 import { AppDialogProvider } from '@/context/AppDialogContext';
 import { PartnersProvider } from '@/context/PartnersContext';
 import { ReferenceProvider } from '@/context/ReferenceContext';
 import { RecipesProvider } from '@/context/RecipesContext';
+import { TonightRecipesProvider } from '@/context/TonightRecipesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-import { isAdMobNativeAvailable } from '@/utils/admob';
+import { initializeMobileAds } from '@/utils/admob';
 import { initSentry, Sentry } from '@/utils/sentry';
 
 initSentry();
@@ -55,10 +60,7 @@ function RootLayoutInner({
   const { colors, isDark } = useTheme();
 
   useEffect(() => {
-    if (!isAdMobNativeAvailable()) return;
-    void import('react-native-google-mobile-ads')
-      .then(({ default: mobileAds }) => mobileAds().initialize())
-      .catch(() => undefined);
+    void initializeMobileAds().catch(() => undefined);
   }, []);
 
   const finishLaunchSplash = useCallback(async () => {
@@ -79,7 +81,8 @@ function RootLayoutInner({
       <RecipesProvider>
         <ReferenceProvider>
           <AppProvider>
-            <AppDialogProvider>
+            <TonightRecipesProvider>
+              <AppDialogProvider>
               <PartnersProvider>
                 <View style={{ flex: 1, backgroundColor: colors.cream }}>
                   <StatusBar style={launchDone ? (isDark ? 'light' : 'dark') : 'light'} />
@@ -103,9 +106,11 @@ function RootLayoutInner({
                   {!launchDone && <LaunchSplash />}
                   <NotificationNavigationBridge />
                   <AppDialogHost />
+                  <TrialExpiredPaywallModal />
                 </View>
               </PartnersProvider>
-            </AppDialogProvider>
+              </AppDialogProvider>
+            </TonightRecipesProvider>
           </AppProvider>
         </ReferenceProvider>
       </RecipesProvider>

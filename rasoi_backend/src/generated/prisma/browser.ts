@@ -82,3 +82,8 @@ export type AppSettings = Prisma.AppSettingsModel
  * 
  */
 export type SponsorApplication = Prisma.SponsorApplicationModel
+/**
+ * Model UserFeedback
+ * 
+ */
+export type UserFeedback = Prisma.UserFeedbackModel

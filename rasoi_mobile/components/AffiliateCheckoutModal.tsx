@@ -1,7 +1,7 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ShoppingBag, Sparkles, X } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -38,6 +38,7 @@ export default function AffiliateCheckoutModal({
   initialPartner = 'blinkit',
 }: AffiliateCheckoutModalProps) {
   const [loading, setLoading] = useState<AffiliatePartner | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const { partnersInTrialMode } = useAppContext();
   const { groceryPartners, openGroceryCheckout } = usePartners();
   const insets = useSafeAreaInsets();
@@ -47,6 +48,14 @@ export default function AffiliateCheckoutModal({
   useEffect(() => {
     if (!visible) setLoading(null);
   }, [visible]);
+
+  useEffect(() => {
+    if (!visible || missingIngredients.length === 0) return;
+    const timer = setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [visible, initialPartner, missingIngredients.length]);
 
   const handleCheckout = async (partner: AffiliatePartner) => {
     if (missingIngredients.length === 0) return;
@@ -97,6 +106,7 @@ export default function AffiliateCheckoutModal({
           </LinearGradient>
 
           <ScrollView
+            ref={scrollRef}
             style={[styles.bodyScroll, { maxHeight: maxBodyScrollHeight }]}
             contentContainerStyle={styles.body}
             showsVerticalScrollIndicator={false}
@@ -120,9 +130,17 @@ export default function AffiliateCheckoutModal({
               </>
             )}
 
+            {missingIngredients.length > 1 && (
+              <Text style={styles.searchHint}>
+                Checkout opens search for {missingIngredients[0]} — add other items from the list above.
+              </Text>
+            )}
+
             <Text style={styles.pickLabel}>Pick a delivery partner</Text>
 
-            {groceryPartners.map((partner) => (
+            {groceryPartners.map((partner) => {
+              const isSelected = partner.id === initialPartner;
+              return (
               <Pressable
                 key={partner.id}
                 onPress={() => void handleCheckout(partner.id)}
@@ -130,6 +148,7 @@ export default function AffiliateCheckoutModal({
                 style={({ pressed }) => [
                   styles.partnerBtn,
                   { backgroundColor: partner.accent },
+                  isSelected && styles.partnerBtnSelected,
                   pressed && styles.partnerBtnPressed,
                   loading === partner.id && styles.partnerBtnLoading,
                   missingIngredients.length === 0 && styles.partnerBtnDisabled,
@@ -143,7 +162,9 @@ export default function AffiliateCheckoutModal({
                 >
                   {loading === partner.id
                     ? 'Opening cart…'
-                    : `Checkout on ${partner.label}`}
+                    : isSelected
+                      ? `Checkout on ${partner.label} →`
+                      : `Checkout on ${partner.label}`}
                 </Text>
                 <Text
                   style={[
@@ -154,7 +175,8 @@ export default function AffiliateCheckoutModal({
                   {partner.delivery} delivery
                 </Text>
               </Pressable>
-            ))}
+            );
+            })}
 
             <Text style={styles.disclosure}>{REVENUE_DISCLOSURE}</Text>
           </ScrollView>
@@ -280,6 +302,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.charcoal,
   },
+  searchHint: {
+    marginTop: -spacing.sm,
+    marginBottom: spacing.lg,
+    fontSize: 12,
+    lineHeight: 17,
+    color: colors.muted,
+  },
   partnerBtn: {
     borderRadius: radius.md,
     paddingVertical: spacing.md,
@@ -287,6 +316,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
     alignItems: 'center',
     ...shadows.cardLifted,
+  },
+  partnerBtnSelected: {
+    borderWidth: 3,
+    borderColor: colors.white,
   },
   partnerBtnPressed: {
     opacity: 0.92,

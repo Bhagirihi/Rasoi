@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Lock, ShoppingBag } from 'lucide-react-native';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GROCERY_PARTNER_UI } from '@/constants/monetization';
@@ -12,19 +12,37 @@ import type { AffiliatePartner } from '@/utils/affiliate';
 import { PAYWALL_HREF } from '@/utils/routes';
 
 const GROCERY_IDS: AffiliatePartner[] = ['blinkit', 'zepto', 'instamart'];
+const MISSING_BTN_COLOR = '#EF5350';
 
 type MissingShopVariant = 'footer' | 'inline' | 'hero';
 
 type MissingShopInlineProps = {
   missing: string[];
   variant?: MissingShopVariant;
+  cookSlot?: ReactNode;
   onShopPress: () => void;
   onPartnerPress: (partner: AffiliatePartner) => void;
 };
 
+export const missingShopActionStyles = StyleSheet.create({
+  cookPill: {
+    flexShrink: 0,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  cookPillText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.white,
+  },
+});
+
 export default function MissingShopInline({
   missing,
   variant = 'inline',
+  cookSlot,
   onShopPress,
   onPartnerPress,
 }: MissingShopInlineProps) {
@@ -39,7 +57,11 @@ export default function MissingShopInline({
 
   const isHero = variant === 'hero';
   const isFooter = variant === 'footer';
-  const ingredientPreview = missing.slice(0, 2).join(', ') + (missing.length > 2 ? ` +${missing.length - 2}` : '');
+  const isCardLayout = isHero || isFooter;
+  const showActionRow = Boolean(cookSlot);
+  const ingredientPreview =
+    missing.slice(0, 2).join(', ') + (missing.length > 2 ? ` +${missing.length - 2}` : '');
+  const missingCta = missing.length === 1 ? 'Item missing' : 'Items missing';
 
   const partnerLabel = (id: AffiliatePartner) =>
     groceryPartners.find((p) => p.id === id)?.label ??
@@ -63,39 +85,52 @@ export default function MissingShopInline({
     }
   };
 
+  const missingPill = (
+    <Pressable
+      onPress={(event) => {
+        event.stopPropagation?.();
+        handleMissingPress();
+      }}
+      style={styles.missingBtn}
+    >
+      <Text style={styles.missingBtnText} numberOfLines={1}>
+        {missingCta} →
+      </Text>
+    </Pressable>
+  );
+
   return (
     <View
       style={[
-        styles.wrap,
+        isHero ? styles.wrapHero : styles.wrap,
         isFooter && [
           styles.wrapFooter,
           { backgroundColor: themeColors.white, borderTopColor: themeColors.border },
         ],
-        isHero && styles.wrapHero,
       ]}
     >
-      <Pressable onPress={handleMissingPress} style={styles.summaryRow}>
-        <View style={[styles.countBadge, isHero && styles.countBadgeHero]}>
-          <ShoppingBag size={12} color={isHero ? colors.primary : colors.white} />
-          <Text style={[styles.countText, isHero && styles.countTextHero]}>
-            {missing.length}
-          </Text>
+      {showActionRow ? (
+        <View style={styles.actionRow}>
+          {missingPill}
+          {cookSlot}
         </View>
-        <View style={styles.summaryCopy}>
-          <Text style={[styles.summaryTitle, isHero && styles.summaryTitleHero, !isHero && { color: themeColors.charcoal }]}>
-            {missing.length === 1 ? 'Item missing' : 'Items missing'}
-          </Text>
-          <Text
-            style={[styles.summarySub, isHero && styles.summarySubHero, !isHero && { color: themeColors.muted }]}
-            numberOfLines={1}
-          >
-            {ingredientPreview}
-          </Text>
-        </View>
-        {!showPartners && (
-          <Lock size={13} color={isHero ? 'rgba(255,255,255,0.45)' : colors.muted} />
-        )}
-      </Pressable>
+      ) : isCardLayout ? (
+        missingPill
+      ) : (
+        <View style={styles.actionRow}>{missingPill}</View>
+      )}
+
+      {isCardLayout && (
+        <Text
+          style={[
+            styles.missingIngredients,
+            isHero ? styles.missingIngredientsHero : { color: themeColors.muted },
+          ]}
+          numberOfLines={2}
+        >
+          {ingredientPreview}
+        </Text>
+      )}
 
       <View style={styles.partnerRow}>
         {GROCERY_IDS.map((id) => {
@@ -105,7 +140,10 @@ export default function MissingShopInline({
           return (
             <Pressable
               key={id}
-              onPress={() => handlePartnerPress(id)}
+              onPress={(event) => {
+                event.stopPropagation?.();
+                handlePartnerPress(id);
+              }}
               style={[
                 styles.partnerChip,
                 isHero && styles.partnerChipHero,
@@ -125,7 +163,14 @@ export default function MissingShopInline({
               >
                 {label}
               </Text>
-              <Text style={[styles.partnerEta, isHero && styles.partnerEtaHero, !isHero && { color: themeColors.muted }]} numberOfLines={1}>
+              <Text
+                style={[
+                  styles.partnerEta,
+                  isHero && styles.partnerEtaHero,
+                  !isHero && { color: themeColors.muted },
+                ]}
+                numberOfLines={1}
+              >
                 {delivery.replace('~', '')}
               </Text>
             </Pressable>
@@ -148,56 +193,35 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   wrapHero: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.12)',
     gap: spacing.sm,
   },
-  summaryRow: {
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: spacing.sm,
   },
-  countBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+  missingBtn: {
+    flexShrink: 0,
     borderRadius: radius.pill,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    backgroundColor: MISSING_BTN_COLOR,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
-  countBadgeHero: {
-    backgroundColor: 'rgba(255,107,53,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.45)',
-  },
-  countText: {
+  missingBtnText: {
     fontSize: 12,
     fontWeight: '800',
     color: colors.white,
   },
-  countTextHero: {
-    color: colors.primary,
-  },
-  summaryCopy: {
-    flex: 1,
-  },
-  summaryTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.charcoal,
-  },
-  summaryTitleHero: {
-    color: colors.white,
-  },
-  summarySub: {
-    marginTop: 1,
+  missingIngredients: {
     fontSize: 11,
-    color: colors.muted,
+    fontWeight: '600',
   },
-  summarySubHero: {
+  missingIngredientsHero: {
     color: 'rgba(255,255,255,0.55)',
   },
   partnerRow: {

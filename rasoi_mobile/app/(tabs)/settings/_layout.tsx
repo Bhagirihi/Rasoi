@@ -14,6 +14,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="edit-profile" />
       <Stack.Screen name="edit-preferences" />
       <Stack.Screen name="paywall" />
+      <Stack.Screen name="feedback" />
     </Stack>
   );
 }

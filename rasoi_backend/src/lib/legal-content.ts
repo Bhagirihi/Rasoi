@@ -1,4 +1,4 @@
-export const LEGAL_CONTACT_EMAIL = 'hello@rasoiapplication.in';
+export const LEGAL_CONTACT_EMAIL = 'cooking@rasoiapplication.in';
 
 export const privacySections = [
   {

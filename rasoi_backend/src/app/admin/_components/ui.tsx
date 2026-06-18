@@ -196,16 +196,22 @@ export function SelectInput({
 }: {
   value: string;
   onChange: (value: string) => void;
-  options: string[];
+  options: string[] | ReadonlyArray<{ value: string; label: string }>;
 }) {
+  const normalized = options.map((option) =>
+    typeof option === 'string' ? { value: option, label: option } : option,
+  );
+
   return (
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
       className="mt-2 w-full rounded-xl border border-admin-border bg-white/80 px-4 py-3 text-sm text-admin-ink outline-none transition focus:border-admin-gold/70 focus:ring-2 focus:ring-admin-gold/15"
     >
-      {options.map((option) => (
-        <option key={option} value={option}>{option}</option>
+      {normalized.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
       ))}
     </select>
   );

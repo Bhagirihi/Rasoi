@@ -9,13 +9,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
 import CookTonightSheet from '@/components/CookTonightSheet';
-import MissingShopInline from '@/components/MissingShopInline';
+import MissingShopInline, { missingShopActionStyles } from '@/components/MissingShopInline';
 import { AppTabHeader } from '@/components/AppTabHeader';
 import RecipeCard from '@/components/RecipeCard';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
+import SponsorOrAd from '@/components/SponsorOrAd';
 import TrialCountdownBanner from '@/components/TrialCountdownBanner';
+import TonightCardsSkeleton from '@/components/TonightCardsSkeleton';
+import HomeHeroLoadingBox from '@/components/HomeHeroLoadingBox';
 import { EmptyState } from '@/components/ui/Primitives';
 import { useRecipeDiscovery } from '@/hooks/useRecipeDiscovery';
+import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
@@ -51,15 +55,21 @@ export default function HomeScreen() {
     dietChoice,
     regionalCuisine,
   } = useRecipeDiscovery();
+  const { sponsor: homeSponsor, loading: homeSponsorLoading } = usePlacementSponsor('home');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
   const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
   const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
+  const [heroIntroFinished, setHeroIntroFinished] = useState(false);
 
   const { greeting, subtitle } = getLocalizedGreeting();
   const isLateNight = meal.slot === 'lateNight';
+  const heroDataReady = !!topPick && !recipesLoading;
+  const showHeroIntro = !heroIntroFinished;
+  const showHeroCard = heroIntroFinished && !!topPick;
+  const showTonightSkeleton = recipesLoading && tonightCards.length === 0;
 
   const topPickMissing = useMemo(() => {
     if (!topPick) return [];
@@ -161,15 +171,14 @@ export default function HomeScreen() {
 
           <TrialCountdownBanner />
 
-          {recipesLoading && recipes.length === 0 && (
-            <EmptyState
-              icon={Timer}
-              title="Loading recipes"
-              subtitle="Fetching tonight's dishes from Rasoi…"
-            />
-          )}
+          <SponsorOrAd
+            sponsor={homeSponsor}
+            loading={homeSponsorLoading}
+            placement="home"
+            compact
+          />
 
-          {recipesError && (
+          {!recipesLoading && recipesError && (
             <EmptyState
               icon={Timer}
               title="Could not load recipes"
@@ -177,7 +186,16 @@ export default function HomeScreen() {
             />
           )}
 
-          {topPick && (
+          {showHeroIntro && (
+            <HomeHeroLoadingBox
+              dataReady={heroDataReady}
+              hasError={!!recipesError && !recipesLoading}
+              isLateNight={isLateNight}
+              onFinished={() => setHeroIntroFinished(true)}
+            />
+          )}
+
+          {showHeroCard && (
             <Pressable
               style={[styles.heroCard, isLateNight && styles.heroCardLateNight]}
               onPress={() => {
@@ -228,19 +246,22 @@ export default function HomeScreen() {
                     <Text style={styles.heroMeta}>
                       {topPick.prepTime} min · {topPick.dietType} · {topPick.region}
                     </Text>
-                    <Pressable
-                      onPress={(event) => {
-                        event.stopPropagation?.();
-                        void Haptics.selectionAsync();
-                        if (topPick) openCookTonight(topPick);
-                      }}
-                      style={[
-                        styles.cookTonightBtn,
-                        isLateNight && styles.cookTonightBtnLateNight,
-                      ]}
-                    >
-                      <Text style={styles.cookTonightBtnText}>{meal.cookCta} →</Text>
-                    </Pressable>
+                    {topPickMissing.length === 0 && (
+                      <Pressable
+                        onPress={(event) => {
+                          event.stopPropagation?.();
+                          void Haptics.selectionAsync();
+                          if (topPick) openCookTonight(topPick);
+                        }}
+                        style={[
+                          missingShopActionStyles.cookPill,
+                          styles.cookTonightBtnStandalone,
+                          isLateNight && styles.cookTonightBtnLateNight,
+                        ]}
+                      >
+                        <Text style={missingShopActionStyles.cookPillText}>{meal.cookCta} →</Text>
+                      </Pressable>
+                    )}
                   </View>
                   <Image
                     source={{ uri: topPick.imageUrl }}
@@ -254,19 +275,40 @@ export default function HomeScreen() {
                 </View>
 
                 {topPickMissing.length > 0 && (
-                  <View style={styles.heroShopFooter}>
-                    <MissingShopInline
-                      missing={topPickMissing}
-                      variant="hero"
-                      onShopPress={() => openShopModal(topPick, topPickMissing)}
-                      onPartnerPress={(partner) =>
-                        openShopModal(topPick, topPickMissing, partner)
-                      }
-                    />
-                  </View>
+                  <MissingShopInline
+                    missing={topPickMissing}
+                    variant="hero"
+                    cookSlot={
+                      <Pressable
+                        onPress={(event) => {
+                          event.stopPropagation?.();
+                          void Haptics.selectionAsync();
+                          if (topPick) openCookTonight(topPick);
+                        }}
+                        style={[
+                          missingShopActionStyles.cookPill,
+                          isLateNight && styles.cookTonightBtnLateNight,
+                        ]}
+                      >
+                        <Text style={missingShopActionStyles.cookPillText}>{meal.cookCta} →</Text>
+                      </Pressable>
+                    }
+                    onShopPress={() => openShopModal(topPick, topPickMissing)}
+                    onPartnerPress={(partner) =>
+                      openShopModal(topPick, topPickMissing, partner)
+                    }
+                  />
                 )}
               </LinearGradient>
             </Pressable>
+          )}
+
+          {showTonightSkeleton && (
+            <TonightCardsSkeleton
+              label={meal.alsoLabel}
+              isLateNight={isLateNight}
+              count={3}
+            />
           )}
 
           {tonightCards.length > 0 && (
@@ -297,7 +339,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {!recipesLoading && !recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
+          {!recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
             <View
               style={[
                 styles.noMatchCard,
@@ -477,13 +519,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: 'rgba(255,255,255,0.6)',
   },
-  cookTonightBtn: {
-    marginTop: spacing.md,
+  cookTonightBtnStandalone: {
+    marginTop: spacing.sm,
     alignSelf: 'flex-start',
-    borderRadius: radius.pill,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
   },
   cookTonightBtnLateNight: {
     backgroundColor: colors.primary,
@@ -492,17 +530,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.35,
     shadowRadius: 6,
     elevation: 4,
-  },
-  cookTonightBtnText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.white,
-  },
-  heroShopFooter: {
-    marginTop: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
   },
   tonightCards: {
     gap: spacing.md,

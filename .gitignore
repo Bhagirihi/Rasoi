@@ -3,6 +3,7 @@
 
 # User-requested exclusions
 docs/AI_influence/.reel_build/
+docs/AI_influence/.venv/
 rasoi_mobile/screenshots-backup-pre-v2/
 rasoi_mobile/.qa/
 
@@ -45,3 +46,6 @@ npm-debug.*
 
 # MCP local secrets
 .cursor/mcp-servers/gmail-imap/.env
+.cursor/mcp-servers/admob/.env
+.cursor/mcp-servers/admob/credentials/
+.vercel

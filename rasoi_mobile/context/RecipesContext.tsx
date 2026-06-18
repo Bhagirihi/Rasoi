@@ -56,9 +56,13 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        void refreshRecipes();
-      }
+      if (state !== 'active') return;
+
+      const now = Date.now();
+      if (now - lastForegroundRefreshRef.current < 60_000) return;
+      lastForegroundRefreshRef.current = now;
+
+      void refreshRecipes();
     });
 
     return () => subscription.remove();
@@ -75,6 +79,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
 
   const recipesRef = useRef(recipes);
   recipesRef.current = recipes;
+  const lastForegroundRefreshRef = useRef(0);
 
   const mergeRecipe = useCallback((recipe: Recipe) => {
     setRecipes((current) => {

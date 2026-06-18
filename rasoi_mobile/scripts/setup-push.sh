@@ -98,11 +98,28 @@ fi
 
 echo "google-services.json: OK"
 echo ""
-echo "Step 4: Upload FCM v1 credentials (if not done yet)"
+echo "Step 4: Upload google-services.json to EAS (required for cloud builds)"
+for eas_env in production preview development; do
+  if npx eas env:create "$eas_env" \
+    --name GOOGLE_SERVICES_JSON \
+    --type file \
+    --value "$GOOGLE_SERVICES" \
+    --visibility secret \
+    --environment "$eas_env" \
+    --non-interactive \
+    --force >/dev/null 2>&1; then
+    echo "  EAS ${eas_env}: GOOGLE_SERVICES_JSON uploaded"
+  else
+    echo "  EAS ${eas_env}: upload failed — run manually:"
+    echo "    eas env:create ${eas_env} --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --visibility secret"
+  fi
+done
+echo ""
+echo "Step 5: Upload FCM v1 credentials (if not done yet)"
 echo "  npm run setup:fcm"
 echo ""
-echo "Step 5: Rebuild release APK"
+echo "Step 6: Rebuild release APK"
 echo "  npm run android:release-apk"
 echo ""
-echo "Step 6: On device — install APK, log in, enable notifications, reopen app."
+echo "Step 7: On device — install APK, log in, enable notifications, reopen app."
 echo "  Admin → Users → verify push token → Send meal notification (Dinner)."

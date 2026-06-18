@@ -1,9 +1,9 @@
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { Bookmark, ChefHat } from 'lucide-react-native';
+import { Bookmark } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import MissingShopInline from '@/components/MissingShopInline';
+import MissingShopInline, { missingShopActionStyles } from '@/components/MissingShopInline';
 import RecipeImage from '@/components/RecipeImage';
 import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -72,22 +72,45 @@ export default function RecipeCard({
       <MissingShopInline
         missing={missing}
         variant="footer"
+        cookSlot={
+          onCookTonight ? (
+            <Pressable
+              onPress={(event) => {
+                event.stopPropagation?.();
+                handleCookPress();
+              }}
+              style={missingShopActionStyles.cookPill}
+            >
+              <Text style={missingShopActionStyles.cookPillText}>{cookCtaLabel} →</Text>
+            </Pressable>
+          ) : undefined
+        }
         onShopPress={() => handleShopPress()}
         onPartnerPress={(partner) => handleShopPress(partner)}
       />
     ) : null;
 
+  const cookPill = onCookTonight ? (
+    <Pressable
+      onPress={(event) => {
+        event.stopPropagation?.();
+        handleCookPress();
+      }}
+      style={missingShopActionStyles.cookPill}
+    >
+      <Text style={missingShopActionStyles.cookPillText}>{cookCtaLabel} →</Text>
+    </Pressable>
+  ) : null;
+
   if (isTonight) {
     return (
-      <Pressable
-        onPress={handlePress}
-        testID={testID}
+      <View
         style={[
           styles.tonightCard,
           { backgroundColor: themeColors.white, borderColor: themeColors.border },
         ]}
       >
-        <View style={styles.tonightMain}>
+        <Pressable onPress={handlePress} testID={testID} style={styles.tonightMain}>
           <RecipeImage uri={recipe.imageUrl} style={styles.tonightImage} />
           <View style={styles.tonightBody}>
             <View style={styles.tonightTitleRow}>
@@ -113,63 +136,58 @@ export default function RecipeCard({
               {recipe.prepTime} min · {matchPercent}% pantry · {recipe.dietType}
             </Text>
 
-            {onCookTonight && (
-              <Pressable
-                onPress={(event) => {
-                  event.stopPropagation?.();
-                  handleCookPress();
-                }}
-                style={styles.cookBtn}
-              >
-                <ChefHat size={14} color={colors.primary} />
-                <Text style={styles.cookBtnText}>{cookCtaLabel}</Text>
-              </Pressable>
-            )}
+            {missing.length === 0 && cookPill ? (
+              <View style={styles.standaloneCook}>{cookPill}</View>
+            ) : null}
           </View>
-        </View>
+        </Pressable>
         {shopFooter}
-      </Pressable>
+      </View>
     );
   }
 
   return (
-    <Pressable
-      onPress={handlePress}
-      testID={testID}
+    <View
       style={[
         styles.listCard,
         { backgroundColor: themeColors.white, borderColor: themeColors.border },
       ]}
     >
-      <RecipeImage uri={recipe.imageUrl} style={styles.listImage} />
+      <Pressable onPress={handlePress} testID={testID}>
+        <RecipeImage uri={recipe.imageUrl} style={styles.listImage} />
 
-      <View style={styles.listBody}>
-        <View style={styles.listTitleRow}>
-          <Text style={[styles.listTitle, { color: themeColors.charcoal }]} numberOfLines={2}>
-            {recipe.title}
+        <View style={styles.listBody}>
+          <View style={styles.listTitleRow}>
+            <Text style={[styles.listTitle, { color: themeColors.charcoal }]} numberOfLines={2}>
+              {recipe.title}
+            </Text>
+            <Pressable onPress={handleSavePress} hitSlop={10} style={styles.bookmarkBtn}>
+              <Bookmark
+                size={18}
+                color={saved ? colors.primary : themeColors.muted}
+                fill={saved ? colors.primary : 'transparent'}
+              />
+            </Pressable>
+          </View>
+
+          {pickReason ? (
+            <Text style={[styles.listReason, { color: themeColors.muted }]} numberOfLines={2}>
+              {pickReason}
+            </Text>
+          ) : null}
+
+          <Text style={[styles.listMeta, { color: themeColors.muted }]}>
+            {recipe.prepTime} min · {matchPercent}% pantry · {recipe.region}
           </Text>
-          <Pressable onPress={handleSavePress} hitSlop={10} style={styles.bookmarkBtn}>
-            <Bookmark
-              size={18}
-              color={saved ? colors.primary : themeColors.muted}
-              fill={saved ? colors.primary : 'transparent'}
-            />
-          </Pressable>
+
+          {missing.length === 0 && cookPill ? (
+            <View style={styles.standaloneCook}>{cookPill}</View>
+          ) : null}
         </View>
-
-        {pickReason ? (
-          <Text style={[styles.listReason, { color: themeColors.muted }]} numberOfLines={2}>
-            {pickReason}
-          </Text>
-        ) : null}
-
-        <Text style={[styles.listMeta, { color: themeColors.muted }]}>
-          {recipe.prepTime} min · {matchPercent}% pantry · {recipe.region}
-        </Text>
-      </View>
+      </Pressable>
 
       {shopFooter}
-    </Pressable>
+    </View>
   );
 }
 
@@ -227,23 +245,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.muted,
   },
-  cookBtn: {
+  standaloneCook: {
     marginTop: spacing.sm,
     alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.35)',
-    backgroundColor: 'rgba(255,107,53,0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  cookBtnText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.primary,
   },
   bookmarkBtn: {
     padding: 2,

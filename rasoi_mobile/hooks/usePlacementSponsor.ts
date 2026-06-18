@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
-import { fetchSponsor, type SponsorCardData } from '@/services/sponsors';
+import { fetchSponsor, type SponsorCardData, type SponsorScreenPlacement } from '@/services/sponsors';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
-export function usePlacementSponsor(placement: 'home' | 'pantry') {
+export function usePlacementSponsor(placement: SponsorScreenPlacement) {
   const [sponsor, setSponsor] = useState<SponsorCardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

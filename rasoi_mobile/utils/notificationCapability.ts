@@ -11,3 +11,10 @@ export function isRemotePushAvailable(): boolean {
   if (Platform.OS === 'android' && isExpoGo()) return false;
   return true;
 }
+
+/** Importing expo-notifications on Android Expo Go logs an error (SDK 53+ remote push removal). */
+export function canLoadExpoNotifications(): boolean {
+  if (Platform.OS === 'web') return false;
+  if (Platform.OS === 'android' && isExpoGo()) return false;
+  return true;
+}

@@ -17,6 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AdMobBanner from '@/components/AdMobBanner';
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
+import RateRasoiCard from '@/components/settings/RateRasoiCard';
+import FeedbackLinkCard from '@/components/settings/FeedbackLinkCard';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   AccountActionsCard,
@@ -109,6 +111,11 @@ export default function SettingsScreen() {
   const openEditPreferences = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/(tabs)/settings/edit-preferences');
+  };
+
+  const openFeedback = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push('/(tabs)/settings/feedback');
   };
 
   const openPaywall = () => {
@@ -329,6 +336,11 @@ export default function SettingsScreen() {
           {showPartners && <PartnerStrip />}
         </SettingsCard>
 
+        <SettingsGroupLabel label="Support" />
+        <FeedbackLinkCard onPress={openFeedback} />
+        <View style={styles.supportSpacer} />
+        <RateRasoiCard />
+
         <SettingsGroupLabel label="Account" />
         <AccountActionsCard
           isGuest={isGuest}
@@ -454,5 +466,8 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     fontSize: 14,
     lineHeight: 22,
+  },
+  supportSpacer: {
+    height: spacing.md,
   },
 });

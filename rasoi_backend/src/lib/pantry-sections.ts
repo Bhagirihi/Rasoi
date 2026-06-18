@@ -1,11 +1,25 @@
 export const PANTRY_SECTIONS = [
   {
     title: 'Staples',
-    items: ['Atta', 'Rice', 'Dal', 'Besan', 'Jeera', 'Haldi', 'Namak', 'Oil', 'Chawal'],
+    items: ['Atta', 'Rice', 'Chawal', 'Besan', 'Jeera', 'Haldi', 'Namak', 'Oil', 'Rai', 'Garam masala'],
+  },
+  {
+    title: 'Pulses',
+    items: [
+      'Moong dal',
+      'Masoor dal',
+      'Toor dal',
+      'Chana dal',
+      'Urad dal',
+      'Arhar dal',
+      'Rajma',
+      'Chana',
+      'Lobia',
+    ],
   },
   {
     title: 'Veggies',
-    items: ['Aloo', 'Pyaaz', 'Tamatar', 'Gobi', 'Bhindi', 'Palak', 'Matar', 'Mirch', 'Adrak'],
+    items: ['Aloo', 'Pyaaz', 'Tamatar', 'Gobi', 'Bhindi', 'Palak', 'Matar', 'Mirch', 'Adrak', 'Lahsun'],
   },
   {
     title: 'Dairy',

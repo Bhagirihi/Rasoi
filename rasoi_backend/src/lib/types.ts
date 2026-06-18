@@ -1,7 +1,7 @@
 export type DietType = 'Veg' | 'Egg' | 'Non-Veg';
 export type RecipeDifficulty = 'Easy' | 'Medium' | 'Hard';
 export type RecipeTag = 'under20' | 'leftover' | 'kids' | 'quick' | 'festive';
-export type SponsorPlacement = 'home' | 'pantry' | 'recipe';
+export type SponsorPlacement = 'home' | 'recipes' | 'pantry' | 'saved' | 'recipe';
 export type PlanTier = 'free' | 'trial' | 'paid';
 export type DietChoice = 'Veg' | 'Egg' | 'Non-Veg' | 'Jain';
 export type CuisineId = string;

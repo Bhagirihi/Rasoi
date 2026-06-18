@@ -2,9 +2,11 @@ import Link from 'next/link';
 
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
 import { DataTable } from '@/app/admin/_components/DataTable';
+import SponsorActiveToggle from '@/app/admin/_components/SponsorActiveToggle';
 import { Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteSponsorAction } from '@/app/admin/sponsor-actions';
 import { prisma } from '@/lib/prisma';
+import { getSponsorPlacementLabel } from '@/lib/sponsor-placements';
 import { serializeSponsor } from '@/lib/serializers';
 
 export default async function AdminSponsorsPage() {
@@ -16,7 +18,7 @@ export default async function AdminSponsorsPage() {
     <div className="space-y-8">
       <PageHeader
         title="Sponsors"
-        description="Curate premium brand placements across home, pantry, and recipe surfaces."
+        description="Curate sponsored placements for Home, Recipes, Pantry, Saved, and Recipe detail. Toggle active to show or hide in the app."
         action={<PrimaryButton href="/admin/sponsors/new">Add sponsor</PrimaryButton>}
       />
 
@@ -33,13 +35,15 @@ export default async function AdminSponsorsPage() {
                 <p className="mt-1 text-xs text-admin-muted">{serialized.productLabel}</p>
               </td>
               <td className="px-5 py-4">
-                <Badge tone="gold">{serialized.placement}</Badge>
+                <Badge tone="gold">{getSponsorPlacementLabel(serialized.placement)}</Badge>
               </td>
               <td className="px-5 py-4 text-admin-muted">{serialized.priority}</td>
               <td className="px-5 py-4">
-                <Badge tone={serialized.active ? 'success' : 'warning'}>
-                  {serialized.active ? 'Active' : 'Paused'}
-                </Badge>
+                <SponsorActiveToggle
+                  sponsorId={sponsor.id}
+                  brandName={serialized.brandName}
+                  active={serialized.active}
+                />
               </td>
               <td className="px-5 py-4">
                 <div className="flex items-center gap-4">

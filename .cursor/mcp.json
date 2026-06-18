@@ -20,6 +20,14 @@
     "instagram": {
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/instagram/run.sh",
       "args": []
+    },
+    "firebase": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/firebase/run.sh",
+      "args": []
+    },
+    "admob": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/admob/run.sh",
+      "args": []
     }
   }
 }

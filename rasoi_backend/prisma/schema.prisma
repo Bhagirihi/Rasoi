@@ -41,6 +41,7 @@ model User {
   pushTokens             PushToken[]
   affiliateEvents        AffiliateEvent[]
   mealNotificationLogs   MealNotificationLog[]
+  feedback               UserFeedback[]
 
   @@schema("rasoi")
 }
@@ -207,6 +208,23 @@ model SponsorApplication {
   status             String   @default("pending")
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  @@schema("rasoi")
+}
+
+model UserFeedback {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category   String
+  message    String
+  name       String?
+  email      String?
+  appVersion String?
+  platform   String?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@schema("rasoi")
 }

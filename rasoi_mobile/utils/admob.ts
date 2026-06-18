@@ -7,3 +7,16 @@ export function isAdMobNativeAvailable(): boolean {
   if (Constants.appOwnership === 'expo') return false;
   return true;
 }
+
+export async function initializeMobileAds(): Promise<void> {
+  if (!isAdMobNativeAvailable()) return;
+
+  const { default: mobileAds } = await import('react-native-google-mobile-ads');
+  await mobileAds().initialize();
+
+  if (__DEV__) {
+    await mobileAds().setRequestConfiguration({
+      testDeviceIdentifiers: ['EMULATOR'],
+    });
+  }
+}

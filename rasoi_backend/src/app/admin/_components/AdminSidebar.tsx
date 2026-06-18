@@ -8,13 +8,15 @@ import { useToast } from '@/app/admin/_components/Toast';
 
 export const adminNavItems = [
   { href: '/admin', label: 'Overview', exact: true },
+  { href: '/admin/kitchen-styles', label: 'Kitchen styles' },
   { href: '/admin/recipes', label: 'Recipes' },
   { href: '/admin/sponsors', label: 'Sponsors' },
   { href: '/admin/sponsor-applications', label: 'Applications' },
   { href: '/admin/partners', label: 'Partner links' },
   { href: '/admin/payments', label: 'Payment' },
-  { href: '/admin/kitchen-styles', label: 'Kitchen styles' },
+  { href: '/admin/integrations', label: 'Integrations' },
   { href: '/admin/users', label: 'Users' },
+  { href: '/admin/feedback', label: 'User reports' },
 ] as const;
 
 export function AdminSidebarNav({

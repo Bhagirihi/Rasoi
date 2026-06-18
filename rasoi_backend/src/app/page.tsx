@@ -12,13 +12,14 @@ import {
   organizationJsonLd,
   webSiteJsonLd,
 } from '@/lib/seo';
-import { prisma } from '@/lib/prisma';
+import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
+import { getPublishedRecipeCount } from '@/lib/home-stats';
 
 export const metadata = homeMetadata;
-export const dynamic = 'force-dynamic';
+export const revalidate = 300;
 
 export default async function HomePage() {
-  const recipeCount = await prisma.recipe.count({ where: { published: true } });
+  const recipeCount = await getPublishedRecipeCount();
 
   return (
     <div className="landing-grain min-h-screen text-[#1a1a2e]">
@@ -152,7 +153,7 @@ export default async function HomePage() {
                 },
                 {
                   title: 'Sponsored brands',
-                  body: 'Curated sponsor placements for pantry staples and in-recipe brand recommendations.',
+                  body: 'Native sponsor cards on Home, Recipes, Pantry, Saved, and recipe detail screens.',
                 },
                 {
                   title: 'Quick filters',
@@ -219,13 +220,22 @@ export default async function HomePage() {
                 </h2>
                 <p className="mt-4 text-[#6b6560] leading-relaxed">
                   Put your brand in front of home cooks actively planning dinner. Rasoi offers
-                  native sponsored placements on the home feed, pantry screen, and inside recipe
-                  detail views — right when users are deciding what to cook and what to buy.
+                  native sponsored placements on Home, Recipes, Pantry, Saved, and Recipe detail
+                  — right when users are deciding what to cook and what to buy.
+                </p>
+                <p className="mt-6 text-sm text-[#6b6560]">
+                  Questions about sponsorship?{' '}
+                  <a
+                    href={`mailto:${LEGAL_CONTACT_EMAIL}`}
+                    className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+                  >
+                    {LEGAL_CONTACT_EMAIL}
+                  </a>
                 </p>
                 <ul className="mt-8 space-y-4 text-sm text-[#1a1a2e]">
                   {[
-                    'High-intent audience: recipe discovery and grocery checkout',
-                    'Placements tied to ingredients and pantry restock moments',
+                    'Five high-intent screens: home planning, recipe browse, pantry restock, saved favourites, and in-recipe cooking',
+                    'Placements tied to ingredients and checkout moments',
                     'Clear “Sponsored” labeling with affiliate-friendly CTAs',
                     'Reviewed by our team before going live in the app',
                   ].map((item) => (
@@ -294,7 +304,12 @@ export default async function HomePage() {
 
       <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[#6b6560] lg:px-8">
-          <p>Rasoi — Indian recipe app for home cooks · rasoiapplication.in</p>
+          <p>
+            Rasoi — Indian recipe app for home cooks ·{' '}
+            <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="font-semibold hover:text-[#c45c2a]">
+              {LEGAL_CONTACT_EMAIL}
+            </a>
+          </p>
           <div className="flex flex-wrap items-center gap-6">
             <Link
               href={APP_DOWNLOAD_PATH}

@@ -4,7 +4,7 @@ import { Platform } from 'react-native';
 
 import type { NotificationResponse } from 'expo-notifications';
 
-import { isRemotePushAvailable } from '@/utils/notificationCapability';
+import { isRemotePushAvailable, canLoadExpoNotifications } from '@/utils/notificationCapability';
 
 const LAST_HANDLED_NOTIFICATION_KEY = '@rasoi/last_handled_notification_response';
 
@@ -16,7 +16,7 @@ let notificationsModule: ExpoNotifications | null = null;
 let notificationsLoad: Promise<ExpoNotifications> | null = null;
 
 async function getNotifications(): Promise<ExpoNotifications | null> {
-  if (Platform.OS === 'web') return null;
+  if (!canLoadExpoNotifications()) return null;
 
   if (notificationsModule) return notificationsModule;
 

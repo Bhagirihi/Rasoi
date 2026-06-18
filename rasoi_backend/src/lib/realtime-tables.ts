@@ -9,6 +9,7 @@ export const RASOI_REALTIME_TABLES = [
   'RegionalCuisineOption',
   'PantrySection',
   'SponsorApplication',
+  'UserFeedback',
   'AffiliateEvent',
   'PushToken',
 ] as const;

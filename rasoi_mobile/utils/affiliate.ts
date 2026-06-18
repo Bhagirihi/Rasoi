@@ -10,11 +10,13 @@ import {
 export type { AffiliatePartner, FoodDeliveryPartner };
 
 async function openUrls(deepLink: string, webUrl: string) {
+  const url = deepLink.startsWith('http') ? deepLink : webUrl;
   try {
-    const canOpen = await Linking.canOpenURL(deepLink);
-    await Linking.openURL(canOpen ? deepLink : webUrl);
+    await Linking.openURL(url);
   } catch {
-    await Linking.openURL(webUrl);
+    if (url !== webUrl) {
+      await Linking.openURL(webUrl);
+    }
   }
 }
 

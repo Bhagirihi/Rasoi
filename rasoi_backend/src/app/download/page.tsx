@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
+
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import {
   ANDROID_APK_URL,
@@ -111,9 +113,12 @@ export default function DownloadPage() {
         <section className="mx-auto max-w-6xl px-5 py-12 text-center lg:px-8">
           <p className="text-sm text-[#6b6560]">
             Play Store coming soon. Questions or feedback?{' '}
-            <Link href="/" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
-              Visit our homepage
-            </Link>
+            <a
+              href={`mailto:${LEGAL_CONTACT_EMAIL}`}
+              className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+            >
+              {LEGAL_CONTACT_EMAIL}
+            </a>
             .
           </p>
         </section>
@@ -121,7 +126,12 @@ export default function DownloadPage() {
 
       <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[#6b6560] lg:px-8">
-          <p>Rasoi — Indian recipes for modern home cooks.</p>
+          <p>
+            Rasoi — Indian recipes for modern home cooks ·{' '}
+            <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="font-semibold hover:text-[#c45c2a]">
+              {LEGAL_CONTACT_EMAIL}
+            </a>
+          </p>
           <div className="flex flex-wrap items-center gap-6">
             <Link href="/privacy" className="font-semibold hover:text-[#c45c2a]">
               Privacy

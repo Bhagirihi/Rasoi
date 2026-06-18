@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       return jsonError('Invalid email or password', 401);
     }
 
-    const token = await signToken({ sub: admin.id, type: 'admin' }, '7d');
+    const token = await signToken({ sub: admin.id, type: 'admin', name: admin.name }, '7d');
 
     return jsonOk({
       token,

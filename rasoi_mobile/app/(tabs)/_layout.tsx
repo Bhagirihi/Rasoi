@@ -1,4 +1,5 @@
 import { Redirect, Tabs } from 'expo-router';
+import { useMemo } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 import { Bookmark, BookOpen, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,13 +24,36 @@ function getTabBarLayout(bottomInset: number) {
 export default function TabLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const tabBarLayout = getTabBarLayout(insets.bottom);
+  const tabBarLayout = useMemo(() => getTabBarLayout(insets.bottom), [insets.bottom]);
   const {
     isHydrated,
     hasCompletedOnboarding,
     isLoggedIn,
     pendingTrialWelcome,
   } = useAppContext();
+
+  const screenOptions = useMemo(
+    () => ({
+      headerShown: false,
+      lazy: true,
+      freezeOnBlur: true,
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.muted,
+      tabBarStyle: {
+        backgroundColor: colors.white,
+        borderTopColor: colors.border,
+        borderTopWidth: 1,
+        height: tabBarLayout.height,
+        paddingBottom: tabBarLayout.paddingBottom,
+        paddingTop: tabBarLayout.paddingTop,
+      },
+      tabBarLabelStyle: {
+        fontSize: 11,
+        fontWeight: '600' as const,
+      },
+    }),
+    [colors.primary, colors.muted, colors.white, colors.border, tabBarLayout],
+  );
 
   if (!isHydrated) {
     return (
@@ -52,25 +76,7 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.muted,
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          height: tabBarLayout.height,
-          paddingBottom: tabBarLayout.paddingBottom,
-          paddingTop: tabBarLayout.paddingTop,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
-      }}
-    >
+    <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{

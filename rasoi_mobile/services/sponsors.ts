@@ -21,8 +21,10 @@ function mapSponsor(sponsor: SponsorResponse): SponsorCardData {
   };
 }
 
+export type SponsorScreenPlacement = 'home' | 'recipes' | 'pantry' | 'saved';
+
 export async function fetchSponsor(
-  placement: 'home' | 'pantry' | 'recipe',
+  placement: SponsorScreenPlacement | 'recipe',
   recipeId?: string,
 ): Promise<SponsorCardData | null> {
   const sponsors = await apiFetch<SponsorResponse[]>(
@@ -47,8 +49,16 @@ export function fetchHomeSponsor(): Promise<SponsorCardData | null> {
   return fetchSponsor('home');
 }
 
+export function fetchRecipesSponsor(): Promise<SponsorCardData | null> {
+  return fetchSponsor('recipes');
+}
+
 export function fetchPantrySponsor(): Promise<SponsorCardData | null> {
   return fetchSponsor('pantry');
+}
+
+export function fetchSavedSponsor(): Promise<SponsorCardData | null> {
+  return fetchSponsor('saved');
 }
 
 export async function fetchRecipeSponsor(recipeId: string): Promise<SponsorCardData | null> {

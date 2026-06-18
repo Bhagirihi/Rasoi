@@ -6,6 +6,7 @@ import MissingItemsPanel from '@/components/MissingItemsPanel';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { Recipe, RecipeIngredient } from '@/data/mockRecipes';
+import type { AffiliatePartner } from '@/utils/affiliate';
 import { ingredientKey } from '@/utils/recipeIngredients';
 
 interface IngredientListProps {
@@ -13,6 +14,7 @@ interface IngredientListProps {
   available: string[];
   missing: string[];
   onShopMissing?: () => void;
+  onPartnerPress?: (partner: AffiliatePartner) => void;
 }
 
 function IngredientRow({
@@ -42,6 +44,7 @@ export default function IngredientList({
   available,
   missing,
   onShopMissing,
+  onPartnerPress,
 }: IngredientListProps) {
   const { colors: themeColors } = useTheme();
   const availableSet = new Set(available.map((item) => ingredientKey(item)));
@@ -76,6 +79,7 @@ export default function IngredientList({
         missing={missing}
         totalCount={recipe.ingredients.length}
         onShopAll={missing.length > 0 ? onShopMissing : undefined}
+        onPartnerPress={missing.length > 0 ? onPartnerPress : undefined}
       />
 
       {sponsoredIngredient?.recommendedBrand && (

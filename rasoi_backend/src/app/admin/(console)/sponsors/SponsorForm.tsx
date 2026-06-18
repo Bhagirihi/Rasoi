@@ -13,13 +13,14 @@ import {
 } from '@/app/admin/_components/ui';
 import { createSponsorAction, updateSponsorAction } from '@/app/admin/sponsor-actions';
 import type { SponsorResponse } from '@/lib/types';
+import { SPONSOR_PLACEMENT_OPTIONS, type SponsorPlacement } from '@/lib/sponsor-placements';
 
 export default function SponsorForm({ sponsor }: { sponsor?: SponsorResponse }) {
   const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(false);
 
-  const [placement, setPlacement] = useState(sponsor?.placement ?? 'home');
+  const [placement, setPlacement] = useState<SponsorPlacement>(sponsor?.placement ?? 'home');
   const [brandName, setBrandName] = useState(sponsor?.brandName ?? '');
   const [productLabel, setProductLabel] = useState(sponsor?.productLabel ?? '');
   const [tagline, setTagline] = useState(sponsor?.tagline ?? '');
@@ -73,8 +74,8 @@ export default function SponsorForm({ sponsor }: { sponsor?: SponsorResponse }) 
             <FieldLabel>Placement</FieldLabel>
             <SelectInput
               value={placement}
-              onChange={(v) => setPlacement(v as typeof placement)}
-              options={['home', 'pantry', 'recipe']}
+              onChange={(v) => setPlacement(v as SponsorPlacement)}
+              options={SPONSOR_PLACEMENT_OPTIONS}
             />
           </label>
 

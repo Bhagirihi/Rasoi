@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ArrowRight, Check, ChefHat, Package, Sparkles } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,72 +15,140 @@ import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import { InsightBanner, PrimaryButton } from '@/components/ui/Primitives';
+import { usePantryScreenData } from '@/hooks/usePantryScreenData';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { colors, gradients, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
+import type { PantrySection } from '@/services/reference';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
-import { usePartners } from '@/context/PartnersContext';
-import { useRecipes } from '@/context/RecipesContext';
-import { useReferenceData } from '@/context/ReferenceContext';
-import { countFullyStockedRecipes } from '@/utils/recipes';
+import { pantryHasIngredient } from '@/utils/pantryCanonical';
 import type { AffiliatePartner } from '@/utils/affiliate';
-import { dietChoiceToFilter } from '@/utils/storage';
-
-const RESTOCK_SUGGESTIONS = ['Paneer', 'Tamatar', 'Dahi', 'Mirch'];
 
 function countStockedInSection(items: string[], pantryIngredients: string[]) {
-  return items.filter((item) => pantryIngredients.includes(item)).length;
+  return items.filter((item) => pantryHasIngredient(pantryIngredients, item)).length;
+}
+
+type PantrySectionCardProps = {
+  section: PantrySection;
+  pantryIngredients: string[];
+  onToggle: (item: string) => void;
+  accent?: boolean;
+  subtitle?: string;
+};
+
+function PantrySectionCard({
+  section,
+  pantryIngredients,
+  onToggle,
+  accent = false,
+  subtitle,
+}: PantrySectionCardProps) {
+  const { colors: themeColors, isDark } = useTheme();
+  const stockedInSection = countStockedInSection(section.items, pantryIngredients);
+  const sectionComplete = section.items.length > 0 && stockedInSection === section.items.length;
+
+  return (
+    <View
+      style={[
+        styles.sectionCard,
+        accent && styles.sectionCardAccent,
+        { backgroundColor: themeColors.white, borderColor: accent ? 'rgba(255,107,53,0.35)' : themeColors.border },
+      ]}
+    >
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionTitleBlock}>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionTitle, { color: themeColors.charcoal }]}>{section.title}</Text>
+            {sectionComplete && (
+              <View style={styles.sectionCompleteBadge}>
+                <Check size={12} color={colors.green} strokeWidth={3} />
+              </View>
+            )}
+          </View>
+          {subtitle ? (
+            <Text style={[styles.sectionSubtitle, { color: themeColors.muted }]} numberOfLines={2}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </View>
+        <View
+          style={[
+            styles.sectionCountBadge,
+            {
+              backgroundColor: sectionComplete
+                ? isDark
+                  ? 'rgba(0,168,107,0.18)'
+                  : 'rgba(0,168,107,0.1)'
+                : isDark
+                  ? 'rgba(107,114,128,0.16)'
+                  : 'rgba(107,114,128,0.08)',
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.sectionCountText,
+              { color: sectionComplete ? colors.green : themeColors.muted },
+            ]}
+          >
+            {stockedInSection}/{section.items.length}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.grid}>
+        {section.items.map((item) => {
+          const isSelected = pantryHasIngredient(pantryIngredients, item);
+          return (
+            <Pressable
+              key={item}
+              onPress={() => onToggle(item)}
+              style={[
+                styles.chip,
+                {
+                  backgroundColor: isSelected
+                    ? isDark
+                      ? 'rgba(0,168,107,0.16)'
+                      : 'rgba(0,168,107,0.08)'
+                    : themeColors.cream,
+                  borderColor: isSelected ? colors.green : themeColors.border,
+                },
+              ]}
+            >
+              {isSelected ? (
+                <View style={styles.chipCheck}>
+                  <Check size={11} color={colors.white} strokeWidth={3} />
+                </View>
+              ) : (
+                <View style={[styles.chipDot, { borderColor: themeColors.border }]} />
+              )}
+              <Text
+                style={[styles.chipText, { color: isSelected ? colors.green : themeColors.charcoal }]}
+                numberOfLines={1}
+              >
+                {item}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
 }
 
 export default function PantryScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const { colors: themeColors, isDark } = useTheme();
-  const {
-    pantryIngredients,
-    togglePantryIngredient,
-    setPantryFilterActive,
-    regionalCuisine,
-    dietChoice,
-    showPartners,
-    partnersInTrialMode,
-  } = useAppContext();
-  const { recipes } = useRecipes();
-  const { pantrySections } = useReferenceData();
-  const { openGroceryCheckout } = usePartners();
+  const { pantryIngredients, togglePantryIngredient, setPantryFilterActive, showPartners, partnersInTrialMode } =
+    useAppContext();
+  const { essentialSections, personalSection, stockStats, restockItems, matchCount } = usePantryScreenData();
 
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
   const [stickyBarHeight, setStickyBarHeight] = useState(96);
   const { sponsor: pantrySponsor, loading: pantrySponsorLoading } = usePlacementSponsor('pantry');
-
-  const matchCount = useMemo(
-    () =>
-      countFullyStockedRecipes(recipes, {
-        dietPreference: dietChoiceToFilter(dietChoice),
-        regionalCuisine,
-        pantryIngredients,
-      }),
-    [recipes, dietChoice, regionalCuisine, pantryIngredients],
-  );
-
-  const restockItems = useMemo(
-    () => RESTOCK_SUGGESTIONS.filter((item) => !pantryIngredients.includes(item)),
-    [pantryIngredients],
-  );
-
-  const totalPantryItems = useMemo(
-    () => pantrySections.reduce((sum, section) => sum + section.items.length, 0),
-    [pantrySections],
-  );
-
-  const stockedPercent = useMemo(
-    () =>
-      totalPantryItems > 0
-        ? Math.round((pantryIngredients.length / totalPantryItems) * 100)
-        : 0,
-    [pantryIngredients.length, totalPantryItems],
-  );
 
   const scrollBottomPadding = stickyBarHeight + tabBarHeight + spacing.lg;
 
@@ -111,7 +179,7 @@ export default function PantryScreen() {
           <AppTabHeader
             eyebrow="Pantry checker"
             title="What's at home"
-            subtitle="Tap ingredients you have — we'll match recipes and flag what to restock."
+            subtitle="Tick essentials, then items for your picks and saved recipes."
           />
 
           <View
@@ -130,11 +198,16 @@ export default function PantryScreen() {
               <View>
                 <Text style={[styles.statsEyebrow, { color: themeColors.muted }]}>Pantry snapshot</Text>
                 <Text style={[styles.statsTitle, { color: themeColors.charcoal }]}>
-                  {pantryIngredients.length} of {totalPantryItems} stocked
+                  {stockStats.stocked} of {stockStats.total} stocked
                 </Text>
               </View>
-              <View style={[styles.percentBadge, { backgroundColor: isDark ? 'rgba(0,168,107,0.18)' : 'rgba(0,168,107,0.1)' }]}>
-                <Text style={styles.percentBadgeText}>{stockedPercent}%</Text>
+              <View
+                style={[
+                  styles.percentBadge,
+                  { backgroundColor: isDark ? 'rgba(0,168,107,0.18)' : 'rgba(0,168,107,0.1)' },
+                ]}
+              >
+                <Text style={styles.percentBadgeText}>{stockStats.percent}%</Text>
               </View>
             </View>
 
@@ -144,7 +217,7 @@ export default function PantryScreen() {
                 { backgroundColor: isDark ? 'rgba(0,168,107,0.22)' : 'rgba(0,168,107,0.12)' },
               ]}
             >
-              <View style={[styles.progressFill, { width: `${Math.max(stockedPercent, 4)}%` }]} />
+              <View style={[styles.progressFill, { width: `${Math.max(stockStats.percent, 4)}%` }]} />
             </View>
 
             <View style={styles.statsRow}>
@@ -158,7 +231,7 @@ export default function PantryScreen() {
                   <Package size={18} color={colors.green} strokeWidth={2.5} />
                 </View>
                 <View style={styles.statCopy}>
-                  <Text style={styles.statValue}>{pantryIngredients.length}</Text>
+                  <Text style={styles.statValue}>{stockStats.stocked}</Text>
                   <Text style={[styles.statLabel, { color: themeColors.muted }]}>At home</Text>
                 </View>
               </View>
@@ -182,8 +255,8 @@ export default function PantryScreen() {
 
           {pantryIngredients.length === 0 ? (
             <InsightBanner
-              title="Start with what you already have"
-              subtitle="Mark staples like atta, rice, and masala — even a few items unlock better recipe matches."
+              title="Start with kitchen essentials"
+              subtitle="Tick atta, chawal, oil, and masala — then check items for your lunch pick and saved recipes."
             />
           ) : matchCount > 0 ? (
             <InsightBanner
@@ -199,10 +272,11 @@ export default function PantryScreen() {
                 <GroceryPromoStrip
                   onShopPress={() => setModalVisible(true)}
                   onPartnerPress={(partner) => {
-                    void openGroceryCheckout(partner, restockItems);
+                    setModalPartner(partner);
+                    setModalVisible(true);
                   }}
                   missingCount={restockItems.length}
-                  title="Restock your pantry"
+                  title="Still missing"
                   subtitle={`Order ${restockItems.join(', ')} in minutes`}
                   hidePartnerBranding
                   ctaText="Restock now →"
@@ -216,111 +290,49 @@ export default function PantryScreen() {
             ))}
 
           <View style={styles.ingredientsHeader}>
-            <Text style={[styles.ingredientsTitle, { color: themeColors.charcoal }]}>Ingredients</Text>
+            <Text style={[styles.ingredientsTitle, { color: themeColors.charcoal }]}>Essentials</Text>
             <Text style={[styles.ingredientsHint, { color: themeColors.muted }]}>
-              Tap to toggle · green = in stock
+              Every kitchen · tap what you keep at home
             </Text>
           </View>
 
-          {pantrySections.map((section) => {
-            const stockedInSection = countStockedInSection(section.items, pantryIngredients);
-            const sectionComplete = stockedInSection === section.items.length;
-
-            return (
-              <View
-                key={section.title}
-                style={[
-                  styles.sectionCard,
-                  { backgroundColor: themeColors.white, borderColor: themeColors.border },
-                ]}
-              >
-                <View style={styles.sectionHeader}>
-                  <View style={styles.sectionTitleRow}>
-                    <Text style={[styles.sectionTitle, { color: themeColors.charcoal }]}>
-                      {section.title}
-                    </Text>
-                    {sectionComplete && (
-                      <View style={styles.sectionCompleteBadge}>
-                        <Check size={12} color={colors.green} strokeWidth={3} />
-                      </View>
-                    )}
-                  </View>
-                  <View
-                    style={[
-                      styles.sectionCountBadge,
-                      {
-                        backgroundColor: sectionComplete
-                          ? isDark
-                            ? 'rgba(0,168,107,0.18)'
-                            : 'rgba(0,168,107,0.1)'
-                          : isDark
-                            ? 'rgba(107,114,128,0.16)'
-                            : 'rgba(107,114,128,0.08)',
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.sectionCountText,
-                        { color: sectionComplete ? colors.green : themeColors.muted },
-                      ]}
-                    >
-                      {stockedInSection}/{section.items.length}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.grid}>
-                  {section.items.map((item) => {
-                    const isSelected = pantryIngredients.includes(item);
-                    return (
-                      <Pressable
-                        key={item}
-                        onPress={() => handleToggle(item)}
-                        style={[
-                          styles.chip,
-                          {
-                            backgroundColor: isSelected
-                              ? isDark
-                                ? 'rgba(0,168,107,0.16)'
-                                : 'rgba(0,168,107,0.08)'
-                              : themeColors.cream,
-                            borderColor: isSelected ? colors.green : themeColors.border,
-                          },
-                        ]}
-                      >
-                        {isSelected ? (
-                          <View style={styles.chipCheck}>
-                            <Check size={11} color={colors.white} strokeWidth={3} />
-                          </View>
-                        ) : (
-                          <View style={[styles.chipDot, { borderColor: themeColors.border }]} />
-                        )}
-                        <Text
-                          style={[
-                            styles.chipText,
-                            { color: isSelected ? colors.green : themeColors.charcoal },
-                          ]}
-                          numberOfLines={1}
-                        >
-                          {item}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-            );
-          })}
-
-          <View style={styles.sponsorSlot}>
-            <SponsorOrAd
-              sponsor={pantrySponsor}
-              loading={pantrySponsorLoading}
-              placement="pantry"
-              compact
+          {essentialSections.map((section) => (
+            <PantrySectionCard
+              key={section.title}
+              section={section}
+              pantryIngredients={pantryIngredients}
+              onToggle={handleToggle}
             />
+          ))}
+
+          <View style={styles.ingredientsHeader}>
+            <Text style={[styles.ingredientsTitle, { color: themeColors.charcoal }]}>Your recipes</Text>
+            <Text style={[styles.ingredientsHint, { color: themeColors.muted }]}>
+              From your meal pick, also-for cards & saved recipes
+            </Text>
           </View>
+
+          {personalSection ? (
+            <PantrySectionCard
+              section={{ title: personalSection.title, items: personalSection.items }}
+              pantryIngredients={pantryIngredients}
+              onToggle={handleToggle}
+              accent
+              subtitle={personalSection.subtitle}
+            />
+          ) : (
+            <InsightBanner
+              title="Personal picks appear here"
+              subtitle="Open Home for your meal pick, or save recipes — we'll show extra ingredients to stock."
+            />
+          )}
+
+          <SponsorOrAd
+            sponsor={pantrySponsor}
+            loading={pantrySponsorLoading}
+            placement="pantry"
+            compact
+          />
         </View>
       </ScrollViewWithFloatingIndicator>
 
@@ -343,9 +355,7 @@ export default function PantryScreen() {
               <Sparkles size={16} color={colors.primary} />
             </View>
             <View style={styles.stickyMetaCopy}>
-              <Text style={styles.stickyMetaValue}>
-                {matchCount > 0 ? matchCount : '—'}
-              </Text>
+              <Text style={styles.stickyMetaValue}>{matchCount > 0 ? matchCount : '—'}</Text>
               <Text style={[styles.stickyMetaLabel, { color: themeColors.muted }]}>
                 {matchCount === 1 ? 'recipe ready' : 'recipes ready'}
               </Text>
@@ -366,6 +376,7 @@ export default function PantryScreen() {
         onClose={() => setModalVisible(false)}
         missingIngredients={restockItems}
         recipeTitle="Pantry restock"
+        initialPartner={modalPartner}
       />
     </SafeAreaView>
   );
@@ -493,21 +504,33 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     ...shadows.card,
   },
+  sectionCardAccent: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
   sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     gap: spacing.sm,
+  },
+  sectionTitleBlock: {
+    flex: 1,
+    gap: 4,
   },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    flex: 1,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '800',
+  },
+  sectionSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
   },
   sectionCompleteBadge: {
     width: 20,
@@ -560,9 +583,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     flexShrink: 1,
-  },
-  sponsorSlot: {
-    marginTop: spacing.sm,
   },
   stickyBar: {
     position: 'absolute',

@@ -56,7 +56,7 @@ export default function RecipesTabScreen() {
     regionalCuisine,
     handleFilterToggle,
   } = useRecipeDiscovery();
-  const { sponsor: homeSponsor, loading: homeSponsorLoading } = usePlacementSponsor('home');
+  const { sponsor: recipesSponsor, loading: recipesSponsorLoading } = usePlacementSponsor('recipes');
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
@@ -166,9 +166,12 @@ export default function RecipesTabScreen() {
   const renderItem = ({ item, index }: { item: Recipe; index: number }) => (
     <View>
       {index === 1 && (
-        <View style={styles.sponsorSlot}>
-          <SponsorOrAd sponsor={homeSponsor} loading={homeSponsorLoading} placement="home" />
-        </View>
+        <SponsorOrAd
+          sponsor={recipesSponsor}
+          loading={recipesSponsorLoading}
+          placement="recipes"
+          style={styles.listSponsorInset}
+        />
       )}
       <RecipeCard
         recipe={item}
@@ -319,7 +322,7 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     marginBottom: spacing.md,
   },
-  sponsorSlot: {
+  listSponsorInset: {
     marginTop: spacing.lg,
     marginBottom: spacing.lg,
   },

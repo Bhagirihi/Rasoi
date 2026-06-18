@@ -16,24 +16,26 @@ export const DEFAULT_PARTNER_LINKS: Array<{
     label: 'Blinkit',
     category: 'grocery',
     deepLinkUrl:
-      'blinkit://cart/checkout?items={query}&affiliate_id=rasoi_india&source=recipe_detail',
-    webUrl: 'https://blinkit.com/s/?q={query}',
+      'https://blinkit.com/s/?q={query}&utm_source=rasoi&utm_medium=affiliate',
+    webUrl: 'https://blinkit.com/s/?q={query}&utm_source=rasoi&utm_medium=affiliate',
   },
   {
     partnerId: 'zepto',
     label: 'Zepto',
     category: 'grocery',
     deepLinkUrl:
-      'zepto://checkout/cart?products={query}&ref=rasoi_partner&campaign=cook_today',
-    webUrl: 'https://www.zeptonow.com/search?query={query}',
+      'https://www.zeptonow.com/search?query={query}&utm_source=rasoi&utm_medium=affiliate',
+    webUrl:
+      'https://www.zeptonow.com/search?query={query}&utm_source=rasoi&utm_medium=affiliate',
   },
   {
     partnerId: 'instamart',
     label: 'Instamart',
     category: 'grocery',
     deepLinkUrl:
-      'swiggy://instamart/cart?item_list={query}&partner=rasoi&medium=affiliate',
-    webUrl: 'https://www.swiggy.com/instamart/search?query={query}',
+      'https://www.swiggy.com/instamart/search?query={query}&utm_source=rasoi&utm_medium=affiliate',
+    webUrl:
+      'https://www.swiggy.com/instamart/search?query={query}&utm_source=rasoi&utm_medium=affiliate',
   },
   {
     partnerId: 'zomato',
@@ -57,5 +59,8 @@ export function buildPartnerUrl(template: string, query: string): string {
 }
 
 export function buildGroceryCheckoutQuery(items: string[]): string {
-  return items.map((item) => item.trim()).filter(Boolean).join(', ');
+  const trimmed = items.map((item) => item.trim()).filter(Boolean);
+  if (trimmed.length === 0) return '';
+  // Grocery apps open a single search screen — use the first missing item.
+  return trimmed[0];
 }

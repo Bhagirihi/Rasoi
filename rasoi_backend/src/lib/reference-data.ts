@@ -28,7 +28,12 @@ export async function ensureReferenceData() {
   for (const section of DEFAULT_PANTRY_SECTIONS) {
     await prisma.pantrySection.upsert({
       where: { id: section.id },
-      update: {},
+      update: {
+        title: section.title,
+        items: JSON.stringify(section.items),
+        sortOrder: section.sortOrder,
+        active: section.active,
+      },
       create: {
         id: section.id,
         title: section.title,

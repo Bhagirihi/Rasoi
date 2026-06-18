@@ -11,10 +11,15 @@ const JWT_SECRET = new TextEncoder().encode(
 export type TokenPayload = {
   sub: string;
   type: 'user' | 'admin';
+  /** Admin display name — avoids a DB round-trip on every /admin page when present. */
+  name?: string;
 };
 
 export async function signToken(payload: TokenPayload, expiresIn = '30d') {
-  return new SignJWT({ type: payload.type })
+  return new SignJWT({
+    type: payload.type,
+    ...(payload.name ? { name: payload.name } : {}),
+  })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(payload.sub)
     .setIssuedAt()
@@ -29,7 +34,12 @@ export async function verifyToken(token: string): Promise<TokenPayload | null> {
     if (!sub || typeof sub !== 'string') return null;
     const type = payload.type;
     if (type !== 'user' && type !== 'admin') return null;
-    return { sub, type };
+    const name = payload.name;
+    return {
+      sub,
+      type,
+      name: typeof name === 'string' ? name : undefined,
+    };
   } catch {
     return null;
   }
@@ -70,6 +80,10 @@ export async function getAdminFromCookies() {
 
   const payload = await verifyToken(token);
   if (!payload || payload.type !== 'admin') return null;
+
+  if (payload.name) {
+    return { id: payload.sub, name: payload.name, email: '' };
+  }
 
   return prisma.admin.findUnique({ where: { id: payload.sub } });
 }

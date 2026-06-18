@@ -2,6 +2,10 @@ import { existsSync } from 'fs';
 import type { ExpoConfig } from 'expo/config';
 
 import appJson from './app.json';
+import {
+  ADMOB_ANDROID_APP_ID,
+  ADMOB_IOS_APP_ID,
+} from './constants/admobAppIds.js';
 
 const base = appJson.expo as ExpoConfig;
 
@@ -14,7 +18,10 @@ const easProjectId =
   '';
 
 const googleServicesPath = './google-services.json';
-const hasGoogleServices = existsSync(googleServicesPath);
+const easGoogleServicesPath = process.env.GOOGLE_SERVICES_JSON?.trim();
+const hasGoogleServices =
+  existsSync(googleServicesPath) ||
+  (easGoogleServicesPath ? existsSync(easGoogleServicesPath) : false);
 
 if (!easProjectId) {
   console.warn(
@@ -28,8 +35,26 @@ if (!hasGoogleServices) {
   );
 }
 
+function withAdMobPlugin(plugins: ExpoConfig['plugins']): ExpoConfig['plugins'] {
+  if (!plugins) return plugins;
+  return plugins.map((plugin) => {
+    if (Array.isArray(plugin) && plugin[0] === 'react-native-google-mobile-ads') {
+      return [
+        plugin[0],
+        {
+          ...(typeof plugin[1] === 'object' && plugin[1] ? plugin[1] : {}),
+          androidAppId: ADMOB_ANDROID_APP_ID,
+          iosAppId: ADMOB_IOS_APP_ID,
+        },
+      ] as typeof plugin;
+    }
+    return plugin;
+  });
+}
+
 export default (): ExpoConfig => ({
   ...base,
+  plugins: withAdMobPlugin(base.plugins),
   extra: {
     ...base.extra,
     eas: {

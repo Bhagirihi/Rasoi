@@ -26,6 +26,16 @@ export async function updateSponsorAction(id: string, raw: unknown) {
   revalidatePath('/admin/sponsors');
 }
 
+export async function setSponsorActiveAction(id: string, active: boolean) {
+  await requireAdminSession();
+  await prisma.sponsor.update({
+    where: { id },
+    data: { active },
+  });
+  revalidatePath('/admin/sponsors');
+  revalidatePath('/admin');
+}
+
 export async function deleteSponsorAction(id: string) {
   await requireAdminSession();
   await prisma.sponsor.delete({ where: { id } });

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
@@ -18,6 +18,10 @@
     "db:sync-public-cuisines": "tsx scripts/sync-public-kitchen-styles.ts",
     "db:seed-recipes": "tsx scripts/seed-recipes-to-supabase.ts",
     "db:seed-recipes:dry": "tsx scripts/seed-recipes-to-supabase.ts --dry-run",
+    "db:seed-batch7": "tsx scripts/seed-batch7-to-supabase.ts",
+    "db:seed-batch8": "tsx scripts/seed-batch8-to-supabase.ts",
+    "db:seed-batch6": "tsx scripts/seed-batch6-recipes.ts",
+    "db:seed-batch6:dry": "tsx scripts/seed-batch6-recipes.ts --dry-run",
     "cron:keep-alive": "tsx scripts/cron-keep-alive.ts",
     "cron:meal-notifications": "tsx scripts/cron-meal-notifications.ts"
   },

@@ -16,9 +16,10 @@ import {
 import { usePartners } from '@/context/PartnersContext';
 import { useTheme } from '@/context/ThemeContext';
 import { colors, layout, radius, shadows, spacing } from '@/constants/theme';
+import { CONTACT_EMAIL, CONTACT_MAILTO, SITE_BASE_URL } from '@/constants/links';
 import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
 
-const LEGAL_BASE_URL = 'https://rasoiapplication.in';
+const LEGAL_BASE_URL = SITE_BASE_URL;
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.3';
 
 function openLegalUrl(path: '/privacy' | '/terms') {
@@ -446,6 +447,10 @@ export function PartnerStrip() {
   );
 }
 
+function openContactEmail() {
+  void Linking.openURL(CONTACT_MAILTO);
+}
+
 export function SettingsFooter() {
   const { colors: themeColors } = useTheme();
 
@@ -458,6 +463,10 @@ export function SettingsFooter() {
         <Text style={[styles.footerDot, { color: themeColors.muted }]}>·</Text>
         <Pressable onPress={() => openLegalUrl('/terms')} hitSlop={8}>
           <Text style={[styles.footerLink, { color: themeColors.primary }]}>Terms</Text>
+        </Pressable>
+        <Text style={[styles.footerDot, { color: themeColors.muted }]}>·</Text>
+        <Pressable onPress={openContactEmail} hitSlop={8}>
+          <Text style={[styles.footerLink, { color: themeColors.primary }]}>{CONTACT_EMAIL}</Text>
         </Pressable>
       </View>
       <Text style={[styles.footer, { color: themeColors.muted }]}>

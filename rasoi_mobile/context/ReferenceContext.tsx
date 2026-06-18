@@ -17,10 +17,15 @@ import {
 } from '@/services/reference';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
+const DEFAULT_APP_CONFIG = {
+  paymentsEnabled: false,
+};
+
 const EMPTY_REFERENCE: ReferenceData = {
   regionalCuisines: [],
   pantrySections: [],
   kitchenStyles: [],
+  appConfig: DEFAULT_APP_CONFIG,
 };
 
 type ReferenceContextValue = {
@@ -85,7 +90,7 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
       regionalCuisines: reference.regionalCuisines,
       pantrySections: reference.pantrySections,
       kitchenStyles: reference.kitchenStyles,
-      paymentsEnabled: reference.appConfig.paymentsEnabled,
+      paymentsEnabled: reference.appConfig?.paymentsEnabled ?? false,
       loading,
       error,
       refreshReference,

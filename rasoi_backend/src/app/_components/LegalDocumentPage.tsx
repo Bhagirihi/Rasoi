@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import RasoiLogo from '@/app/_components/RasoiLogo';
+import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 import { APP_DOWNLOAD_PATH } from '@/lib/app-download';
 
 type LegalSection = { title: string; body: string };
@@ -65,7 +66,12 @@ export default function LegalDocumentPage({
 
       <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[#6b6560] lg:px-8">
-          <p>Rasoi · rasoiapplication.in</p>
+          <p>
+            Rasoi ·{' '}
+            <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="font-semibold hover:text-[#c45c2a]">
+              {LEGAL_CONTACT_EMAIL}
+            </a>
+          </p>
           <div className="flex flex-wrap items-center gap-6">
             <Link href="/privacy" className="font-semibold hover:text-[#c45c2a]">
               Privacy

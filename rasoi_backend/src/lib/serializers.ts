@@ -13,6 +13,7 @@ import type {
   UserProfileResponse,
 } from '@/lib/types';
 import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
+import { resolveStepsForRecipe } from '@/lib/recipe-steps';
 
 export function parseJson<T>(value: string, fallback: T): T {
   try {
@@ -41,7 +42,7 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
     imageUrl: recipe.imageUrl,
     tags: parseJson<RecipeTag[]>(recipe.tags, []),
     ingredients: normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, [])),
-    steps: recipe.steps ? parseJson<string[]>(recipe.steps, []) : undefined,
+    steps: resolveStepsForRecipe(recipe),
     published: recipe.published,
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),

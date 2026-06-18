@@ -41,6 +41,8 @@ npm run db:sync
 npm run dev
 ```
 
+Use **`npm run dev` only** for local work (Turbopack — fast compile). Do not chain `npm run dev && npm start`; production `npm start` needs `npm run build` first and is slower.
+
 `db:sync` applies the Prisma schema to Supabase and seeds recipes, sponsors, partners, and admin using **upserts** (same IDs → updates, not duplicates).
 
 Prisma tables live in the **`rasoi` PostgreSQL schema** so they do not conflict with Supabase `public.profiles` → `auth.users` (from optional 004 SQL migration). See `prisma/supabase-note.md`.

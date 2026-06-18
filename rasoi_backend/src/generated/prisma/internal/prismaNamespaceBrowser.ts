@@ -63,7 +63,8 @@ export const ModelName = {
   RegionalCuisineOption: 'RegionalCuisineOption',
   PantrySection: 'PantrySection',
   AppSettings: 'AppSettings',
-  SponsorApplication: 'SponsorApplication'
+  SponsorApplication: 'SponsorApplication',
+  UserFeedback: 'UserFeedback'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -276,6 +277,23 @@ export const SponsorApplicationScalarFieldEnum = {
 } as const
 
 export type SponsorApplicationScalarFieldEnum = (typeof SponsorApplicationScalarFieldEnum)[keyof typeof SponsorApplicationScalarFieldEnum]
+
+
+export const UserFeedbackScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  category: 'category',
+  message: 'message',
+  name: 'name',
+  email: 'email',
+  appVersion: 'appVersion',
+  platform: 'platform',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type UserFeedbackScalarFieldEnum = (typeof UserFeedbackScalarFieldEnum)[keyof typeof UserFeedbackScalarFieldEnum]
 
 
 export const SortOrder = {

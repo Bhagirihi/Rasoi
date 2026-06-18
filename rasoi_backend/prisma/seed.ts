@@ -82,8 +82,8 @@ async function main() {
 
   const sponsorSeeds = [
     {
-      id: 'seed-sponsor-home-amul',
-      placement: 'home',
+      id: 'seed-sponsor-recipes-amul',
+      placement: 'recipes',
       brandName: 'Amul',
       productLabel: "Amul Paneer — tonight's dinner sorted",
       tagline: 'Fresh block paneer, perfect for curries',

@@ -46,3 +46,9 @@ export function normalizeRecipeIngredients(raw: unknown): RecipeIngredient[] {
 export function ingredientKey(name: string | undefined | null): string {
   return (name ?? '').trim().toLowerCase();
 }
+
+export {
+  addPantryIngredient,
+  pantryHasIngredient,
+  removePantryIngredient,
+} from '@/utils/pantryCanonical';

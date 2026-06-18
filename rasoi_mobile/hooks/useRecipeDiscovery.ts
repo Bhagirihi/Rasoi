@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useAppContext } from '@/context/AppContext';
+import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { useRecipes } from '@/context/RecipesContext';
 import { getMealContext } from '@/utils/mealTime';
 import {
@@ -22,22 +23,37 @@ export function useRecipeDiscovery() {
     setPantryFilterActive,
   } = useAppContext();
   const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes } = useRecipes();
+  const { rankedRecipes: baseRankedRecipes } = useTonightRecipes();
   const [activeFilters, setActiveFilters] = useState<ToggleableFastFilter[]>([]);
   const meal = getMealContext();
 
-  const filteredRecipes = useMemo(
-    () =>
-      filterRecipes(recipes, {
-        dietPreference: dietChoiceToFilter(dietChoice),
-        regionalCuisine,
-        favoriteCuisines,
-        pantryIngredients,
-        fastFilters: activeFilters,
-        requirePantryMatch: pantryFilterActive,
-        pantryMatchMode: pantryFilterActive ? 'any' : 'full',
-      }),
-    [recipes, dietChoice, regionalCuisine, favoriteCuisines, pantryIngredients, activeFilters, pantryFilterActive],
-  );
+  const hasDiscoveryFilters = activeFilters.length > 0 || pantryFilterActive;
+
+  const filteredRecipes = useMemo(() => {
+    if (!hasDiscoveryFilters) {
+      return baseRankedRecipes;
+    }
+
+    return filterRecipes(recipes, {
+      dietPreference: dietChoiceToFilter(dietChoice),
+      regionalCuisine,
+      favoriteCuisines,
+      pantryIngredients,
+      fastFilters: activeFilters,
+      requirePantryMatch: pantryFilterActive,
+      pantryMatchMode: pantryFilterActive ? 'any' : 'full',
+    });
+  }, [
+    hasDiscoveryFilters,
+    baseRankedRecipes,
+    recipes,
+    dietChoice,
+    regionalCuisine,
+    favoriteCuisines,
+    pantryIngredients,
+    activeFilters,
+    pantryFilterActive,
+  ]);
 
   useEffect(() => {
     if (!pantryFilterActive || recipesLoading || recipes.length === 0) return;
@@ -45,15 +61,24 @@ export function useRecipeDiscovery() {
     setPantryFilterActive(false);
   }, [filteredRecipes.length, pantryFilterActive, recipes.length, recipesLoading, setPantryFilterActive]);
 
-  const rankedRecipes = useMemo(
-    () =>
-      sortRecipesForTonight(filteredRecipes, {
-        regionalCuisine,
-        pantryIngredients,
-        mealSlot: meal.slot,
-      }),
-    [filteredRecipes, regionalCuisine, pantryIngredients, meal.slot],
-  );
+  const rankedRecipes = useMemo(() => {
+    if (!hasDiscoveryFilters) {
+      return baseRankedRecipes;
+    }
+
+    return sortRecipesForTonight(filteredRecipes, {
+      regionalCuisine,
+      pantryIngredients,
+      mealSlot: meal.slot,
+    });
+  }, [
+    hasDiscoveryFilters,
+    baseRankedRecipes,
+    filteredRecipes,
+    regionalCuisine,
+    pantryIngredients,
+    meal.slot,
+  ]);
 
   const topPick = rankedRecipes[0];
   const tonightCards = rankedRecipes.slice(1, 4);

@@ -1,5 +1,5 @@
 import { DietType, Recipe } from '@/data/mockRecipes';
-import { ingredientKey } from '@/utils/recipeIngredients';
+import { ingredientKey, pantryHasIngredient } from '@/utils/recipeIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
 export type FastFilter = 'all' | 'under20' | 'leftover' | 'kids';
@@ -8,9 +8,8 @@ export type PantryMatchMode = 'any' | 'full';
 
 export function isRecipeFullyStocked(recipe: Recipe, pantryIngredients: string[]): boolean {
   if (pantryIngredients.length === 0) return false;
-  const pantrySet = new Set(pantryIngredients.map((item) => ingredientKey(item)));
   return recipe.ingredients.every((ingredient) =>
-    ingredientKey(ingredient.name) && pantrySet.has(ingredientKey(ingredient.name)),
+    ingredientKey(ingredient.name) && pantryHasIngredient(pantryIngredients, ingredient.name),
   );
 }
 
@@ -133,11 +132,9 @@ export function filterRecipes(
       if (pantryMatchMode === 'full') {
         if (!isRecipeFullyStocked(recipe, pantryIngredients)) return false;
       } else {
-        const pantrySet = new Set(pantryIngredients.map((item) => ingredientKey(item)));
-        const hasMatch = recipe.ingredients.some((ingredient) => {
-          const key = ingredientKey(ingredient.name);
-          return key && pantrySet.has(key);
-        });
+        const hasMatch = recipe.ingredients.some((ingredient) =>
+          pantryHasIngredient(pantryIngredients, ingredient.name),
+        );
         if (!hasMatch) return false;
       }
     }
@@ -150,15 +147,13 @@ export function partitionIngredients(
   recipe: Recipe,
   pantryIngredients: string[],
 ): { available: string[]; missing: string[] } {
-  const pantrySet = new Set(pantryIngredients.map((item) => ingredientKey(item)));
-
   const available: string[] = [];
   const missing: string[] = [];
 
   recipe.ingredients.forEach((ingredient) => {
     const name = ingredient.name?.trim();
     if (!name) return;
-    if (pantrySet.has(ingredientKey(name))) {
+    if (pantryHasIngredient(pantryIngredients, name)) {
       available.push(name);
     } else {
       missing.push(name);

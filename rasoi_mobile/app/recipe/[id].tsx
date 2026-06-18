@@ -45,6 +45,7 @@ import { getRecipeSteps } from '@/utils/recipeSteps';
 import { getRecipeStepsHi } from '@/utils/recipeStepsHi';
 import { shareRecipeOnWhatsApp } from '@/utils/shareRecipe';
 import { PAYWALL_HREF } from '@/utils/routes';
+import type { AffiliatePartner } from '@/utils/affiliate';
 
 function normalizeRecipeId(id: string | string[] | undefined): string {
   if (Array.isArray(id)) return id[0] ?? '';
@@ -68,6 +69,7 @@ export default function RecipeDetailScreen() {
   const loadRecipeByIdRef = useRef(loadRecipeById);
   loadRecipeByIdRef.current = loadRecipeById;
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
   const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
   const [stickyBarHeight, setStickyBarHeight] = useState(160);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
@@ -164,7 +166,7 @@ export default function RecipeDetailScreen() {
   }, [recipe, stepsLang]);
 
   useEffect(() => {
-    if (!recipeId || SCREENSHOT_MODE || !showPartners) return;
+    if (!recipeId || !SCREENSHOT_MODE || !showPartners) return;
     const timer = setTimeout(() => {
       setDeliveryModalVisible(true);
     }, 700);
@@ -198,9 +200,10 @@ export default function RecipeDetailScreen() {
     toggleSavedRecipe(recipe.id);
   };
 
-  const openCheckout = () => {
-    if (!showPartners) return;
+  const openCheckout = (partner: AffiliatePartner = 'blinkit') => {
+    if (!showPartners || missing.length === 0) return;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setModalPartner(partner);
     setModalVisible(true);
   };
 
@@ -385,7 +388,8 @@ export default function RecipeDetailScreen() {
             recipe={recipe}
             available={available}
             missing={missing}
-            onShopMissing={missing.length > 0 && showPartners ? openCheckout : undefined}
+            onShopMissing={missing.length > 0 && showPartners ? () => openCheckout() : undefined}
+            onPartnerPress={missing.length > 0 && showPartners ? openCheckout : undefined}
           />
 
         </View>
@@ -410,7 +414,7 @@ export default function RecipeDetailScreen() {
               <Text style={styles.stickySub}>Zomato · Swiggy · ~30 min delivery</Text>
             </Pressable>
             {missing.length > 0 && (
-              <Pressable onPress={openCheckout} style={styles.stickyBtnGroceries}>
+              <Pressable onPress={() => openCheckout()} style={styles.stickyBtnGroceries}>
                 <ShoppingCart size={16} color={colors.primary} />
                 <Text style={styles.stickyGroceriesText}>
                   Or shop {missing.length} grocery item{missing.length !== 1 ? 's' : ''}
@@ -444,7 +448,9 @@ export default function RecipeDetailScreen() {
             visible={modalVisible}
             onClose={() => setModalVisible(false)}
             recipeTitle={recipe.title}
+            recipeId={recipe.id}
             missingIngredients={missing}
+            initialPartner={modalPartner}
           />
         </>
       )}

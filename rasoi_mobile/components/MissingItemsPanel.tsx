@@ -2,13 +2,19 @@ import * as Haptics from 'expo-haptics';
 import { Package, ShoppingCart } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { GROCERY_PARTNER_UI } from '@/constants/monetization';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
+import { usePartners } from '@/context/PartnersContext';
+import type { AffiliatePartner } from '@/utils/affiliate';
+
+const GROCERY_IDS: AffiliatePartner[] = ['blinkit', 'zepto', 'instamart'];
 
 interface MissingItemsPanelProps {
   missing: string[];
   totalCount: number;
   onShopAll?: () => void;
+  onPartnerPress?: (partner: AffiliatePartner) => void;
   title?: string;
 }
 
@@ -16,9 +22,15 @@ export default function MissingItemsPanel({
   missing,
   totalCount,
   onShopAll,
+  onPartnerPress,
   title = 'Need to buy',
 }: MissingItemsPanelProps) {
   const { colors: themeColors } = useTheme();
+  const { groceryPartners } = usePartners();
+
+  const partnerLabel = (id: AffiliatePartner) =>
+    groceryPartners.find((p) => p.id === id)?.label ??
+    id.charAt(0).toUpperCase() + id.slice(1);
 
   if (missing.length === 0) {
     return (
@@ -90,7 +102,39 @@ export default function MissingItemsPanel({
         </Pressable>
       )}
 
-      <Text style={[styles.partnerHint, { color: themeColors.muted }]}>Blinkit · Zepto · Instamart</Text>
+      {onPartnerPress ? (
+        <View style={styles.partnerRow}>
+          {GROCERY_IDS.map((id) => {
+            const ui = GROCERY_PARTNER_UI[id];
+            const label = partnerLabel(id);
+            const delivery =
+              groceryPartners.find((p) => p.id === id)?.delivery ?? ui.delivery;
+            return (
+              <Pressable
+                key={id}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  onPartnerPress(id);
+                }}
+                style={[
+                  styles.partnerChip,
+                  { backgroundColor: themeColors.white, borderColor: `${ui.accent}55` },
+                ]}
+              >
+                <View style={[styles.partnerAccent, { backgroundColor: ui.accent }]} />
+                <Text style={[styles.partnerLabel, { color: themeColors.charcoal }]} numberOfLines={1}>
+                  {label}
+                </Text>
+                <Text style={[styles.partnerEta, { color: themeColors.muted }]} numberOfLines={1}>
+                  {delivery.replace('~', '')}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : (
+        <Text style={[styles.partnerHint, { color: themeColors.muted }]}>Blinkit · Zepto · Instamart</Text>
+      )}
     </View>
   );
 }
@@ -214,6 +258,39 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
     textAlign: 'center',
     fontSize: 11,
+    fontWeight: '600',
+    color: colors.muted,
+  },
+  partnerRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: spacing.md,
+  },
+  partnerChip: {
+    flex: 1,
+    alignItems: 'center',
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    paddingVertical: 7,
+    paddingHorizontal: 4,
+    overflow: 'hidden',
+  },
+  partnerAccent: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+  },
+  partnerLabel: {
+    marginTop: 4,
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.charcoal,
+  },
+  partnerEta: {
+    marginTop: 1,
+    fontSize: 9,
     fontWeight: '600',
     color: colors.muted,
   },

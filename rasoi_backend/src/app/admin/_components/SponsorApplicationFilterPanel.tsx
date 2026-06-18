@@ -1,6 +1,7 @@
 'use client';
 
 import FilterChipBar from '@/app/admin/_components/FilterChipBar';
+import { SPONSOR_APPLICATION_PLACEMENT_OPTIONS } from '@/lib/sponsor-placements';
 
 export default function SponsorApplicationFilterPanel() {
   return (
@@ -22,10 +23,10 @@ export default function SponsorApplicationFilterPanel() {
         label="Placement interest"
         options={[
           { value: 'all', label: 'All placements' },
-          { value: 'home', label: 'Home' },
-          { value: 'pantry', label: 'Pantry' },
-          { value: 'recipe', label: 'In-recipe' },
-          { value: 'multiple', label: 'Multiple' },
+          ...SPONSOR_APPLICATION_PLACEMENT_OPTIONS.map((option) => ({
+            value: option.value,
+            label: option.label,
+          })),
         ]}
       />
     </div>

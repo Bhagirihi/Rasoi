@@ -2,7 +2,7 @@ import type { PlanTier } from '@/constants/plans';
 import type { CuisineId, DietChoice } from '@/constants/theme';
 import type { DietType } from '@/data/mockRecipes';
 
-export type SponsorPlacement = 'home' | 'pantry' | 'recipe';
+export type SponsorPlacement = 'home' | 'recipes' | 'pantry' | 'saved' | 'recipe';
 
 export interface UserProfileResponse {
   id: string;

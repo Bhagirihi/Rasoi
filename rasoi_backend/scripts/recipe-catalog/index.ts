@@ -1,6 +1,9 @@
 import { ALL_CUISINES_BATCH3_RECIPES } from './all-cuisines-batch3';
 import { ALL_CUISINES_BATCH4_RECIPES } from './all-cuisines-batch4';
 import { ALL_CUISINES_BATCH5_RECIPES } from './all-cuisines-batch5';
+import { ALL_CUISINES_BATCH6_RECIPES } from './all-cuisines-batch6';
+import { ALL_CUISINES_BATCH7_RECIPES } from './all-cuisines-batch7';
+import { ALL_CUISINES_BATCH8_RECIPES } from './all-cuisines-batch8';
 import { ASSAMESE_BATCH2_RECIPES } from './assamese-batch2';
 import { ASSAMESE_EXTRA_RECIPES } from './assamese-extra';
 import { BASE_RECIPES } from './base-recipes';
@@ -101,6 +104,9 @@ const EXTRA_RECIPES: RecipeCatalogEntry[] = [
   ...ALL_CUISINES_BATCH3_RECIPES,
   ...ALL_CUISINES_BATCH4_RECIPES,
   ...ALL_CUISINES_BATCH5_RECIPES,
+  ...ALL_CUISINES_BATCH6_RECIPES,
+  ...ALL_CUISINES_BATCH7_RECIPES,
+  ...ALL_CUISINES_BATCH8_RECIPES,
   ...MARKETING_AD_MISSING_RECIPES,
 ];
 

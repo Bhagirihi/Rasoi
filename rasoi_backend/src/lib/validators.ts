@@ -1,10 +1,16 @@
 import { z } from 'zod';
 
+import {
+  SPONSOR_APPLICATION_PLACEMENT_VALUES,
+  SPONSOR_PLACEMENT_VALUES,
+} from '@/lib/sponsor-placements';
+
 const dietType = z.enum(['Veg', 'Egg', 'Non-Veg']);
 const dietChoice = z.enum(['Veg', 'Egg', 'Non-Veg', 'Jain']);
 const difficulty = z.enum(['Easy', 'Medium', 'Hard']);
 const recipeTag = z.enum(['under20', 'leftover', 'kids', 'quick', 'festive']);
-const sponsorPlacement = z.enum(['home', 'pantry', 'recipe']);
+
+const sponsorPlacement = z.enum(SPONSOR_PLACEMENT_VALUES);
 const planTier = z.enum(['free', 'trial', 'paid']);
 const favoriteCuisines = z.array(z.string().trim().min(1).max(40));
 
@@ -169,6 +175,28 @@ export const kitchenStyleCreateSchema = z.object({
 
 export const kitchenStyleUpdateSchema = kitchenStyleCreateSchema.omit({ id: true }).partial();
 
+export const feedbackCategory = z.enum(['issue', 'suggestion', 'other']);
+
+export const feedbackSchema = z.object({
+  category: feedbackCategory,
+  message: z.string().trim().min(10).max(2000),
+  name: z
+    .string()
+    .trim()
+    .max(80)
+    .optional()
+    .transform((value) => (value?.trim() ? value.trim() : undefined)),
+  email: z
+    .string()
+    .email()
+    .max(120)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => (value ? value : undefined)),
+  appVersion: z.string().trim().max(32).optional(),
+  platform: z.enum(['ios', 'android', 'web']).optional(),
+});
+
 export const sponsorApplicationSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
   contactName: z.string().trim().min(2).max(80),
@@ -179,7 +207,7 @@ export const sponsorApplicationSchema = z.object({
     .transform((value) => (value?.trim() ? value.trim() : undefined)),
   brandName: z.string().trim().min(2).max(80),
   productDescription: z.string().trim().min(20).max(1000),
-  placementInterest: z.enum(['home', 'pantry', 'recipe', 'multiple']),
+  placementInterest: z.enum(SPONSOR_APPLICATION_PLACEMENT_VALUES),
   website: z
     .string()
     .url()

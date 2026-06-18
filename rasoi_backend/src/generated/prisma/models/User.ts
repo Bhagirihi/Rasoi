@@ -313,6 +313,7 @@ export type UserWhereInput = {
   pushTokens?: Prisma.PushTokenListRelationFilter
   affiliateEvents?: Prisma.AffiliateEventListRelationFilter
   mealNotificationLogs?: Prisma.MealNotificationLogListRelationFilter
+  feedback?: Prisma.UserFeedbackListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -340,6 +341,7 @@ export type UserOrderByWithRelationInput = {
   pushTokens?: Prisma.PushTokenOrderByRelationAggregateInput
   affiliateEvents?: Prisma.AffiliateEventOrderByRelationAggregateInput
   mealNotificationLogs?: Prisma.MealNotificationLogOrderByRelationAggregateInput
+  feedback?: Prisma.UserFeedbackOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -370,6 +372,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   pushTokens?: Prisma.PushTokenListRelationFilter
   affiliateEvents?: Prisma.AffiliateEventListRelationFilter
   mealNotificationLogs?: Prisma.MealNotificationLogListRelationFilter
+  feedback?: Prisma.UserFeedbackListRelationFilter
 }, "id" | "email" | "phone">
 
 export type UserOrderByWithAggregationInput = {
@@ -451,6 +454,7 @@ export type UserCreateInput = {
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -478,6 +482,7 @@ export type UserUncheckedCreateInput = {
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserUpdateInput = {
@@ -505,6 +510,7 @@ export type UserUpdateInput = {
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -532,6 +538,7 @@ export type UserUncheckedUpdateInput = {
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -756,6 +763,22 @@ export type UserUpdateOneRequiredWithoutPushTokensNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutPushTokensInput, Prisma.UserUpdateWithoutPushTokensInput>, Prisma.UserUncheckedUpdateWithoutPushTokensInput>
 }
 
+export type UserCreateNestedOneWithoutFeedbackInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFeedbackInput, Prisma.UserUncheckedCreateWithoutFeedbackInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFeedbackInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutFeedbackNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutFeedbackInput, Prisma.UserUncheckedCreateWithoutFeedbackInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutFeedbackInput
+  upsert?: Prisma.UserUpsertWithoutFeedbackInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutFeedbackInput, Prisma.UserUpdateWithoutFeedbackInput>, Prisma.UserUncheckedUpdateWithoutFeedbackInput>
+}
+
 export type UserCreateWithoutMealNotificationLogsInput = {
   id?: string
   email?: string | null
@@ -780,6 +803,7 @@ export type UserCreateWithoutMealNotificationLogsInput = {
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutMealNotificationLogsInput = {
@@ -806,6 +830,7 @@ export type UserUncheckedCreateWithoutMealNotificationLogsInput = {
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutMealNotificationLogsInput = {
@@ -848,6 +873,7 @@ export type UserUpdateWithoutMealNotificationLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMealNotificationLogsInput = {
@@ -874,6 +900,7 @@ export type UserUncheckedUpdateWithoutMealNotificationLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutAffiliateEventsInput = {
@@ -900,6 +927,7 @@ export type UserCreateWithoutAffiliateEventsInput = {
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutAffiliateEventsInput = {
@@ -926,6 +954,7 @@ export type UserUncheckedCreateWithoutAffiliateEventsInput = {
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutAffiliateEventsInput = {
@@ -968,6 +997,7 @@ export type UserUpdateWithoutAffiliateEventsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAffiliateEventsInput = {
@@ -994,6 +1024,7 @@ export type UserUncheckedUpdateWithoutAffiliateEventsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutPushTokensInput = {
@@ -1020,6 +1051,7 @@ export type UserCreateWithoutPushTokensInput = {
   updatedAt?: Date | string
   affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
 
 export type UserUncheckedCreateWithoutPushTokensInput = {
@@ -1046,6 +1078,7 @@ export type UserUncheckedCreateWithoutPushTokensInput = {
   updatedAt?: Date | string
   affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
 
 export type UserCreateOrConnectWithoutPushTokensInput = {
@@ -1088,6 +1121,7 @@ export type UserUpdateWithoutPushTokensInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPushTokensInput = {
@@ -1114,6 +1148,131 @@ export type UserUncheckedUpdateWithoutPushTokensInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutFeedbackInput = {
+  id?: string
+  email?: string | null
+  phone?: string | null
+  name: string
+  isGuest?: boolean
+  role?: $Enums.UserRole
+  isActive?: boolean
+  hasCompletedOnboarding?: boolean
+  dietPreference?: string
+  dietChoice?: string
+  regionalCuisine?: string
+  favoriteCuisines?: string
+  notificationsEnabled?: boolean
+  timezone?: string
+  pantryIngredients?: string
+  savedRecipeIds?: string
+  planTier?: string
+  trialStartedAt?: Date | string | null
+  hasUsedTrial?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
+  mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutFeedbackInput = {
+  id?: string
+  email?: string | null
+  phone?: string | null
+  name: string
+  isGuest?: boolean
+  role?: $Enums.UserRole
+  isActive?: boolean
+  hasCompletedOnboarding?: boolean
+  dietPreference?: string
+  dietChoice?: string
+  regionalCuisine?: string
+  favoriteCuisines?: string
+  notificationsEnabled?: boolean
+  timezone?: string
+  pantryIngredients?: string
+  savedRecipeIds?: string
+  planTier?: string
+  trialStartedAt?: Date | string | null
+  hasUsedTrial?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
+  mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutFeedbackInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutFeedbackInput, Prisma.UserUncheckedCreateWithoutFeedbackInput>
+}
+
+export type UserUpsertWithoutFeedbackInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutFeedbackInput, Prisma.UserUncheckedUpdateWithoutFeedbackInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutFeedbackInput, Prisma.UserUncheckedCreateWithoutFeedbackInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutFeedbackInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutFeedbackInput, Prisma.UserUncheckedUpdateWithoutFeedbackInput>
+}
+
+export type UserUpdateWithoutFeedbackInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
+  dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
+  regionalCuisine?: Prisma.StringFieldUpdateOperationsInput | string
+  favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
+  notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
+  savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
+  planTier?: Prisma.StringFieldUpdateOperationsInput | string
+  trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
+  mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutFeedbackInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
+  dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
+  regionalCuisine?: Prisma.StringFieldUpdateOperationsInput | string
+  favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
+  notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
+  savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
+  planTier?: Prisma.StringFieldUpdateOperationsInput | string
+  trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
+  mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
 
@@ -1125,12 +1284,14 @@ export type UserCountOutputType = {
   pushTokens: number
   affiliateEvents: number
   mealNotificationLogs: number
+  feedback: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   pushTokens?: boolean | UserCountOutputTypeCountPushTokensArgs
   affiliateEvents?: boolean | UserCountOutputTypeCountAffiliateEventsArgs
   mealNotificationLogs?: boolean | UserCountOutputTypeCountMealNotificationLogsArgs
+  feedback?: boolean | UserCountOutputTypeCountFeedbackArgs
 }
 
 /**
@@ -1164,6 +1325,13 @@ export type UserCountOutputTypeCountMealNotificationLogsArgs<ExtArgs extends run
   where?: Prisma.MealNotificationLogWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountFeedbackArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserFeedbackWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1190,6 +1358,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   affiliateEvents?: boolean | Prisma.User$affiliateEventsArgs<ExtArgs>
   mealNotificationLogs?: boolean | Prisma.User$mealNotificationLogsArgs<ExtArgs>
+  feedback?: boolean | Prisma.User$feedbackArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -1270,6 +1439,7 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   affiliateEvents?: boolean | Prisma.User$affiliateEventsArgs<ExtArgs>
   mealNotificationLogs?: boolean | Prisma.User$mealNotificationLogsArgs<ExtArgs>
+  feedback?: boolean | Prisma.User$feedbackArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
@@ -1281,6 +1451,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     pushTokens: Prisma.$PushTokenPayload<ExtArgs>[]
     affiliateEvents: Prisma.$AffiliateEventPayload<ExtArgs>[]
     mealNotificationLogs: Prisma.$MealNotificationLogPayload<ExtArgs>[]
+    feedback: Prisma.$UserFeedbackPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1701,6 +1872,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   pushTokens<T extends Prisma.User$pushTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   affiliateEvents<T extends Prisma.User$affiliateEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$affiliateEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AffiliateEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mealNotificationLogs<T extends Prisma.User$mealNotificationLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mealNotificationLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MealNotificationLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  feedback<T extends Prisma.User$feedbackArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$feedbackArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserFeedbackPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2213,6 +2385,30 @@ export type User$mealNotificationLogsArgs<ExtArgs extends runtime.Types.Extensio
   take?: number
   skip?: number
   distinct?: Prisma.MealNotificationLogScalarFieldEnum | Prisma.MealNotificationLogScalarFieldEnum[]
+}
+
+/**
+ * User.feedback
+ */
+export type User$feedbackArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserFeedback
+   */
+  select?: Prisma.UserFeedbackSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserFeedback
+   */
+  omit?: Prisma.UserFeedbackOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserFeedbackInclude<ExtArgs> | null
+  where?: Prisma.UserFeedbackWhereInput
+  orderBy?: Prisma.UserFeedbackOrderByWithRelationInput | Prisma.UserFeedbackOrderByWithRelationInput[]
+  cursor?: Prisma.UserFeedbackWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserFeedbackScalarFieldEnum | Prisma.UserFeedbackScalarFieldEnum[]
 }
 
 /**

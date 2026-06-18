@@ -2,14 +2,10 @@
 
 import { useState } from 'react';
 
-type Placement = 'home' | 'pantry' | 'recipe' | 'multiple';
-
-const placementOptions: Array<{ value: Placement; label: string; hint: string }> = [
-  { value: 'home', label: 'Home feed', hint: 'Featured rail on the recipe home screen' },
-  { value: 'pantry', label: 'Pantry screen', hint: 'Sponsored essentials while users stock up' },
-  { value: 'recipe', label: 'In-recipe', hint: 'Brand recommendation inside a dish' },
-  { value: 'multiple', label: 'Multiple placements', hint: 'Bundle across screens' },
-];
+import {
+  SPONSOR_APPLICATION_PLACEMENT_OPTIONS,
+  type SponsorApplicationPlacement,
+} from '@/lib/sponsor-placements';
 
 export default function SponsorApplyForm() {
   const [companyName, setCompanyName] = useState('');
@@ -18,7 +14,7 @@ export default function SponsorApplyForm() {
   const [phone, setPhone] = useState('');
   const [brandName, setBrandName] = useState('');
   const [productDescription, setProductDescription] = useState('');
-  const [placementInterest, setPlacementInterest] = useState<Placement>('home');
+  const [placementInterest, setPlacementInterest] = useState<SponsorApplicationPlacement>('home');
   const [website, setWebsite] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -140,7 +136,7 @@ export default function SponsorApplyForm() {
         <fieldset className="md:col-span-2">
           <legend className="text-sm font-medium text-[#1a1a2e]">Preferred placement</legend>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            {placementOptions.map((option) => (
+            {SPONSOR_APPLICATION_PLACEMENT_OPTIONS.map((option) => (
               <label
                 key={option.value}
                 className={`cursor-pointer rounded-xl border px-4 py-3 transition ${

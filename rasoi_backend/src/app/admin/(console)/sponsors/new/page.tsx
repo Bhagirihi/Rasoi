@@ -6,7 +6,7 @@ export default function NewSponsorPage() {
     <div className="space-y-8">
       <PageHeader
         title="Add sponsor"
-        description="Configure a new sponsored placement with brand copy and affiliate search terms."
+        description="Choose a screen placement (Home, Recipes, Pantry, Saved, or Recipe detail), then add brand copy and affiliate search terms."
         action={<GhostButton href="/admin/sponsors">Back to sponsors</GhostButton>}
       />
       <SponsorForm />
