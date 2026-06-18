@@ -1,0 +1,5 @@
+rasoi_mobile
+docs
+.cursor
+**/*.apk
+rasoi_backend/public/rasoi-release.apk

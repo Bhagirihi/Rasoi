@@ -32,6 +32,7 @@ export const DEFAULT_KEYWORDS = [
 export const TWITTER_HANDLE = '@rasoiapp';
 
 import { ANDROID_APK_URL } from '@/lib/app-download';
+import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 
 export const FAQ_ITEMS = [
   {
@@ -83,6 +84,15 @@ export function buildPageMetadata(options: {
     keywords: [...DEFAULT_KEYWORDS, ...(options.keywords ?? [])],
     metadataBase: new URL(SITE_URL),
     alternates: { canonical },
+    icons: {
+      icon: [
+        { url: '/favicon.png', type: 'image/png' },
+        { url: '/rasoi-logo.png', type: 'image/png', sizes: '512x512' },
+      ],
+      apple: [{ url: '/apple-icon.png', type: 'image/png' }],
+      shortcut: '/favicon.png',
+    },
+    manifest: '/site.webmanifest',
     robots: options.noIndex
       ? { index: false, follow: false }
       : { index: true, follow: true, googleBot: { index: true, follow: true } },
@@ -127,8 +137,9 @@ export function organizationJsonLd() {
     '@type': 'Organization',
     name: SITE_NAME,
     url: SITE_URL,
-    logo: absoluteUrl('/download-hero.png'),
+    logo: absoluteUrl('/rasoi-logo.png'),
     description: DEFAULT_DESCRIPTION,
+    email: LEGAL_CONTACT_EMAIL,
     areaServed: { '@type': 'Country', name: 'India' },
   };
 }
