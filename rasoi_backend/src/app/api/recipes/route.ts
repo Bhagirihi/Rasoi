@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/admin';
 import { jsonOk, handleApiError } from '@/lib/api';
 import { buildRecipeWhere } from '@/lib/recipe-filters';
-import { serializeRecipe } from '@/lib/serializers';
+import { serializeRecipe, serializeRecipeListItem } from '@/lib/serializers';
 import { recipeCreateSchema } from '@/lib/validators';
 
 export async function GET(request: NextRequest) {
@@ -20,12 +20,16 @@ export async function GET(request: NextRequest) {
       published: searchParams.get('published') ?? undefined,
     });
 
+    const view = searchParams.get('view')?.trim().toLowerCase();
+    const serialize =
+      view === 'list' || view === 'mobile' ? serializeRecipeListItem : serializeRecipe;
+
     const recipes = await prisma.recipe.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
 
-    return jsonOk(recipes.map(serializeRecipe));
+    return jsonOk(recipes.map(serialize));
   } catch (error) {
     return handleApiError(error);
   }

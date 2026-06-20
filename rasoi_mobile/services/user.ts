@@ -33,6 +33,18 @@ export async function updateUserProfile(input: {
   });
 }
 
+export async function updateUserLocation(input: {
+  city: string | null;
+  state?: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}): Promise<UserProfileResponse> {
+  return authApiFetch<UserProfileResponse>('/api/users/me/location', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  });
+}
+
 export async function updatePantryIngredients(ingredients: string[]): Promise<UserProfileResponse> {
   return authApiFetch<UserProfileResponse>('/api/users/me/pantry', {
     method: 'PUT',

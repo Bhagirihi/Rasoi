@@ -54,6 +54,7 @@ export const ModelName = {
   User: 'User',
   MealNotificationLog: 'MealNotificationLog',
   AffiliateEvent: 'AffiliateEvent',
+  SponsorEvent: 'SponsorEvent',
   PushToken: 'PushToken',
   Admin: 'Admin',
   Recipe: 'Recipe',
@@ -98,11 +99,17 @@ export const UserScalarFieldEnum = {
   favoriteCuisines: 'favoriteCuisines',
   notificationsEnabled: 'notificationsEnabled',
   timezone: 'timezone',
+  city: 'city',
+  state: 'state',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  locationUpdatedAt: 'locationUpdatedAt',
   pantryIngredients: 'pantryIngredients',
   savedRecipeIds: 'savedRecipeIds',
   planTier: 'planTier',
   trialStartedAt: 'trialStartedAt',
   hasUsedTrial: 'hasUsedTrial',
+  termsAcceptedAt: 'termsAcceptedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -133,6 +140,22 @@ export const AffiliateEventScalarFieldEnum = {
 } as const
 
 export type AffiliateEventScalarFieldEnum = (typeof AffiliateEventScalarFieldEnum)[keyof typeof AffiliateEventScalarFieldEnum]
+
+
+export const SponsorEventScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  eventType: 'eventType',
+  brandName: 'brandName',
+  placement: 'placement',
+  sponsorId: 'sponsorId',
+  partner: 'partner',
+  query: 'query',
+  city: 'city',
+  createdAt: 'createdAt'
+} as const
+
+export type SponsorEventScalarFieldEnum = (typeof SponsorEventScalarFieldEnum)[keyof typeof SponsorEventScalarFieldEnum]
 
 
 export const PushTokenScalarFieldEnum = {

@@ -1,0 +1,26 @@
+---
+description: Every Vercel production deploy must be committed and pushed to GitHub first
+alwaysApply: true
+---
+
+# Vercel deploys must be on GitHub
+
+Production on `rasoiapplication.in` must always match a GitHub commit. Never leave Vercel ahead of the repo.
+
+## Required order
+
+1. **Commit** all changes (backend, mobile, APK, config).
+2. **Push** to GitHub (`git push origin <branch>`).
+3. **Then deploy** — prefer Vercel Git integration (push triggers deploy) over orphan CLI deploys.
+
+If using CLI: `npx vercel deploy --prod` only **after** the same changes are pushed to GitHub.
+
+## Do not
+
+- Run `vercel deploy --prod` with uncommitted local-only changes.
+- Deploy from a machine state that is not pushed to GitHub.
+- Treat CLI production deploy as done without confirming the commit exists on remote (`git log origin/<branch> -1`).
+
+## After deploy
+
+Note the commit SHA in the Vercel deployment and confirm it matches GitHub.

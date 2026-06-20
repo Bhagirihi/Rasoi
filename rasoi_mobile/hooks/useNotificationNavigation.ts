@@ -60,7 +60,7 @@ export function useNotificationNavigation(): void {
   useEffect(() => {
     if (Platform.OS === 'web' || !appReady) return;
 
-    let unsubscribe = () => undefined;
+    let unsubscribe: (() => void) | undefined;
     let cancelled = false;
 
     void (async () => {
@@ -76,7 +76,7 @@ export function useNotificationNavigation(): void {
 
     return () => {
       cancelled = true;
-      unsubscribe();
+      unsubscribe?.();
     };
   }, [appReady, handleResponse]);
 }

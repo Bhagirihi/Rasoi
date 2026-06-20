@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ArrowRight, Check, ChefHat, Package, Sparkles } from 'lucide-react-native';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -16,6 +16,7 @@ import SponsorOrAd from '@/components/SponsorOrAd';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import { InsightBanner, PrimaryButton } from '@/components/ui/Primitives';
 import { usePantryScreenData } from '@/hooks/usePantryScreenData';
+import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { colors, gradients, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
@@ -149,6 +150,8 @@ export default function PantryScreen() {
   const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
   const [stickyBarHeight, setStickyBarHeight] = useState(96);
   const { sponsor: pantrySponsor, loading: pantrySponsorLoading } = usePlacementSponsor('pantry');
+
+  useDismissOnBlur(useCallback(() => setModalVisible(false), []));
 
   const scrollBottomPadding = stickyBarHeight + tabBarHeight + spacing.lg;
 

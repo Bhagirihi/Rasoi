@@ -47,6 +47,14 @@ function toAdminUserRow(
     notificationsEnabled: serialized.notificationsEnabled,
     pushTokenCount,
     timezone: user.timezone || 'Asia/Kolkata',
+    city: user.city ?? null,
+    state: user.state ?? null,
+    latitude: user.latitude ?? null,
+    longitude: user.longitude ?? null,
+    locationUpdatedAt: user.locationUpdatedAt?.toISOString() ?? null,
+    termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
+    createdAt: user.createdAt.toISOString(),
+    accountLabel: serialized.isGuest ? 'Guest session' : 'Registered member',
     ineligibleReasons,
   };
 }

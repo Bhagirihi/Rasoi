@@ -14,6 +14,7 @@ const MIN_REFRESH_INTERVAL_MS = 8_000;
 const IGNORED_REALTIME_TABLES = new Set([
   'PushToken',
   'AffiliateEvent',
+  'SponsorEvent',
   'MealNotificationLog',
 ]);
 

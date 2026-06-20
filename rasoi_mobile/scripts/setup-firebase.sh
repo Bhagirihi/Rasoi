@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 GOOGLE_SERVICES="$ROOT/google-services.json"
-PACKAGE="com.rasoi.app"
+PACKAGE="com.bhagihiri.rasoiapp"
 PROJECT_ID="${FIREBASE_PROJECT_ID:-rasoi-app-prod}"
 DISPLAY_NAME="${FIREBASE_DISPLAY_NAME:-Rasoi App}"
 APP_LABEL="${FIREBASE_APP_LABEL:-Rasoi Android}"
@@ -39,11 +39,14 @@ create_project_if_needed() {
 }
 
 android_app_id() {
-  npx firebase-tools apps:list ANDROID --project "$PROJECT_ID" 2>/dev/null \
-    | awk -v pkg="$PACKAGE" '
-      $0 ~ pkg { found=1 }
-      found && /App ID/ { gsub(/.*App ID: /, ""); print; exit }
-    '
+  npx firebase-tools apps:list ANDROID --project "$PROJECT_ID" --json 2>/dev/null \
+    | node -e "
+      const input = require('fs').readFileSync(0, 'utf8');
+      const pkg = process.argv[1];
+      const data = JSON.parse(input);
+      const match = (data.result || []).find((app) => app.packageName === pkg);
+      if (match?.appId) process.stdout.write(match.appId);
+    " "$PACKAGE"
 }
 
 create_android_app_if_needed() {
@@ -79,9 +82,11 @@ create_android_app_if_needed() {
 download_google_services() {
   local app_id="$1"
   echo "Downloading google-services.json..."
+  rm -f "$GOOGLE_SERVICES" "$ROOT/android/app/google-services.json"
   npx firebase-tools apps:sdkconfig ANDROID "$app_id" \
     --project "$PROJECT_ID" \
     --out "$GOOGLE_SERVICES"
+  cp "$GOOGLE_SERVICES" "$ROOT/android/app/google-services.json"
 
   if ! grep -q "\"package_name\": \"${PACKAGE}\"" "$GOOGLE_SERVICES"; then
     echo "Error: google-services.json package mismatch"

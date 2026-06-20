@@ -3,7 +3,7 @@ import Link from 'next/link';
 import JsonLd from '@/app/_components/JsonLd';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import SponsorApplyForm from '@/app/_components/SponsorApplyForm';
-import { APP_DOWNLOAD_PATH } from '@/lib/app-download';
+import { PLAY_STORE_LISTING_URL } from '@/lib/app-download';
 import {
   FAQ_ITEMS,
   faqJsonLd,
@@ -36,12 +36,14 @@ export default async function HomePage() {
             </div>
           </div>
           <nav className="hidden items-center gap-8 text-sm font-medium text-[#6b6560] md:flex">
-            <Link
-              href={APP_DOWNLOAD_PATH}
+            <a
+              href={PLAY_STORE_LISTING_URL}
               className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+              rel="noopener noreferrer"
+              target="_blank"
             >
-              Download app
-            </Link>
+              Get on Google Play
+            </a>
             <a href="#features" className="hover:text-[#c45c2a]">Features</a>
             <a href="#faq" className="hover:text-[#c45c2a]">FAQ</a>
             <a href="#partners" className="hover:text-[#c45c2a]">Partners</a>
@@ -72,17 +74,19 @@ export default async function HomePage() {
                 and your region.
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#6b6560]">
-                Rasoi is a free Indian home-cooking app on Android. Discover regional dishes,
-                match recipes to what you already have, save favourites, and order missing
-                ingredients from Blinkit, Zepto, Instamart, Zomato, or Swiggy in one tap.
+                Rasoi is free on Google Play for Android. Discover regional dishes, match recipes
+                to what you already have, save favourites, and order missing ingredients from
+                Blinkit, Zepto, Instamart, Zomato, or Swiggy in one tap.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
-                <Link
-                  href={APP_DOWNLOAD_PATH}
+                <a
+                  href={PLAY_STORE_LISTING_URL}
                   className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
+                  rel="noopener noreferrer"
+                  target="_blank"
                 >
-                  Download Android app
-                </Link>
+                  Get it on Google Play
+                </a>
                 <a
                   href="#features"
                   className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-[#c9a227]/50"
@@ -311,12 +315,14 @@ export default async function HomePage() {
             </a>
           </p>
           <div className="flex flex-wrap items-center gap-6">
-            <Link
-              href={APP_DOWNLOAD_PATH}
+            <a
+              href={PLAY_STORE_LISTING_URL}
               className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+              rel="noopener noreferrer"
+              target="_blank"
             >
-              Download Android app
-            </Link>
+              Get it on Google Play
+            </a>
             <Link href="/privacy" className="font-semibold hover:text-[#c45c2a]">
               Privacy
             </Link>

@@ -13,6 +13,8 @@ import LaunchSplash, { LAUNCH_SPLASH_DURATION_MS } from '@/components/LaunchSpla
 import AppDialogHost from '@/components/AppDialogHost';
 import TrialExpiredPaywallModal from '@/components/paywall/TrialExpiredPaywallModal';
 import NotificationNavigationBridge from '@/components/NotificationNavigationBridge';
+import LocationSyncBridge from '@/components/LocationSyncBridge';
+import RevenueCatBridge from '@/components/RevenueCatBridge';
 import { AppProvider } from '@/context/AppContext';
 import { AppDialogProvider } from '@/context/AppDialogContext';
 import { PartnersProvider } from '@/context/PartnersContext';
@@ -22,8 +24,12 @@ import { TonightRecipesProvider } from '@/context/TonightRecipesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { initializeMobileAds } from '@/utils/admob';
 import { initSentry, Sentry } from '@/utils/sentry';
+import { warmRasoiRealtime } from '@/utils/realtime';
+import { warmSupabaseClient } from '@/utils/supabase';
 
 initSentry();
+warmSupabaseClient();
+warmRasoiRealtime();
 
 if (__DEV__) {
   LogBox.ignoreLogs([
@@ -100,11 +106,15 @@ function RootLayoutInner({
                       options={{
                         presentation: 'card',
                         animation: 'slide_from_right',
+                        gestureEnabled: true,
+                        fullScreenGestureEnabled: true,
                       }}
                     />
                   </Stack>
                   {!launchDone && <LaunchSplash />}
                   <NotificationNavigationBridge />
+                  <LocationSyncBridge />
+                  <RevenueCatBridge />
                   <AppDialogHost />
                   <TrialExpiredPaywallModal />
                 </View>

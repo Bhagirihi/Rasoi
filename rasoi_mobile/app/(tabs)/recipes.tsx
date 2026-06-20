@@ -1,7 +1,7 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
 import { Search, Timer } from 'lucide-react-native';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -14,6 +14,7 @@ import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import { EmptyState } from '@/components/ui/Primitives';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
+import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { useRecipeDiscovery } from '@/hooks/useRecipeDiscovery';
 import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
@@ -122,6 +123,14 @@ export default function RecipesTabScreen() {
     setCookTonightVisible(false);
     setCookTonightTarget(null);
   };
+
+  useDismissOnBlur(
+    useCallback(() => {
+      setModalVisible(false);
+      setCookTonightVisible(false);
+      setCookTonightTarget(null);
+    }, []),
+  );
 
   const clearDiscovery = () => {
     setSearchQuery('');

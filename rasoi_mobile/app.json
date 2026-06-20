@@ -9,11 +9,18 @@
     "scheme": "rasoi",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Rasoi uses your city to show local recipes and measure sponsor reach in your area."
+      }
     },
     "android": {
-      "package": "com.rasoi.app",
+      "package": "com.bhagihiri.rasoiapp",
       "versionCode": 4,
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#FF6B35",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -57,6 +64,12 @@
         {
           "organization": "rasoi-app",
           "project": "rasoi-mobile"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Rasoi uses your city to show local recipes and measure sponsor reach in your area."
         }
       ]
     ],

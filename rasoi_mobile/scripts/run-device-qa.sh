@@ -7,7 +7,7 @@ cd "$ROOT"
 
 SUITE="${1:-smoke}"
 MAESTRO_BIN="${MAESTRO_BIN:-maestro}"
-APP_ID="${RASOI_APP_ID:-com.rasoi.app}"
+APP_ID="${RASOI_APP_ID:-com.bhagihiri.rasoiapp}"
 EVIDENCE_DIR="${ROOT}/.qa/maestro-$(date +%Y%m%d-%H%M%S)"
 
 bash scripts/qa-preflight.sh

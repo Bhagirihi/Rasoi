@@ -1,12 +1,12 @@
 import type { BillingInterval } from '@/constants/plans';
 import {
   getConfiguredPaymentProviderId,
+  getRevenueCatApiKey,
   RASOI_PLUS_MONTHLY_PRODUCT_ID,
   RASOI_PLUS_YEARLY_PRODUCT_ID,
-  REVENUECAT_API_KEY_ANDROID,
-  REVENUECAT_API_KEY_IOS,
 } from '@/constants/payments';
 import { stubPaymentProvider } from '@/services/payments/stubProvider';
+import { revenueCatPaymentProvider } from '@/services/payments/revenueCatProvider';
 import type {
   ApplyPaidPlanOptions,
   PaymentProvider,
@@ -21,9 +21,9 @@ let cachedProvider: PaymentProvider | null = null;
 function createRevenueCatProvider(): PaymentProvider {
   const hasKeys =
     Platform.OS === 'ios'
-      ? REVENUECAT_API_KEY_IOS.length > 0
+      ? getRevenueCatApiKey('ios').length > 0
       : Platform.OS === 'android'
-        ? REVENUECAT_API_KEY_ANDROID.length > 0
+        ? getRevenueCatApiKey('android').length > 0
         : false;
 
   if (!hasKeys) {
@@ -31,25 +31,7 @@ function createRevenueCatProvider(): PaymentProvider {
     return stubPaymentProvider;
   }
 
-  // Swap this block for `react-native-purchases` when you enable RevenueCat.
-  return {
-    id: 'revenuecat',
-    supportsRestore: true,
-    async purchase() {
-      return {
-        success: false,
-        provider: 'revenuecat',
-        errorMessage: 'Install react-native-purchases and configure offerings to enable billing.',
-      };
-    },
-    async restorePurchases() {
-      return {
-        success: false,
-        provider: 'revenuecat',
-        errorMessage: 'Restore not configured yet.',
-      };
-    },
-  };
+  return revenueCatPaymentProvider;
 }
 
 function createRazorpayProvider(): PaymentProvider {

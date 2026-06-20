@@ -3,14 +3,18 @@ import { ExternalLink, Sparkles } from 'lucide-react-native';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, shadows } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
 import { usePartners } from '@/context/PartnersContext';
 import { useTheme } from '@/context/ThemeContext';
+import { logSponsorEvent } from '@/services/sponsorEvents';
 
 interface SponsorRailProps {
   brandName: string;
   productLabel: string;
   tagline: string;
   logoUrl: string;
+  placement: string;
+  sponsorId?: string;
   cta?: string;
   searchQuery?: string;
   compact?: boolean;
@@ -21,15 +25,27 @@ export default function SponsorRail({
   productLabel,
   tagline,
   logoUrl,
+  placement,
+  sponsorId,
   cta = 'Shop now',
   searchQuery,
   compact = false,
 }: SponsorRailProps) {
   const { openBrandSearch } = usePartners();
+  const { userCity } = useAppContext();
   const { colors: themeColors, semantic, isDark } = useTheme();
 
   const handlePress = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void logSponsorEvent({
+      eventType: 'tap',
+      brandName,
+      placement,
+      sponsorId,
+      partner: 'blinkit',
+      query: searchQuery ?? brandName,
+      city: userCity ?? undefined,
+    });
     void openBrandSearch(searchQuery ?? brandName, 'blinkit', { context: 'sponsor_rail' });
   };
 

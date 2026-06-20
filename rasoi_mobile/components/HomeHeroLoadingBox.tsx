@@ -14,9 +14,9 @@ type HomeHeroLoadingBoxProps = {
   onFinished: () => void;
 };
 
-const INTRO_MS = 2000;
-const CHECKING_MS = 1000;
-const RASOI_HOLD_MS = 2000;
+const INTRO_MS = __DEV__ ? 2000 : 650;
+const CHECKING_MS = __DEV__ ? 1000 : 450;
+const RASOI_HOLD_MS = __DEV__ ? 2000 : 280;
 
 const INTRO_LINES = [
   'Are aap aa gaye....',
@@ -24,6 +24,8 @@ const INTRO_LINES = [
   'Kuch bhi banalo',
   'Ruko dekhte he!!',
 ];
+
+const MAX_INTRO_LINES = __DEV__ ? INTRO_LINES.length : 2;
 
 const CHECKING_LINES = [
   'Pantry check kar rahe hain...',
@@ -267,7 +269,7 @@ export default function HomeHeroLoadingBox({
 
     const timer = setTimeout(() => {
       if (dataReadyRef.current) return;
-      if (introIndex >= INTRO_LINES.length - 1) {
+      if (introIndex >= MAX_INTRO_LINES - 1) {
         setPhase('checking');
         return;
       }
@@ -297,7 +299,8 @@ export default function HomeHeroLoadingBox({
     }
 
     const enteredAt = rasoiEnteredAtRef.current;
-    const waitMs = Math.max(0, RASOI_HOLD_MS - (Date.now() - enteredAt));
+    const holdTarget = dataReadyRef.current && !__DEV__ ? 180 : RASOI_HOLD_MS;
+    const waitMs = Math.max(0, holdTarget - (Date.now() - enteredAt));
 
     const holdTimer = setTimeout(() => {
       if (dataReadyRef.current || hasError) {

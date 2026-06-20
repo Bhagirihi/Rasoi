@@ -10,12 +10,18 @@ export interface UserProfileResponse {
   phone: string | null;
   name: string;
   isGuest: boolean;
+  isActive?: boolean;
   hasCompletedOnboarding: boolean;
   dietPreference: DietType;
   dietChoice: DietChoice;
   regionalCuisine: string;
   favoriteCuisines: CuisineId[];
   notificationsEnabled: boolean;
+  city: string | null;
+  state: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  locationUpdatedAt: string | null;
   pantryIngredients: string[];
   savedRecipeIds: string[];
   plan: {

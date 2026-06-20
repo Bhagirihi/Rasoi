@@ -25,34 +25,43 @@ For this Expo app, **RevenueCat + native IAP** is the best fit once you pick mob
 ## Switch provider (later)
 
 ```bash
-# .env (004)
+# .env
 EXPO_PUBLIC_PAYMENT_PROVIDER=revenuecat
+# Dev / sandbox (RevenueCat Test Store):
+EXPO_PUBLIC_REVENUECAT_TEST_KEY=test_SJxxLWvHNMyNuMgqvvFMAhddtiC
+# Production (after Play / App Store products are linked):
+EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_HHYkVegKPcskYJYCtbxGuPGMahj
 EXPO_PUBLIC_REVENUECAT_IOS_KEY=appl_...
-EXPO_PUBLIC_REVENUECAT_ANDROID_KEY=goog_...
-
-# or
-EXPO_PUBLIC_PAYMENT_PROVIDER=razorpay
-EXPO_PUBLIC_RAZORPAY_KEY_ID=rzp_test_...
 ```
 
-Then implement purchase in:
+RevenueCat project **Rasoi App** is configured with:
 
-- `services/payments/index.ts` → `createRevenueCatProvider()` / `createRazorpayProvider()`
-- `005/src/app/api/billing/confirm/route.ts` → verify webhook / receipt before setting `planTier: paid`
+| Resource | Identifier |
+|----------|------------|
+| Entitlement | `rasoi_plus` |
+| Offering (current) | `default` |
+| Monthly package | `$rc_monthly` → `rasoi_plus_monthly` |
+| Annual package | `$rc_annual` → `rasoi_plus_yearly` |
+
+Turn **Payment** ON in admin (`/admin/payments`) before testing live billing.
+
+Server webhook verification (optional hardening): `rasoi_backend/src/app/api/billing/confirm/route.ts`
 
 ## Code map
 
 | File | Role |
 |------|------|
 | `constants/payments.ts` | Provider id, product id, disclaimers |
-| `services/payments/` | Provider interface + stub |
+| `services/payments/revenueCatClient.ts` | SDK configure, purchase, restore |
+| `services/payments/revenueCatProvider.ts` | PaymentProvider for RevenueCat |
+| `components/RevenueCatBridge.tsx` | Init SDK + link user id |
 | `hooks/usePaywall.ts` | Loading state + subscribe / restore UI |
 | `components/paywall/` | Shared compare table + CTAs |
 | `app/(tabs)/settings/paywall.tsx` | Full paywall screen |
 | `app/(auth)/trial-welcome.tsx` | Post-registration trial upsell (full screen) |
 | `components/TrialWelcomeContent.tsx` | Shared trial welcome UI |
 | `context/AppContext.tsx` | `upgradeToPaid`, `restorePurchases` |
-| `005/.../billing/confirm/route.ts` | Future server verification |
+| `005/.../billing/confirm/route.ts` | Future server webhook verification |
 
 ## Product ids & pricing
 

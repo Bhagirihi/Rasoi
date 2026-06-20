@@ -20,8 +20,20 @@ export type UserModel = runtime.Types.Result.DefaultSelection<Prisma.$UserPayloa
 
 export type AggregateUser = {
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
+}
+
+export type UserAvgAggregateOutputType = {
+  latitude: number | null
+  longitude: number | null
+}
+
+export type UserSumAggregateOutputType = {
+  latitude: number | null
+  longitude: number | null
 }
 
 export type UserMinAggregateOutputType = {
@@ -39,11 +51,17 @@ export type UserMinAggregateOutputType = {
   favoriteCuisines: string | null
   notificationsEnabled: boolean | null
   timezone: string | null
+  city: string | null
+  state: string | null
+  latitude: number | null
+  longitude: number | null
+  locationUpdatedAt: Date | null
   pantryIngredients: string | null
   savedRecipeIds: string | null
   planTier: string | null
   trialStartedAt: Date | null
   hasUsedTrial: boolean | null
+  termsAcceptedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -63,11 +81,17 @@ export type UserMaxAggregateOutputType = {
   favoriteCuisines: string | null
   notificationsEnabled: boolean | null
   timezone: string | null
+  city: string | null
+  state: string | null
+  latitude: number | null
+  longitude: number | null
+  locationUpdatedAt: Date | null
   pantryIngredients: string | null
   savedRecipeIds: string | null
   planTier: string | null
   trialStartedAt: Date | null
   hasUsedTrial: boolean | null
+  termsAcceptedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -87,16 +111,32 @@ export type UserCountAggregateOutputType = {
   favoriteCuisines: number
   notificationsEnabled: number
   timezone: number
+  city: number
+  state: number
+  latitude: number
+  longitude: number
+  locationUpdatedAt: number
   pantryIngredients: number
   savedRecipeIds: number
   planTier: number
   trialStartedAt: number
   hasUsedTrial: number
+  termsAcceptedAt: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type UserAvgAggregateInputType = {
+  latitude?: true
+  longitude?: true
+}
+
+export type UserSumAggregateInputType = {
+  latitude?: true
+  longitude?: true
+}
 
 export type UserMinAggregateInputType = {
   id?: true
@@ -113,11 +153,17 @@ export type UserMinAggregateInputType = {
   favoriteCuisines?: true
   notificationsEnabled?: true
   timezone?: true
+  city?: true
+  state?: true
+  latitude?: true
+  longitude?: true
+  locationUpdatedAt?: true
   pantryIngredients?: true
   savedRecipeIds?: true
   planTier?: true
   trialStartedAt?: true
   hasUsedTrial?: true
+  termsAcceptedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -137,11 +183,17 @@ export type UserMaxAggregateInputType = {
   favoriteCuisines?: true
   notificationsEnabled?: true
   timezone?: true
+  city?: true
+  state?: true
+  latitude?: true
+  longitude?: true
+  locationUpdatedAt?: true
   pantryIngredients?: true
   savedRecipeIds?: true
   planTier?: true
   trialStartedAt?: true
   hasUsedTrial?: true
+  termsAcceptedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -161,11 +213,17 @@ export type UserCountAggregateInputType = {
   favoriteCuisines?: true
   notificationsEnabled?: true
   timezone?: true
+  city?: true
+  state?: true
+  latitude?: true
+  longitude?: true
+  locationUpdatedAt?: true
   pantryIngredients?: true
   savedRecipeIds?: true
   planTier?: true
   trialStartedAt?: true
   hasUsedTrial?: true
+  termsAcceptedAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -209,6 +267,18 @@ export type UserAggregateArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: UserAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: UserSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: UserMinAggregateInputType
@@ -239,6 +309,8 @@ export type UserGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
   take?: number
   skip?: number
   _count?: UserCountAggregateInputType | true
+  _avg?: UserAvgAggregateInputType
+  _sum?: UserSumAggregateInputType
   _min?: UserMinAggregateInputType
   _max?: UserMaxAggregateInputType
 }
@@ -258,14 +330,22 @@ export type UserGroupByOutputType = {
   favoriteCuisines: string
   notificationsEnabled: boolean
   timezone: string
+  city: string | null
+  state: string | null
+  latitude: number | null
+  longitude: number | null
+  locationUpdatedAt: Date | null
   pantryIngredients: string
   savedRecipeIds: string
   planTier: string
   trialStartedAt: Date | null
   hasUsedTrial: boolean
+  termsAcceptedAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: UserCountAggregateOutputType | null
+  _avg: UserAvgAggregateOutputType | null
+  _sum: UserSumAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
   _max: UserMaxAggregateOutputType | null
 }
@@ -303,15 +383,22 @@ export type UserWhereInput = {
   favoriteCuisines?: Prisma.StringFilter<"User"> | string
   notificationsEnabled?: Prisma.BoolFilter<"User"> | boolean
   timezone?: Prisma.StringFilter<"User"> | string
+  city?: Prisma.StringNullableFilter<"User"> | string | null
+  state?: Prisma.StringNullableFilter<"User"> | string | null
+  latitude?: Prisma.FloatNullableFilter<"User"> | number | null
+  longitude?: Prisma.FloatNullableFilter<"User"> | number | null
+  locationUpdatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   pantryIngredients?: Prisma.StringFilter<"User"> | string
   savedRecipeIds?: Prisma.StringFilter<"User"> | string
   planTier?: Prisma.StringFilter<"User"> | string
   trialStartedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   hasUsedTrial?: Prisma.BoolFilter<"User"> | boolean
+  termsAcceptedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   pushTokens?: Prisma.PushTokenListRelationFilter
   affiliateEvents?: Prisma.AffiliateEventListRelationFilter
+  sponsorEvents?: Prisma.SponsorEventListRelationFilter
   mealNotificationLogs?: Prisma.MealNotificationLogListRelationFilter
   feedback?: Prisma.UserFeedbackListRelationFilter
 }
@@ -331,15 +418,22 @@ export type UserOrderByWithRelationInput = {
   favoriteCuisines?: Prisma.SortOrder
   notificationsEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  state?: Prisma.SortOrderInput | Prisma.SortOrder
+  latitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  locationUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   pantryIngredients?: Prisma.SortOrder
   savedRecipeIds?: Prisma.SortOrder
   planTier?: Prisma.SortOrder
   trialStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   hasUsedTrial?: Prisma.SortOrder
+  termsAcceptedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   pushTokens?: Prisma.PushTokenOrderByRelationAggregateInput
   affiliateEvents?: Prisma.AffiliateEventOrderByRelationAggregateInput
+  sponsorEvents?: Prisma.SponsorEventOrderByRelationAggregateInput
   mealNotificationLogs?: Prisma.MealNotificationLogOrderByRelationAggregateInput
   feedback?: Prisma.UserFeedbackOrderByRelationAggregateInput
 }
@@ -362,15 +456,22 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   favoriteCuisines?: Prisma.StringFilter<"User"> | string
   notificationsEnabled?: Prisma.BoolFilter<"User"> | boolean
   timezone?: Prisma.StringFilter<"User"> | string
+  city?: Prisma.StringNullableFilter<"User"> | string | null
+  state?: Prisma.StringNullableFilter<"User"> | string | null
+  latitude?: Prisma.FloatNullableFilter<"User"> | number | null
+  longitude?: Prisma.FloatNullableFilter<"User"> | number | null
+  locationUpdatedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   pantryIngredients?: Prisma.StringFilter<"User"> | string
   savedRecipeIds?: Prisma.StringFilter<"User"> | string
   planTier?: Prisma.StringFilter<"User"> | string
   trialStartedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   hasUsedTrial?: Prisma.BoolFilter<"User"> | boolean
+  termsAcceptedAt?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"User"> | Date | string
   pushTokens?: Prisma.PushTokenListRelationFilter
   affiliateEvents?: Prisma.AffiliateEventListRelationFilter
+  sponsorEvents?: Prisma.SponsorEventListRelationFilter
   mealNotificationLogs?: Prisma.MealNotificationLogListRelationFilter
   feedback?: Prisma.UserFeedbackListRelationFilter
 }, "id" | "email" | "phone">
@@ -390,16 +491,24 @@ export type UserOrderByWithAggregationInput = {
   favoriteCuisines?: Prisma.SortOrder
   notificationsEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  city?: Prisma.SortOrderInput | Prisma.SortOrder
+  state?: Prisma.SortOrderInput | Prisma.SortOrder
+  latitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  longitude?: Prisma.SortOrderInput | Prisma.SortOrder
+  locationUpdatedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   pantryIngredients?: Prisma.SortOrder
   savedRecipeIds?: Prisma.SortOrder
   planTier?: Prisma.SortOrder
   trialStartedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   hasUsedTrial?: Prisma.SortOrder
+  termsAcceptedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
+  _avg?: Prisma.UserAvgOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
   _min?: Prisma.UserMinOrderByAggregateInput
+  _sum?: Prisma.UserSumOrderByAggregateInput
 }
 
 export type UserScalarWhereWithAggregatesInput = {
@@ -420,11 +529,17 @@ export type UserScalarWhereWithAggregatesInput = {
   favoriteCuisines?: Prisma.StringWithAggregatesFilter<"User"> | string
   notificationsEnabled?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   timezone?: Prisma.StringWithAggregatesFilter<"User"> | string
+  city?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  state?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  latitude?: Prisma.FloatNullableWithAggregatesFilter<"User"> | number | null
+  longitude?: Prisma.FloatNullableWithAggregatesFilter<"User"> | number | null
+  locationUpdatedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   pantryIngredients?: Prisma.StringWithAggregatesFilter<"User"> | string
   savedRecipeIds?: Prisma.StringWithAggregatesFilter<"User"> | string
   planTier?: Prisma.StringWithAggregatesFilter<"User"> | string
   trialStartedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   hasUsedTrial?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  termsAcceptedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
@@ -444,15 +559,22 @@ export type UserCreateInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
@@ -472,15 +594,22 @@ export type UserUncheckedCreateInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
@@ -500,15 +629,22 @@ export type UserUpdateInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
@@ -528,15 +664,22 @@ export type UserUncheckedUpdateInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -556,11 +699,17 @@ export type UserCreateManyInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -580,11 +729,17 @@ export type UserUpdateManyMutationInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -604,11 +759,17 @@ export type UserUncheckedUpdateManyInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -628,13 +789,24 @@ export type UserCountOrderByAggregateInput = {
   favoriteCuisines?: Prisma.SortOrder
   notificationsEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  state?: Prisma.SortOrder
+  latitude?: Prisma.SortOrder
+  longitude?: Prisma.SortOrder
+  locationUpdatedAt?: Prisma.SortOrder
   pantryIngredients?: Prisma.SortOrder
   savedRecipeIds?: Prisma.SortOrder
   planTier?: Prisma.SortOrder
   trialStartedAt?: Prisma.SortOrder
   hasUsedTrial?: Prisma.SortOrder
+  termsAcceptedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserAvgOrderByAggregateInput = {
+  latitude?: Prisma.SortOrder
+  longitude?: Prisma.SortOrder
 }
 
 export type UserMaxOrderByAggregateInput = {
@@ -652,11 +824,17 @@ export type UserMaxOrderByAggregateInput = {
   favoriteCuisines?: Prisma.SortOrder
   notificationsEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  state?: Prisma.SortOrder
+  latitude?: Prisma.SortOrder
+  longitude?: Prisma.SortOrder
+  locationUpdatedAt?: Prisma.SortOrder
   pantryIngredients?: Prisma.SortOrder
   savedRecipeIds?: Prisma.SortOrder
   planTier?: Prisma.SortOrder
   trialStartedAt?: Prisma.SortOrder
   hasUsedTrial?: Prisma.SortOrder
+  termsAcceptedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -676,13 +854,24 @@ export type UserMinOrderByAggregateInput = {
   favoriteCuisines?: Prisma.SortOrder
   notificationsEnabled?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  city?: Prisma.SortOrder
+  state?: Prisma.SortOrder
+  latitude?: Prisma.SortOrder
+  longitude?: Prisma.SortOrder
+  locationUpdatedAt?: Prisma.SortOrder
   pantryIngredients?: Prisma.SortOrder
   savedRecipeIds?: Prisma.SortOrder
   planTier?: Prisma.SortOrder
   trialStartedAt?: Prisma.SortOrder
   hasUsedTrial?: Prisma.SortOrder
+  termsAcceptedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type UserSumOrderByAggregateInput = {
+  latitude?: Prisma.SortOrder
+  longitude?: Prisma.SortOrder
 }
 
 export type UserScalarRelationFilter = {
@@ -709,6 +898,14 @@ export type BoolFieldUpdateOperationsInput = {
 
 export type EnumUserRoleFieldUpdateOperationsInput = {
   set?: $Enums.UserRole
+}
+
+export type NullableFloatFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
 }
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -747,6 +944,22 @@ export type UserUpdateOneWithoutAffiliateEventsNestedInput = {
   delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutAffiliateEventsInput, Prisma.UserUpdateWithoutAffiliateEventsInput>, Prisma.UserUncheckedUpdateWithoutAffiliateEventsInput>
+}
+
+export type UserCreateNestedOneWithoutSponsorEventsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSponsorEventsInput, Prisma.UserUncheckedCreateWithoutSponsorEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSponsorEventsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutSponsorEventsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSponsorEventsInput, Prisma.UserUncheckedCreateWithoutSponsorEventsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSponsorEventsInput
+  upsert?: Prisma.UserUpsertWithoutSponsorEventsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSponsorEventsInput, Prisma.UserUpdateWithoutSponsorEventsInput>, Prisma.UserUncheckedUpdateWithoutSponsorEventsInput>
 }
 
 export type UserCreateNestedOneWithoutPushTokensInput = {
@@ -794,15 +1007,22 @@ export type UserCreateWithoutMealNotificationLogsInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
 
@@ -821,15 +1041,22 @@ export type UserUncheckedCreateWithoutMealNotificationLogsInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -864,15 +1091,22 @@ export type UserUpdateWithoutMealNotificationLogsInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
 
@@ -891,15 +1125,22 @@ export type UserUncheckedUpdateWithoutMealNotificationLogsInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -918,14 +1159,21 @@ export type UserCreateWithoutAffiliateEventsInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
@@ -945,14 +1193,21 @@ export type UserUncheckedCreateWithoutAffiliateEventsInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
@@ -988,14 +1243,21 @@ export type UserUpdateWithoutAffiliateEventsInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
@@ -1015,14 +1277,173 @@ export type UserUncheckedUpdateWithoutAffiliateEventsInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedUpdateManyWithoutUserNestedInput
+  mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
+}
+
+export type UserCreateWithoutSponsorEventsInput = {
+  id?: string
+  email?: string | null
+  phone?: string | null
+  name: string
+  isGuest?: boolean
+  role?: $Enums.UserRole
+  isActive?: boolean
+  hasCompletedOnboarding?: boolean
+  dietPreference?: string
+  dietChoice?: string
+  regionalCuisine?: string
+  favoriteCuisines?: string
+  notificationsEnabled?: boolean
+  timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
+  pantryIngredients?: string
+  savedRecipeIds?: string
+  planTier?: string
+  trialStartedAt?: Date | string | null
+  hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
+  affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
+  mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutSponsorEventsInput = {
+  id?: string
+  email?: string | null
+  phone?: string | null
+  name: string
+  isGuest?: boolean
+  role?: $Enums.UserRole
+  isActive?: boolean
+  hasCompletedOnboarding?: boolean
+  dietPreference?: string
+  dietChoice?: string
+  regionalCuisine?: string
+  favoriteCuisines?: string
+  notificationsEnabled?: boolean
+  timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
+  pantryIngredients?: string
+  savedRecipeIds?: string
+  planTier?: string
+  trialStartedAt?: Date | string | null
+  hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
+  affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
+  mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
+  feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutSponsorEventsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSponsorEventsInput, Prisma.UserUncheckedCreateWithoutSponsorEventsInput>
+}
+
+export type UserUpsertWithoutSponsorEventsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSponsorEventsInput, Prisma.UserUncheckedUpdateWithoutSponsorEventsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSponsorEventsInput, Prisma.UserUncheckedCreateWithoutSponsorEventsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSponsorEventsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSponsorEventsInput, Prisma.UserUncheckedUpdateWithoutSponsorEventsInput>
+}
+
+export type UserUpdateWithoutSponsorEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
+  dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
+  regionalCuisine?: Prisma.StringFieldUpdateOperationsInput | string
+  favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
+  notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
+  savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
+  planTier?: Prisma.StringFieldUpdateOperationsInput | string
+  trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
+  affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
+  mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
+  feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSponsorEventsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  isGuest?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  role?: Prisma.EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  hasCompletedOnboarding?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  dietPreference?: Prisma.StringFieldUpdateOperationsInput | string
+  dietChoice?: Prisma.StringFieldUpdateOperationsInput | string
+  regionalCuisine?: Prisma.StringFieldUpdateOperationsInput | string
+  favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
+  notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
+  savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
+  planTier?: Prisma.StringFieldUpdateOperationsInput | string
+  trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
+  affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -1042,14 +1463,21 @@ export type UserCreateWithoutPushTokensInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackCreateNestedManyWithoutUserInput
 }
@@ -1069,14 +1497,21 @@ export type UserUncheckedCreateWithoutPushTokensInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
   feedback?: Prisma.UserFeedbackUncheckedCreateNestedManyWithoutUserInput
 }
@@ -1112,14 +1547,21 @@ export type UserUpdateWithoutPushTokensInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUpdateManyWithoutUserNestedInput
 }
@@ -1139,14 +1581,21 @@ export type UserUncheckedUpdateWithoutPushTokensInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
   feedback?: Prisma.UserFeedbackUncheckedUpdateManyWithoutUserNestedInput
 }
@@ -1166,15 +1615,22 @@ export type UserCreateWithoutFeedbackInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogCreateNestedManyWithoutUserInput
 }
 
@@ -1193,15 +1649,22 @@ export type UserUncheckedCreateWithoutFeedbackInput = {
   favoriteCuisines?: string
   notificationsEnabled?: boolean
   timezone?: string
+  city?: string | null
+  state?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  locationUpdatedAt?: Date | string | null
   pantryIngredients?: string
   savedRecipeIds?: string
   planTier?: string
   trialStartedAt?: Date | string | null
   hasUsedTrial?: boolean
+  termsAcceptedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   pushTokens?: Prisma.PushTokenUncheckedCreateNestedManyWithoutUserInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedCreateNestedManyWithoutUserInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedCreateNestedManyWithoutUserInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedCreateNestedManyWithoutUserInput
 }
 
@@ -1236,15 +1699,22 @@ export type UserUpdateWithoutFeedbackInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUpdateManyWithoutUserNestedInput
 }
 
@@ -1263,15 +1733,22 @@ export type UserUncheckedUpdateWithoutFeedbackInput = {
   favoriteCuisines?: Prisma.StringFieldUpdateOperationsInput | string
   notificationsEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   timezone?: Prisma.StringFieldUpdateOperationsInput | string
+  city?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  state?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  locationUpdatedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   pantryIngredients?: Prisma.StringFieldUpdateOperationsInput | string
   savedRecipeIds?: Prisma.StringFieldUpdateOperationsInput | string
   planTier?: Prisma.StringFieldUpdateOperationsInput | string
   trialStartedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   hasUsedTrial?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  termsAcceptedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   pushTokens?: Prisma.PushTokenUncheckedUpdateManyWithoutUserNestedInput
   affiliateEvents?: Prisma.AffiliateEventUncheckedUpdateManyWithoutUserNestedInput
+  sponsorEvents?: Prisma.SponsorEventUncheckedUpdateManyWithoutUserNestedInput
   mealNotificationLogs?: Prisma.MealNotificationLogUncheckedUpdateManyWithoutUserNestedInput
 }
 
@@ -1283,6 +1760,7 @@ export type UserUncheckedUpdateWithoutFeedbackInput = {
 export type UserCountOutputType = {
   pushTokens: number
   affiliateEvents: number
+  sponsorEvents: number
   mealNotificationLogs: number
   feedback: number
 }
@@ -1290,6 +1768,7 @@ export type UserCountOutputType = {
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   pushTokens?: boolean | UserCountOutputTypeCountPushTokensArgs
   affiliateEvents?: boolean | UserCountOutputTypeCountAffiliateEventsArgs
+  sponsorEvents?: boolean | UserCountOutputTypeCountSponsorEventsArgs
   mealNotificationLogs?: boolean | UserCountOutputTypeCountMealNotificationLogsArgs
   feedback?: boolean | UserCountOutputTypeCountFeedbackArgs
 }
@@ -1316,6 +1795,13 @@ export type UserCountOutputTypeCountPushTokensArgs<ExtArgs extends runtime.Types
  */
 export type UserCountOutputTypeCountAffiliateEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.AffiliateEventWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSponsorEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SponsorEventWhereInput
 }
 
 /**
@@ -1348,15 +1834,22 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   favoriteCuisines?: boolean
   notificationsEnabled?: boolean
   timezone?: boolean
+  city?: boolean
+  state?: boolean
+  latitude?: boolean
+  longitude?: boolean
+  locationUpdatedAt?: boolean
   pantryIngredients?: boolean
   savedRecipeIds?: boolean
   planTier?: boolean
   trialStartedAt?: boolean
   hasUsedTrial?: boolean
+  termsAcceptedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   affiliateEvents?: boolean | Prisma.User$affiliateEventsArgs<ExtArgs>
+  sponsorEvents?: boolean | Prisma.User$sponsorEventsArgs<ExtArgs>
   mealNotificationLogs?: boolean | Prisma.User$mealNotificationLogsArgs<ExtArgs>
   feedback?: boolean | Prisma.User$feedbackArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -1377,11 +1870,17 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   favoriteCuisines?: boolean
   notificationsEnabled?: boolean
   timezone?: boolean
+  city?: boolean
+  state?: boolean
+  latitude?: boolean
+  longitude?: boolean
+  locationUpdatedAt?: boolean
   pantryIngredients?: boolean
   savedRecipeIds?: boolean
   planTier?: boolean
   trialStartedAt?: boolean
   hasUsedTrial?: boolean
+  termsAcceptedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1401,11 +1900,17 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   favoriteCuisines?: boolean
   notificationsEnabled?: boolean
   timezone?: boolean
+  city?: boolean
+  state?: boolean
+  latitude?: boolean
+  longitude?: boolean
+  locationUpdatedAt?: boolean
   pantryIngredients?: boolean
   savedRecipeIds?: boolean
   planTier?: boolean
   trialStartedAt?: boolean
   hasUsedTrial?: boolean
+  termsAcceptedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["user"]>
@@ -1425,19 +1930,26 @@ export type UserSelectScalar = {
   favoriteCuisines?: boolean
   notificationsEnabled?: boolean
   timezone?: boolean
+  city?: boolean
+  state?: boolean
+  latitude?: boolean
+  longitude?: boolean
+  locationUpdatedAt?: boolean
   pantryIngredients?: boolean
   savedRecipeIds?: boolean
   planTier?: boolean
   trialStartedAt?: boolean
   hasUsedTrial?: boolean
+  termsAcceptedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "phone" | "name" | "isGuest" | "role" | "isActive" | "hasCompletedOnboarding" | "dietPreference" | "dietChoice" | "regionalCuisine" | "favoriteCuisines" | "notificationsEnabled" | "timezone" | "pantryIngredients" | "savedRecipeIds" | "planTier" | "trialStartedAt" | "hasUsedTrial" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "email" | "phone" | "name" | "isGuest" | "role" | "isActive" | "hasCompletedOnboarding" | "dietPreference" | "dietChoice" | "regionalCuisine" | "favoriteCuisines" | "notificationsEnabled" | "timezone" | "city" | "state" | "latitude" | "longitude" | "locationUpdatedAt" | "pantryIngredients" | "savedRecipeIds" | "planTier" | "trialStartedAt" | "hasUsedTrial" | "termsAcceptedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   pushTokens?: boolean | Prisma.User$pushTokensArgs<ExtArgs>
   affiliateEvents?: boolean | Prisma.User$affiliateEventsArgs<ExtArgs>
+  sponsorEvents?: boolean | Prisma.User$sponsorEventsArgs<ExtArgs>
   mealNotificationLogs?: boolean | Prisma.User$mealNotificationLogsArgs<ExtArgs>
   feedback?: boolean | Prisma.User$feedbackArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -1450,6 +1962,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   objects: {
     pushTokens: Prisma.$PushTokenPayload<ExtArgs>[]
     affiliateEvents: Prisma.$AffiliateEventPayload<ExtArgs>[]
+    sponsorEvents: Prisma.$SponsorEventPayload<ExtArgs>[]
     mealNotificationLogs: Prisma.$MealNotificationLogPayload<ExtArgs>[]
     feedback: Prisma.$UserFeedbackPayload<ExtArgs>[]
   }
@@ -1468,11 +1981,17 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     favoriteCuisines: string
     notificationsEnabled: boolean
     timezone: string
+    city: string | null
+    state: string | null
+    latitude: number | null
+    longitude: number | null
+    locationUpdatedAt: Date | null
     pantryIngredients: string
     savedRecipeIds: string
     planTier: string
     trialStartedAt: Date | null
     hasUsedTrial: boolean
+    termsAcceptedAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["user"]>
@@ -1871,6 +2390,7 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   readonly [Symbol.toStringTag]: "PrismaPromise"
   pushTokens<T extends Prisma.User$pushTokensArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$pushTokensArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PushTokenPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   affiliateEvents<T extends Prisma.User$affiliateEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$affiliateEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AffiliateEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  sponsorEvents<T extends Prisma.User$sponsorEventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sponsorEventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SponsorEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   mealNotificationLogs<T extends Prisma.User$mealNotificationLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$mealNotificationLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MealNotificationLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   feedback<T extends Prisma.User$feedbackArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$feedbackArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserFeedbackPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1916,11 +2436,17 @@ export interface UserFieldRefs {
   readonly favoriteCuisines: Prisma.FieldRef<"User", 'String'>
   readonly notificationsEnabled: Prisma.FieldRef<"User", 'Boolean'>
   readonly timezone: Prisma.FieldRef<"User", 'String'>
+  readonly city: Prisma.FieldRef<"User", 'String'>
+  readonly state: Prisma.FieldRef<"User", 'String'>
+  readonly latitude: Prisma.FieldRef<"User", 'Float'>
+  readonly longitude: Prisma.FieldRef<"User", 'Float'>
+  readonly locationUpdatedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly pantryIngredients: Prisma.FieldRef<"User", 'String'>
   readonly savedRecipeIds: Prisma.FieldRef<"User", 'String'>
   readonly planTier: Prisma.FieldRef<"User", 'String'>
   readonly trialStartedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly hasUsedTrial: Prisma.FieldRef<"User", 'Boolean'>
+  readonly termsAcceptedAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"User", 'DateTime'>
 }
@@ -2361,6 +2887,30 @@ export type User$affiliateEventsArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.AffiliateEventScalarFieldEnum | Prisma.AffiliateEventScalarFieldEnum[]
+}
+
+/**
+ * User.sponsorEvents
+ */
+export type User$sponsorEventsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SponsorEvent
+   */
+  select?: Prisma.SponsorEventSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SponsorEvent
+   */
+  omit?: Prisma.SponsorEventOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SponsorEventInclude<ExtArgs> | null
+  where?: Prisma.SponsorEventWhereInput
+  orderBy?: Prisma.SponsorEventOrderByWithRelationInput | Prisma.SponsorEventOrderByWithRelationInput[]
+  cursor?: Prisma.SponsorEventWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SponsorEventScalarFieldEnum | Prisma.SponsorEventScalarFieldEnum[]
 }
 
 /**

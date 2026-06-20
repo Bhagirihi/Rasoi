@@ -8,6 +8,7 @@ export async function syncSupabaseAccount(
   supabaseAccessToken: string,
   name: string,
   phone: string,
+  options?: { acceptedTerms?: boolean },
 ): Promise<AuthResponse> {
   authLog('syncSupabaseAccount:start', {
     apiUrl: getApiBaseUrl(),
@@ -22,7 +23,11 @@ export async function syncSupabaseAccount(
       headers: {
         Authorization: `Bearer ${supabaseAccessToken}`,
       },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({
+        name,
+        phone,
+        ...(options?.acceptedTerms ? { acceptedTerms: true as const } : {}),
+      }),
     });
     await saveAuthToken(response.token);
     authLog('syncSupabaseAccount:success', {

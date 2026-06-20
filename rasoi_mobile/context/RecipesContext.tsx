@@ -11,8 +11,8 @@ import React, {
 import { AppState } from 'react-native';
 
 import { Recipe } from '@/data/mockRecipes';
-import { fetchPublishedRecipes, fetchRecipeById } from '@/services/recipes';
-import { getApiBaseUrl } from '@/utils/api';
+import { fetchPublishedRecipes, fetchRecipeById, type RecipeFetchFilters } from '@/services/recipes';
+import { formatUserFacingApiError } from '@/utils/api';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
 type RecipesContextValue = {
@@ -20,39 +20,71 @@ type RecipesContextValue = {
   loading: boolean;
   error: string | null;
   refreshRecipes: () => Promise<void>;
+  syncRecipeFilters: (dietChoice: string, regionalCuisine: string) => void;
   getRecipeById: (id: string) => Recipe | undefined;
   loadRecipeById: (id: string) => Promise<Recipe | null>;
 };
 
 const RecipesContext = createContext<RecipesContextValue | undefined>(undefined);
 
+function recipeFiltersKey(filters: RecipeFetchFilters): string {
+  return `${filters.dietChoice ?? ''}|${filters.region ?? ''}`;
+}
+
+function filtersFromProfile(dietChoice: string, regionalCuisine: string): RecipeFetchFilters {
+  return {
+    dietChoice,
+    region: regionalCuisine,
+  };
+}
+
 export function RecipesProvider({ children }: { children: ReactNode }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const listFiltersRef = useRef<RecipeFetchFilters>({ dietChoice: 'Veg', region: 'All India' });
+  const lastFetchedKeyRef = useRef<string>('');
+  const recipesRef = useRef(recipes);
+  recipesRef.current = recipes;
+  const lastForegroundRefreshRef = useRef(0);
+
   const refreshRecipes = useCallback(async () => {
-    setLoading(true);
+    const filters = listFiltersRef.current;
+    const hasRecipes = recipesRef.current.length > 0;
+    if (!hasRecipes) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
-      const next = await fetchPublishedRecipes();
+      const next = await fetchPublishedRecipes(filters);
       setRecipes(next);
+      lastFetchedKeyRef.current = recipeFiltersKey(filters);
     } catch (caught) {
-      const message =
-        caught instanceof Error
-          ? caught.message
-          : 'Could not load recipes from the server';
-      setError(`${message} (${getApiBaseUrl()})`);
-      setRecipes([]);
+      setError(formatUserFacingApiError(caught, 'Could not load recipes. Pull to refresh when you are back online.'));
+      if (!hasRecipes) {
+        setRecipes([]);
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    void refreshRecipes();
-  }, [refreshRecipes]);
+  const syncRecipeFilters = useCallback(
+    (dietChoice: string, regionalCuisine: string) => {
+      const filters = filtersFromProfile(dietChoice, regionalCuisine);
+      const key = recipeFiltersKey(filters);
+      listFiltersRef.current = filters;
+
+      if (key === lastFetchedKeyRef.current && recipesRef.current.length > 0) {
+        return;
+      }
+
+      void refreshRecipes();
+    },
+    [refreshRecipes],
+  );
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
@@ -76,10 +108,6 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     (id: string) => recipes.find((recipe) => recipe.id === id),
     [recipes],
   );
-
-  const recipesRef = useRef(recipes);
-  recipesRef.current = recipes;
-  const lastForegroundRefreshRef = useRef(0);
 
   const mergeRecipe = useCallback((recipe: Recipe) => {
     setRecipes((current) => {
@@ -110,10 +138,11 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       refreshRecipes,
+      syncRecipeFilters,
       getRecipeById,
       loadRecipeById,
     }),
-    [recipes, loading, error, refreshRecipes, getRecipeById, loadRecipeById],
+    [recipes, loading, error, refreshRecipes, syncRecipeFilters, getRecipeById, loadRecipeById],
   );
 
   return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;

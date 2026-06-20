@@ -54,24 +54,23 @@ function mapRecipe(recipe: ApiRecipe): Recipe {
 }
 
 function buildRecipesQuery(filters?: RecipeFetchFilters): string {
-  if (!filters) return '';
-
   const params = new URLSearchParams();
-  if (filters.region && filters.region !== 'All India') {
+  params.set('view', 'list');
+  if (filters?.region && filters.region !== 'All India') {
     params.set('region', filters.region);
   }
-  if (filters.dietChoice) {
+  if (filters?.dietChoice) {
     params.set('dietChoice', filters.dietChoice);
   }
-  if (filters.dietType) {
+  if (filters?.dietType) {
     params.set('dietType', filters.dietType);
   }
-  if (filters.tag && filters.tag !== 'all') {
+  if (filters?.tag && filters.tag !== 'all') {
     params.set('tag', filters.tag);
   }
 
   const query = params.toString();
-  return query ? `?${query}` : '';
+  return `?${query}`;
 }
 
 export async function fetchPublishedRecipes(filters?: RecipeFetchFilters): Promise<Recipe[]> {

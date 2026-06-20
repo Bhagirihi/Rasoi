@@ -273,6 +273,8 @@ Sponsors = **paid native placements** in Rasoi (not affiliate %). Configured tod
 
 ### Who to target (India)
 
+> **Complete sponsor playbook (targets, contacts, templates, pricing, pitch):** [`docs/marketing/SPONSOR_OUTREACH_PLAYBOOK.md`](../../../docs/marketing/SPONSOR_OUTREACH_PLAYBOOK.md) · Extended brand list: [`SPONSOR_BRANDS_TO_CONTACT.md`](../../../docs/marketing/SPONSOR_BRANDS_TO_CONTACT.md)
+
 **Tier 1 — easiest fit**
 
 - **Amul**, **Mother Dairy**, **Britannia** — paneer, butter, dairy in recipes

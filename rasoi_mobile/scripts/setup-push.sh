@@ -81,7 +81,7 @@ echo ""
 if [[ ! -f "$GOOGLE_SERVICES" ]]; then
   echo "Step 4: Add Firebase google-services.json (required for Android FCM)"
   echo "  1. https://console.firebase.google.com/ → Add/use project"
-  echo "  2. Add Android app → package: com.rasoi.app"
+  echo "  2. Add Android app → package: com.bhagihiri.rasoiapp"
   echo "  3. Download google-services.json → save as:"
   echo "     ${GOOGLE_SERVICES}"
   echo ""
@@ -100,7 +100,14 @@ echo "google-services.json: OK"
 echo ""
 echo "Step 4: Upload google-services.json to EAS (required for cloud builds)"
 for eas_env in production preview development; do
-  if npx eas env:create "$eas_env" \
+  if npx eas env:update "$eas_env" \
+    --variable-name GOOGLE_SERVICES_JSON \
+    --value "$GOOGLE_SERVICES" \
+    --type file \
+    --visibility secret \
+    --non-interactive >/dev/null 2>&1; then
+    echo "  EAS ${eas_env}: GOOGLE_SERVICES_JSON updated"
+  elif npx eas env:create "$eas_env" \
     --name GOOGLE_SERVICES_JSON \
     --type file \
     --value "$GOOGLE_SERVICES" \
@@ -108,10 +115,10 @@ for eas_env in production preview development; do
     --environment "$eas_env" \
     --non-interactive \
     --force >/dev/null 2>&1; then
-    echo "  EAS ${eas_env}: GOOGLE_SERVICES_JSON uploaded"
+    echo "  EAS ${eas_env}: GOOGLE_SERVICES_JSON created"
   else
     echo "  EAS ${eas_env}: upload failed — run manually:"
-    echo "    eas env:create ${eas_env} --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --visibility secret"
+    echo "    eas env:update ${eas_env} --variable-name GOOGLE_SERVICES_JSON --value ./google-services.json --type file --visibility secret"
   fi
 done
 echo ""

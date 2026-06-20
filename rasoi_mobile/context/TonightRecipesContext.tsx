@@ -31,24 +31,41 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   const { recipes } = useRecipes();
   const meal = getMealContext();
   const deferredPantryIngredients = useDeferredValue(pantryIngredients);
+  const [rankedRecipes, setRankedRecipes] = useState<Recipe[]>([]);
 
-  const rankedRecipes = useMemo(() => {
-    if (recipes.length === 0) return [];
+  useEffect(() => {
+    if (recipes.length === 0) {
+      setRankedRecipes([]);
+      return;
+    }
 
-    const filtered = filterRecipes(recipes, {
-      dietPreference: dietChoiceToFilter(dietChoice),
-      regionalCuisine,
-      favoriteCuisines,
-      pantryIngredients: deferredPantryIngredients,
-      fastFilters: [],
+    const task = InteractionManager.runAfterInteractions(() => {
+      const filtered = filterRecipes(recipes, {
+        dietPreference: dietChoiceToFilter(dietChoice),
+        regionalCuisine,
+        favoriteCuisines,
+        pantryIngredients: deferredPantryIngredients,
+        fastFilters: [],
+      });
+
+      setRankedRecipes(
+        sortRecipesForTonight(filtered, {
+          regionalCuisine,
+          pantryIngredients: deferredPantryIngredients,
+          mealSlot: meal.slot,
+        }),
+      );
     });
 
-    return sortRecipesForTonight(filtered, {
-      regionalCuisine,
-      pantryIngredients: deferredPantryIngredients,
-      mealSlot: meal.slot,
-    });
-  }, [recipes, dietChoice, regionalCuisine, favoriteCuisines, deferredPantryIngredients, meal.slot]);
+    return () => task.cancel();
+  }, [
+    recipes,
+    dietChoice,
+    regionalCuisine,
+    favoriteCuisines,
+    deferredPantryIngredients,
+    meal.slot,
+  ]);
 
   const topPick = rankedRecipes[0];
   const alsoFor = rankedRecipes.slice(1, 4);

@@ -12,8 +12,8 @@ type BannerModule = {
     unitId: string;
     size: string;
     requestOptions?: { requestNonPersonalizedAdsOnly?: boolean };
-    onAdLoaded?: () => void;
-    onAdFailedToLoad?: () => void;
+    onAdLoaded?: (dimensions: { width: number; height: number }) => void;
+    onAdFailedToLoad?: (error: Error) => void;
   }>;
   BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: string };
 };

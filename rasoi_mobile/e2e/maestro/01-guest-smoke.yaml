@@ -1,5 +1,5 @@
 # Fresh install → onboarding → guest login → all tabs
-appId: com.rasoi.app
+appId: com.bhagihiri.rasoiapp
 ---
 - launchApp:
     clearState: true

@@ -14,6 +14,7 @@
     "db:setup": "prisma db push && tsx prisma/seed.ts",
     "db:sync": "prisma db push && tsx prisma/seed.ts",
     "db:realtime": "tsx scripts/enable-realtime.ts",
+    "db:ping": "tsx scripts/db-ping.ts",
     "db:sync-public": "tsx scripts/sync-public-recipes.ts",
     "db:sync-public-cuisines": "tsx scripts/sync-public-kitchen-styles.ts",
     "db:seed-recipes": "tsx scripts/seed-recipes-to-supabase.ts",
@@ -23,7 +24,8 @@
     "db:seed-batch6": "tsx scripts/seed-batch6-recipes.ts",
     "db:seed-batch6:dry": "tsx scripts/seed-batch6-recipes.ts --dry-run",
     "cron:keep-alive": "tsx scripts/cron-keep-alive.ts",
-    "cron:meal-notifications": "tsx scripts/cron-meal-notifications.ts"
+    "cron:meal-notifications": "tsx scripts/cron-meal-notifications.ts",
+    "sync:apk": "bash scripts/sync-apk.sh"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

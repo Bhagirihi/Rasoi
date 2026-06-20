@@ -8,7 +8,7 @@ Track release readiness for sideload beta and Play Store launch.
 | 1 | `SUPABASE_SERVICE_ROLE_KEY` on Vercel | ✅ Done | Set on Production + Preview (verified via `vercel env ls`) |
 | 2 | `CRON_SECRET` + `MEAL_NOTIFICATIONS_URL` on GitHub | ✅ Done | Secrets present; workflow `.github/workflows/meal-notifications.yml` runs every 15 min |
 | 3 | `EXPO_PUBLIC_SENTRY_DSN` in build `.env` | ✅ Local | Set in `rasoi_mobile/.env` — **rebuild APK/AAB** after any DSN change |
-| 4 | `google-services.json` + FCM v1 on EAS | ✅ Done | FCM v1 linked to `com.rasoi.app` on @takeyshi/rasoi; `google-services.json` in local build env |
+| 4 | `google-services.json` + FCM v1 on EAS | ✅ Done | FCM v1 linked to `com.bhagihiri.rasoiapp` on @takeyshi/rasoi; `google-services.json` in local build env |
 | 5 | `npm run qa:preflight` + `qa:device` | ⚠️ Blocked | No Android device connected for Maestro; API 200 + guest auth 200 verified |
 | 6 | Privacy policy live + Settings link | ✅ Code ready | `/privacy` + `/terms` pages + Settings footer — **deploy backend to Vercel** |
 | 7 | Monetization decision | ✅ Admin toggle | `/admin/payments` — OFF = no paywall, partners unlocked, ads + sponsors on |

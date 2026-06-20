@@ -3,7 +3,7 @@
 Remote meal pushes need **two things** on release APKs:
 
 1. **EAS project ID** — embedded in the app (`EXPO_PUBLIC_EAS_PROJECT_ID`)
-2. **`google-services.json`** — Firebase config for `com.rasoi.app`
+2. **`google-services.json`** — Firebase config for `com.bhagihiri.rasoiapp`
 
 Local 5 PM / 10 PM reminders work without these. **Server pushes (5 meal slots) do not.**
 
@@ -44,13 +44,15 @@ Find it anytime: [expo.dev](https://expo.dev) → **@takeyshi/rasoi** → Projec
 
 ```bash
 npx firebase-tools login          # one-time, opens browser
-npm run setup:firebase            # creates project + com.rasoi.app + downloads JSON
+npm run setup:firebase            # registers com.bhagihiri.rasoiapp + downloads JSON
 ```
+
+Registered app: **`com.bhagihiri.rasoiapp`** · Firebase App ID `1:304365765846:android:85492c6a6786f4cec27577` · project `rasoi-app-prod`
 
 **Manual:**
 
 1. [Firebase Console](https://console.firebase.google.com/) → **Add project** (or use existing)
-2. **Add app** → Android → package name: **`com.rasoi.app`**
+2. **Add app** → Android → package name: **`com.bhagihiri.rasoiapp`**
 3. Download **`google-services.json`**
 4. Save as `rasoi_mobile/google-services.json` (same folder as `app.json`)
 
@@ -60,7 +62,7 @@ npm run setup:firebase            # creates project + com.rasoi.app + downloads 
 npm run setup:fcm
 ```
 
-This generates a Firebase service account key and uploads it to EAS for `com.rasoi.app`.
+This generates a Firebase service account key and uploads it to EAS for `com.bhagihiri.rasoiapp`.
 
 Manual alternative:
 

@@ -1,4 +1,4 @@
-package com.rasoi.app
+package com.bhagihiri.rasoiapp
 
 import android.app.Application
 import android.content.res.Configuration

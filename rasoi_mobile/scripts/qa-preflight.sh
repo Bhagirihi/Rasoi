@@ -36,7 +36,7 @@ EOF
 fi
 ok "Maestro CLI ($("$MAESTRO_BIN" --version 2>/dev/null | head -1 || echo installed))"
 
-APP_ID="${RASOI_APP_ID:-com.rasoi.app}"
+APP_ID="${RASOI_APP_ID:-com.bhagihiri.rasoiapp}"
 if adb shell pm path "$APP_ID" >/dev/null 2>&1; then
   ok "App installed ($APP_ID)"
 else

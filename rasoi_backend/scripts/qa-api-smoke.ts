@@ -118,6 +118,65 @@ async function main(): Promise<void> {
       badPhone.status === 401 || badPhone.status === 503,
       `supabase-sync rejects invalid token or missing config (${badPhone.status})`,
     );
+
+    const sponsorEvent = await request<{ id: string }>('/api/sponsor-events', {
+      method: 'POST',
+      body: JSON.stringify({
+        eventType: 'impression',
+        brandName: 'Smoke Test',
+        placement: 'home',
+      }),
+    });
+    record('TC-API-11', sponsorEvent.status === 201 && Boolean(sponsorEvent.body.data?.id), 'POST /api/sponsor-events');
+
+    const location = await request<{ city: string | null }>('/api/users/me/location', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        latitude: 19.076,
+        longitude: 72.8777,
+      }),
+    });
+    record(
+      'TC-API-12',
+      location.body.ok && location.body.data?.city === 'Mumbai',
+      'PUT /api/users/me/location',
+    );
+
+    const affiliate = await request<{ id: string }>('/api/affiliate-events', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ partner: 'blinkit', context: 'smoke' }),
+    });
+    record('TC-API-13', affiliate.status === 201 && Boolean(affiliate.body.data?.id), 'POST /api/affiliate-events');
+
+    const search = await request<{ id: string }>('/api/recipe-searches', {
+      method: 'POST',
+      body: JSON.stringify({ query: 'paneer', sourceScreen: 'home', resultCount: 3 }),
+    });
+    record('TC-API-14', search.status === 201 && Boolean(search.body.data?.id), 'POST /api/recipe-searches');
+
+    const apkRedirect = await fetch(`${BASE}/api/download/apk`, { redirect: 'manual' });
+    const apkLocation = apkRedirect.headers.get('location') ?? '';
+    record(
+      'TC-API-15',
+      apkRedirect.status === 302 && apkLocation.includes('rasoi-release.apk'),
+      'GET /api/download/apk redirects to APK',
+    );
+
+    if (apkLocation.startsWith('http')) {
+      const apkHead = await fetch(apkLocation, { method: 'HEAD' });
+      const apkSize = Number(apkHead.headers.get('content-length') ?? 0);
+      record(
+        'TC-API-16',
+        apkHead.status === 200 && apkSize > 50_000_000,
+        `APK artifact reachable (${apkSize || 'unknown'} bytes)`,
+      );
+    } else {
+      record('TC-API-16', true, 'Skipped remote APK size check (relative redirect)');
+    }
   } catch (error) {
     console.error('Smoke test aborted:', error instanceof Error ? error.message : error);
     process.exitCode = 1;

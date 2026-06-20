@@ -1,7 +1,15 @@
 import type { Session } from '@supabase/supabase-js';
 
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
-import { getSupabaseClient, requireSupabaseClient } from '@/utils/supabase';
+import {
+  clearSupabaseSessionCache,
+  getSupabaseClient,
+  getSupabaseSessionCache,
+  requireSupabaseClient,
+  setSupabaseSessionCache,
+} from '@/utils/supabase';
+
+export type OtpFlow = 'signup' | 'login';
 
 export async function sendEmailOtp(name: string, phone: string, email: string): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
@@ -84,13 +92,23 @@ export async function sendLoginEmailOtp(email: string): Promise<void> {
   authLog('sendLoginEmailOtp:success', { email: maskEmail(normalizedEmail) });
 }
 
-export async function verifyEmailOtp(email: string, otp: string): Promise<Session> {
+function isOtpTypeMismatch(error: { message?: string } | null): boolean {
+  const lower = error?.message?.toLowerCase() ?? '';
+  return lower.includes('token') || lower.includes('otp') || lower.includes('type');
+}
+
+export async function verifyEmailOtp(
+  email: string,
+  otp: string,
+  flow: OtpFlow = 'login',
+): Promise<Session> {
   const normalizedEmail = email.trim().toLowerCase();
   const token = otp.replace(/\D/g, '').trim();
 
   authLog('verifyEmailOtp:start', {
     email: maskEmail(normalizedEmail),
     otpLength: token.length,
+    flow,
   });
 
   if (token.length < 6) {
@@ -98,18 +116,20 @@ export async function verifyEmailOtp(email: string, otp: string): Promise<Sessio
   }
 
   const supabase = requireSupabaseClient();
+  const primaryType = flow === 'signup' ? 'signup' : 'email';
+  const fallbackType = flow === 'signup' ? 'email' : 'signup';
+
   let { data, error } = await supabase.auth.verifyOtp({
     email: normalizedEmail,
     token,
-    type: 'email',
+    type: primaryType,
   });
 
-  // New sign-ups sometimes return type signup on some Supabase projects.
-  if (error?.message?.toLowerCase().includes('token') || error?.message?.toLowerCase().includes('otp')) {
+  if (error && isOtpTypeMismatch(error)) {
     const retry = await supabase.auth.verifyOtp({
       email: normalizedEmail,
       token,
-      type: 'signup',
+      type: fallbackType,
     });
     if (!retry.error) {
       data = retry.data;
@@ -136,6 +156,8 @@ export async function verifyEmailOtp(email: string, otp: string): Promise<Sessio
     throw new Error('Email verification failed. Please try again.');
   }
 
+  setSupabaseSessionCache(data.session);
+
   authLog('verifyEmailOtp:success', {
     email: maskEmail(normalizedEmail),
     userId: data.user?.id?.slice(0, 8),
@@ -146,13 +168,22 @@ export async function verifyEmailOtp(email: string, otp: string): Promise<Sessio
 }
 
 export async function getSupabaseSession(): Promise<Session | null> {
+  const cached = getSupabaseSessionCache();
+  if (cached !== undefined) {
+    return cached;
+  }
+
   const supabase = getSupabaseClient();
   if (!supabase) return null;
+
   const { data, error } = await supabase.auth.getSession();
   if (error) {
     authError('getSupabaseSession:error', error);
+    setSupabaseSessionCache(null);
     return null;
   }
+
+  setSupabaseSessionCache(data.session);
   return data.session;
 }
 
@@ -160,6 +191,7 @@ export async function signOutSupabase(): Promise<void> {
   const supabase = getSupabaseClient();
   if (!supabase) return;
   const { error } = await supabase.auth.signOut();
+  clearSupabaseSessionCache();
   if (error) {
     authError('signOutSupabase:error', error);
   }

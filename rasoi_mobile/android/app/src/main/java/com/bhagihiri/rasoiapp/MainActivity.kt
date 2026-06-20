@@ -1,4 +1,4 @@
-package com.rasoi.app
+package com.bhagihiri.rasoiapp
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

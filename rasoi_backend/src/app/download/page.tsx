@@ -7,6 +7,7 @@ import RasoiLogo from '@/app/_components/RasoiLogo';
 import {
   ANDROID_APK_URL,
   APP_FEATURES,
+  PLAY_STORE_LISTING_URL,
 } from '@/lib/app-download';
 import { downloadMetadata } from '@/lib/seo';
 
@@ -50,39 +51,42 @@ export default function DownloadPage() {
 
           <div className="mx-auto mt-12 max-w-3xl text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
-              Thank you for your interest
+              Available on Google Play
             </p>
             <h1 className="font-display mt-4 text-4xl font-semibold leading-tight tracking-tight lg:text-5xl">
-              We&apos;re not on the Play Store yet
+              Download Rasoi free on Android
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-[#6b6560]">
-              Thank you for showing interest in our application. Rasoi is currently in early
-              access — we&apos;re working on our Google Play Store listing and will announce it
-              here when it goes live.
-            </p>
-            <p className="mt-4 text-base leading-relaxed text-[#6b6560]">
-              For now, you can install the latest Android APK directly on your phone and start
-              cooking with regional recipes, smart pantry matching, and more.
+              Rasoi is live on Google Play. Install in one tap for regional recipes, smart pantry
+              matching, saved favourites, and automatic updates.
             </p>
           </div>
 
           <div className="mx-auto mt-10 max-w-xl rounded-[1.5rem] border border-[#e8dfd3] bg-[#fcf9f4] p-8 text-center">
+            <a
+              href={PLAY_STORE_LISTING_URL}
+              className="inline-flex rounded-full bg-[#14110f] px-8 py-3.5 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
+            >
+              Get it on Google Play
+            </a>
+            <p className="mt-4 text-sm leading-relaxed text-[#6b6560]">
+              Free to install. Open Google Play on your Android phone and tap Install.
+            </p>
+          </div>
+
+          <div className="mx-auto mt-8 max-w-xl rounded-[1.5rem] border border-dashed border-[#d9d0c4] bg-white p-6 text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b6560]">
-              Early access · Android only
+              Alternative · Direct APK
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-[#6b6560]">
+              Can&apos;t use Google Play? Download the latest Android APK from our site.
             </p>
             <a
               href={ANDROID_APK_URL}
-              className="mt-5 inline-flex rounded-full bg-[#14110f] px-8 py-3.5 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
+              className="mt-4 inline-flex rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-[#c9a227]/50"
             >
               Download Android APK
             </a>
-            <p className="mt-4 text-xs leading-relaxed text-[#6b6560]">
-              After downloading, open the file and allow installation from your browser or file
-              manager if Android asks you to enable &quot;Install unknown apps&quot;.
-            </p>
-            <p className="mt-3 text-xs text-[#6b6560]">
-              Package: <span className="font-semibold text-[#1a1a2e]">com.rasoi.app</span>
-            </p>
           </div>
         </section>
 
@@ -112,7 +116,7 @@ export default function DownloadPage() {
 
         <section className="mx-auto max-w-6xl px-5 py-12 text-center lg:px-8">
           <p className="text-sm text-[#6b6560]">
-            Play Store coming soon. Questions or feedback?{' '}
+            Questions or feedback?{' '}
             <a
               href={`mailto:${LEGAL_CONTACT_EMAIL}`}
               className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"

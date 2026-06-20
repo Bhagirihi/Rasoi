@@ -16,6 +16,8 @@ export const adminNavItems = [
   { href: '/admin/payments', label: 'Payment' },
   { href: '/admin/integrations', label: 'Integrations' },
   { href: '/admin/users', label: 'Users' },
+  { href: '/admin/affiliate-events', label: 'Partner events' },
+  { href: '/admin/sponsor-analytics', label: 'Sponsor analytics' },
   { href: '/admin/feedback', label: 'User reports' },
 ] as const;
 

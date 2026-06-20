@@ -2,11 +2,12 @@ import AdMobBanner from '@/components/AdMobBanner';
 import SponsorPitchLink from '@/components/SponsorPitchLink';
 import SponsorRail from '@/components/SponsorRail';
 import type { SponsorCardData } from '@/services/sponsors';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { logSponsorEvent } from '@/services/sponsorEvents';
 import { isAdMobNativeAvailable } from '@/utils/admob';
 
 type SponsorOrAdProps = {
@@ -25,21 +26,47 @@ export default function SponsorOrAd({
   loading = false,
   style,
 }: SponsorOrAdProps) {
-  const { showAds } = useAppContext();
+  const { showAds, userCity } = useAppContext();
   const [adVisible, setAdVisible] = useState(false);
   const [adResolved, setAdResolved] = useState(false);
+  const loggedImpressionRef = useRef<string | null>(null);
 
   const handleAdVisibility = useCallback((visible: boolean) => {
     setAdVisible(visible);
     setAdResolved(true);
   }, []);
 
+  useEffect(() => {
+    if (!sponsor) return;
+    const key = `${sponsor.id}:${placement}`;
+    if (loggedImpressionRef.current === key) return;
+    loggedImpressionRef.current = key;
+
+    void logSponsorEvent({
+      eventType: 'impression',
+      brandName: sponsor.brandName,
+      placement,
+      sponsorId: sponsor.id,
+      city: userCity ?? undefined,
+    });
+  }, [placement, sponsor, userCity]);
+
   if (loading) return null;
 
   if (sponsor) {
     return (
       <View style={style}>
-        <SponsorRail {...sponsor} compact={compact} />
+        <SponsorRail
+          brandName={sponsor.brandName}
+          productLabel={sponsor.productLabel}
+          tagline={sponsor.tagline}
+          logoUrl={sponsor.logoUrl}
+          cta={sponsor.cta}
+          searchQuery={sponsor.searchQuery}
+          placement={placement}
+          sponsorId={sponsor.id}
+          compact={compact}
+        />
       </View>
     );
   }

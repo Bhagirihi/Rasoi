@@ -2,6 +2,9 @@ node_modules/
 .expo/
 dist/
 web-build/
+android/app/build/
+android/build/
+android/.gradle/
 npm-debug.*
 *.jks
 *.p8
@@ -11,7 +14,8 @@ npm-debug.*
 *.orig.*
 .env
 .env.local
-google-services.json
+/google-services.json
+android/app/google-services.json
 fcm-service-account.json
 *-firebase-adminsdk-*.json
 .qa/

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import SponsorActiveToggle from '@/app/admin/_components/SponsorActiveToggle';
-import { Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
+import { Badge, GhostButton, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteSponsorAction } from '@/app/admin/sponsor-actions';
 import { prisma } from '@/lib/prisma';
 import { getSponsorPlacementLabel } from '@/lib/sponsor-placements';
@@ -19,7 +19,12 @@ export default async function AdminSponsorsPage() {
       <PageHeader
         title="Sponsors"
         description="Curate sponsored placements for Home, Recipes, Pantry, Saved, and Recipe detail. Toggle active to show or hide in the app."
-        action={<PrimaryButton href="/admin/sponsors/new">Add sponsor</PrimaryButton>}
+        action={
+          <div className="flex flex-wrap gap-3">
+            <GhostButton href="/admin/sponsor-analytics">View analytics</GhostButton>
+            <PrimaryButton href="/admin/sponsors/new">Add sponsor</PrimaryButton>
+          </div>
+        }
       />
 
       <DataTable
@@ -46,7 +51,13 @@ export default async function AdminSponsorsPage() {
                 />
               </td>
               <td className="px-5 py-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link
+                    href={`/admin/sponsor-analytics?brand=${encodeURIComponent(serialized.brandName)}&placement=${encodeURIComponent(serialized.placement)}`}
+                    className="text-sm font-semibold text-admin-ink hover:text-admin-saffron"
+                  >
+                    Analytics
+                  </Link>
                   <Link
                     href={`/admin/sponsors/${sponsor.id}`}
                     className="text-sm font-semibold text-admin-saffron hover:text-admin-ink"

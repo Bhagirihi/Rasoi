@@ -1,8 +1,20 @@
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
 
+export const ANDROID_PACKAGE = 'com.bhagihiri.rasoiapp';
+
+/** Google Play open testing — anyone can opt in and install from Play Store. */
+export const PLAY_STORE_OPEN_TESTING_URL =
+  process.env.NEXT_PUBLIC_PLAY_STORE_TESTING_URL?.trim() ||
+  'https://play.google.com/apps/testing/com.bhagihiri.rasoiapp';
+
+/** Public Play Store listing (works after joining open testing). */
+export const PLAY_STORE_LISTING_URL =
+  process.env.NEXT_PUBLIC_PLAY_STORE_URL?.trim() ||
+  `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
+
 /**
- * Download button target. Resolves to Expo EAS artifact when ANDROID_APK_EXPO_URL is set on Vercel,
+ * Direct APK sideload. Resolves to Expo EAS artifact when ANDROID_APK_EXPO_URL is set on Vercel,
  * otherwise falls back to the APK in /public on this site.
  */
 export const ANDROID_APK_URL = `${SITE_URL}/api/download/apk`;

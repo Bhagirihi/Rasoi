@@ -37,10 +37,15 @@ export async function POST(request: Request) {
       return jsonError('Email login is not configured on the server', 503);
     }
 
+    const [authResult, body] = await Promise.all([
+      supabase.auth.getUser(accessToken),
+      request.json(),
+    ]);
+
     const {
       data: { user: authUser },
       error: authError,
-    } = await supabase.auth.getUser(accessToken);
+    } = authResult;
 
     if (authError || !authUser?.email) {
       console.error('[supabase-sync] invalid supabase session', {
@@ -51,22 +56,26 @@ export async function POST(request: Request) {
       return jsonError('Invalid or expired email verification', 401);
     }
 
-    const body = await request.json();
     const input = supabaseSyncSchema.parse(body);
+
+    let existing = await prisma.user.findUnique({
+      where: { email: authUser.email },
+    });
+
+    if (!existing && input.phone) {
+      existing = await prisma.user.findFirst({
+        where: { phone: input.phone },
+      });
+    }
+
+    if (!existing && !input.acceptedTerms) {
+      return jsonError('Terms and Privacy Policy must be accepted', 400);
+    }
 
     console.log('[supabase-sync] upserting user', {
       email: maskEmail(authUser.email),
       phoneLength: input.phone?.length ?? 0,
       nameLength: input.name.trim().length,
-    });
-
-    const existing = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: authUser.email },
-          ...(input.phone ? [{ phone: input.phone }] : []),
-        ],
-      },
     });
 
     const user = existing
@@ -77,6 +86,8 @@ export async function POST(request: Request) {
             phone: input.phone ?? existing.phone,
             email: authUser.email,
             isGuest: false,
+            termsAcceptedAt:
+              existing.termsAcceptedAt ?? (input.acceptedTerms ? new Date() : undefined),
           },
         })
       : await prisma.user.create({
@@ -85,6 +96,7 @@ export async function POST(request: Request) {
             phone: input.phone ?? null,
             email: authUser.email,
             isGuest: false,
+            termsAcceptedAt: new Date(),
           },
         });
 

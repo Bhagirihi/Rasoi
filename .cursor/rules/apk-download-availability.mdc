@@ -1,0 +1,29 @@
+---
+description: On every production push, verify users can download the APK from rasoiapplication.in
+alwaysApply: true
+---
+
+# APK available on every production push
+
+Users install from `https://rasoiapplication.in/download` → `/api/download/apk`.
+
+**Before any production deploy completes**, confirm the APK is reachable for users.
+
+## When app or backend ships to production
+
+1. Build: `cd rasoi_mobile && npm run android:release-apk` (or EAS APK).
+2. Sync: `cd rasoi_backend && npm run sync:apk`
+3. Commit `rasoi_backend/public/rasoi-release.apk` if the build changed.
+4. Deploy from **repo root** (Vercel root is monorepo, not `rasoi_backend/` alone).
+5. Verify: `curl -sI https://rasoiapplication.in/rasoi-release.apk` → **200** and **> 50MB**.
+
+Skip build/sync only for backend-only changes with **no** app version change — still run step 5.
+
+## Do not use as public download URLs
+
+- Expo project page (`expo.dev/accounts/.../projects/rasoi`) — login required.
+- Optional: `ANDROID_APK_EXPO_URL` on Vercel = EAS artifact from `bash rasoi_backend/scripts/get-eas-apk-url.sh`.
+
+## Deploy guard
+
+`.vercelignore` must keep `rasoi_backend/public/rasoi-release.apk` included (`!public/rasoi-release.apk` and `!rasoi_backend/public/rasoi-release.apk`).

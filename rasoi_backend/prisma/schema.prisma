@@ -31,15 +31,22 @@ model User {
   favoriteCuisines       String    @default("[]")
   notificationsEnabled   Boolean   @default(false)
   timezone               String    @default("Asia/Kolkata")
+  city                   String?
+  state                  String?
+  latitude               Float?
+  longitude              Float?
+  locationUpdatedAt      DateTime?
   pantryIngredients      String    @default("[]")
   savedRecipeIds         String    @default("[]")
   planTier               String    @default("free")
   trialStartedAt         DateTime?
   hasUsedTrial           Boolean   @default(false)
+  termsAcceptedAt        DateTime?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   pushTokens             PushToken[]
   affiliateEvents        AffiliateEvent[]
+  sponsorEvents          SponsorEvent[]
   mealNotificationLogs   MealNotificationLog[]
   feedback               UserFeedback[]
 
@@ -72,6 +79,26 @@ model AffiliateEvent {
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([partner, createdAt(sort: Desc)])
+  @@index([context, createdAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model SponsorEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType String
+  brandName String
+  placement String
+  sponsorId String?
+  partner   String?
+  query     String?
+  city      String?
+  createdAt DateTime @default(now())
+
+  @@index([brandName, placement, createdAt(sort: Desc)])
+  @@index([eventType, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
   @@schema("rasoi")
 }
 

@@ -194,13 +194,13 @@ export function sortRecipesForTonight(
   },
 ): Recipe[] {
   const mealSlot = options.mealSlot ?? 'dinner';
-  return [...recipes].sort((a, b) => {
-    const scoreA =
-      scoreRecipeForTonight(a, options) + scoreRecipeForMealSlot(a, mealSlot) * 0.4;
-    const scoreB =
-      scoreRecipeForTonight(b, options) + scoreRecipeForMealSlot(b, mealSlot) * 0.4;
-    return scoreB - scoreA;
-  });
+  const scored = recipes.map((recipe) => ({
+    recipe,
+    score:
+      scoreRecipeForTonight(recipe, options) + scoreRecipeForMealSlot(recipe, mealSlot) * 0.4,
+  }));
+  scored.sort((a, b) => b.score - a.score);
+  return scored.map((entry) => entry.recipe);
 }
 
 export function getRecipePickReason(

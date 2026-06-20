@@ -1,0 +1,10 @@
+# Shrink EAS upload archive (monorepo root is above rasoi_mobile)
+../rasoi_backend/**
+../docs/**
+../.cursor/**
+**/.qa/**
+**/dist/**
+**/android/app/build/**
+**/android/.gradle/**
+**/node_modules/**/android/build/**
+screenshots/**

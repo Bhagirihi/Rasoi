@@ -9,6 +9,7 @@ import {
   TRIAL_DURATION_DAYS,
   type BillingInterval,
 } from '@/constants/plans';
+import { RECURRING_PAYMENT_NOTICE } from '@/constants/payments';
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
@@ -75,6 +76,11 @@ export default function PaywallActions({
 
       {paymentsEnabled && effectiveTier !== 'paid' && (
         <>
+          <View style={styles.recurringCard}>
+            <Text style={styles.recurringTitle}>Recurring subscription</Text>
+            <Text style={styles.recurringBody}>{RECURRING_PAYMENT_NOTICE}</Text>
+          </View>
+
           <Pressable
             onPress={() => onSubscribe('yearly')}
             disabled={isBusy}
@@ -181,6 +187,26 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.danger,
     textAlign: 'center',
+  },
+  recurringCard: {
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(255,107,53,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,53,0.18)',
+    padding: spacing.md,
+  },
+  recurringTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+  },
+  recurringBody: {
+    marginTop: spacing.xs,
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.muted,
   },
   primaryWrap: {
     borderRadius: radius.md,

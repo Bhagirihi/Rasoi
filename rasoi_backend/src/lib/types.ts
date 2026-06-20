@@ -77,6 +77,13 @@ export interface UserProfileResponse {
   regionalCuisine: string;
   favoriteCuisines: CuisineId[];
   notificationsEnabled: boolean;
+  city: string | null;
+  state: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  locationUpdatedAt: string | null;
+  termsAcceptedAt: string | null;
+  createdAt: string;
   pantryIngredients: string[];
   savedRecipeIds: string[];
   plan: {

@@ -3,7 +3,7 @@ import * as Linking from 'expo-linking';
 import { Platform } from 'react-native';
 
 const ANDROID_PACKAGE =
-  Constants.expoConfig?.android?.package ?? 'com.rasoi.app';
+  Constants.expoConfig?.android?.package ?? 'com.bhagihiri.rasoiapp';
 
 const IOS_APP_STORE_ID = process.env.EXPO_PUBLIC_IOS_APP_STORE_ID?.trim() ?? '';
 

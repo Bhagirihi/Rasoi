@@ -1,10 +1,13 @@
 import * as Haptics from 'expo-haptics';
 import { ExternalLink, Sparkles } from 'lucide-react-native';
+import { useEffect, useRef } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, shadows } from '@/constants/theme';
+import { useAppContext } from '@/context/AppContext';
+import { usePartners } from '@/context/PartnersContext';
 import { useTheme } from '@/context/ThemeContext';
-import { openBrandSearch } from '@/utils/affiliate';
+import { logSponsorEvent } from '@/services/sponsorEvents';
 
 interface BrandSponsorProps {
   brandName: string;
@@ -12,6 +15,7 @@ interface BrandSponsorProps {
   productLabel: string;
   tagline?: string;
   searchQuery?: string;
+  placement?: string;
 }
 
 export default function BrandSponsor({
@@ -20,12 +24,35 @@ export default function BrandSponsor({
   productLabel,
   tagline = 'Recommended for this dish',
   searchQuery,
+  placement = 'recipe',
 }: BrandSponsorProps) {
+  const { openBrandSearch } = usePartners();
+  const { userCity } = useAppContext();
   const { colors: themeColors, semantic, isDark } = useTheme();
+  const loggedImpressionRef = useRef(false);
+
+  useEffect(() => {
+    if (loggedImpressionRef.current) return;
+    loggedImpressionRef.current = true;
+    void logSponsorEvent({
+      eventType: 'impression',
+      brandName,
+      placement,
+      city: userCity ?? undefined,
+    });
+  }, [brandName, placement, userCity]);
 
   const handlePress = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    void openBrandSearch(searchQuery ?? brandName);
+    void logSponsorEvent({
+      eventType: 'tap',
+      brandName,
+      placement,
+      partner: 'blinkit',
+      query: searchQuery ?? brandName,
+      city: userCity ?? undefined,
+    });
+    void openBrandSearch(searchQuery ?? brandName, 'blinkit', { context: 'brand_search' });
   };
 
   return (

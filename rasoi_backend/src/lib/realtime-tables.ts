@@ -11,6 +11,7 @@ export const RASOI_REALTIME_TABLES = [
   'SponsorApplication',
   'UserFeedback',
   'AffiliateEvent',
+  'SponsorEvent',
   'PushToken',
 ] as const;
 

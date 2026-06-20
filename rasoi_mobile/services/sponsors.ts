@@ -2,6 +2,7 @@ import type { SponsorResponse } from '@/types/api';
 import { apiFetch } from '@/utils/api';
 
 export type SponsorCardData = {
+  id: string;
   brandName: string;
   productLabel: string;
   tagline: string;
@@ -12,6 +13,7 @@ export type SponsorCardData = {
 
 function mapSponsor(sponsor: SponsorResponse): SponsorCardData {
   return {
+    id: sponsor.id,
     brandName: sponsor.brandName,
     productLabel: sponsor.productLabel,
     tagline: sponsor.tagline,

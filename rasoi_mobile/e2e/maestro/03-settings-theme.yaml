@@ -1,5 +1,5 @@
 # Theme toggle on Settings (requires logged-in session)
-appId: com.rasoi.app
+appId: com.bhagihiri.rasoiapp
 ---
 - launchApp
 - extendedWaitUntil:

@@ -1,0 +1,193 @@
+{
+  "developerAccount": {
+    "displayName": "Bhagihiri Applications",
+    "note": "Set during Google Play Console developer registration ($25 one-time). Cannot be changed via API."
+  },
+  "application": {
+    "playConsoleName": "Rasoi App",
+    "defaultLanguage": "en-US",
+    "packageName": "com.bhagihiri.rasoiapp",
+    "expoSlug": "rasoi",
+    "expoOwner": "takeyshi",
+    "versionName": "1.0.3",
+    "versionCode": 4,
+    "category": "FOOD_AND_DRINK",
+    "appType": "APPLICATION",
+    "contentRating": "Everyone",
+    "defaultCountry": "IN",
+    "pricing": "FREE"
+  },
+  "storeListing": {
+    "title": "Rasoi App",
+    "shortDescription": "Aaj kya banaye? Cook from your pantry. 1,200+ Indian recipes. 15 cuisines.",
+    "fullDescription": "Rasoi helps Indian home cooks answer \"Aaj kya banaye?\" every evening — decide dinner in seconds from what's already in your kitchen.\n\n🍳 TONIGHT'S PICKS\n• Smart meal suggestions for breakfast, lunch, dinner & late-night\n• Personalized picks based on your diet and regional cuisine\n\n🥘 COOK FROM YOUR PANTRY\n• Add pantry items and see recipe match %\n• Filter recipes you can cook right now\n\n📚 1,200+ INDIAN RECIPES\n• 15 regional cuisines — Gujarati, South Indian, Punjabi, Bengali & more\n• Veg, Jain, Egg & Non-Veg filters\n• Quick filters: under 20 min, leftovers, kids-friendly\n\n🛒 SHOP & ORDER (Rasoi Plus)\n• Open Blinkit, Zepto & Instamart for missing groceries\n• Zomato & Swiggy delivery when you want to order instead\n\n⭐ RASOI PLUS SUBSCRIPTION\n• Monthly ₹49 or Yearly ₹499 (save 15% vs monthly)\n• Ad-free experience across the app\n• Partner grocery & delivery checkout links\n• Cancel anytime in Google Play → Subscriptions\n\n🆓 FREE TO START\n• Free plan with recipes & pantry matching\n• Optional 3-day in-app trial for partner features (managed in-app, not a Play free trial)\n\nRasoi may use your city (optional location permission) for local recipe relevance and sponsor analytics.\n\nWebsite: https://rasoiapplication.in\nPrivacy: https://rasoiapplication.in/privacy\nTerms: https://rasoiapplication.in/terms\nSupport: cooking@rasoiapplication.in",
+    "website": "https://rasoiapplication.in",
+    "email": "cooking@rasoiapplication.in",
+    "privacyPolicyUrl": "https://rasoiapplication.in/privacy"
+  },
+  "declarations": {
+    "ads": true,
+    "adsNote": "AdMob banner ads on free and trial tiers (react-native-google-mobile-ads)",
+    "inAppPurchases": true,
+    "subscriptions": true,
+    "locationPermission": "ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION — city for local recipes and sponsor reach",
+    "targetAudience": "General audience, not directed at children under 13",
+    "playAppSigning": true
+  },
+  "dataSafetyQuestionnaire": {
+    "step2": {
+      "collectsOrSharesData": true,
+      "encryptedInTransit": true,
+      "accountCreationMethods": ["usernameAndOtherAuthentication"],
+      "deleteAccountUrl": "https://rasoiapplication.in/privacy",
+      "partialDeletionWithoutAccountDelete": false
+    },
+    "step3DataTypes": [
+      "Approximate location",
+      "Name",
+      "Email address",
+      "User IDs",
+      "Phone number",
+      "Other info",
+      "Purchase history",
+      "App interactions",
+      "In-app search history",
+      "Other user-generated content",
+      "Crash logs",
+      "Diagnostics",
+      "Device or other IDs"
+    ],
+    "step4Defaults": {
+      "collected": true,
+      "shared": false,
+      "ephemeral": false,
+      "requiredVsOptional": "Users can choose whether this data is collected (guest mode available; location and phone optional)",
+      "purposes": ["App functionality", "Analytics", "Account management"],
+      "notSold": true,
+      "overrides": {
+        "Device or other IDs": {
+          "shared": true,
+          "purposes": ["Advertising", "Analytics"]
+        },
+        "Purchase history": {
+          "purposes": ["App functionality", "Account management"]
+        },
+        "Crash logs": {
+          "purposes": ["Analytics", "App functionality"]
+        },
+        "Diagnostics": {
+          "purposes": ["Analytics", "App functionality"]
+        },
+        "Approximate location": {
+          "purposes": ["App functionality", "Analytics"]
+        }
+      }
+    }
+  },
+  "contentRatingQuestionnaire": {
+    "category": "Reference, News, or Educational / Other",
+    "violence": "No",
+    "sexuality": "No",
+    "language": "No",
+    "controlledSubstances": "No",
+    "gambling": "No",
+    "userGeneratedContent": "No",
+    "locationSharing": "Yes — optional city-level for personalization",
+    "digitalPurchases": "Yes — Rasoi Plus subscriptions"
+  },
+  "subscriptions": {
+    "entitlementId": "rasoi_plus",
+    "revenueCatOffering": "default",
+    "revenueCatPackages": {
+      "monthly": "$rc_monthly",
+      "annual": "$rc_annual"
+    },
+    "products": [
+      {
+        "productId": "rasoi_plus_monthly",
+        "basePlanId": "monthly",
+        "billingPeriod": "P1M",
+        "priceInr": 49,
+        "title": "Rasoi Plus Monthly",
+        "description": "Monthly Rasoi Plus — ad-free recipes and delivery partner links.",
+        "benefits": [
+          "No ads anywhere in the app",
+          "Blinkit, Zepto & Instamart grocery checkout",
+          "Zomato & Swiggy food delivery links"
+        ]
+      },
+      {
+        "productId": "rasoi_plus_yearly",
+        "basePlanId": "yearly",
+        "billingPeriod": "P1Y",
+        "priceInr": 499,
+        "title": "Rasoi Plus Yearly",
+        "description": "Yearly Rasoi Plus — save 15% vs paying monthly.",
+        "benefits": [
+          "No ads anywhere in the app",
+          "Blinkit, Zepto & Instamart grocery checkout",
+          "Zomato & Swiggy food delivery links",
+          "Best value — ₹42/mo billed yearly"
+        ]
+      }
+    ]
+  },
+  "planTiers": {
+    "free": {
+      "ads": true,
+      "partners": false
+    },
+    "trial": {
+      "durationDays": 3,
+      "ads": true,
+      "partners": true,
+      "note": "In-app trial via API — not a Play subscription free trial"
+    },
+    "paid": {
+      "label": "Rasoi Plus",
+      "ads": false,
+      "partners": true
+    }
+  },
+  "assets": {
+    "icon": "rasoi_mobile/assets/images/icon.png",
+    "adaptiveIconForeground": "rasoi_mobile/assets/images/android-icon-foreground.png",
+    "featureGraphicSpec": "1024x500 — Aaj Kya Banaye? + kadai + phone mockup",
+    "screenshotsSpec": "rasoi_mobile/screenshots/ → npm run generate → app-store-assets/",
+    "screenshotOrder": [
+      "01-hero",
+      "02-todays-picks",
+      "03-pantry-match",
+      "04-indian-regions",
+      "05-smart-filters",
+      "06-cook-shop-order",
+      "07-personalization",
+      "08-final"
+    ]
+  },
+  "build": {
+    "easProfile": "production",
+    "buildType": "app-bundle",
+    "easProjectId": "01de1672-85ce-4ad7-83d7-7fc958fc5659"
+  },
+  "openTesting": {
+    "trackStatus": "active",
+    "countries": ["IN"],
+    "testerLimit": "unlimited",
+    "optInUrl": "https://play.google.com/apps/testing/com.bhagihiri.rasoiapp",
+    "versionCodeLink": "https://play.google.com/apps/test/com.bhagihiri.rasoiapp/4",
+    "storeListingUrl": "https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp",
+    "release": {
+      "versionName": "1.0.3",
+      "versionCode": 4
+    }
+  },
+  "sourceFiles": [
+    "rasoi_mobile/app.json",
+    "rasoi_mobile/constants/payments.ts",
+    "rasoi_mobile/constants/plans.ts",
+    "rasoi_mobile/constants/revenuecat.ts",
+    "rasoi_mobile/services/payments/revenueCatClient.ts",
+    "rasoi_backend/src/lib/legal-content.ts"
+  ]
+}

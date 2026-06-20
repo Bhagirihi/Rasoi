@@ -49,6 +49,12 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
   };
 }
 
+/** List/bootstrap payload — omit cooking steps to shrink mobile cold-start downloads. */
+export function serializeRecipeListItem(recipe: Recipe): RecipeResponse {
+  const full = serializeRecipe(recipe);
+  return { ...full, steps: [] };
+}
+
 export function serializeSponsor(sponsor: Sponsor): SponsorResponse {
   return {
     id: sponsor.id,
@@ -79,6 +85,13 @@ export function serializeUser(user: User): UserProfileResponse {
     regionalCuisine: user.regionalCuisine,
     favoriteCuisines: parseJson<CuisineId[]>(user.favoriteCuisines, []),
     notificationsEnabled: user.notificationsEnabled,
+    city: user.city ?? null,
+    state: user.state ?? null,
+    latitude: user.latitude ?? null,
+    longitude: user.longitude ?? null,
+    locationUpdatedAt: user.locationUpdatedAt?.toISOString() ?? null,
+    termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
+    createdAt: user.createdAt.toISOString(),
     pantryIngredients: parseJson<string[]>(user.pantryIngredients, []),
     savedRecipeIds: parseJson<string[]>(user.savedRecipeIds, []),
     plan: {

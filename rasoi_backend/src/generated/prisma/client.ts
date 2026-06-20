@@ -57,6 +57,11 @@ export type MealNotificationLog = Prisma.MealNotificationLogModel
  */
 export type AffiliateEvent = Prisma.AffiliateEventModel
 /**
+ * Model SponsorEvent
+ * 
+ */
+export type SponsorEvent = Prisma.SponsorEventModel
+/**
  * Model PushToken
  * 
  */

@@ -19,6 +19,7 @@ import AdMobBanner from '@/components/AdMobBanner';
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import RateRasoiCard from '@/components/settings/RateRasoiCard';
 import FeedbackLinkCard from '@/components/settings/FeedbackLinkCard';
+import LocationCard from '@/components/settings/LocationCard';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   AccountActionsCard,
@@ -228,6 +229,9 @@ export default function SettingsScreen() {
             onPress={openEditProfile}
           />
         </View>
+
+        <SettingsGroupLabel label="Location" />
+        <LocationCard />
 
         <SettingsGroupLabel label="Appearance" />
         <SettingsCard style={styles.appearanceCard}>

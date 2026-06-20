@@ -1,5 +1,5 @@
 # Requires logged-in session (run after 01-guest-smoke or with existing app state)
-appId: com.rasoi.app
+appId: com.bhagihiri.rasoiapp
 ---
 - launchApp
 - extendedWaitUntil:

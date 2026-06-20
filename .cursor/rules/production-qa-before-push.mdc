@@ -1,0 +1,42 @@
+---
+description: Run API and mobile QA before declaring prod ready or pushing APK + backend
+alwaysApply: true
+---
+
+# Production QA before push
+
+Do not commit, push, or deploy to production until QA passes for the scope of the change.
+
+## Backend / API changes (or before declaring prod ready)
+
+1. Quick check:
+   ```bash
+   curl -s -o /dev/null -w "%{http_code}\n" https://rasoiapplication.in/api/recipes
+   ```
+   Expect **200**.
+
+2. Full smoke (local backend running, or against production):
+   ```bash
+   cd rasoi_backend && npm run dev   # if testing locally
+   cd rasoi_backend && npx tsx scripts/qa-api-smoke.ts
+   # or live:
+   QA_API_URL=https://rasoiapplication.in npx tsx scripts/qa-api-smoke.ts
+   ```
+   All cases must **PASS**, including **TC-API-15** (download redirect) and **TC-API-16** (APK size > 50MB when URL is absolute).
+
+Fix failures before push or deploy.
+
+## APK + backend release (combined push)
+
+When shipping a new APK **and** backend changes together:
+
+1. **Backend QA** — steps above (smoke + `/api/recipes` curl).
+2. **Mobile QA** — `cd rasoi_mobile && npm run qa:preflight && npm run qa:device` (device required), or use the **expo-mobile-qa** skill for real-device UI checks.
+3. **Sync APK** — `cd rasoi_backend && npm run sync:apk` after build.
+4. **Then push** — commit → `git push` → deploy (see `vercel-github-sync` and `apk-download-availability` rules).
+
+Do **not** push or production-deploy until both backend smoke and mobile QA are green.
+
+## After deploy
+
+Re-run production smoke (`QA_API_URL=https://rasoiapplication.in`) and APK curl from `apk-download-availability`.

@@ -46,6 +46,7 @@ export const supabaseSyncSchema = z.object({
       (value) => value === undefined || /^[6-9]\d{9}$/.test(value),
       'Invalid Indian phone number',
     ),
+  acceptedTerms: z.literal(true).optional(),
 });
 
 export const onboardingSchema = z.object({
@@ -113,6 +114,23 @@ export const affiliateEventSchema = z.object({
   context: z.string().max(40).optional(),
   recipeId: z.string().max(64).optional(),
   query: z.string().max(240).optional(),
+});
+
+export const sponsorEventSchema = z.object({
+  eventType: z.enum(['impression', 'tap']),
+  brandName: z.string().trim().min(1).max(80),
+  placement: z.string().trim().min(2).max(40),
+  sponsorId: z.string().max(64).optional(),
+  partner: z.enum(['blinkit', 'zepto', 'instamart', 'zomato', 'swiggy']).optional(),
+  query: z.string().max(240).optional(),
+  city: z.string().max(80).optional(),
+});
+
+export const userLocationSchema = z.object({
+  city: z.string().trim().min(1).max(80).nullable(),
+  state: z.string().trim().max(80).nullable().optional(),
+  latitude: z.number().min(-90).max(90).nullable(),
+  longitude: z.number().min(-180).max(180).nullable(),
 });
 
 export const recipeSearchSchema = z.object({

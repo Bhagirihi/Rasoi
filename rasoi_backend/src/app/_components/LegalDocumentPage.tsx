@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
-import { APP_DOWNLOAD_PATH } from '@/lib/app-download';
+import { PLAY_STORE_LISTING_URL } from '@/lib/app-download';
 
 type LegalSection = { title: string; body: string };
 
@@ -39,9 +39,14 @@ export default function LegalDocumentPage({
             <Link href="/terms" className="hover:text-[#c45c2a]">
               Terms
             </Link>
-            <Link href={APP_DOWNLOAD_PATH} className="text-[#c45c2a] hover:text-[#1a1a2e]">
-              Download
-            </Link>
+            <a
+              href={PLAY_STORE_LISTING_URL}
+              className="text-[#c45c2a] hover:text-[#1a1a2e]"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Google Play
+            </a>
           </nav>
         </div>
       </header>
@@ -79,9 +84,14 @@ export default function LegalDocumentPage({
             <Link href="/terms" className="font-semibold hover:text-[#c45c2a]">
               Terms
             </Link>
-            <Link href={APP_DOWNLOAD_PATH} className="font-semibold text-[#c45c2a]">
-              Download app
-            </Link>
+            <a
+              href={PLAY_STORE_LISTING_URL}
+              className="font-semibold text-[#c45c2a]"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Get on Google Play
+            </a>
           </div>
         </div>
       </footer>

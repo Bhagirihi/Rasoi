@@ -36,7 +36,7 @@ export default function TabLayout() {
     () => ({
       headerShown: false,
       lazy: true,
-      freezeOnBlur: true,
+      freezeOnBlur: false,
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.muted,
       tabBarStyle: {

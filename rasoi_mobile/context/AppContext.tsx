@@ -25,6 +25,7 @@ import {
   registerPushToken,
   updatePantryIngredients,
   updateSavedRecipeIds,
+  updateUserLocation,
   updateUserPlan,
   updateUserProfile,
 } from '@/services/user';
@@ -59,6 +60,7 @@ import {
 } from '@/utils/storage';
 import { cuisinesToRegion } from '@/utils/kitchenStyles';
 import type { StoredPlanState } from '@/utils/planStorage';
+import type { UserLocationSnapshot } from '@/utils/location';
 
 export type FoodPreferencesPayload = {
   dietChoice: DietChoice;
@@ -73,9 +75,12 @@ interface AppContextValue extends ResolvedPlan {
   hasCompletedOnboarding: boolean;
   isLoggedIn: boolean;
   isGuest: boolean;
+  userId: string | null;
   userName: string;
   userPhone: string;
   userEmail: string;
+  userCity: string | null;
+  userState: string | null;
   pantryIngredients: string[];
   dietPreference: DietType;
   dietChoice: DietChoice;
@@ -87,10 +92,17 @@ interface AppContextValue extends ResolvedPlan {
   completeOnboarding: (payload: OnboardingPayload) => Promise<void>;
   sendEmailOtp: (name: string, phone: string, email: string) => Promise<void>;
   sendLoginEmailOtp: (email: string) => Promise<void>;
-  verifyEmailOtpAndLogin: (email: string, otp: string, name: string, phone: string) => Promise<boolean>;
+  verifyEmailOtpAndLogin: (
+    email: string,
+    otp: string,
+    name: string,
+    phone: string,
+    options?: { acceptedTerms?: boolean },
+  ) => Promise<boolean>;
   verifyLoginEmailOtp: (email: string, otp: string) => Promise<boolean>;
   loginAsGuest: () => Promise<void>;
   updateProfile: (name: string, phone: string) => Promise<void>;
+  syncUserLocation: (snapshot: UserLocationSnapshot) => Promise<boolean>;
   logout: () => Promise<void>;
   resetAppFlow: () => Promise<void>;
   togglePantryIngredient: (ingredient: string) => void;
@@ -128,14 +140,17 @@ function planFromUser(user: UserProfileResponse): StoredPlanState {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const { recipes, getRecipeById } = useRecipes();
+  const { recipes, getRecipeById, syncRecipeFilters } = useRecipes();
   const { kitchenStyles, paymentsEnabled } = useReferenceData();
   const [isHydrated, setIsHydrated] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const [userCity, setUserCity] = useState<string | null>(null);
+  const [userState, setUserState] = useState<string | null>(null);
   const [isGuestUser, setIsGuestUser] = useState(false);
   const [pantryIngredients, setPantryIngredients] = useState<string[]>([...DEFAULT_PANTRY]);
   const [dietChoice, setDietChoiceState] = useState<DietChoice>('Veg');
@@ -208,9 +223,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (user: UserProfileResponse) => {
       setIsLoggedIn(true);
       setIsGuestUser(user.isGuest);
+      setUserId(user.id);
       setUserName(user.name);
       setUserPhone(user.phone ?? '');
       setUserEmail(user.email ?? '');
+      setUserCity(user.city ?? null);
+      setUserState(user.state ?? null);
       setHasCompletedOnboarding((prev) => user.hasCompletedOnboarding || prev);
       setDietChoiceState(user.dietChoice);
       setRegionalCuisine(user.regionalCuisine);
@@ -313,9 +331,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void (async () => {
       try {
-        const local = await loadLocalOnboardingState();
+        const [local, pendingWelcome, appToken] = await Promise.all([
+          loadLocalOnboardingState(),
+          loadPendingTrialWelcome(),
+          getAuthToken(),
+        ]);
         applyLocalOnboarding(local);
-        const pendingWelcome = await loadPendingTrialWelcome();
         setPendingTrialWelcomeState(pendingWelcome);
         const pendingPayload = localStateToOnboardingPayload(local);
         if (pendingPayload) {
@@ -323,7 +344,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
           authLog('hydrate:restored_pending_onboarding');
         }
 
-        const appToken = await getAuthToken();
         if (appToken) {
           try {
             const user = await fetchCurrentUser();
@@ -351,6 +371,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await logoutSession();
         setIsLoggedIn(false);
         setIsGuestUser(false);
+        setUserId(null);
         setUserName('');
         setUserPhone('');
         setUserEmail('');
@@ -359,6 +380,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     })();
   }, [applyLocalOnboarding, applyUserProfile, finishAuthAfterSync, syncPendingOnboarding]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    syncRecipeFilters(dietChoice, regionalCuisine);
+  }, [isHydrated, dietChoice, regionalCuisine, syncRecipeFilters]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -499,11 +525,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const verifyEmailOtpAndLogin = useCallback(
-    async (email: string, otp: string, name: string, phone: string) => {
+    async (
+      email: string,
+      otp: string,
+      name: string,
+      phone: string,
+      options?: { acceptedTerms?: boolean },
+    ) => {
       authLog('verifyEmailOtpAndLogin:start');
       try {
-        const session = await verifyEmailOtp(email, otp);
-        const { user } = await syncSupabaseAccount(session.access_token, name, phone);
+        const session = await verifyEmailOtp(email, otp, 'signup');
+        const { user } = await syncSupabaseAccount(session.access_token, name, phone, options);
         const showTrialWelcome = await finishAuthAfterSync(user);
         authLog('verifyEmailOtpAndLogin:success', {
           onboardingDone: user.hasCompletedOnboarding,
@@ -523,7 +555,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (email: string, otp: string) => {
       authLog('verifyLoginEmailOtp:start');
       try {
-        const session = await verifyEmailOtp(email, otp);
+        const session = await verifyEmailOtp(email, otp, 'login');
         const meta = session.user?.user_metadata as Record<string, unknown> | undefined;
         const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
         const metaPhone = typeof meta?.phone === 'string' ? meta.phone : '';
@@ -557,14 +589,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyUserProfile],
   );
 
+  const syncUserLocation = useCallback(
+    async (snapshot: UserLocationSnapshot): Promise<boolean> => {
+      if (!isLoggedIn) return false;
+      try {
+        const user = await updateUserLocation({
+          city: snapshot.city,
+          state: snapshot.state,
+          latitude: snapshot.latitude,
+          longitude: snapshot.longitude,
+        });
+        applyUserProfile(user);
+        return true;
+      } catch {
+        // Optional — GPS sync can fail when permission is denied or API is not deployed yet.
+        return false;
+      }
+    },
+    [applyUserProfile, isLoggedIn],
+  );
+
   const logout = useCallback(async () => {
     await syncPushTokenToServer(false);
     await logoutSession();
     setIsLoggedIn(false);
     setIsGuestUser(false);
+    setUserId(null);
     setUserName('');
     setUserPhone('');
     setUserEmail('');
+    setUserCity(null);
+    setUserState(null);
     setPantryIngredients([...DEFAULT_PANTRY]);
     setSavedRecipeIds([]);
     applyPlanState(DEFAULT_PLAN);
@@ -579,9 +634,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setHasCompletedOnboarding(false);
     setIsLoggedIn(false);
     setIsGuestUser(false);
+    setUserId(null);
     setUserName('');
     setUserPhone('');
     setUserEmail('');
+    setUserCity(null);
+    setUserState(null);
     setDietChoiceState('Veg');
     setRegionalCuisine('All India');
     setFavoriteCuisines([]);
@@ -747,9 +805,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       hasCompletedOnboarding,
       isLoggedIn,
       isGuest,
+      userId,
       userName,
       userPhone,
       userEmail,
+      userCity,
+      userState,
       pantryIngredients,
       dietPreference,
       dietChoice,
@@ -765,6 +826,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       verifyLoginEmailOtp,
       loginAsGuest,
       updateProfile,
+      syncUserLocation,
       logout,
       resetAppFlow,
       togglePantryIngredient,
@@ -791,9 +853,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       hasCompletedOnboarding,
       isLoggedIn,
       isGuest,
+      userId,
       userName,
       userPhone,
       userEmail,
+      userCity,
+      userState,
       pantryIngredients,
       dietPreference,
       dietChoice,
@@ -809,6 +874,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       verifyLoginEmailOtp,
       loginAsGuest,
       updateProfile,
+      syncUserLocation,
       logout,
       resetAppFlow,
       togglePantryIngredient,

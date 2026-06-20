@@ -387,6 +387,7 @@ export const ModelName = {
   User: 'User',
   MealNotificationLog: 'MealNotificationLog',
   AffiliateEvent: 'AffiliateEvent',
+  SponsorEvent: 'SponsorEvent',
   PushToken: 'PushToken',
   Admin: 'Admin',
   Recipe: 'Recipe',
@@ -413,7 +414,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "mealNotificationLog" | "affiliateEvent" | "pushToken" | "admin" | "recipe" | "sponsor" | "partnerLink" | "kitchenStyle" | "regionalCuisineOption" | "pantrySection" | "appSettings" | "sponsorApplication" | "userFeedback"
+    modelProps: "user" | "mealNotificationLog" | "affiliateEvent" | "sponsorEvent" | "pushToken" | "admin" | "recipe" | "sponsor" | "partnerLink" | "kitchenStyle" | "regionalCuisineOption" | "pantrySection" | "appSettings" | "sponsorApplication" | "userFeedback"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -636,6 +637,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.AffiliateEventCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.AffiliateEventCountAggregateOutputType> | number
+        }
+      }
+    }
+    SponsorEvent: {
+      payload: Prisma.$SponsorEventPayload<ExtArgs>
+      fields: Prisma.SponsorEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SponsorEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SponsorEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>
+        }
+        findFirst: {
+          args: Prisma.SponsorEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SponsorEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>
+        }
+        findMany: {
+          args: Prisma.SponsorEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>[]
+        }
+        create: {
+          args: Prisma.SponsorEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>
+        }
+        createMany: {
+          args: Prisma.SponsorEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SponsorEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>[]
+        }
+        delete: {
+          args: Prisma.SponsorEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>
+        }
+        update: {
+          args: Prisma.SponsorEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.SponsorEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SponsorEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SponsorEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.SponsorEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SponsorEventPayload>
+        }
+        aggregate: {
+          args: Prisma.SponsorEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSponsorEvent>
+        }
+        groupBy: {
+          args: Prisma.SponsorEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SponsorEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SponsorEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SponsorEventCountAggregateOutputType> | number
         }
       }
     }
@@ -1507,11 +1582,17 @@ export const UserScalarFieldEnum = {
   favoriteCuisines: 'favoriteCuisines',
   notificationsEnabled: 'notificationsEnabled',
   timezone: 'timezone',
+  city: 'city',
+  state: 'state',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  locationUpdatedAt: 'locationUpdatedAt',
   pantryIngredients: 'pantryIngredients',
   savedRecipeIds: 'savedRecipeIds',
   planTier: 'planTier',
   trialStartedAt: 'trialStartedAt',
   hasUsedTrial: 'hasUsedTrial',
+  termsAcceptedAt: 'termsAcceptedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1542,6 +1623,22 @@ export const AffiliateEventScalarFieldEnum = {
 } as const
 
 export type AffiliateEventScalarFieldEnum = (typeof AffiliateEventScalarFieldEnum)[keyof typeof AffiliateEventScalarFieldEnum]
+
+
+export const SponsorEventScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  eventType: 'eventType',
+  brandName: 'brandName',
+  placement: 'placement',
+  sponsorId: 'sponsorId',
+  partner: 'partner',
+  query: 'query',
+  city: 'city',
+  createdAt: 'createdAt'
+} as const
+
+export type SponsorEventScalarFieldEnum = (typeof SponsorEventScalarFieldEnum)[keyof typeof SponsorEventScalarFieldEnum]
 
 
 export const PushTokenScalarFieldEnum = {
@@ -1771,6 +1868,20 @@ export type ListEnumUserRoleFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -1795,20 +1906,6 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -1924,6 +2021,7 @@ export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   mealNotificationLog?: Prisma.MealNotificationLogOmit
   affiliateEvent?: Prisma.AffiliateEventOmit
+  sponsorEvent?: Prisma.SponsorEventOmit
   pushToken?: Prisma.PushTokenOmit
   admin?: Prisma.AdminOmit
   recipe?: Prisma.RecipeOmit

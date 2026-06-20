@@ -9,7 +9,7 @@ export const DEFAULT_TITLE =
   'Rasoi — Aaj Kya Banaye? Indian Recipe App | Pantry Match & Regional Dishes';
 
 export const DEFAULT_DESCRIPTION =
-  'Rasoi helps Indian home cooks decide dinner from what is already in the kitchen. 1,200+ regional recipes, pantry match %, Veg/Jain filters, and Blinkit/Zepto checkout. Download free on Android — rasoiapplication.in';
+  'Rasoi helps Indian home cooks decide dinner from what is already in the kitchen. 1,200+ regional recipes, pantry match %, Veg/Jain filters, and Blinkit/Zepto checkout. Free on Google Play for Android.';
 
 export const DEFAULT_KEYWORDS = [
   'Rasoi app',
@@ -31,7 +31,7 @@ export const DEFAULT_KEYWORDS = [
 
 export const TWITTER_HANDLE = '@rasoiapp';
 
-import { ANDROID_APK_URL } from '@/lib/app-download';
+import { ANDROID_APK_URL, PLAY_STORE_LISTING_URL } from '@/lib/app-download';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 
 export const FAQ_ITEMS = [
@@ -43,7 +43,7 @@ export const FAQ_ITEMS = [
   {
     question: 'Is Rasoi free to download?',
     answer:
-      'Yes. Rasoi is free to download on Android from rasoiapplication.in. Rasoi Plus adds partner checkout (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a 3-day trial.',
+      'Yes. Rasoi is free on Android from Google Play at rasoiapplication.in/download. Rasoi Plus adds partner checkout (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a 3-day trial.',
   },
   {
     question: 'Which Indian cuisines does Rasoi support?',
@@ -124,11 +124,16 @@ export const homeMetadata = buildPageMetadata({
 });
 
 export const downloadMetadata = buildPageMetadata({
-  title: 'Download Rasoi App — Free Android APK | rasoiapplication.in',
+  title: 'Download Rasoi on Google Play | rasoiapplication.in',
   description:
-    'Download Rasoi free for Android. Indian recipe app with pantry match, regional cuisines, meal reminders, and partner checkout. Official APK from rasoiapplication.in.',
+    'Download Rasoi free on Google Play for Android. Indian recipe app with pantry match, regional cuisines, meal reminders, and partner checkout.',
   path: '/download',
-  keywords: ['download Rasoi app', 'Rasoi APK', 'Rasoi Android download'],
+  keywords: [
+    'download Rasoi app',
+    'Rasoi Google Play',
+    'Rasoi Android download',
+    'Indian recipe app Android',
+  ],
 });
 
 export function organizationJsonLd() {
@@ -164,8 +169,9 @@ export function mobileAppJsonLd() {
     applicationCategory: 'LifestyleApplication',
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
     description: DEFAULT_DESCRIPTION,
-    downloadUrl: ANDROID_APK_URL,
-    installUrl: absoluteUrl('/download'),
+    downloadUrl: PLAY_STORE_LISTING_URL,
+    installUrl: PLAY_STORE_LISTING_URL,
+    sameAs: [PLAY_STORE_LISTING_URL, ANDROID_APK_URL],
     url: SITE_URL,
     featureList: [
       'Pantry-to-recipe matching',

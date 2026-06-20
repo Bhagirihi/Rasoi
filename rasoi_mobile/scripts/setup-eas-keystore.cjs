@@ -24,7 +24,7 @@ const { generateRandomKeystoreAsync } = require(path.join(
 
 const accountName = process.env.EAS_ACCOUNT || 'takeyshi';
 const projectName = process.env.EAS_PROJECT || 'rasoi';
-const androidPackage = process.env.ANDROID_PACKAGE || 'com.rasoi.app';
+const androidPackage = process.env.ANDROID_PACKAGE || 'com.bhagihiri.rasoiapp';
 const profileName = process.env.EAS_BUILD_PROFILE || 'production';
 const projectId =
   process.env.EXPO_PUBLIC_EAS_PROJECT_ID ||

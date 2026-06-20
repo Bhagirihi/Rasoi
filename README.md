@@ -16,7 +16,7 @@ Install the latest release on your phone (enable **Install unknown apps** for yo
 
 | | |
 |---|---|
-| Package | `com.rasoi.app` |
+| Package | `com.bhagihiri.rasoiapp` |
 | Version | 1.0.0 (versionCode 1) |
 
 > Release builds are currently signed with a debug keystore for sideloading and testing. Use a production keystore before Play Store submission.

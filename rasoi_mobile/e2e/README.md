@@ -5,7 +5,7 @@ Automated end-to-end UI tests run on a **real Android device** via [Maestro](htt
 ## Prerequisites
 
 1. **Android device** with USB debugging (or wireless adb)
-2. **Dev build installed** (`com.rasoi.app`) — Expo Go is not supported (different app id)
+2. **Dev build installed** (`com.bhagihiri.rasoiapp`) — Expo Go is not supported (different app id)
 3. **Maestro CLI**:
    ```bash
    curl -Ls "https://get.maestro.mobile.dev" | bash
@@ -64,4 +64,4 @@ For adb screenshots and UI dumps without Maestro, use:
 | `recipe-card-first` not found | Wait for recipes API; check `GET /api/recipes` |
 | Maestro not found | Install Maestro and add `~/.maestro/bin` to PATH |
 
-Override app id: `RASOI_APP_ID=com.rasoi.app npm run qa:smoke`
+Override app id: `RASOI_APP_ID=com.bhagihiri.rasoiapp npm run qa:smoke`

@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import PreferencesSummaryCard from '@/components/auth/PreferencesSummaryCard';
+import TermsAcceptanceModal from '@/components/auth/TermsAcceptanceModal';
 import { authStyles as styles } from '@/components/auth/authStyles';
 import { gradients, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
@@ -57,6 +58,8 @@ export default function RegisterScreen() {
   const [fieldError, setFieldError] = useState<FieldError>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (!isGuest && userName && userName !== 'Guest') {
@@ -111,6 +114,15 @@ export default function RegisterScreen() {
     const details = validateDetails();
     if (!details) return;
 
+    if (!termsAccepted) {
+      setShowTermsModal(true);
+      return;
+    }
+
+    await sendOtpForDetails(details);
+  };
+
+  const sendOtpForDetails = async (details: { name: string; phone: string; email: string }) => {
     setIsSubmitting(true);
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -155,6 +167,7 @@ export default function RegisterScreen() {
         code,
         details.name,
         details.phone,
+        { acceptedTerms: true },
       );
       authLog('register:verifyOtp_success');
       navigateAfterAuth(showTrialWelcome);
@@ -225,7 +238,23 @@ export default function RegisterScreen() {
             ? 'Creating your Rasoi account…'
             : 'Sending verification code…'
         }
-        subtitle={step === 'otp' ? 'Syncing preferences and trial' : 'Check your email in a moment'}
+        subtitle={
+          step === 'otp'
+            ? 'Syncing your account and preferences'
+            : 'Sending via email — usually arrives in under a minute'
+        }
+      />
+      <TermsAcceptanceModal
+        visible={showTermsModal}
+        checked={termsAccepted}
+        onToggleChecked={() => setTermsAccepted((value) => !value)}
+        onCancel={() => setShowTermsModal(false)}
+        onContinue={() => {
+          if (!termsAccepted) return;
+          setShowTermsModal(false);
+          const details = validateDetails();
+          if (details) void sendOtpForDetails(details);
+        }}
       />
       <KeyboardAvoidingView
         style={styles.flex}

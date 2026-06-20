@@ -9,6 +9,7 @@ import SendCustomNotificationControl from '@/app/admin/_components/SendCustomNot
 import SendMealNotificationControl from '@/app/admin/_components/SendMealNotificationControl';
 import UserAccountStatusControl from '@/app/admin/_components/UserAccountStatusControl';
 import type { AdminUserRow } from '@/app/admin/_components/admin-users-types';
+import { formatAdminJoinedAt } from '@/app/admin/_components/admin-users-types';
 import { Badge } from '@/app/admin/_components/ui';
 
 type DrawerTab = 'profile' | 'notifications' | 'account';
@@ -47,7 +48,7 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
       <BulkMealNotificationBar users={users} />
 
       <DataTable
-        columns={['Name', 'Email', 'Status', 'Diet', 'Type', 'Plan', 'Push', '']}
+        columns={['Name', 'Email', 'Account', 'Joined', 'Location', 'Status', 'Diet', 'Plan', 'Push', '']}
         emptyMessage="No members match these filters."
       >
         {users.map((user) => (
@@ -70,17 +71,19 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
             </td>
             <td className="px-5 py-4 text-sm text-admin-muted">{user.email ?? '—'}</td>
             <td className="px-5 py-4">
+              <Badge tone={user.isGuest ? 'neutral' : 'gold'}>{user.accountLabel}</Badge>
+            </td>
+            <td className="px-5 py-4 text-sm text-admin-muted">{formatAdminJoinedAt(user.createdAt)}</td>
+            <td className="px-5 py-4 text-sm text-admin-muted">
+              {user.city ? `${user.city}${user.state ? `, ${user.state}` : ''}` : '—'}
+            </td>
+            <td className="px-5 py-4">
               <Badge tone={user.isActive ? 'success' : 'warning'}>
                 {user.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </td>
             <td className="px-5 py-4">
               <Badge tone="gold">{user.dietLabel}</Badge>
-            </td>
-            <td className="px-5 py-4">
-              <Badge tone={user.isGuest ? 'neutral' : 'gold'}>
-                {user.isGuest ? 'Guest' : 'Member'}
-              </Badge>
             </td>
             <td className="px-5 py-4">
               <Badge tone="neutral">{user.planTier}</Badge>
@@ -141,6 +144,38 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
                   />
                   <DetailRow label="Email" value={selectedUser.email ?? '—'} />
                   <DetailRow label="Phone" value={selectedUser.phone ?? '—'} />
+                  <DetailRow label="Account type" value={selectedUser.accountLabel} />
+                  <DetailRow label="Joined" value={formatAdminJoinedAt(selectedUser.createdAt)} />
+                  <DetailRow
+                    label="Terms accepted"
+                    value={
+                      selectedUser.termsAcceptedAt
+                        ? formatAdminJoinedAt(selectedUser.termsAcceptedAt)
+                        : selectedUser.isGuest
+                          ? 'Not required (guest)'
+                          : '—'
+                    }
+                  />
+                  <DetailRow
+                    label="Location"
+                    value={
+                      selectedUser.city
+                        ? `${selectedUser.city}${selectedUser.state ? `, ${selectedUser.state}` : ''}`
+                        : 'Not set'
+                    }
+                  />
+                  {selectedUser.latitude != null && selectedUser.longitude != null && (
+                    <DetailRow
+                      label="Coordinates"
+                      value={`${selectedUser.latitude.toFixed(4)}, ${selectedUser.longitude.toFixed(4)}`}
+                    />
+                  )}
+                  {selectedUser.locationUpdatedAt && (
+                    <DetailRow
+                      label="Location updated"
+                      value={new Date(selectedUser.locationUpdatedAt).toLocaleString('en-IN')}
+                    />
+                  )}
                   <DetailRow label="Region" value={selectedUser.regionalCuisine} />
                   <DetailRow
                     label="Cuisines"

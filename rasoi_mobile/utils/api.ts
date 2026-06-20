@@ -57,6 +57,22 @@ function resolveDevApiUrl(configured?: string): string {
 
 const PROD_API_URL = 'https://rasoiapplication.in';
 
+/** Legacy deploy hostnames still baked into older APK builds. */
+const LEGACY_API_HOSTS = new Set(['rasoiapp.vercel.app', 'www.rasoiapp.vercel.app']);
+
+function normalizeProductionApiUrl(raw: string): string {
+  const trimmed = raw.replace(/\/$/, '');
+  try {
+    const parsed = new URL(trimmed);
+    if (LEGACY_API_HOSTS.has(parsed.hostname)) {
+      return PROD_API_URL;
+    }
+    return parsed.origin;
+  } catch {
+    return PROD_API_URL;
+  }
+}
+
 export function getApiBaseUrl(): string {
   const configured = process.env.EXPO_PUBLIC_API_URL?.trim();
 
@@ -64,7 +80,42 @@ export function getApiBaseUrl(): string {
     return resolveDevApiUrl(configured);
   }
 
-  return (configured ?? PROD_API_URL).replace(/\/$/, '');
+  return normalizeProductionApiUrl(configured ?? PROD_API_URL);
+}
+
+/** User-facing copy — never expose internal URLs or hostnames. */
+export function formatUserFacingApiError(error: unknown, fallback = 'Something went wrong'): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const lower = message.toLowerCase();
+
+  if (
+    lower.includes('network request failed') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('network error') ||
+    lower.includes('internet connection') ||
+    lower.includes('timeout') ||
+    lower.includes('timed out') ||
+    lower.includes('enotfound') ||
+    lower.includes('econnrefused')
+  ) {
+    return 'No internet connection. Check your network and try again.';
+  }
+
+  if (lower.includes('non-json') || lower.includes('html — is the backend deployed')) {
+    return 'Rasoi servers are temporarily unavailable. Please try again in a moment.';
+  }
+
+  if (lower.includes('unauthorized') || lower.includes('not authenticated')) {
+    return 'Your session expired. Please sign in again.';
+  }
+
+  // Strip accidental URL suffixes from older builds.
+  const withoutUrl = message.replace(/\s*\(https?:\/\/[^\s)]+\)\s*$/, '').trim();
+  if (withoutUrl.length > 0 && !withoutUrl.startsWith('http')) {
+    return withoutUrl;
+  }
+
+  return fallback;
 }
 
 export type ApiEnvelope<T> = {
@@ -86,7 +137,19 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
       },
     });
 
-    const payload = (await response.json()) as ApiEnvelope<T>;
+    const raw = await response.text();
+    let payload: ApiEnvelope<T>;
+
+    try {
+      payload = JSON.parse(raw) as ApiEnvelope<T>;
+    } catch {
+      const snippet = raw.trim().slice(0, 80).replace(/\s+/g, ' ');
+      throw new Error(
+        response.ok
+          ? `Server returned non-JSON from ${path}`
+          : `API error ${response.status} on ${path}${snippet.startsWith('<!') ? ' (HTML — is the backend deployed?)' : ''}`,
+      );
+    }
 
     if (!response.ok || !payload.ok) {
       throw new Error(payload.error ?? `Request failed (${response.status})`);
@@ -98,16 +161,24 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
     return payload.data;
   } catch (error) {
-    captureException(error, {
-      url,
-      method: init?.method ?? 'GET',
-    });
-    if (error instanceof Error) {
-      addSentryBreadcrumb('API request failed', 'api', {
+    const isNonCriticalPath =
+      path.includes('/api/sponsor-events') ||
+      path.includes('/api/affiliate-events') ||
+      path.includes('/api/recipe-searches') ||
+      path.includes('/api/users/me/location');
+
+    if (!isNonCriticalPath) {
+      captureException(error, {
         url,
         method: init?.method ?? 'GET',
-        message: error.message,
       });
+      if (error instanceof Error) {
+        addSentryBreadcrumb('API request failed', 'api', {
+          url,
+          method: init?.method ?? 'GET',
+          message: error.message,
+        });
+      }
     }
     throw error;
   }

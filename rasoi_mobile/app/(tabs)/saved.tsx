@@ -1,6 +1,6 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChefHat } from 'lucide-react-native';
@@ -13,6 +13,7 @@ import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import { EmptyState, InsightBanner } from '@/components/ui/Primitives';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
+import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
 import { colors, layout, scrollIndicator, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
@@ -82,6 +83,14 @@ export default function SavedScreen() {
     setCookTonightVisible(false);
     setCookTonightTarget(null);
   };
+
+  useDismissOnBlur(
+    useCallback(() => {
+      setModalVisible(false);
+      setCookTonightVisible(false);
+      setCookTonightTarget(null);
+    }, []),
+  );
 
   const openShopModal = (
     recipe: Recipe,

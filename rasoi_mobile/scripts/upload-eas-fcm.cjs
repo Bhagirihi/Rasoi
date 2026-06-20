@@ -7,7 +7,7 @@ const root = path.resolve(__dirname, '..');
 const keyPath = path.join(root, process.env.FCM_SERVICE_ACCOUNT_FILE || 'fcm-service-account.json');
 const accountName = process.env.EAS_ACCOUNT || 'takeyshi';
 const projectName = process.env.EAS_PROJECT || 'rasoi';
-const androidPackage = process.env.ANDROID_PACKAGE || 'com.rasoi.app';
+const androidPackage = process.env.ANDROID_PACKAGE || 'com.bhagihiri.rasoiapp';
 
 const easCliRoot = (() => {
   try {

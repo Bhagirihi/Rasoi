@@ -11,6 +11,7 @@
 export type * from './models/User'
 export type * from './models/MealNotificationLog'
 export type * from './models/AffiliateEvent'
+export type * from './models/SponsorEvent'
 export type * from './models/PushToken'
 export type * from './models/Admin'
 export type * from './models/Recipe'
