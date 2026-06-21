@@ -3,7 +3,7 @@
     "name": "Rasoi",
     "slug": "rasoi",
     "owner": "takeyshi",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rasoi",
@@ -11,12 +11,18 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Rasoi uses your city to show local recipes and measure sponsor reach in your area."
+        "NSLocationWhenInUseUsageDescription": "Rasoi uses your city to show local recipes and measure sponsor reach in your area.",
+        "LSApplicationQueriesSchemes": [
+          "zomato",
+          "swiggy",
+          "blinkit",
+          "zepto"
+        ]
       }
     },
     "android": {
       "package": "com.bhagihiri.rasoiapp",
-      "versionCode": 4,
+      "versionCode": 5,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"

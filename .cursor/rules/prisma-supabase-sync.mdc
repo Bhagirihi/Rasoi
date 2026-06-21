@@ -1,30 +1,29 @@
 ---
-description: Prisma schema and seed changes must be applied to Supabase before production
+description: Supabase schema and seed changes must be applied to production before shipping
 alwaysApply: true
 ---
 
-# Prisma changes must live on Supabase
+# Supabase is the database source of truth
 
-Supabase PostgreSQL is the source of truth for production data. Local Prisma edits are incomplete until applied remotely.
+Production data lives in Supabase PostgreSQL. Backend code uses `@/lib/db` (Supabase service role + optional `pg` for raw SQL). There is no Prisma client.
 
-## Schema changes (`rasoi_backend/prisma/`)
+## Schema changes
 
-1. Edit `schema.prisma` (and SQL helpers under `prisma/` if needed).
-2. Apply to Supabase: `cd rasoi_backend && npm run db:push` (uses `DIRECT_URL`).
-3. For tracked migrations: `npm run db:migrate` and commit migration files.
-4. If Realtime tables changed: `npm run db:realtime` once (see `prisma/supabase-note.md`).
-5. Regenerate client if needed: `npm run db:generate`.
+1. Add a SQL migration under `rasoi_mobile/supabase/migrations/` (and optional helpers under `rasoi_backend/prisma/*.sql`).
+2. Apply to the remote Supabase project: SQL editor, `supabase db push`, or Supabase MCP `apply_migration`.
+3. Keep `rasoi_backend/prisma/schema.prisma` in sync as **reference documentation** only (no code generation).
+4. If Realtime tables changed: `cd rasoi_backend && npm run db:realtime` once (see `prisma/supabase-note.md`).
 
 ## Seed / reference data
 
-- Run `npm run db:seed` (or targeted seed scripts) against the same Supabase project before relying on data in production.
-- Do not ship code that expects new tables/columns/seed rows without running the sync on Supabase first.
+- Run `cd rasoi_backend && npm run db:seed` (or targeted seed scripts) against the same Supabase project before relying on data in production.
+- Do not ship code that expects new tables/columns/seed rows without applying migrations on Supabase first.
 
-## Mobile Supabase SQL (`rasoi_mobile/supabase/migrations/`)
+## Mobile RLS (`rasoi_mobile/supabase/migrations/`)
 
-When adding auth/public-layer tables or RLS, add a migration file **and** apply it to the remote Supabase project (SQL editor or `supabase db push`), not only in the repo.
+When adding auth/public-layer tables or RLS, add a migration file **and** apply it to the remote Supabase project, not only in the repo.
 
 ## Verify
 
-- Supabase Table Editor shows new/changed tables under schema **`rasoi`** (Prisma admin/API data).
+- Supabase Table Editor shows new/changed tables under schema **`rasoi`**.
 - Production API smoke passes against live Supabase (`npm run dev` + `npx tsx scripts/qa-api-smoke.ts`, or hit production endpoints).

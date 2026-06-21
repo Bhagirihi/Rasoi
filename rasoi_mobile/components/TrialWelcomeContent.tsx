@@ -19,15 +19,18 @@ import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 
 type TrialWelcomeContentProps = {
-  onContinueTrial: () => void;
+  trialStarted: boolean;
+  onContinueTrial: () => void | Promise<void>;
   onSubscribe: (interval: BillingInterval) => Promise<void>;
 };
 
 export default function TrialWelcomeContent({
+  trialStarted,
   onContinueTrial,
   onSubscribe,
 }: TrialWelcomeContentProps) {
   const [loading, setLoading] = useState<BillingInterval | null>(null);
+  const [continuingTrial, setContinuingTrial] = useState(false);
 
   const handleSubscribe = async (interval: BillingInterval) => {
     setLoading(interval);
@@ -39,10 +42,18 @@ export default function TrialWelcomeContent({
     }
   };
 
-  const handleContinue = () => {
-    void Haptics.selectionAsync();
-    onContinueTrial();
+  const handleContinue = async () => {
+    if (continuingTrial) return;
+    setContinuingTrial(true);
+    try {
+      void Haptics.selectionAsync();
+      await onContinueTrial();
+    } finally {
+      setContinuingTrial(false);
+    }
   };
+
+  const subscribeBusy = loading !== null;
 
   return (
     <View style={styles.root}>
@@ -57,10 +68,15 @@ export default function TrialWelcomeContent({
           <Text style={styles.heroBadgeText}>Welcome to Rasoi</Text>
         </View>
         <Crown size={36} color={colors.white} />
-        <Text style={styles.heroTitle}>You&apos;re on trial for {TRIAL_DURATION_DAYS} days</Text>
+        <Text style={styles.heroTitle}>
+          {trialStarted
+            ? `You're on trial for ${TRIAL_DURATION_DAYS} days`
+            : `Start your ${TRIAL_DURATION_DAYS}-day free trial`}
+        </Text>
         <Text style={styles.heroSub}>
-          Enjoy partner checkout during your trial. Upgrade to Rasoi Plus to remove ads and keep
-          access forever.
+          {trialStarted
+            ? 'Enjoy partner checkout during your trial. Upgrade to Rasoi Plus to remove ads and keep access forever.'
+            : 'Try partner grocery and delivery checkout free. No payment required until you subscribe below.'}
         </Text>
       </LinearGradient>
 
@@ -71,17 +87,37 @@ export default function TrialWelcomeContent({
         ))}
 
         <Text style={[styles.sectionLabel, styles.sectionGap]}>
-          Rasoi Plus · {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE} (
-          {PAID_PLAN_YEARLY_SAVINGS_LABEL})
+          Rasoi Plus · charged immediately via Google Play
+        </Text>
+        <Text style={styles.subscribeNote}>
+          Subscribe now for {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE} (
+          {PAID_PLAN_YEARLY_SAVINGS_LABEL}). Cancel anytime in Google Play → Subscriptions.
         </Text>
         {PAID_PLAN_FEATURES.map((feature) => (
           <FeatureRow key={feature} text={feature} tone="paid" />
         ))}
 
         <Pressable
+          onPress={() => void handleContinue()}
+          disabled={continuingTrial}
+          testID={testIds.trialContinue}
+          style={[styles.primaryTrialBtn, continuingTrial && styles.btnDisabled]}
+        >
+          <Text style={styles.primaryTrialBtnText}>
+            {continuingTrial
+              ? 'Starting trial…'
+              : trialStarted
+                ? 'Continue with trial'
+                : `Start free ${TRIAL_DURATION_DAYS}-day trial`}
+          </Text>
+        </Pressable>
+
+        <Text style={styles.orLabel}>Or subscribe now</Text>
+
+        <Pressable
           onPress={() => void handleSubscribe('yearly')}
-          disabled={loading !== null}
-          style={[styles.primaryBtn, loading !== null && styles.btnDisabled]}
+          disabled={continuingTrial || subscribeBusy}
+          style={[styles.primaryBtn, (continuingTrial || subscribeBusy) && styles.btnDisabled]}
         >
           <LinearGradient
             colors={[colors.primary, colors.saffron]}
@@ -99,21 +135,12 @@ export default function TrialWelcomeContent({
 
         <Pressable
           onPress={() => void handleSubscribe('monthly')}
-          disabled={loading !== null}
-          style={[styles.secondaryBtn, loading !== null && styles.btnDisabled]}
+          disabled={continuingTrial || subscribeBusy}
+          style={[styles.secondaryBtn, (continuingTrial || subscribeBusy) && styles.btnDisabled]}
         >
           <Text style={styles.secondaryBtnText}>
             {loading === 'monthly' ? 'Processing…' : `Plus monthly · ${PAID_PLAN_MONTHLY_PRICE}`}
           </Text>
-        </Pressable>
-
-        <Pressable
-          onPress={handleContinue}
-          disabled={loading !== null}
-          testID={testIds.trialContinue}
-          style={[styles.skipBtn, loading !== null && styles.btnDisabled]}
-        >
-          <Text style={styles.skipBtnText}>Continue with trial</Text>
         </Pressable>
 
         <Text style={styles.disclaimer}>
@@ -266,8 +293,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.charcoal,
   },
-  skipBtn: {
-    marginTop: spacing.md,
+  primaryTrialBtn: {
+    marginTop: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.md,
@@ -276,10 +303,25 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: 'rgba(255,107,53,0.08)',
   },
-  skipBtnText: {
+  primaryTrialBtnText: {
     fontSize: 15,
     fontWeight: '800',
     color: colors.primary,
+  },
+  orLabel: {
+    marginTop: spacing.md,
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.muted,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  subscribeNote: {
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.muted,
+    marginBottom: spacing.sm,
   },
   btnDisabled: {
     opacity: 0.6,

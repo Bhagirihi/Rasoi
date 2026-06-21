@@ -6,7 +6,7 @@ import { DataTable } from '@/app/admin/_components/DataTable';
 import SponsorApplicationFilterPanel from '@/app/admin/_components/SponsorApplicationFilterPanel';
 import { Badge, PageHeader } from '@/app/admin/_components/ui';
 import { deleteSponsorApplicationAction } from '@/app/admin/sponsor-application-actions';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { getSponsorPlacementLabel } from '@/lib/sponsor-placements';
 
 const statusTone = {
@@ -35,7 +35,7 @@ export default async function SponsorApplicationsPage({ searchParams }: PageProp
     ...(placement && placement !== 'all' ? { placementInterest: placement } : {}),
   };
 
-  const applications = await prisma.sponsorApplication.findMany({
+  const applications = await db.sponsorApplication.findMany({
     where,
     orderBy: { createdAt: 'desc' },
     take: 200,

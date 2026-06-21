@@ -102,6 +102,10 @@ export const authStyles = StyleSheet.create({
     fontWeight: '600',
     color: colors.charcoal,
   },
+  labelRequired: {
+    color: colors.danger,
+    fontWeight: '700',
+  },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -170,6 +174,10 @@ export const authStyles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.cream,
+  },
+  actions: {
+    marginTop: 24,
+    gap: 0,
   },
   submitWrap: {
     borderRadius: 16,

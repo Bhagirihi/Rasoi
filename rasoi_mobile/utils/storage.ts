@@ -96,6 +96,8 @@ export async function saveOnboardingComplete(payload: OnboardingPayload): Promis
 export async function clearAuthState(): Promise<void> {
   await AsyncStorage.multiRemove(Object.values(KEYS));
   await clearAuthToken();
+  const { clearCachedUserProfile } = await import('@/utils/userProfileCache');
+  await clearCachedUserProfile();
 }
 
 export async function loadPendingTrialWelcome(): Promise<boolean> {
@@ -127,6 +129,21 @@ export function isValidIndianPhone(phone: string): boolean {
 
 export function isValidPhoneLength(phone: string): boolean {
   return isValidIndianPhone(phone);
+}
+
+/** User-facing copy when mobile validation fails. */
+export function getIndianPhoneError(phone: string): string | null {
+  const normalized = normalizeIndianPhone(phone);
+  if (normalized.length === 0) {
+    return 'Enter your 10-digit mobile number.';
+  }
+  if (normalized.length < 10) {
+    return `Enter all 10 digits (${normalized.length}/10 so far).`;
+  }
+  if (!/^[6-9]/.test(normalized)) {
+    return 'Indian mobile numbers start with 6, 7, 8, or 9 — e.g. 9876543210.';
+  }
+  return null;
 }
 
 export function isValidEmail(email: string): boolean {

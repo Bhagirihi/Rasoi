@@ -1,4 +1,5 @@
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
+import type { SponsorEventWithUser } from '@/lib/db/types';
 import {
   buildSponsorEventWhere,
   type SponsorAnalyticsFilters,
@@ -12,7 +13,7 @@ export type SponsorAnalyticsRow = {
   tapRate: number;
 };
 
-export type SponsorEventListItem = Awaited<ReturnType<typeof getSponsorEventList>>[number];
+export type SponsorEventListItem = SponsorEventWithUser;
 
 export type SponsorBrandOption = {
   brandName: string;
@@ -63,11 +64,11 @@ function aggregateRows(
 export async function getSponsorBrandOptions(): Promise<SponsorBrandOption[]> {
   try {
     const [configuredSponsors, eventBrands] = await Promise.all([
-      prisma.sponsor.findMany({
+      db.sponsor.findMany({
         select: { brandName: true, active: true },
         orderBy: [{ priority: 'desc' }, { brandName: 'asc' }],
       }),
-      prisma.sponsorEvent.groupBy({
+      db.sponsorEvent.groupBy({
         by: ['brandName'],
         _count: { _all: true },
       }),
@@ -110,7 +111,7 @@ export async function getSponsorAnalyticsStats(filters: SponsorAnalyticsFilters 
   const where = buildSponsorEventWhere({ ...filters, days });
 
   try {
-    const rows = await prisma.sponsorEvent.findMany({
+    const rows = await db.sponsorEvent.findMany({
       where,
       select: { brandName: true, placement: true, eventType: true },
     });
@@ -118,10 +119,10 @@ export async function getSponsorAnalyticsStats(filters: SponsorAnalyticsFilters 
     const byBrandPlacement = aggregateRows(rows);
 
     const [totalImpressions, totalTaps] = await Promise.all([
-      prisma.sponsorEvent.count({
+      db.sponsorEvent.count({
         where: { ...where, eventType: 'impression' },
       }),
-      prisma.sponsorEvent.count({
+      db.sponsorEvent.count({
         where: { ...where, eventType: 'tap' },
       }),
     ]);
@@ -147,11 +148,11 @@ export async function getSponsorAnalyticsStats(filters: SponsorAnalyticsFilters 
 export async function getSponsorEventList(
   filters: SponsorAnalyticsFilters = {},
   limit = 500,
-) {
+): Promise<SponsorEventWithUser[]> {
   const where = buildSponsorEventWhere(filters);
 
   try {
-    return await prisma.sponsorEvent.findMany({
+    return (await db.sponsorEvent.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: limit,
@@ -166,7 +167,7 @@ export async function getSponsorEventList(
           },
         },
       },
-    });
+    })) as SponsorEventWithUser[];
   } catch (error) {
     console.error('[sponsor-analytics] list query failed', error);
     return [];
@@ -177,7 +178,7 @@ export async function getSponsorEventsForExport(filters: SponsorAnalyticsFilters
   const where = buildSponsorEventWhere(filters);
 
   try {
-    const events = await prisma.sponsorEvent.findMany({
+    const events = (await db.sponsorEvent.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: 10_000,
@@ -186,7 +187,7 @@ export async function getSponsorEventsForExport(filters: SponsorAnalyticsFilters
           select: { name: true, city: true, state: true },
         },
       },
-    });
+    })) as SponsorEventWithUser[];
 
     return events.map((event) => ({
       eventType: event.eventType,

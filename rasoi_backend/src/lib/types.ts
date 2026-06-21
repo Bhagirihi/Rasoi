@@ -64,6 +64,19 @@ export interface SponsorResponse {
   priority: number;
 }
 
+export interface UserPlanResponse {
+  planTier: PlanTier;
+  trialStartedAt: string | null;
+  hasUsedTrial: boolean;
+  trialDurationDays: number;
+  trialBonusDays: number;
+  trialTotalDays: number;
+  trialActive: boolean;
+  yearlyPromoOfferTag: string | null;
+  yearlyPromoDiscountPercent: number | null;
+  yearlyPromoAmountInr: number | null;
+}
+
 export interface UserProfileResponse {
   id: string;
   email: string | null;
@@ -83,12 +96,9 @@ export interface UserProfileResponse {
   longitude: number | null;
   locationUpdatedAt: string | null;
   termsAcceptedAt: string | null;
+  termsAcceptedVersion: string | null;
   createdAt: string;
   pantryIngredients: string[];
   savedRecipeIds: string[];
-  plan: {
-    planTier: PlanTier;
-    trialStartedAt: string | null;
-    hasUsedTrial: boolean;
-  };
+  plan: UserPlanResponse;
 }

@@ -4,15 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:setup": "prisma db push && tsx prisma/seed.ts",
-    "db:sync": "prisma db push && tsx prisma/seed.ts",
+    "db:setup": "tsx prisma/seed.ts",
+    "db:sync": "tsx prisma/seed.ts",
     "db:realtime": "tsx scripts/enable-realtime.ts",
     "db:ping": "tsx scripts/db-ping.ts",
     "db:sync-public": "tsx scripts/sync-public-recipes.ts",
@@ -27,12 +24,7 @@
     "cron:meal-notifications": "tsx scripts/cron-meal-notifications.ts",
     "sync:apk": "bash scripts/sync-apk.sh"
   },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.1",
     "bcryptjs": "^3.0.3",
@@ -54,7 +46,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
-    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5"

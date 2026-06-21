@@ -10,6 +10,7 @@ import CookTonightSheet from '@/components/CookTonightSheet';
 import { AppTabHeader } from '@/components/AppTabHeader';
 import QuickFiltersSection, { getQuickFilterLabels } from '@/components/QuickFiltersSection';
 import RecipeCard from '@/components/RecipeCard';
+import RecipeListSkeleton from '@/components/RecipeListSkeleton';
 import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import { EmptyState } from '@/components/ui/Primitives';
@@ -56,6 +57,7 @@ export default function RecipesTabScreen() {
     dietChoice,
     regionalCuisine,
     handleFilterToggle,
+    rankingReady,
   } = useRecipeDiscovery();
   const { sponsor: recipesSponsor, loading: recipesSponsorLoading } = usePlacementSponsor('recipes');
   const [modalVisible, setModalVisible] = useState(false);
@@ -172,6 +174,9 @@ export default function RecipesTabScreen() {
     ? keyboardHeight + tabBarHeight + spacing.xxxl
     : tabBarHeight + spacing.xxxl + spacing.lg;
 
+  const discoveryReady = !recipesLoading && rankingReady;
+  const showListSkeleton = !discoveryReady && searchedMoreRecipes.length === 0 && !recipesError;
+
   const renderItem = ({ item, index }: { item: Recipe; index: number }) => (
     <View>
       {index === 1 && (
@@ -240,7 +245,7 @@ export default function RecipesTabScreen() {
               onClearAll={clearDiscovery}
             />
 
-            {!recipesLoading && !recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
+            {discoveryReady && !recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
               <View
                 style={[
                   styles.noMatchCard,
@@ -265,12 +270,8 @@ export default function RecipesTabScreen() {
         }
         renderItem={renderItem}
         ListEmptyComponent={
-          recipesLoading && recipes.length === 0 ? (
-            <EmptyState
-              icon={Timer}
-              title="Loading recipes"
-              subtitle="Fetching dishes from Rasoi…"
-            />
+          showListSkeleton ? (
+            <RecipeListSkeleton count={6} />
           ) : recipesError ? (
             <View style={styles.errorBox}>
               <EmptyState icon={Timer} title="Could not load recipes" subtitle={recipesError} />

@@ -198,9 +198,11 @@ export function AccountActionsCard({
             </View>
           </LinearGradient>
         </Pressable>
-        <Pressable onPress={onReset} style={styles.accountResetLink}>
-          <Text style={[styles.accountResetText, { color: themeColors.muted }]}>Reset full flow (testing)</Text>
-        </Pressable>
+        {__DEV__ ? (
+          <Pressable onPress={onReset} style={styles.accountResetLink}>
+            <Text style={[styles.accountResetText, { color: themeColors.muted }]}>Reset full flow (testing)</Text>
+          </Pressable>
+        ) : null}
       </View>
     );
   }
@@ -228,9 +230,11 @@ export function AccountActionsCard({
           <Text style={[styles.accountBtnOutlineSub, { color: themeColors.muted }]}>Return to login</Text>
         </Pressable>
       </View>
-      <Pressable onPress={onReset} style={styles.accountResetLink}>
-        <Text style={[styles.accountResetText, { color: themeColors.muted }]}>Reset full flow (testing)</Text>
-      </Pressable>
+      {__DEV__ ? (
+        <Pressable onPress={onReset} style={styles.accountResetLink}>
+          <Text style={[styles.accountResetText, { color: themeColors.muted }]}>Reset full flow (testing)</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

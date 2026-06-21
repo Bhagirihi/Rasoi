@@ -1,14 +1,14 @@
 import { redirect } from 'next/navigation';
 
 import RecipeForm from '@/app/admin/(console)/recipes/RecipeForm';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { serializeRecipe } from '@/lib/serializers';
 
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function EditRecipePage({ params }: PageProps) {
   const { id } = await params;
-  const recipe = await prisma.recipe.findUnique({ where: { id } });
+  const recipe = await db.recipe.findUnique({ where: { id } });
   if (!recipe) redirect('/admin/recipes');
 
   const serialized = serializeRecipe(recipe);

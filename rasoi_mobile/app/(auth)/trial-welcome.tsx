@@ -1,10 +1,12 @@
 import { Redirect, useRouter } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import TrialWelcomeContent from '@/components/TrialWelcomeContent';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import { colors, scrollIndicator } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 import { useAppContext } from '@/context/AppContext';
 
 export default function TrialWelcomeScreen() {
@@ -15,12 +17,20 @@ export default function TrialWelcomeScreen() {
     pendingTrialWelcome,
     dismissTrialWelcome,
     upgradeToPaid,
+    startTrial,
+    effectiveTier,
   } = useAppContext();
 
   if (!isHydrated) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <AppSavingOverlay
+          visible
+          steps={[
+            { message: 'Opening Rasoi…', subtitle: 'Loading your kitchen' },
+            { message: 'Preparing your trial…', subtitle: 'Just a moment' },
+          ]}
+        />
       </View>
     );
   }
@@ -33,19 +43,27 @@ export default function TrialWelcomeScreen() {
     return <Redirect href="/(tabs)" />;
   }
 
+  const trialStarted = effectiveTier === 'trial';
+
   const finishWelcome = () => {
     dismissTrialWelcome();
     router.replace('/(tabs)');
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']} testID={testIds.screenTrialWelcome}>
       <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
         contentContainerStyle={styles.scrollContent}
       >
         <TrialWelcomeContent
-          onContinueTrial={finishWelcome}
+          trialStarted={trialStarted}
+          onContinueTrial={async () => {
+            if (!trialStarted) {
+              await startTrial();
+            }
+            finishWelcome();
+          }}
           onSubscribe={async (interval) => {
             await upgradeToPaid(interval);
             finishWelcome();

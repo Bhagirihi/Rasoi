@@ -1,27 +1,21 @@
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
 
-import { getDirectDatabaseUrl } from '../src/lib/database-url';
+import { db } from '../src/lib/db';
 import { DEFAULT_KITCHEN_STYLES } from '../src/lib/kitchen-style-data';
 import { ensureReferenceData } from '../src/lib/reference-data';
+import { ensurePromoCodes } from '../src/lib/promo-seed';
 import { DEFAULT_PARTNER_LINKS } from '../src/lib/partners';
 import { syncPublicKitchenStyle } from '../src/lib/sync-public-kitchen-style';
 import { syncPublicRecipe } from '../src/lib/sync-public-recipe';
-import { PrismaClient } from '../src/generated/prisma/client';
 import { KITCHEN_STYLE_RECIPES } from './kitchen-style-recipes';
-
-const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@rasoi.app';
   const adminPassword = process.env.ADMIN_PASSWORD ?? 'rasoi-admin123';
   const passwordHash = await bcrypt.hash(adminPassword, 10);
 
-  await prisma.admin.upsert({
+  await db.admin.upsert({
     where: { email: adminEmail },
     update: { passwordHash, name: 'Rasoi Admin' },
     create: {
@@ -32,12 +26,12 @@ async function main() {
   });
 
   const recipeIds = KITCHEN_STYLE_RECIPES.map((recipe) => recipe.id);
-  await prisma.recipe.deleteMany({
+  await db.recipe.deleteMany({
     where: { id: { notIn: recipeIds } },
   });
 
   for (const recipe of KITCHEN_STYLE_RECIPES) {
-    const saved = await prisma.recipe.upsert({
+    const saved = await db.recipe.upsert({
       where: { id: recipe.id },
       update: {
         title: recipe.title,
@@ -110,7 +104,7 @@ async function main() {
   ];
 
   for (const sponsor of sponsorSeeds) {
-    await prisma.sponsor.upsert({
+    await db.sponsor.upsert({
       where: { id: sponsor.id },
       update: {
         placement: sponsor.placement,
@@ -128,7 +122,7 @@ async function main() {
   }
 
   for (const link of DEFAULT_PARTNER_LINKS) {
-    await prisma.partnerLink.upsert({
+    await db.partnerLink.upsert({
       where: { partnerId: link.partnerId },
       update: {
         label: link.label,
@@ -142,7 +136,7 @@ async function main() {
   }
 
   for (const style of DEFAULT_KITCHEN_STYLES) {
-    const saved = await prisma.kitchenStyle.upsert({
+    const saved = await db.kitchenStyle.upsert({
       where: { id: style.id },
       update: {
         label: style.label,
@@ -162,17 +156,13 @@ async function main() {
   }
 
   await ensureReferenceData();
+  await ensurePromoCodes();
 
   console.log('Seed complete.');
   console.log(`Admin account ready for ${adminEmail}`);
 }
 
-main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-    await pool.end();
-  });
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

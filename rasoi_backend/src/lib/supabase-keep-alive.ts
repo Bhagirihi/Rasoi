@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { queryPg } from '@/lib/db';
 
 export type KeepAliveResult = {
   ok: boolean;
@@ -17,7 +17,7 @@ export async function runSupabaseKeepAlive(): Promise<KeepAliveResult> {
   let authApi = false;
 
   try {
-    await prisma.$queryRaw`SELECT 1 AS ok`;
+    await queryPg('SELECT 1 AS ok');
     database = true;
   } catch (error) {
     errors.push(

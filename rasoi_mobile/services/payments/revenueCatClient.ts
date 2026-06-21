@@ -75,7 +75,17 @@ export function hasRasoiPlusEntitlement(customerInfo: CustomerInfo): boolean {
 
 export function getActiveSubscriptionTransactionId(customerInfo: CustomerInfo): string | undefined {
   const entitlement = customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
-  return entitlement?.productIdentifier ?? entitlement?.originalPurchaseDate;
+  if (!entitlement) return undefined;
+  return (
+    entitlement.latestPurchaseDate ??
+    entitlement.originalPurchaseDate ??
+    entitlement.productIdentifier
+  );
+}
+
+export function getActiveSubscriptionStoreProductId(customerInfo: CustomerInfo): string | undefined {
+  const entitlement = customerInfo.entitlements.active[REVENUECAT_ENTITLEMENT_ID];
+  return entitlement?.productIdentifier;
 }
 
 async function getCurrentOffering(): Promise<PurchasesOffering | null> {
@@ -105,7 +115,12 @@ function findPackage(
 
 export async function purchaseRevenueCatProduct(
   productId: PurchaseProductId,
-): Promise<{ customerInfo: CustomerInfo; transactionId?: string }> {
+  googlePlayOfferTag?: string | null,
+): Promise<{
+  customerInfo: CustomerInfo;
+  transactionId?: string;
+  storeProductId?: string;
+}> {
   if (!(await configureRevenueCat())) {
     throw new Error('RevenueCat is not configured on this platform.');
   }
@@ -121,6 +136,25 @@ export async function purchaseRevenueCatProduct(
   }
 
   const Purchases = await getPurchasesModule();
+
+  if (googlePlayOfferTag && Platform.OS === 'android') {
+    const subscriptionOptions = pkg.product.subscriptionOptions ?? [];
+    const promoOption = subscriptionOptions.find((option) =>
+      option.tags.includes(googlePlayOfferTag),
+    );
+    if (promoOption) {
+      const { customerInfo } = await Purchases.purchaseSubscriptionOption(promoOption);
+      if (!hasRasoiPlusEntitlement(customerInfo)) {
+        throw new Error('Purchase completed but Rasoi Plus entitlement is not active.');
+      }
+      return {
+        customerInfo,
+        transactionId: getActiveSubscriptionTransactionId(customerInfo),
+        storeProductId: getActiveSubscriptionStoreProductId(customerInfo),
+      };
+    }
+  }
+
   const { customerInfo } = await Purchases.purchasePackage(pkg);
 
   if (!hasRasoiPlusEntitlement(customerInfo)) {
@@ -130,12 +164,14 @@ export async function purchaseRevenueCatProduct(
   return {
     customerInfo,
     transactionId: getActiveSubscriptionTransactionId(customerInfo),
+    storeProductId: getActiveSubscriptionStoreProductId(customerInfo),
   };
 }
 
 export async function restoreRevenueCatPurchases(): Promise<{
   customerInfo: CustomerInfo;
   transactionId?: string;
+  storeProductId?: string;
 }> {
   if (!(await configureRevenueCat())) {
     throw new Error('RevenueCat is not configured on this platform.');
@@ -151,5 +187,6 @@ export async function restoreRevenueCatPurchases(): Promise<{
   return {
     customerInfo,
     transactionId: getActiveSubscriptionTransactionId(customerInfo),
+    storeProductId: getActiveSubscriptionStoreProductId(customerInfo),
   };
 }

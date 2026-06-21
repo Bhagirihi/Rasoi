@@ -1,4 +1,5 @@
 import { apiFetch } from '@/utils/api';
+import { getRasoiDb, isDirectSupabaseReadsEnabled } from '@/utils/rasoiDb';
 import { buildPartnerUrl, type PartnerId } from '@/constants/partners';
 
 export type PartnerLinkResponse = {
@@ -14,6 +15,28 @@ export type PartnerLinkResponse = {
 let cachedLinks: PartnerLinkResponse[] | null = null;
 let loadPromise: Promise<PartnerLinkResponse[]> | null = null;
 
+async function loadPartnerLinksFromSupabase(): Promise<PartnerLinkResponse[]> {
+  const { data, error } = await getRasoiDb()
+    .from('PartnerLink')
+    .select('partnerId, label, category, deepLinkUrl, webUrl, active, updatedAt')
+    .eq('active', true)
+    .order('partnerId', { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((link) => ({
+    partnerId: link.partnerId as PartnerId,
+    label: link.label,
+    category: link.category as PartnerLinkResponse['category'],
+    deepLinkUrl: link.deepLinkUrl,
+    webUrl: link.webUrl,
+    active: link.active,
+    updatedAt: link.updatedAt,
+  }));
+}
+
 export async function loadPartnerLinks(force = false): Promise<PartnerLinkResponse[]> {
   if (cachedLinks && !force) {
     return cachedLinks;
@@ -23,11 +46,20 @@ export async function loadPartnerLinks(force = false): Promise<PartnerLinkRespon
     return loadPromise;
   }
 
-  loadPromise = apiFetch<PartnerLinkResponse[]>('/api/partners')
-    .then((links) => {
-      cachedLinks = links.filter((link) => link.active);
-      return cachedLinks;
-    })
+  loadPromise = (async () => {
+    if (isDirectSupabaseReadsEnabled()) {
+      try {
+        cachedLinks = await loadPartnerLinksFromSupabase();
+        return cachedLinks;
+      } catch (error) {
+        console.warn('[partners] Supabase read failed, falling back to API', error);
+      }
+    }
+
+    const links = await apiFetch<PartnerLinkResponse[]>('/api/partners');
+    cachedLinks = links.filter((link) => link.active);
+    return cachedLinks;
+  })()
     .catch((error) => {
       if (cachedLinks) {
         return cachedLinks;

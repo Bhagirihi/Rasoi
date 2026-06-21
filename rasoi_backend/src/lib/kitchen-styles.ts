@@ -2,7 +2,7 @@ import {
   DEFAULT_KITCHEN_STYLES,
   type KitchenStyleRecord,
 } from '@/lib/kitchen-style-data';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export type { KitchenStyleRecord } from '@/lib/kitchen-style-data';
 
@@ -14,14 +14,14 @@ let activeKitchenStyleIdsExpiresAt = 0;
 export async function ensureKitchenStyles() {
   if (stylesEnsured) return;
 
-  const existingCount = await prisma.kitchenStyle.count();
+  const existingCount = await db.kitchenStyle.count();
   if (existingCount >= DEFAULT_KITCHEN_STYLES.length) {
     stylesEnsured = true;
     return;
   }
 
   for (const style of DEFAULT_KITCHEN_STYLES) {
-    await prisma.kitchenStyle.upsert({
+    await db.kitchenStyle.upsert({
       where: { id: style.id },
       update: {},
       create: style,
@@ -40,7 +40,7 @@ async function getActiveKitchenStyleIds(): Promise<Set<string>> {
 
   await ensureKitchenStyles();
 
-  const styles = await prisma.kitchenStyle.findMany({
+  const styles = await db.kitchenStyle.findMany({
     where: { active: true },
     select: { id: true },
   });
@@ -52,7 +52,7 @@ async function getActiveKitchenStyleIds(): Promise<Set<string>> {
 
 export async function getActiveKitchenStyles(): Promise<KitchenStyleRecord[]> {
   await ensureKitchenStyles();
-  return prisma.kitchenStyle.findMany({
+  return db.kitchenStyle.findMany({
     where: { active: true },
     orderBy: [{ sortOrder: 'asc' }, { label: 'asc' }],
   });
@@ -60,7 +60,7 @@ export async function getActiveKitchenStyles(): Promise<KitchenStyleRecord[]> {
 
 export async function getAllKitchenStyles(): Promise<KitchenStyleRecord[]> {
   await ensureKitchenStyles();
-  return prisma.kitchenStyle.findMany({
+  return db.kitchenStyle.findMany({
     orderBy: [{ sortOrder: 'asc' }, { label: 'asc' }],
   });
 }

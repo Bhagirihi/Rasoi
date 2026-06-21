@@ -2,11 +2,12 @@ import { Suspense } from 'react';
 
 import UserFilterPanel from '@/app/admin/_components/UserFilterPanel';
 import UsersManagementClient from '@/app/admin/_components/UsersManagementClient';
-import type { AdminUserRow } from '@/app/admin/_components/admin-users-types';
 import { PageHeader } from '@/app/admin/_components/ui';
-import { buildUserWhere, DIET_CHOICE_LABELS, type DietChoice } from '@/lib/recipe-filters';
-import { prisma } from '@/lib/prisma';
-import { serializeUser } from '@/lib/serializers';
+import { loadAdminMemberRows } from '@/lib/admin-members';
+import { buildUserWhere } from '@/lib/recipe-filters';
+import { db } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -17,61 +18,20 @@ function param(value: string | string[] | undefined): string | undefined {
   return value;
 }
 
-function toAdminUserRow(
-  user: Awaited<ReturnType<typeof loadUsers>>[number],
-): AdminUserRow {
-  const serialized = serializeUser(user);
-  const dietLabel =
-    DIET_CHOICE_LABELS[serialized.dietChoice as DietChoice] ?? serialized.dietChoice;
-  const pushTokenCount = user._count.pushTokens;
-  const ineligibleReasons: string[] = [];
-
-  if (serialized.isGuest) ineligibleReasons.push('Guest account');
-  if (!serialized.isActive) ineligibleReasons.push('Account deactivated');
-  if (!serialized.hasCompletedOnboarding) ineligibleReasons.push('Onboarding incomplete');
-  if (!serialized.notificationsEnabled) ineligibleReasons.push('Notifications disabled');
-  if (pushTokenCount === 0) ineligibleReasons.push('No active push token');
-
-  return {
-    id: serialized.id,
-    name: serialized.name,
-    email: serialized.email,
-    phone: serialized.phone,
-    dietLabel,
-    regionalCuisine: serialized.regionalCuisine,
-    favoriteCuisines: serialized.favoriteCuisines,
-    isGuest: serialized.isGuest,
-    isActive: serialized.isActive,
-    planTier: serialized.plan.planTier,
-    hasCompletedOnboarding: serialized.hasCompletedOnboarding,
-    notificationsEnabled: serialized.notificationsEnabled,
-    pushTokenCount,
-    timezone: user.timezone || 'Asia/Kolkata',
-    city: user.city ?? null,
-    state: user.state ?? null,
-    latitude: user.latitude ?? null,
-    longitude: user.longitude ?? null,
-    locationUpdatedAt: user.locationUpdatedAt?.toISOString() ?? null,
-    termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
-    createdAt: user.createdAt.toISOString(),
-    accountLabel: serialized.isGuest ? 'Guest session' : 'Registered member',
-    ineligibleReasons,
-  };
-}
-
-async function loadUsers(where: ReturnType<typeof buildUserWhere>) {
-  return prisma.user.findMany({
-    where,
-    orderBy: { createdAt: 'desc' },
-    take: 200,
-    include: {
-      _count: {
-        select: {
-          pushTokens: { where: { active: true } },
-        },
-      },
-    },
-  });
+function hasRestrictiveFilters(filterParams: {
+  dietChoice?: string;
+  region?: string;
+  memberType?: string;
+  plan?: string;
+  accountStatus?: string;
+}): boolean {
+  return Boolean(
+    (filterParams.dietChoice && filterParams.dietChoice !== 'all') ||
+      (filterParams.region && filterParams.region !== 'all') ||
+      (filterParams.memberType && filterParams.memberType !== 'all') ||
+      (filterParams.plan && filterParams.plan !== 'all') ||
+      (filterParams.accountStatus && filterParams.accountStatus !== 'all'),
+  );
 }
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
@@ -85,17 +45,13 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   };
 
   const where = buildUserWhere(filterParams);
-  const users = await loadUsers(where);
-  const totalCount = await prisma.user.count();
-  const rows = users.map(toAdminUserRow);
+  const includeAuthOnly = !hasRestrictiveFilters(filterParams);
+  const rows = await loadAdminMemberRows(where, { includeAuthOnly });
+  const totalCount = await db.user.count();
+  const authOnlyCount = rows.filter((row) => row.syncStatus === 'auth_only').length;
   const pushReadyCount = rows.filter((user) => user.pushTokenCount > 0).length;
 
-  const hasFilters =
-    filterParams.dietChoice ||
-    (filterParams.region && filterParams.region !== 'all') ||
-    (filterParams.memberType && filterParams.memberType !== 'all') ||
-    (filterParams.plan && filterParams.plan !== 'all') ||
-    (filterParams.accountStatus && filterParams.accountStatus !== 'all');
+  const hasFilters = hasRestrictiveFilters(filterParams);
 
   return (
     <div className="space-y-8">
@@ -103,8 +59,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         title="Members"
         description={
           hasFilters
-            ? `Showing ${rows.length} of ${totalCount} accounts. Open a member to send notifications or manage account status. ${pushReadyCount} have active push tokens.`
-            : `Registered accounts and guest sessions. Open a member drawer to send meal picks, custom messages, or activate/deactivate. ${pushReadyCount} of ${rows.length} shown users can receive push.`
+            ? `Showing ${rows.length} matching accounts (${totalCount} Rasoi profiles in database). ${pushReadyCount} can receive push.`
+            : `Rasoi app profiles plus Supabase Auth users (${totalCount} synced profiles${authOnlyCount > 0 ? `, ${authOnlyCount} auth-only` : ''}). Open a synced member to send notifications or manage account status.`
         }
       />
 

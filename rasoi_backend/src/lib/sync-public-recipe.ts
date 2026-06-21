@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 
-import type { Recipe } from '@/generated/prisma/client';
+import type { Recipe } from '@/lib/db/types';
 import type { RecipeIngredient } from '@/lib/types';
 import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
 import { PANTRY_SECTIONS } from '@/lib/pantry-sections';

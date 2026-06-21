@@ -13,10 +13,16 @@ export const testIds = {
   screenSettings: 'screen-settings',
   screenLogin: 'screen-login',
   screenRegister: 'screen-register',
+  screenLegalConsent: 'screen-legal-consent',
   screenOnboarding: 'screen-onboarding',
+  screenTrialWelcome: 'screen-trial-welcome',
+
+  legalConsentCheckbox: 'legal-consent-checkbox',
+  legalConsentContinue: 'legal-consent-continue',
   screenRecipe: 'screen-recipe',
 
   loginGuest: 'login-guest',
+  guestContinue: 'guest-continue',
   loginSendOtp: 'login-send-otp',
   registerSendOtp: 'register-send-otp',
 

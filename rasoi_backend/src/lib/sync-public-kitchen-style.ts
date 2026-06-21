@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 
-import type { KitchenStyle } from '@/generated/prisma/client';
+import type { KitchenStyle } from '@/lib/db/types';
 import { getPooledDatabaseUrl } from '@/lib/database-url';
 
 let pool: Pool | null = null;

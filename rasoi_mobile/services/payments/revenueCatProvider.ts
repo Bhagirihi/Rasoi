@@ -1,5 +1,6 @@
 import { PURCHASES_ERROR_CODE } from 'react-native-purchases';
 
+import { normalizeRasoiPlusProductId } from '@/constants/payments';
 import type { PaymentProvider, PurchaseRequest, PurchaseResult } from '@/services/payments/types';
 import {
   isRevenueCatSupported,
@@ -21,6 +22,23 @@ function formatPurchaseError(error: unknown): string {
   return 'Purchase could not be completed.';
 }
 
+function buildPurchaseResult(
+  request: PurchaseRequest,
+  input: { transactionId?: string; storeProductId?: string },
+): PurchaseResult {
+  const storeProductId = input.storeProductId;
+  const normalizedProductId =
+    normalizeRasoiPlusProductId(storeProductId ?? request.productId) ?? request.productId;
+
+  return {
+    success: true,
+    provider: 'revenuecat',
+    productId: normalizedProductId,
+    storeProductId,
+    transactionId: input.transactionId ?? storeProductId ?? request.productId,
+  };
+}
+
 export const revenueCatPaymentProvider: PaymentProvider = {
   id: 'revenuecat',
   supportsRestore: true,
@@ -35,12 +53,11 @@ export const revenueCatPaymentProvider: PaymentProvider = {
     }
 
     try {
-      const { transactionId } = await purchaseRevenueCatProduct(request.productId);
-      return {
-        success: true,
-        provider: 'revenuecat',
-        transactionId,
-      };
+      const result = await purchaseRevenueCatProduct(
+        request.productId,
+        request.googlePlayOfferTag,
+      );
+      return buildPurchaseResult(request, result);
     } catch (error) {
       return {
         success: false,
@@ -61,11 +78,18 @@ export const revenueCatPaymentProvider: PaymentProvider = {
     }
 
     try {
-      const { transactionId } = await restoreRevenueCatPurchases();
+      const result = await restoreRevenueCatPurchases();
+      const storeProductId = result.storeProductId;
+      const productId = storeProductId
+        ? normalizeRasoiPlusProductId(storeProductId)
+        : undefined;
+
       return {
         success: true,
         provider: 'revenuecat',
-        transactionId,
+        productId: productId ?? undefined,
+        storeProductId,
+        transactionId: result.transactionId ?? storeProductId,
       };
     } catch (error) {
       return {

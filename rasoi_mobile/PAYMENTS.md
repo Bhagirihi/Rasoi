@@ -40,12 +40,12 @@ RevenueCat project **Rasoi App** is configured with:
 |----------|------------|
 | Entitlement | `rasoi_plus` |
 | Offering (current) | `default` |
-| Monthly package | `$rc_monthly` → `rasoi_plus_monthly` |
-| Annual package | `$rc_annual` → `rasoi_plus_yearly` |
+| Monthly package | `$rc_monthly` → `rasoi_plus_monthly:monthly` (Play) + Test Store |
+| Annual package | `$rc_annual` → `rasoi_plus_yearly:yearly` (Play) + Test Store |
 
 Turn **Payment** ON in admin (`/admin/payments`) before testing live billing.
 
-Server webhook verification (optional hardening): `rasoi_backend/src/app/api/billing/confirm/route.ts`
+Server webhook + purchase confirm: `rasoi_backend/src/app/api/billing/confirm/route.ts`, `rasoi_backend/src/app/api/billing/revenuecat/webhook/route.ts`
 
 ## Code map
 
@@ -61,6 +61,7 @@ Server webhook verification (optional hardening): `rasoi_backend/src/app/api/bil
 | `app/(auth)/trial-welcome.tsx` | Post-registration trial upsell (full screen) |
 | `components/TrialWelcomeContent.tsx` | Shared trial welcome UI |
 | `context/AppContext.tsx` | `upgradeToPaid`, `restorePurchases` |
+| `services/billing.ts` | POST /api/billing/confirm after store purchase |
 | `005/.../billing/confirm/route.ts` | Future server webhook verification |
 
 ## Product ids & pricing

@@ -22,7 +22,7 @@ import { PrimaryButton } from '@/components/ui/Primitives';
 import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
-import { isValidPhoneLength, normalizeIndianPhone } from '@/utils/storage';
+import { getIndianPhoneError, isValidPhoneLength, normalizeIndianPhone } from '@/utils/storage';
 
 type FieldError = 'name' | 'phone' | 'general' | null;
 
@@ -69,7 +69,10 @@ export default function EditProfileScreen() {
 
     if (!isValidPhoneLength(normalizedPhone)) {
       setFieldError('phone');
-      setErrorMessage('Enter your 10-digit mobile number.');
+      setErrorMessage(
+        getIndianPhoneError(normalizedPhone) ??
+          'Enter a valid 10-digit Indian mobile number (starts with 6–9).',
+      );
       return;
     }
 
@@ -104,7 +107,17 @@ export default function EditProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
-      <AppSavingOverlay visible={isSubmitting} message="Saving your profile…" />
+      <AppSavingOverlay
+        visible={isSubmitting}
+        steps={
+          isGuest
+            ? [
+                { message: 'Starting guest mode…', subtitle: 'Setting up your kitchen' },
+                { message: 'Almost ready…', subtitle: 'Opening Rasoi' },
+              ]
+            : [{ message: 'Saving your profile…', subtitle: 'Updating your account' }]
+        }
+      />
       <SettingsSubHeader
         title={isGuest ? 'Sign in' : 'Edit profile'}
         onBack={() => router.back()}

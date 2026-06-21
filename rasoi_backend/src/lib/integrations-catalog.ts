@@ -38,7 +38,7 @@ export const INTEGRATION_EMAIL_EXCLUSIONS: EmailExclusionNote[] = [
   {
     label: 'my.website.email2@gmail.com',
     detail:
-      'Private Google account for AdMob console, AdMob MCP OAuth, and Cursor Gmail MCP (device QA). Not the public support address.',
+      'Private Google account for AdMob, MCP OAuth, and device QA. May be used as Supabase SMTP login — but never as the visible From address; set Sender email to cooking@rasoiapplication.in.',
   },
   {
     label: 'User sign-in emails',
@@ -55,14 +55,16 @@ export const INTEGRATION_EMAIL_EXCLUSIONS: EmailExclusionNote[] = [
 export const INTEGRATION_EMAIL_ACCOUNTS: EmailAccountEntry[] = [
   {
     email: LEGAL_CONTACT_EMAIL,
-    role: 'Public support, legal & sponsors',
+    role: 'Public support, legal, sponsors & OTP sender',
     usedFor: [
       'Privacy policy and Terms contact',
       'Sponsor applications (website)',
       'Mobile Settings footer & feedback',
       'Website footer and mailto links',
+      'Supabase Auth OTP From address (sign-in codes)',
     ],
-    notes: 'Primary public address. Cloudflare Email Routing → Gmail inbox for receive/send.',
+    notes:
+      'Cloudflare Email Routing → Gmail inbox. Supabase SMTP Sender email must be this address (not dev Gmail). Gmail → Send mail as cooking@, then Supabase → Authentication → SMTP.',
   },
   {
     email: 'admin@rasoi.app',
@@ -71,11 +73,11 @@ export const INTEGRATION_EMAIL_ACCOUNTS: EmailAccountEntry[] = [
     notes: 'Override with ADMIN_EMAIL in backend .env before production seed.',
   },
   {
-    email: 'Gmail (Supabase SMTP)',
-    role: 'Auth OTP sender',
-    usedFor: ['Mobile email sign-in codes via Supabase Auth'],
+    email: 'Gmail (SMTP login only)',
+    role: 'Supabase SMTP credentials',
+    usedFor: ['SMTP username/password for Supabase Auth delivery'],
     notes:
-      'Set in Supabase Dashboard → Authentication → SMTP (smtp.gmail.com:587 + Google App Password). Sender name: Rasoi App.',
+      'Gmail account that receives cooking@ forwards + App Password. Visible From address must still be cooking@rasoiapplication.in.',
   },
   {
     email: 'my.website.email2@gmail.com',
@@ -122,20 +124,44 @@ export const INTEGRATION_SERVICES: IntegrationEntry[] = [
     usedIn: [
       'rasoi_mobile/services/payments/',
       'EXPO_PUBLIC_PAYMENT_PROVIDER=revenuecat',
-      'rasoi_backend/api/billing/confirm (webhook verify — planned)',
+      'rasoi_backend/api/billing/plans',
+      'rasoi_backend/api/billing/confirm',
+      'rasoi_backend/api/billing/revenuecat/webhook',
+      'rasoi_backend/api/users/me/promo/redeem',
+      'rasoi_backend/admin/promo-codes',
     ],
     account: 'Rasoi App (proj1100e927)',
     envVars: [
-      'EXPO_PUBLIC_REVENUECAT_IOS_KEY',
-      'EXPO_PUBLIC_REVENUECAT_ANDROID_KEY',
-      'EXPO_PUBLIC_REVENUECAT_TEST_KEY',
+      'REVENUECAT_SECRET_API_KEY',
+      'REVENUECAT_WEBHOOK_SECRET',
       'EXPO_PUBLIC_PAYMENT_PROVIDER',
     ],
     status: 'configured',
     statusNote:
-      'Entitlement rasoi_plus, offering default, $rc_monthly / $rc_annual packages. SDK wired; enable admin payments + set API keys to go live.',
+      'Entitlement rasoi_plus, offering default, $rc_monthly / $rc_annual packages linked to Play + Test Store. Yearly promo offer tag promo-yearly-5 (Play offer yearly-promo-5pct, ₹475 first year). Mobile confirms via /api/billing/confirm; webhook syncs renewals/cancellations.',
     consoleUrl: 'https://app.revenuecat.com/',
     docsPath: 'rasoi_mobile/PAYMENTS.md',
+  },
+  {
+    id: 'promo-codes',
+    name: 'Rasoi promo codes',
+    category: 'Mobile monetization',
+    purpose:
+      'In-app trial extensions (+5/+10 days) and yearly Play offer unlock (5% off via tag promo-yearly-5).',
+    usedIn: [
+      'rasoi_backend/lib/plan-pricing.ts',
+      'rasoi_backend/lib/promo-codes.ts',
+      'rasoi_backend/api/users/me/promo/redeem',
+      'rasoi_backend/api/billing/plans',
+      'rasoi_backend/admin/promo-codes',
+      'rasoi_mobile/components/paywall/PromoCodeInput.tsx',
+    ],
+    account: 'Supabase rasoi.PromoCode + Google Play Console offer',
+    envVars: [],
+    status: 'live',
+    statusNote:
+      'Codes MK7Q4VN2, RT9H6WP8, JX5L3KC7 seeded in Supabase. Play offer yearly-promo-5pct active on rasoi_plus_yearly.',
+    docsPath: 'rasoi_mobile/store/play-console/PROMO_CODES.md',
   },
   {
     id: 'razorpay',
@@ -204,7 +230,7 @@ export const INTEGRATION_SERVICES: IntegrationEntry[] = [
       'DIRECT_URL',
     ],
     status: 'live',
-    statusNote: 'Primary database + auth. SMTP Gmail configured in Supabase dashboard.',
+    statusNote: 'Primary database + auth. Set Supabase SMTP sender to cooking@rasoiapplication.in (not dev Gmail).',
     consoleUrl: 'https://supabase.com/dashboard',
     docsPath: 'rasoi_backend/README.md',
   },

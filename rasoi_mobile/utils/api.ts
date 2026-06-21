@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 
 import { getAuthToken } from '@/utils/authToken';
+import { getSupabaseSession } from '@/services/supabaseAuth';
 import { addSentryBreadcrumb, captureException } from '@/utils/sentry';
 
 function devApiDefault(): string {
@@ -77,7 +78,7 @@ export function getApiBaseUrl(): string {
   const configured = process.env.EXPO_PUBLIC_API_URL?.trim();
 
   if (__DEV__) {
-    return resolveDevApiUrl(configured);
+    return normalizeProductionApiUrl(resolveDevApiUrl(configured));
   }
 
   return normalizeProductionApiUrl(configured ?? PROD_API_URL);
@@ -124,12 +125,40 @@ export type ApiEnvelope<T> = {
   error?: string;
 };
 
-export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+export type ApiFetchOptions = {
+  /** Abort the request after this many milliseconds (shows a friendly timeout error). */
+  timeoutMs?: number;
+};
+
+let apiWarmPromise: Promise<void> | null = null;
+
+/** Wake the backend while the user reads the OTP email (reduces cold-start delay on verify). */
+export function warmApiConnection(): void {
+  if (apiWarmPromise) return;
+
+  const url = `${getApiBaseUrl()}/api/recipes`;
+  apiWarmPromise = fetch(url, { headers: { Accept: 'application/json' } })
+    .then(() => undefined)
+    .catch(() => undefined);
+}
+
+export async function apiFetch<T>(
+  path: string,
+  init?: RequestInit,
+  options?: ApiFetchOptions,
+): Promise<T> {
   const url = `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
+
+  const controller = options?.timeoutMs ? new AbortController() : null;
+  const timeoutId =
+    controller && options?.timeoutMs
+      ? setTimeout(() => controller.abort(), options.timeoutMs)
+      : null;
 
   try {
     const response = await fetch(url, {
       ...init,
+      signal: controller?.signal ?? init?.signal,
       headers: {
         Accept: 'application/json',
         ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
@@ -161,6 +190,10 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
 
     return payload.data;
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. Check your connection and try again.');
+    }
+
     const isNonCriticalPath =
       path.includes('/api/sponsor-events') ||
       path.includes('/api/affiliate-events') ||
@@ -181,31 +214,43 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
       }
     }
     throw error;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 
-export async function authApiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+async function getRequestAuthorization(): Promise<string | null> {
+  const session = await getSupabaseSession();
+  if (session?.access_token) {
+    return `Bearer ${session.access_token}`;
+  }
+
   const token = await getAuthToken();
-  if (!token) {
+  return token ? `Bearer ${token}` : null;
+}
+
+export async function authApiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const authorization = await getRequestAuthorization();
+  if (!authorization) {
     throw new Error('Not authenticated');
   }
 
   return apiFetch<T>(path, {
     ...init,
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: authorization,
       ...init?.headers,
     },
   });
 }
 
 export async function optionalAuthApiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = await getAuthToken();
+  const authorization = await getRequestAuthorization();
   return apiFetch<T>(path, {
     ...init,
-    headers: token
+    headers: authorization
       ? {
-          Authorization: `Bearer ${token}`,
+          Authorization: authorization,
           ...init?.headers,
         }
       : init?.headers,

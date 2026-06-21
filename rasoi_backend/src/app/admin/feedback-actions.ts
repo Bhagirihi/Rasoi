@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 async function requireAdminSession() {
   const admin = await getAdminFromCookies();
@@ -17,7 +17,7 @@ export async function updateFeedbackStatusAction(id: string, status: string) {
   const valid = status === 'pending' || status === 'reviewed' || status === 'resolved';
   if (!valid) throw new Error('Invalid status');
 
-  await prisma.userFeedback.update({
+  await db.userFeedback.update({
     where: { id },
     data: { status },
   });
@@ -28,7 +28,7 @@ export async function updateFeedbackStatusAction(id: string, status: string) {
 
 export async function deleteFeedbackAction(id: string) {
   await requireAdminSession();
-  await prisma.userFeedback.delete({ where: { id } });
+  await db.userFeedback.delete({ where: { id } });
   revalidatePath('/admin/feedback');
   revalidatePath('/admin');
 }

@@ -2,12 +2,12 @@ import PartnerLinksForm from '@/app/admin/(console)/partners/PartnerLinksForm';
 import { PageHeader } from '@/app/admin/_components/ui';
 import type { PartnerId } from '@/lib/partners';
 import { ensurePartnerLinks } from '@/lib/partner-seed';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export default async function AdminPartnersPage() {
   await ensurePartnerLinks();
 
-  const links = await prisma.partnerLink.findMany({ orderBy: { partnerId: 'asc' } });
+  const links = await db.partnerLink.findMany({ orderBy: { partnerId: 'asc' } });
 
   return (
     <div className="space-y-8">

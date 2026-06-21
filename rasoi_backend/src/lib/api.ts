@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 
+import { isProduction } from '@/lib/env';
+
 export function jsonOk<T>(data: T, status = 200) {
   return NextResponse.json({ ok: true, data }, { status });
 }
@@ -11,7 +13,10 @@ export function jsonError(message: string, status = 400, details?: unknown) {
 
 export function handleApiError(error: unknown) {
   if (error instanceof ZodError) {
-    return jsonError('Validation failed', 400, error.flatten());
+    const details = isProduction()
+      ? { formErrors: error.flatten().formErrors }
+      : error.flatten();
+    return jsonError('Validation failed', 400, details);
   }
 
   console.error(error);

@@ -2,16 +2,35 @@ import { Check, X } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { PAYWALL_COMPARE_ROWS } from '@/constants/payments';
+import type { PlanTier } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
 
-export default function PaywallCompareTable() {
+type PaywallCompareTableProps = {
+  highlightTier?: PlanTier;
+};
+
+const TIER_LABELS: Record<PlanTier, string> = {
+  free: 'Free',
+  trial: 'Trial',
+  paid: 'Plus',
+};
+
+export default function PaywallCompareTable({ highlightTier }: PaywallCompareTableProps) {
   return (
     <View style={styles.table}>
       <View style={styles.tableHead}>
-        <Text style={[styles.cell, styles.cellFeature]}>Feature</Text>
-        <Text style={styles.cellHead}>Free</Text>
-        <Text style={styles.cellHead}>Trial</Text>
-        <Text style={styles.cellHead}>Paid</Text>
+        <Text style={[styles.cell, styles.cellFeature]}>What you get</Text>
+        {(['free', 'trial', 'paid'] as const).map((tier) => (
+          <View
+            key={tier}
+            style={[styles.headCell, highlightTier === tier && styles.headCellActive]}
+          >
+            <Text style={[styles.cellHead, highlightTier === tier && styles.cellHeadActive]}>
+              {TIER_LABELS[tier]}
+            </Text>
+            {highlightTier === tier ? <Text style={styles.currentBadge}>You</Text> : null}
+          </View>
+        ))}
       </View>
       {PAYWALL_COMPARE_ROWS.map((row) => (
         <View key={row.label} style={styles.tableRow}>
@@ -47,7 +66,7 @@ const styles = StyleSheet.create({
   },
   tableHead: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     backgroundColor: colors.cream,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
@@ -72,12 +91,31 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontWeight: '700',
   },
-  cellHead: {
+  headCell: {
     flex: 1,
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: 4,
+    borderRadius: radius.sm,
+  },
+  headCellActive: {
+    backgroundColor: 'rgba(255,107,53,0.12)',
+  },
+  cellHead: {
     fontSize: 11,
     fontWeight: '800',
     color: colors.muted,
     textAlign: 'center',
+  },
+  cellHeadActive: {
+    color: colors.primary,
+  },
+  currentBadge: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   cellIcon: {
     flex: 1,

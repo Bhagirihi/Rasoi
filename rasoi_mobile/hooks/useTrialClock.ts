@@ -7,7 +7,11 @@ import {
   getTrialDaysLeft,
 } from '@/utils/planLogic';
 
-export function useTrialClock(trialStartedAt: string | null, effectiveTier: PlanTier) {
+export function useTrialClock(
+  trialStartedAt: string | null,
+  effectiveTier: PlanTier,
+  trialBonusDays = 0,
+) {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -18,10 +22,10 @@ export function useTrialClock(trialStartedAt: string | null, effectiveTier: Plan
 
   return useMemo(
     () => ({
-      trialTimeLabel: formatTrialTimeLabel(trialStartedAt, now),
-      trialEndsAtLabel: formatTrialEndsAt(trialStartedAt),
-      trialDaysLeft: getTrialDaysLeft(trialStartedAt, now),
+      trialTimeLabel: formatTrialTimeLabel(trialStartedAt, now, trialBonusDays),
+      trialEndsAtLabel: formatTrialEndsAt(trialStartedAt, trialBonusDays),
+      trialDaysLeft: getTrialDaysLeft(trialStartedAt, now, trialBonusDays),
     }),
-    [trialStartedAt, now],
+    [trialStartedAt, now, trialBonusDays],
   );
 }

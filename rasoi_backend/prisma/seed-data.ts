@@ -9,7 +9,7 @@ export const MOCK_RECIPES = [
     dietType: 'Veg',
     difficulty: 'Medium',
     description: 'Crispy fermented rice crepe with spiced potato filling and fresh coconut chutney.',
-    imageUrl: 'https://images.unsplash.com/photo-1630384060427-c20d1e256a5e?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=800&q=80',
     tags: ['festive'],
     ingredients: [
       { name: 'Rice', isStaple: true },
@@ -78,7 +78,7 @@ export const MOCK_RECIPES = [
     dietType: 'Non-Veg',
     difficulty: 'Hard',
     description: 'Fragrant layered biryani with marinated chicken and saffron-infused basmati rice.',
-    imageUrl: 'https://images.unsplash.com/photo-1563379091335-03a21ab885a8?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=800&q=80',
     tags: ['festive'],
     ingredients: [
       { name: 'Chicken', isStaple: false },
@@ -119,7 +119,7 @@ export const MOCK_RECIPES = [
     dietType: 'Veg',
     difficulty: 'Easy',
     description: 'Smoky tempered yellow dal paired with fragrant jeera rice.',
-    imageUrl: 'https://images.unsplash.com/photo-1546833999-bf7980d87910?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80',
     tags: ['kids', 'leftover'],
     ingredients: [
       { name: 'Dal', isStaple: true },
@@ -140,7 +140,7 @@ export const MOCK_RECIPES = [
     dietType: 'Veg',
     difficulty: 'Easy',
     description: 'Light flattened rice breakfast with peanuts, curry leaves, and lemon.',
-    imageUrl: 'https://images.unsplash.com/photo-1606491956689-2ea866880f84?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&q=80',
     tags: ['under20', 'quick', 'kids'],
     ingredients: [
       { name: 'Poha', isStaple: true },
@@ -180,7 +180,7 @@ export const MOCK_RECIPES = [
     dietType: 'Veg',
     difficulty: 'Easy',
     description: 'Creamy spinach gravy with paneer, served with hot phulka rotis.',
-    imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568fa7098?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&q=80',
     tags: ['under20', 'kids'],
     ingredients: [
       {
@@ -204,7 +204,7 @@ export const MOCK_RECIPES = [
     dietType: 'Veg',
     difficulty: 'Easy',
     description: 'Transform yesterday\'s rice into zesty lemon pulao with peanuts and curry leaves.',
-    imageUrl: 'https://images.unsplash.com/photo-1516684669134-de6f7d4736fa?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800&q=80',
     tags: ['under20', 'leftover', 'quick'],
     ingredients: [
       { name: 'Rice', isStaple: true },
@@ -224,7 +224,7 @@ export const MOCK_RECIPES = [
     dietType: 'Egg',
     difficulty: 'Medium',
     description: 'Boiled eggs simmered in a spiced onion-tomato gravy — a Bengali household staple.',
-    imageUrl: 'https://images.unsplash.com/photo-1589302168068-964664a47807?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&q=80',
     tags: ['kids'],
     ingredients: [
       { name: 'Eggs', isStaple: false },
@@ -289,7 +289,7 @@ export const MOCK_RECIPES = [
     dietType: 'Non-Veg',
     difficulty: 'Medium',
     description: 'Smoky tandoori chicken wrapped in roomali roti with mint chutney.',
-    imageUrl: 'https://images.unsplash.com/photo-1626700051175-6818013e1d2f?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80',
     tags: ['under20', 'quick'],
     ingredients: [
       { name: 'Chicken', isStaple: false },
@@ -309,7 +309,7 @@ export const MOCK_RECIPES = [
     dietType: 'Veg',
     difficulty: 'Easy',
     description: 'Semolina upma with mixed veggies — a quick South Indian tiffin favourite.',
-    imageUrl: 'https://images.unsplash.com/photo-1606491956689-2ea866880f84?w=800&q=80',
+    imageUrl: 'https://images.unsplash.com/photo-1559847844-5315695dadae?w=800&q=80',
     tags: ['under20', 'quick', 'kids', 'leftover'],
     ingredients: [
       { name: 'Rava', isStaple: true },

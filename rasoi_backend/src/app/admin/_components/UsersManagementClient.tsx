@@ -8,8 +8,9 @@ import { DataTable } from '@/app/admin/_components/DataTable';
 import SendCustomNotificationControl from '@/app/admin/_components/SendCustomNotificationControl';
 import SendMealNotificationControl from '@/app/admin/_components/SendMealNotificationControl';
 import UserAccountStatusControl from '@/app/admin/_components/UserAccountStatusControl';
+import UserPlanControl from '@/app/admin/_components/UserPlanControl';
 import type { AdminUserRow } from '@/app/admin/_components/admin-users-types';
-import { formatAdminJoinedAt } from '@/app/admin/_components/admin-users-types';
+import { formatAdminJoinedAt, isAuthOnlyRowId } from '@/app/admin/_components/admin-users-types';
 import { Badge } from '@/app/admin/_components/ui';
 
 type DrawerTab = 'profile' | 'notifications' | 'account';
@@ -48,7 +49,7 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
       <BulkMealNotificationBar users={users} />
 
       <DataTable
-        columns={['Name', 'Email', 'Account', 'Joined', 'Location', 'Status', 'Diet', 'Plan', 'Push', '']}
+        columns={['Name', 'Email', 'Account', 'Sync', 'Joined', 'Location', 'Status', 'Diet', 'Plan', 'Push', '']}
         emptyMessage="No members match these filters."
       >
         {users.map((user) => (
@@ -73,6 +74,11 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
             <td className="px-5 py-4">
               <Badge tone={user.isGuest ? 'neutral' : 'gold'}>{user.accountLabel}</Badge>
             </td>
+            <td className="px-5 py-4">
+              <Badge tone={user.syncStatus === 'synced' ? 'success' : 'warning'}>
+                {user.syncStatus === 'synced' ? 'Synced' : 'Auth only'}
+              </Badge>
+            </td>
             <td className="px-5 py-4 text-sm text-admin-muted">{formatAdminJoinedAt(user.createdAt)}</td>
             <td className="px-5 py-4 text-sm text-admin-muted">
               {user.city ? `${user.city}${user.state ? `, ${user.state}` : ''}` : '—'}
@@ -86,7 +92,9 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
               <Badge tone="gold">{user.dietLabel}</Badge>
             </td>
             <td className="px-5 py-4">
-              <Badge tone="neutral">{user.planTier}</Badge>
+              <Badge tone={user.planTier === 'trial' ? 'gold' : user.planTier === 'paid' ? 'success' : 'neutral'}>
+                {user.planLabel}
+              </Badge>
             </td>
             <td className="px-5 py-4 text-sm text-admin-muted">
               {user.pushTokenCount > 0
@@ -118,8 +126,24 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
       >
         {selectedUser && (
           <div className="space-y-6">
+            {isAuthOnlyRowId(selectedUser.id) && (
+              <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                <p className="font-semibold">Supabase Auth only</p>
+                <p className="mt-1">
+                  This user exists in Supabase Auth but has not opened the Rasoi app far enough to create a{' '}
+                  <code className="rounded bg-white/80 px-1">rasoi.User</code> profile. They will appear as a
+                  full member after register, guest, or email login sync.
+                </p>
+                {selectedUser.supabaseUserId && (
+                  <p className="mt-2 text-xs text-amber-900/80">Auth ID: {selectedUser.supabaseUserId}</p>
+                )}
+              </div>
+            )}
+
             <div className="flex flex-wrap gap-2 border-b border-admin-border pb-1">
-              {(Object.keys(TAB_LABELS) as DrawerTab[]).map((tab) => (
+              {(Object.keys(TAB_LABELS) as DrawerTab[])
+                .filter((tab) => selectedUser.canManage || tab === 'profile')
+                .map((tab) => (
                 <button
                   key={tab}
                   type="button"
@@ -145,6 +169,19 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
                   <DetailRow label="Email" value={selectedUser.email ?? '—'} />
                   <DetailRow label="Phone" value={selectedUser.phone ?? '—'} />
                   <DetailRow label="Account type" value={selectedUser.accountLabel} />
+                  <DetailRow
+                    label="Supabase sync"
+                    value={selectedUser.syncStatus === 'synced' ? 'App profile linked' : 'Auth only — not synced'}
+                  />
+                  {selectedUser.supabaseUserId && (
+                    <DetailRow label="Supabase user ID" value={selectedUser.supabaseUserId} />
+                  )}
+                  {selectedUser.lastSignInAt && (
+                    <DetailRow
+                      label="Last sign-in"
+                      value={formatAdminJoinedAt(selectedUser.lastSignInAt)}
+                    />
+                  )}
                   <DetailRow label="Joined" value={formatAdminJoinedAt(selectedUser.createdAt)} />
                   <DetailRow
                     label="Terms accepted"
@@ -190,6 +227,17 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
                     label="Onboarding"
                     value={selectedUser.hasCompletedOnboarding ? 'Complete' : 'Pending'}
                   />
+                  <DetailRow label="Plan" value={selectedUser.planLabel} />
+                  {selectedUser.planTier === 'trial' && (
+                    <DetailRow
+                      label="Trial status"
+                      value={
+                        selectedUser.trialActive
+                          ? `Active · ${selectedUser.trialTotalDays} days`
+                          : 'Expired'
+                      }
+                    />
+                  )}
                   <DetailRow
                     label="Notifications"
                     value={selectedUser.notificationsEnabled ? 'On' : 'Off'}
@@ -262,22 +310,55 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
               </div>
             )}
 
-            {drawerTab === 'account' && (
-              <section className="space-y-3">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-admin-muted">
-                    Account access
-                  </p>
-                  <p className="mt-1 text-sm text-admin-muted">
-                    Deactivated members cannot sign in or use the app. You can reactivate them anytime.
-                  </p>
+            {drawerTab === 'account' && selectedUser.canManage && (
+              <section className="space-y-6">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-admin-muted">
+                      Plan & trial
+                    </p>
+                    <p className="mt-1 text-sm text-admin-muted">
+                      Downgrade from Rasoi Plus, reset trial, or add bonus trial days for support and QA.
+                    </p>
+                  </div>
+
+                  <UserPlanControl
+                    userId={selectedUser.id}
+                    userName={selectedUser.name}
+                    planTier={selectedUser.planTier}
+                    planLabel={selectedUser.planLabel}
+                    trialStartedAt={selectedUser.trialStartedAt}
+                    trialBonusDays={selectedUser.trialBonusDays}
+                    trialTotalDays={selectedUser.trialTotalDays}
+                    trialActive={selectedUser.trialActive}
+                  />
                 </div>
 
-                <UserAccountStatusControl
-                  userId={selectedUser.id}
-                  userName={selectedUser.name}
-                  isActive={selectedUser.isActive}
-                />
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-admin-muted">
+                      Account access
+                    </p>
+                    <p className="mt-1 text-sm text-admin-muted">
+                      Deactivated members cannot sign in or use the app. You can reactivate them anytime.
+                    </p>
+                  </div>
+
+                  <UserAccountStatusControl
+                    userId={selectedUser.id}
+                    userName={selectedUser.name}
+                    isActive={selectedUser.isActive}
+                  />
+                </div>
+              </section>
+            )}
+
+            {drawerTab === 'account' && !selectedUser.canManage && (
+              <section className="space-y-3">
+                <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  Plan changes are available after this user completes Rasoi app sync and has a{' '}
+                  <code className="rounded bg-white/80 px-1">rasoi.User</code> profile.
+                </div>
               </section>
             )}
           </div>

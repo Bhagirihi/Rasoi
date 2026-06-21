@@ -23,7 +23,7 @@ export function useRecipeDiscovery() {
     setPantryFilterActive,
   } = useAppContext();
   const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes } = useRecipes();
-  const { rankedRecipes: baseRankedRecipes } = useTonightRecipes();
+  const { rankedRecipes: baseRankedRecipes, rankingReady } = useTonightRecipes();
   const [activeFilters, setActiveFilters] = useState<ToggleableFastFilter[]>([]);
   const meal = getMealContext();
 
@@ -103,6 +103,7 @@ export function useRecipeDiscovery() {
     recipes,
     recipesLoading,
     recipesError,
+    rankingReady,
     refreshRecipes,
     activeFilters,
     filteredRecipes,

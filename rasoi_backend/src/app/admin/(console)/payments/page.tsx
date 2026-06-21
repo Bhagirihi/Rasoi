@@ -23,6 +23,23 @@ export default async function AdminPaymentsPage() {
 
       <AdminCard className="p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
+          Promo codes & Play offers
+        </p>
+        <p className="mt-4 text-sm leading-relaxed text-admin-muted">
+          Trial extension and yearly discount codes live in Supabase. Google Play offer{' '}
+          <span className="font-mono text-admin-text">promo-yearly-5</span> is configured on the yearly
+          subscription.
+        </p>
+        <a
+          href="/admin/promo-codes"
+          className="mt-4 inline-flex text-sm font-semibold text-admin-gold-soft hover:text-admin-gold"
+        >
+          Manage promo codes →
+        </a>
+      </AdminCard>
+
+      <AdminCard className="p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
           When payments are off
         </p>
         <ul className="mt-4 space-y-2 text-sm leading-relaxed text-admin-muted">

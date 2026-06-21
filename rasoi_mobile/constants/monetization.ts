@@ -4,28 +4,36 @@ export type { FoodDeliveryPartner };
 
 export const FREE_APP_BADGE = 'Free · Trial · Rasoi Plus';
 
-export const REVENUE_DISCLOSURE =
-  'Rasoi Plus unlocks Blinkit, Zepto, Instamart, Zomato & Swiggy. Free and trial plans may show ads.';
+/** ASCI-style affiliate disclosure for partner checkout modals. */
+export const AFFILIATE_CHECKOUT_DISCLOSURE =
+  'Opens a partner app. Rasoi may earn a fee when their affiliate program applies. Delivery times and availability vary.';
 
-export const FOOD_DELIVERY_DISCLOSURE =
-  'Opens Zomato or Swiggy with affiliate tracking when their partner program applies.';
+/** Subscription / ads note — paywall and upsell surfaces only. */
+export const REVENUE_DISCLOSURE =
+  'Rasoi Plus unlocks partner checkout and removes ads. Free and trial plans may show ads.';
+
+/** Short note under partner checkout buttons (food delivery modal). */
+export const PARTNER_CHECKOUT_SUPPORT_NOTE =
+  'Partner checkout supports Rasoi · Free & trial include ads, Rasoi Plus is ad-free';
+
+export const FOOD_DELIVERY_DISCLOSURE = AFFILIATE_CHECKOUT_DISCLOSURE;
 
 export const GROCERY_PARTNER_UI: Record<
   AffiliatePartner,
   { delivery: string; accent: string; textOnAccent: string }
 > = {
   blinkit: {
-    delivery: '~10 min',
+    delivery: 'Quick delivery',
     accent: '#F8CB46',
     textOnAccent: '#1A1A2E',
   },
   zepto: {
-    delivery: '~15 min',
+    delivery: 'Quick delivery',
     accent: '#7C3AED',
     textOnAccent: '#FFFFFF',
   },
   instamart: {
-    delivery: '~20 min',
+    delivery: 'Quick delivery',
     accent: '#FF5200',
     textOnAccent: '#FFFFFF',
   },

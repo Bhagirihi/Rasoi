@@ -137,3 +137,53 @@ export function warmRasoiRealtime(): void {
   warmSupabaseClient();
   ensureSharedChannel();
 }
+
+const USER_PLAN_DEBOUNCE_MS = 400;
+
+/**
+ * Live-sync plan/trial when rasoi.User changes (e.g. admin console updates).
+ * Uses a row filter so only the signed-in user's profile triggers a refresh.
+ */
+export function useRasoiUserPlanRealtime(userId: string | null, onChange: () => void) {
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  useEffect(() => {
+    if (!userId) return;
+
+    warmSupabaseClient();
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
+
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const channel = supabase
+      .channel(`rasoi-mobile:user-plan:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: RASOI_REALTIME_SCHEMA,
+          table: 'User',
+          filter: `id=eq.${userId}`,
+        },
+        () => {
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            debounceTimer = null;
+            onChangeRef.current();
+          }, USER_PLAN_DEBOUNCE_MS);
+        },
+      )
+      .subscribe((status, error) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn(`[realtime] user plan channel error (${userId})`, error);
+        }
+      });
+
+    return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      void supabase.removeChannel(channel);
+    };
+  }, [userId]);
+}

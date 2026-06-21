@@ -52,9 +52,42 @@ function withAdMobPlugin(plugins: ExpoConfig['plugins']): ExpoConfig['plugins'] 
   });
 }
 
+function withFirebasePlugins(plugins: ExpoConfig['plugins']): ExpoConfig['plugins'] {
+  const existing = plugins ?? [];
+  const pluginId = (entry: NonNullable<ExpoConfig['plugins']>[number]) =>
+    Array.isArray(entry) ? entry[0] : entry;
+
+  if (!hasGoogleServices || existing.some((entry) => pluginId(entry) === '@react-native-firebase/app')) {
+    return existing;
+  }
+
+  return [
+    ...existing,
+    '@react-native-firebase/app',
+    '@react-native-firebase/crashlytics',
+    [
+      '@react-native-firebase/analytics',
+      {
+        ios: {
+          withoutAdIdSupport: true,
+        },
+      },
+    ],
+    [
+      'expo-build-properties',
+      {
+        ios: {
+          useFrameworks: 'static',
+          forceStaticLinking: ['RNFBApp', 'RNFBAnalytics', 'RNFBCrashlytics'],
+        },
+      },
+    ],
+  ];
+}
+
 export default (): ExpoConfig => ({
   ...base,
-  plugins: withAdMobPlugin(base.plugins),
+  plugins: withFirebasePlugins(withAdMobPlugin(base.plugins)),
   extra: {
     ...base.extra,
     eas: {

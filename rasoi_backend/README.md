@@ -33,19 +33,21 @@ Add to `.env` (or `.env.local` for Next.js):
 - `DATABASE_URL` / `DIRECT_URL` — from Supabase **Database** settings
 - `JWT_SECRET` — long random string for Rasoi mobile/admin JWT auth
 
-### 3. Push schema and seed (upserts — safe to re-run, no duplicates)
+### 3. Apply Supabase migrations and seed
+
+Apply SQL migrations from `../rasoi_mobile/supabase/migrations/` to your Supabase project (SQL editor or `supabase db push`), then seed reference data:
 
 ```bash
 npm install
-npm run db:sync
+npm run db:seed
 npm run dev
 ```
 
 Use **`npm run dev` only** for local work (Turbopack — fast compile). Do not chain `npm run dev && npm start`; production `npm start` needs `npm run build` first and is slower.
 
-`db:sync` applies the Prisma schema to Supabase and seeds recipes, sponsors, partners, and admin using **upserts** (same IDs → updates, not duplicates).
+`db:seed` upserts recipes, sponsors, partners, and admin (same IDs → updates, not duplicates).
 
-Prisma tables live in the **`rasoi` PostgreSQL schema** so they do not conflict with Supabase `public.profiles` → `auth.users` (from optional 004 SQL migration). See `prisma/supabase-note.md`.
+Admin/API tables live in the **`rasoi` PostgreSQL schema** so they do not conflict with Supabase `public.profiles` → `auth.users`. See `prisma/supabase-note.md`.
 
 Open [http://localhost:3000](http://localhost:3000) for the landing page, or [http://localhost:3000/admin](http://localhost:3000/admin) for the dashboard.
 
@@ -61,9 +63,10 @@ Change `ADMIN_PASSWORD` in `.env` before seeding production.
 1. Deploy this repo on Vercel
 2. In Vercel **Environment Variables**, set:
    - `DATABASE_URL` — pooled Supabase URI (`6543`, `?pgbouncer=true`)
-   - `DIRECT_URL` — direct URI (for local migrations; not required on Vercel if you migrate locally)
+   - `DIRECT_URL` — direct URI (for local scripts; optional on Vercel)
+   - `SUPABASE_SERVICE_ROLE_KEY` — backend admin access to `rasoi` schema
    - `JWT_SECRET` — long random string
-3. Run `npm run db:push` and `npm run db:seed` locally once (against production `DIRECT_URL`)
+3. Apply Supabase migrations and run `npm run db:seed` locally once (against production `DIRECT_URL`)
 4. Redeploy if needed
 
 Supabase free tier is enough for early launch (500 MB DB, plenty for thousands of users and hundreds of recipes).
@@ -147,10 +150,10 @@ curl "http://localhost:3000/api/sponsors?placement=pantry"
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start dev server |
-| `npm run db:setup` | Push schema + seed data |
-| `npm run db:seed` | Re-seed recipes and sponsors |
-| `npm run db:push` | Apply Prisma schema to Supabase |
-| `npm run db:migrate` | Create/run migrations (uses `DIRECT_URL`) |
+| `npm run db:setup` | Seed reference data (alias of `db:seed`) |
+| `npm run db:seed` | Re-seed recipes, sponsors, partners, admin |
+| `npm run db:realtime` | Enable Realtime on `rasoi` schema tables |
+| `npm run db:sync-public` | Backfill `public.recipes` from `rasoi.Recipe` |
 
 ## Environment
 
@@ -158,8 +161,9 @@ curl "http://localhost:3000/api/sponsors?placement=pantry"
 |----------|---------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (Auth client + middleware) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
-| `DATABASE_URL` | Pooled Supabase URI for the Next.js app |
-| `DIRECT_URL` | Direct Supabase URI for Prisma CLI |
+| `DATABASE_URL` | Pooled Supabase URI for raw SQL (`pg` pool) |
+| `DIRECT_URL` | Direct Supabase URI for local scripts |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key for `@/lib/db` |
 | `JWT_SECRET` | Signs user and admin JWTs |
 | `ADMIN_EMAIL` | Optional seed admin email |
 | `ADMIN_PASSWORD` | Optional seed admin password |

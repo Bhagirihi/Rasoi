@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache';
 
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export type AppConfigResponse = {
   paymentsEnabled: boolean;
@@ -9,7 +9,7 @@ export type AppConfigResponse = {
 const DEFAULT_CONFIG: AppConfigResponse = { paymentsEnabled: false };
 
 async function readAppConfig(): Promise<AppConfigResponse> {
-  const row = await prisma.appSettings.findUnique({ where: { id: 'default' } });
+  const row = await db.appSettings.findUnique({ where: { id: 'default' } });
   if (!row) return DEFAULT_CONFIG;
   return { paymentsEnabled: row.paymentsEnabled };
 }
@@ -20,14 +20,18 @@ export const getAppConfig = unstable_cache(readAppConfig, ['app-config'], {
 });
 
 export async function setPaymentsEnabled(paymentsEnabled: boolean): Promise<AppConfigResponse> {
-  const row = await prisma.appSettings.upsert({
+  const row = await db.appSettings.upsert({
     where: { id: 'default' },
     create: { id: 'default', paymentsEnabled },
     update: { paymentsEnabled },
   });
 
-  const { revalidateTag } = await import('next/cache');
-  revalidateTag('app-config', 'max');
+  try {
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag('app-config', 'max');
+  } catch {
+    // Scripts / CLI run outside Next.js request context — DB update still applies.
+  }
 
   return {
     paymentsEnabled: row.paymentsEnabled,

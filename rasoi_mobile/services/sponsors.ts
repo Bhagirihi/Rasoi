@@ -1,5 +1,6 @@
 import type { SponsorResponse } from '@/types/api';
 import { apiFetch } from '@/utils/api';
+import { getRasoiDb, isDirectSupabaseReadsEnabled } from '@/utils/rasoiDb';
 
 export type SponsorCardData = {
   id: string;
@@ -25,13 +26,58 @@ function mapSponsor(sponsor: SponsorResponse): SponsorCardData {
 
 export type SponsorScreenPlacement = 'home' | 'recipes' | 'pantry' | 'saved';
 
+async function fetchSponsorsFromSupabase(
+  placement: SponsorScreenPlacement | 'recipe',
+): Promise<SponsorResponse[]> {
+  const { data, error } = await getRasoiDb()
+    .from('Sponsor')
+    .select(
+      'id, placement, brandName, productLabel, tagline, logoUrl, cta, searchQuery, recipeId, active, priority',
+    )
+    .eq('placement', placement)
+    .eq('active', true)
+    .order('priority', { ascending: false })
+    .order('createdAt', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    placement: row.placement as SponsorResponse['placement'],
+    brandName: row.brandName,
+    productLabel: row.productLabel,
+    tagline: row.tagline,
+    logoUrl: row.logoUrl,
+    cta: row.cta,
+    searchQuery: row.searchQuery ?? undefined,
+    recipeId: row.recipeId ?? undefined,
+    active: row.active,
+    priority: row.priority,
+  }));
+}
+
 export async function fetchSponsor(
   placement: SponsorScreenPlacement | 'recipe',
   recipeId?: string,
 ): Promise<SponsorCardData | null> {
-  const sponsors = await apiFetch<SponsorResponse[]>(
-    `/api/sponsors?placement=${placement}&active=true`,
-  );
+  let sponsors: SponsorResponse[];
+
+  if (isDirectSupabaseReadsEnabled()) {
+    try {
+      sponsors = await fetchSponsorsFromSupabase(placement);
+    } catch (error) {
+      console.warn('[sponsors] Supabase read failed, falling back to API', error);
+      sponsors = await apiFetch<SponsorResponse[]>(
+        `/api/sponsors?placement=${placement}&active=true`,
+      );
+    }
+  } else {
+    sponsors = await apiFetch<SponsorResponse[]>(
+      `/api/sponsors?placement=${placement}&active=true`,
+    );
+  }
 
   let candidates = sponsors;
   if (placement === 'recipe' && recipeId) {

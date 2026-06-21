@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { REVENUE_DISCLOSURE } from '@/constants/monetization';
+import { AFFILIATE_CHECKOUT_DISCLOSURE } from '@/constants/monetization';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import SmoothModal from '@/components/ui/SmoothModal';
@@ -178,7 +178,7 @@ export default function AffiliateCheckoutModal({
             );
             })}
 
-            <Text style={styles.disclosure}>{REVENUE_DISCLOSURE}</Text>
+            <Text style={styles.disclosure}>{AFFILIATE_CHECKOUT_DISCLOSURE}</Text>
           </ScrollView>
         </View>
     </SmoothModal>

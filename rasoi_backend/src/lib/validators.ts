@@ -33,6 +33,14 @@ export const loginSchema = z.object({
     .refine((value) => /^[6-9]\d{9}$/.test(value), 'Invalid Indian phone number'),
 });
 
+export const onboardingSchema = z.object({
+  dietPreference: dietType,
+  dietChoice: dietChoice,
+  regionalCuisine: z.string().min(1),
+  favoriteCuisines,
+  notificationsEnabled: z.boolean(),
+});
+
 export const supabaseSyncSchema = z.object({
   name: z.string().trim().min(2).max(80),
   phone: z
@@ -47,14 +55,10 @@ export const supabaseSyncSchema = z.object({
       'Invalid Indian phone number',
     ),
   acceptedTerms: z.literal(true).optional(),
-});
-
-export const onboardingSchema = z.object({
-  dietPreference: dietType,
-  dietChoice: dietChoice,
-  regionalCuisine: z.string().min(1),
-  favoriteCuisines,
-  notificationsEnabled: z.boolean(),
+  /** Rasoi guest user id to upgrade when converting guest → registered member. */
+  linkGuestUserId: z.string().trim().min(1).optional(),
+  /** Apply onboarding in the same request to avoid a second round trip after OTP verify. */
+  onboarding: onboardingSchema.optional(),
 });
 
 export const profileUpdateSchema = z.object({
@@ -106,7 +110,7 @@ export const sponsorCreateSchema = z.object({
 export const sponsorUpdateSchema = sponsorCreateSchema.partial();
 
 export const pantryUpdateSchema = z.object({
-  ingredients: z.array(z.string().min(1)),
+  ingredients: z.array(z.string().min(1).max(120)).max(200),
 });
 
 export const affiliateEventSchema = z.object({
@@ -140,7 +144,7 @@ export const recipeSearchSchema = z.object({
 });
 
 export const savedRecipesSchema = z.object({
-  recipeIds: z.array(z.string().min(1)),
+  recipeIds: z.array(z.string().min(1).max(64)).max(500),
 });
 
 export const planUpdateSchema = z.object({
@@ -148,6 +152,58 @@ export const planUpdateSchema = z.object({
   trialStartedAt: z.string().datetime().nullable().optional(),
   hasUsedTrial: z.boolean().optional(),
 });
+
+export const promoRedeemSchema = z.object({
+  code: z.string().trim().min(4).max(32),
+});
+
+const promoCodeKind = z.enum(['trial_extend', 'yearly_discount']);
+
+function normalizePromoCodeInput(code: string): string {
+  return code.trim().toUpperCase().replace(/\s+/g, '');
+}
+
+const promoCodeBaseSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .min(4)
+    .max(32)
+    .transform(normalizePromoCodeInput),
+  kind: promoCodeKind,
+  trialExtendDays: z.number().int().min(1).max(365).nullable().optional(),
+  playOfferTag: z.string().trim().min(1).max(64).nullable().optional(),
+  maxRedemptions: z.number().int().min(1).max(1_000_000).default(10_000),
+  expiresAt: z.string().datetime().nullable().optional(),
+  active: z.boolean().default(true),
+});
+
+function refinePromoCodeFields(
+  data: z.infer<typeof promoCodeBaseSchema>,
+  ctx: z.RefinementCtx,
+): void {
+  if (data.kind === 'trial_extend') {
+    if (!data.trialExtendDays) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Trial extension days are required for trial codes.',
+        path: ['trialExtendDays'],
+      });
+    }
+  }
+
+  if (data.kind === 'yearly_discount' && data.trialExtendDays) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Yearly discount codes cannot set trial extension days.',
+      path: ['trialExtendDays'],
+    });
+  }
+}
+
+export const promoCodeCreateSchema = promoCodeBaseSchema.superRefine(refinePromoCodeFields);
+
+export const promoCodeUpdateSchema = promoCodeBaseSchema.partial();
 
 export const pushTokenSchema = z.object({
   expoPushToken: z.string().min(1).max(512),

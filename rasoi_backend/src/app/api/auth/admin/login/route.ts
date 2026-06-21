@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { signToken } from '@/lib/auth';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { adminLoginSchema } from '@/lib/validators';
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const input = adminLoginSchema.parse(body);
 
-    const admin = await prisma.admin.findUnique({ where: { email: input.email } });
+    const admin = await db.admin.findUnique({ where: { email: input.email } });
     if (!admin) {
       return jsonError('Invalid email or password', 401);
     }

@@ -8,7 +8,7 @@ import RecipeFilterPanel from '@/app/admin/_components/RecipeFilterPanel';
 import { Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteRecipeAction } from '@/app/admin/recipe-actions';
 import { buildRecipeWhere } from '@/lib/recipe-filters';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { serializeRecipe } from '@/lib/serializers';
 
 type PageProps = {
@@ -31,8 +31,8 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
   };
 
   const where = buildRecipeWhere(filterParams, { adminIncludeDrafts: true });
-  const recipes = await prisma.recipe.findMany({ where, orderBy: { createdAt: 'desc' } });
-  const totalCount = await prisma.recipe.count();
+  const recipes = await db.recipe.findMany({ where, orderBy: { createdAt: 'desc' } });
+  const totalCount = await db.recipe.count();
 
   const hasFilters =
     filterParams.dietChoice ||

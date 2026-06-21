@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { pushTokenSchema } from '@/lib/validators';
 
@@ -13,7 +13,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const input = pushTokenSchema.parse(body);
 
-    const record = await prisma.pushToken.upsert({
+    const record = await db.pushToken.upsert({
       where: {
         userId_expoPushToken: {
           userId: user.id,
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest) {
     const parsed = pushTokenSchema.partial({ active: true }).safeParse(body);
 
     if (parsed.success && parsed.data.expoPushToken) {
-      await prisma.pushToken.updateMany({
+      await db.pushToken.updateMany({
         where: {
           userId: user.id,
           expoPushToken: parsed.data.expoPushToken,
@@ -60,7 +60,7 @@ export async function DELETE(request: NextRequest) {
         data: { active: false },
       });
     } else {
-      await prisma.pushToken.updateMany({
+      await db.pushToken.updateMany({
         where: { userId: user.id },
         data: { active: false },
       });

@@ -28,11 +28,14 @@ export interface UserProfileResponse {
     planTier: PlanTier;
     trialStartedAt: string | null;
     hasUsedTrial: boolean;
+    trialBonusDays: number;
+    yearlyPromoOfferTag: string | null;
   };
 }
 
 export interface AuthResponse {
-  token: string;
+  /** Legacy Rasoi JWT — omitted when Supabase-direct auth is active. */
+  token?: string;
   user: UserProfileResponse;
 }
 

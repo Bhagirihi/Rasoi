@@ -1,15 +1,11 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { PaywallPlanGrid } from '@/components/paywall/PaywallPlanCards';
 import {
-  PAID_PLAN_MONTHLY_PRICE,
-  PAID_PLAN_YEARLY_DETAIL,
-  PAID_PLAN_YEARLY_PRICE,
-  PAID_PLAN_YEARLY_SAVINGS_LABEL,
   TRIAL_DURATION_DAYS,
   type BillingInterval,
 } from '@/constants/plans';
-import { RECURRING_PAYMENT_NOTICE } from '@/constants/payments';
+import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS, RECURRING_PAYMENT_NOTICE, type PaymentProviderId } from '@/constants/payments';
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
@@ -21,13 +17,16 @@ type PaywallActionsProps = {
   isBusy: boolean;
   paymentDisclaimer: string;
   providerLabel: string;
+  providerId?: PaymentProviderId;
   supportsRestore: boolean;
   lastError: string | null;
   onStartTrial: () => void;
   onSubscribe: (interval: BillingInterval) => void;
   onRestore?: () => void;
+  yearlyPromoOfferTag?: string | null;
 };
 
+/** Compact pricing block for trial modals — full paywall uses PaywallPricingSection. */
 export default function PaywallActions({
   effectiveTier,
   trialExpired,
@@ -35,26 +34,26 @@ export default function PaywallActions({
   isBusy,
   paymentDisclaimer,
   providerLabel,
+  providerId = getConfiguredPaymentProviderId(),
   supportsRestore,
   lastError,
   onStartTrial,
   onSubscribe,
   onRestore,
+  yearlyPromoOfferTag = null,
 }: PaywallActionsProps) {
   const { paymentsEnabled } = useAppContext();
+
+  const showSubscribeOptions =
+    paymentsEnabled &&
+    (effectiveTier !== 'paid' || providerId === 'stub');
 
   return (
     <View style={styles.wrap}>
       {!paymentsEnabled && (
         <View style={styles.betaCard}>
-          <Text style={styles.betaTitle}>Payments disabled</Text>
+          <Text style={styles.betaTitle}>Early access</Text>
           <Text style={styles.betaBody}>{PAYMENTS_DISABLED_NOTE}</Text>
-        </View>
-      )}
-
-      {paymentsEnabled && (
-        <View style={styles.providerPill}>
-          <Text style={styles.providerText}>Billing · {providerLabel}</Text>
         </View>
       )}
 
@@ -62,55 +61,30 @@ export default function PaywallActions({
         <Pressable
           onPress={onStartTrial}
           disabled={isBusy}
-          style={[styles.secondaryBtn, isBusy && styles.btnDisabled]}
+          style={[styles.trialBtn, isBusy && styles.btnDisabled]}
         >
-          <Text style={styles.secondaryBtnText}>Start {TRIAL_DURATION_DAYS}-day free trial</Text>
+          <Text style={styles.trialBtnText}>Start {TRIAL_DURATION_DAYS}-day free trial</Text>
         </Pressable>
       )}
 
       {paymentsEnabled && trialExpired && effectiveTier === 'free' && (
         <Text style={styles.expiredNote}>
-          Your trial has ended. Subscribe to Rasoi Plus to restore partner checkout.
+          Your trial has ended. Subscribe to restore partner checkout.
         </Text>
       )}
 
-      {paymentsEnabled && effectiveTier !== 'paid' && (
-        <>
-          <View style={styles.recurringCard}>
-            <Text style={styles.recurringTitle}>Recurring subscription</Text>
-            <Text style={styles.recurringBody}>{RECURRING_PAYMENT_NOTICE}</Text>
-          </View>
+      {showSubscribeOptions && (
+        <PaywallPlanGrid
+          disabled={isBusy}
+          yearlyPromoOfferTag={yearlyPromoOfferTag}
+          onSubscribe={onSubscribe}
+        />
+      )}
 
-          <Pressable
-            onPress={() => onSubscribe('yearly')}
-            disabled={isBusy}
-            style={[styles.primaryWrap, isBusy && styles.btnDisabled]}
-          >
-            <LinearGradient
-              colors={[colors.primary, colors.saffron]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.primaryBtn}
-            >
-              <Text style={styles.savingsBadge}>{PAID_PLAN_YEARLY_SAVINGS_LABEL}</Text>
-              <Text style={styles.bestValue}>Best value</Text>
-              <Text style={styles.primaryBtnText}>
-                {isBusy ? 'Processing…' : `Plus yearly · ${PAID_PLAN_YEARLY_PRICE}`}
-              </Text>
-              <Text style={styles.primaryBtnSub}>{PAID_PLAN_YEARLY_DETAIL}</Text>
-            </LinearGradient>
-          </Pressable>
-
-          <Pressable
-            onPress={() => onSubscribe('monthly')}
-            disabled={isBusy}
-            style={[styles.monthlyBtn, isBusy && styles.btnDisabled]}
-          >
-            <Text style={styles.monthlyBtnText}>
-              Plus monthly · {PAID_PLAN_MONTHLY_PRICE}
-            </Text>
-          </Pressable>
-        </>
+      {paymentsEnabled && effectiveTier === 'paid' && providerId === 'revenuecat' && (
+        <Text style={styles.manageNote}>
+          Manage billing in Google Play → Payments & subscriptions.
+        </Text>
       )}
 
       {paymentsEnabled && supportsRestore && onRestore && (
@@ -126,7 +100,9 @@ export default function PaywallActions({
       )}
 
       <Text style={styles.disclaimer}>
-        {paymentsEnabled ? paymentDisclaimer : PAYMENTS_DISABLED_NOTE}
+        {paymentsEnabled
+          ? `${RECURRING_PAYMENT_NOTICE} ${paymentDisclaimer || PAYMENT_DISCLAIMERS[providerId]} Billing · ${providerLabel}.`
+          : PAYMENTS_DISABLED_NOTE}
       </Text>
     </View>
   );
@@ -144,40 +120,24 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
   },
   betaTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
     color: colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
   },
   betaBody: {
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
     fontSize: 13,
     lineHeight: 20,
     color: colors.muted,
   },
-  providerPill: {
-    alignSelf: 'flex-start',
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,107,53,0.12)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-  },
-  providerText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  secondaryBtn: {
+  trialBtn: {
     borderRadius: radius.md,
     borderWidth: 2,
     borderColor: colors.primary,
     paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  secondaryBtnText: {
+  trialBtnText: {
     fontSize: 15,
     fontWeight: '800',
     color: colors.primary,
@@ -187,79 +147,13 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.danger,
     textAlign: 'center',
+    fontWeight: '600',
   },
-  recurringCard: {
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(255,107,53,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.18)',
-    padding: spacing.md,
-  },
-  recurringTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  recurringBody: {
-    marginTop: spacing.xs,
+  manageNote: {
     fontSize: 13,
     lineHeight: 20,
     color: colors.muted,
-  },
-  primaryWrap: {
-    borderRadius: radius.md,
-    overflow: 'hidden',
-  },
-  primaryBtn: {
-    paddingVertical: spacing.lg,
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-  },
-  savingsBadge: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    color: colors.charcoal,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: radius.pill,
-    overflow: 'hidden',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginBottom: 6,
-  },
-  bestValue: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: 'rgba(255,255,255,0.9)',
-  },
-  primaryBtnText: {
-    marginTop: 4,
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.white,
-  },
-  primaryBtnSub: {
-    marginTop: 4,
-    fontSize: 11,
-    lineHeight: 16,
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.92)',
-  },
-  monthlyBtn: {
-    borderRadius: radius.md,
-    backgroundColor: colors.charcoal,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  monthlyBtnText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.white,
   },
   restoreBtn: {
     alignItems: 'center',

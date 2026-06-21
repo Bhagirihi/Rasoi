@@ -16,6 +16,7 @@
   ],
   "exclude": [
     "screenshots-backup-pre-v2",
-    "screenshots"
+    "screenshots",
+    "supabase/functions"
   ]
 }

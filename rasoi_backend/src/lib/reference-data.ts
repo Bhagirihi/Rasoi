@@ -1,6 +1,6 @@
 import { PANTRY_SECTIONS } from '@/lib/pantry-sections';
 import { REGIONAL_CUISINES } from '@/lib/recipe-filters';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export type PantrySectionRecord = {
   id: string;
@@ -26,7 +26,7 @@ const DEFAULT_REGIONAL_CUISINES = REGIONAL_CUISINES.map((label, index) => ({
 
 export async function ensureReferenceData() {
   for (const section of DEFAULT_PANTRY_SECTIONS) {
-    await prisma.pantrySection.upsert({
+    await db.pantrySection.upsert({
       where: { id: section.id },
       update: {
         title: section.title,
@@ -45,7 +45,7 @@ export async function ensureReferenceData() {
   }
 
   for (const cuisine of DEFAULT_REGIONAL_CUISINES) {
-    await prisma.regionalCuisineOption.upsert({
+    await db.regionalCuisineOption.upsert({
       where: { label: cuisine.label },
       update: {},
       create: cuisine,
@@ -55,7 +55,7 @@ export async function ensureReferenceData() {
 
 export async function getActiveRegionalCuisines(): Promise<string[]> {
   await ensureReferenceData();
-  const rows = await prisma.regionalCuisineOption.findMany({
+  const rows = await db.regionalCuisineOption.findMany({
     where: { active: true },
     orderBy: [{ sortOrder: 'asc' }, { label: 'asc' }],
   });
@@ -64,7 +64,7 @@ export async function getActiveRegionalCuisines(): Promise<string[]> {
 
 export async function getActivePantrySections(): Promise<PantrySectionRecord[]> {
   await ensureReferenceData();
-  const rows = await prisma.pantrySection.findMany({
+  const rows = await db.pantrySection.findMany({
     where: { active: true },
     orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
   });

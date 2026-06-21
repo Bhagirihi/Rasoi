@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import SmoothModal from '@/components/ui/SmoothModal';
-import { FOOD_DELIVERY_DISCLOSURE } from '@/constants/monetization';
+import { FOOD_DELIVERY_DISCLOSURE, PARTNER_CHECKOUT_SUPPORT_NOTE } from '@/constants/monetization';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { usePartners } from '@/context/PartnersContext';
@@ -70,7 +70,7 @@ export default function FoodDeliveryModal({
             </View>
             <Text style={styles.heroTitle}>Skip cooking?</Text>
             <Text style={styles.heroSub}>
-              Order &quot;{recipeTitle}&quot; ready-made — hot delivery to your door.
+              Search restaurants on Zomato or Swiggy inspired by &quot;{recipeTitle}&quot;.
             </Text>
             {prepTime != null && (
               <View style={styles.saveRow}>
@@ -114,7 +114,7 @@ export default function FoodDeliveryModal({
 
             <View style={styles.freeRow}>
               <Zap size={12} color={colors.green} />
-              <Text style={styles.freeText}>Rasoi stays free — we earn via partner links</Text>
+              <Text style={styles.freeText}>{PARTNER_CHECKOUT_SUPPORT_NOTE}</Text>
             </View>
             <Text style={styles.disclosure}>{FOOD_DELIVERY_DISCLOSURE}</Text>
           </ScrollView>
@@ -238,15 +238,19 @@ const styles = StyleSheet.create({
   },
   freeRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     gap: 6,
     marginTop: spacing.sm,
+    paddingHorizontal: spacing.sm,
   },
   freeText: {
+    flex: 1,
     fontSize: 11,
     fontWeight: '600',
     color: colors.green,
+    lineHeight: 15,
+    textAlign: 'center',
   },
   disclosure: {
     marginTop: spacing.sm,

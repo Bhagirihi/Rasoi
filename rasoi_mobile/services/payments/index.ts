@@ -5,6 +5,7 @@ import {
   RASOI_PLUS_MONTHLY_PRODUCT_ID,
   RASOI_PLUS_YEARLY_PRODUCT_ID,
 } from '@/constants/payments';
+import { confirmBillingSubscription } from '@/services/billing';
 import { stubPaymentProvider } from '@/services/payments/stubProvider';
 import { revenueCatPaymentProvider } from '@/services/payments/revenueCatProvider';
 import type {
@@ -12,6 +13,7 @@ import type {
   PaymentProvider,
   PurchaseFlowResult,
   PurchaseProductId,
+  PurchaseResult,
 } from '@/services/payments/types';
 import { updateUserPlan } from '@/services/user';
 import { Platform } from 'react-native';
@@ -76,18 +78,55 @@ export function resetPaymentProviderCache(): void {
   cachedProvider = null;
 }
 
-async function applyPaidPlanOnServer(options: ApplyPaidPlanOptions): Promise<PurchaseFlowResult> {
+async function applyPaidPlanOnServer(
+  options: ApplyPaidPlanOptions,
+  purchase?: PurchaseResult,
+): Promise<PurchaseFlowResult> {
   const localPaid: PurchaseFlowResult = {
     ok: true,
     planState: {
       planTier: 'paid',
       trialStartedAt: options.trialStartedAt,
       hasUsedTrial: true,
+      trialBonusDays: 0,
+      yearlyPromoOfferTag: null,
     },
   };
 
   if (!options.isLoggedIn) {
     return localPaid;
+  }
+
+  if (
+    purchase?.provider === 'revenuecat' &&
+    purchase.transactionId &&
+    purchase.productId
+  ) {
+    try {
+      const plan = await confirmBillingSubscription({
+        provider: 'revenuecat',
+        productId: purchase.productId,
+        transactionId: purchase.transactionId,
+      });
+      return {
+        ok: true,
+        planState: {
+          planTier: plan.planTier,
+          trialStartedAt: plan.trialStartedAt,
+          hasUsedTrial: plan.hasUsedTrial,
+          trialBonusDays: plan.trialBonusDays ?? 0,
+          yearlyPromoOfferTag: plan.yearlyPromoOfferTag ?? null,
+        },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Could not confirm subscription on server.',
+      };
+    }
   }
 
   try {
@@ -102,6 +141,8 @@ async function applyPaidPlanOnServer(options: ApplyPaidPlanOptions): Promise<Pur
         planTier: plan.planTier,
         trialStartedAt: plan.trialStartedAt,
         hasUsedTrial: plan.hasUsedTrial,
+        trialBonusDays: plan.trialBonusDays ?? 0,
+        yearlyPromoOfferTag: plan.yearlyPromoOfferTag ?? null,
       },
     };
   } catch (error) {
@@ -117,7 +158,11 @@ export async function purchaseRasoiPlus(
   options: ApplyPaidPlanOptions,
 ): Promise<PurchaseFlowResult> {
   const provider = getPaymentProvider();
-  const purchase = await provider.purchase({ productId });
+  const purchase = await provider.purchase({
+    productId,
+    googlePlayOfferTag:
+      productId === RASOI_PLUS_YEARLY_PRODUCT_ID ? options.yearlyPromoOfferTag : null,
+  });
 
   if (!purchase.success) {
     return {
@@ -127,7 +172,7 @@ export async function purchaseRasoiPlus(
     };
   }
 
-  return applyPaidPlanOnServer(options);
+  return applyPaidPlanOnServer(options, purchase);
 }
 
 export async function restoreRasoiPlus(options: ApplyPaidPlanOptions): Promise<PurchaseFlowResult> {
@@ -147,7 +192,7 @@ export async function restoreRasoiPlus(options: ApplyPaidPlanOptions): Promise<P
     };
   }
 
-  return applyPaidPlanOnServer(options);
+  return applyPaidPlanOnServer(options, restored);
 }
 
 export async function purchaseRasoiPlusDefault(

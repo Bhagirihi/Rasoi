@@ -8,7 +8,6 @@ import React, {
   type ReactNode,
 } from 'react';
 import { AppState } from 'react-native';
-import { Linking } from 'react-native';
 import { router } from 'expo-router';
 
 import {
@@ -26,6 +25,7 @@ import {
 } from '@/services/partners';
 import { logAffiliateEvent } from '@/services/affiliateEvents';
 import { hasValidProfilePhone, PHONE_REQUIRED_FOR_PARTNERS_MESSAGE } from '@/utils/phoneGate';
+import { openPartnerUrls } from '@/utils/openPartnerUrl';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
 export type GroceryPartnerCard = {
@@ -109,18 +109,6 @@ function buildCards(links: PartnerLinkResponse[]) {
     .filter((item): item is DeliveryPartnerCard => item !== null);
 
   return { groceryPartners, deliveryPartners };
-}
-
-async function openPartnerUrls(deepLink: string, webUrl: string) {
-  // Prefer verified https app links — placeholder custom schemes (blinkit://cart/…) fail silently.
-  const url = deepLink.startsWith('http') ? deepLink : webUrl;
-  try {
-    await Linking.openURL(url);
-  } catch {
-    if (url !== webUrl) {
-      await Linking.openURL(webUrl);
-    }
-  }
 }
 
 export function PartnersProvider({ children }: { children: ReactNode }) {

@@ -1,4 +1,4 @@
-import type { Prisma } from '@/generated/prisma/client';
+import type { RecipeWhereInput, UserWhereInput } from '@/lib/db/types';
 
 export const REGIONAL_CUISINES = [
   'All India',
@@ -54,8 +54,8 @@ export interface RecipeFilterParams {
 export function buildRecipeWhere(
   params: RecipeFilterParams,
   options?: { adminIncludeDrafts?: boolean },
-): Prisma.RecipeWhereInput {
-  const where: Prisma.RecipeWhereInput = {};
+): RecipeWhereInput {
+  const where: RecipeWhereInput = {};
 
   const region = params.region?.trim();
   if (region && region !== 'all' && region !== 'All India') {
@@ -102,8 +102,8 @@ export interface UserFilterParams {
   accountStatus?: string;
 }
 
-export function buildUserWhere(params: UserFilterParams): Prisma.UserWhereInput {
-  const where: Prisma.UserWhereInput = {};
+export function buildUserWhere(params: UserFilterParams): UserWhereInput {
+  const where: UserWhereInput = {};
 
   const dietChoice = params.dietChoice?.trim();
   if (dietChoice && dietChoice !== 'all') {

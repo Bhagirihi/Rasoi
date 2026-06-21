@@ -1,24 +1,12 @@
-import { Linking } from 'react-native';
-
 import type { AffiliatePartner, FoodDeliveryPartner } from '@/constants/partners';
 import {
   buildGroceryCheckoutQuery,
   buildPartnerUrls,
   getCachedPartnerLinks,
 } from '@/services/partners';
+import { openPartnerUrls } from '@/utils/openPartnerUrl';
 
 export type { AffiliatePartner, FoodDeliveryPartner };
-
-async function openUrls(deepLink: string, webUrl: string) {
-  const url = deepLink.startsWith('http') ? deepLink : webUrl;
-  try {
-    await Linking.openURL(url);
-  } catch {
-    if (url !== webUrl) {
-      await Linking.openURL(webUrl);
-    }
-  }
-}
 
 export async function openAffiliateCheckout(
   missingIngredients: string[],
@@ -30,7 +18,7 @@ export async function openAffiliateCheckout(
   const urls = buildPartnerUrls(partner, query, getCachedPartnerLinks());
   if (!urls) return;
 
-  await openUrls(urls.deepLink, urls.webUrl);
+  await openPartnerUrls(urls.deepLink, urls.webUrl);
 }
 
 export async function openBrandSearch(
@@ -50,5 +38,5 @@ export async function openFoodDelivery(
   const urls = buildPartnerUrls(partner, trimmed, getCachedPartnerLinks());
   if (!urls) return;
 
-  await openUrls(urls.deepLink, urls.webUrl);
+  await openPartnerUrls(urls.deepLink, urls.webUrl);
 }

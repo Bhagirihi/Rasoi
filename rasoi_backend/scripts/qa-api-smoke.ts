@@ -47,8 +47,21 @@ async function main(): Promise<void> {
     const partners = await request<unknown[]>('/api/partners');
     record('TC-API-03', partners.body.ok && Array.isArray(partners.body.data), 'GET /api/partners');
 
+    const billingPlans = await request<{
+      paymentsEnabled: boolean;
+      yearlyPromo: { offerTag: string; checkoutAmountInr: number };
+    }>('/api/billing/plans');
+    record(
+      'TC-API-03b',
+      billingPlans.body.ok &&
+        billingPlans.body.data?.yearlyPromo?.offerTag === 'promo-yearly-5' &&
+        billingPlans.body.data?.yearlyPromo?.checkoutAmountInr === 475,
+      'GET /api/billing/plans promo catalog',
+    );
+
     const guest = await request<{ token: string; user: { id: string } }>('/api/auth/guest', {
       method: 'POST',
+      body: JSON.stringify({ acceptedTerms: true, termsVersion: '2025-06-21' }),
     });
     record('TC-API-04', guest.body.ok && Boolean(guest.body.data?.token), 'POST /api/auth/guest');
     const token = guest.body.data?.token ?? '';
@@ -91,6 +104,17 @@ async function main(): Promise<void> {
         planData?.planTier === 'trial' &&
         !('id' in (planData ?? {})),
       'PUT /api/users/me/plan returns plan object only',
+    );
+
+    const paidBlocked = await request<{ planTier: string }>('/api/users/me/plan', {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ planTier: 'paid' }),
+    });
+    record(
+      'TC-API-07b',
+      paidBlocked.status === 403,
+      'PUT /api/users/me/plan rejects client-paid escalation',
     );
 
     const pantry = await request<unknown>('/api/users/me/pantry', {

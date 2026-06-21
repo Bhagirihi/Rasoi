@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { jsonOk, handleApiError } from '@/lib/api';
 import { sponsorApplicationSchema } from '@/lib/validators';
 
@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const input = sponsorApplicationSchema.parse(body);
 
-    const application = await prisma.sponsorApplication.create({
+    const application = await db.sponsorApplication.create({
       data: {
         companyName: input.companyName,
         contactName: input.contactName,

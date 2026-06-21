@@ -2,9 +2,10 @@ import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
 import { validateFavoriteCuisines } from '@/lib/kitchen-styles';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { profileUpdateSchema } from '@/lib/validators';
+import { deleteUserAccount } from '@/lib/user-account';
 import { serializeUser } from '@/lib/serializers';
 
 export async function GET(request: NextRequest) {
@@ -31,13 +32,13 @@ export async function PATCH(request: NextRequest) {
     }
 
     if (input.phone && input.phone !== user.phone) {
-      const phoneTaken = await prisma.user.findUnique({ where: { phone: input.phone } });
+      const phoneTaken = await db.user.findUnique({ where: { phone: input.phone } });
       if (phoneTaken && phoneTaken.id !== user.id) {
         return jsonError('Phone number already in use', 409);
       }
     }
 
-    const updated = await prisma.user.update({
+    const updated = await db.user.update({
       where: { id: user.id },
       data: {
         name: input.name,
@@ -53,6 +54,33 @@ export async function PATCH(request: NextRequest) {
     });
 
     return jsonOk(serializeUser(updated));
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const user = await getUserFromRequest(request);
+    if (!user) return jsonError('Unauthorized', 401);
+
+    if (user.isGuest) {
+      await deleteUserAccount(user.id);
+      return jsonOk({ deleted: true });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const confirmEmail =
+      typeof body === 'object' && body && 'confirmEmail' in body
+        ? String((body as { confirmEmail?: string }).confirmEmail ?? '').trim().toLowerCase()
+        : '';
+
+    if (!user.email || confirmEmail !== user.email.toLowerCase()) {
+      return jsonError('Confirm your email address to delete this account', 400);
+    }
+
+    await deleteUserAccount(user.id);
+    return jsonOk({ deleted: true });
   } catch (error) {
     return handleApiError(error);
   }

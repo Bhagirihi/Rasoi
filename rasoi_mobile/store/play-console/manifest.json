@@ -4,13 +4,13 @@
     "note": "Set during Google Play Console developer registration ($25 one-time). Cannot be changed via API."
   },
   "application": {
-    "playConsoleName": "Rasoi App",
+    "playConsoleName": "Rasoi: Aaj Kya Banaye? | Recipes",
     "defaultLanguage": "en-US",
     "packageName": "com.bhagihiri.rasoiapp",
     "expoSlug": "rasoi",
     "expoOwner": "takeyshi",
-    "versionName": "1.0.3",
-    "versionCode": 4,
+    "versionName": "1.0.4",
+    "versionCode": 5,
     "category": "FOOD_AND_DRINK",
     "appType": "APPLICATION",
     "contentRating": "Everyone",
@@ -18,7 +18,7 @@
     "pricing": "FREE"
   },
   "storeListing": {
-    "title": "Rasoi App",
+    "title": "Rasoi: Aaj Kya Banaye? Recipes",
     "shortDescription": "Aaj kya banaye? Cook from your pantry. 1,200+ Indian recipes. 15 cuisines.",
     "fullDescription": "Rasoi helps Indian home cooks answer \"Aaj kya banaye?\" every evening — decide dinner in seconds from what's already in your kitchen.\n\n🍳 TONIGHT'S PICKS\n• Smart meal suggestions for breakfast, lunch, dinner & late-night\n• Personalized picks based on your diet and regional cuisine\n\n🥘 COOK FROM YOUR PANTRY\n• Add pantry items and see recipe match %\n• Filter recipes you can cook right now\n\n📚 1,200+ INDIAN RECIPES\n• 15 regional cuisines — Gujarati, South Indian, Punjabi, Bengali & more\n• Veg, Jain, Egg & Non-Veg filters\n• Quick filters: under 20 min, leftovers, kids-friendly\n\n🛒 SHOP & ORDER (Rasoi Plus)\n• Open Blinkit, Zepto & Instamart for missing groceries\n• Zomato & Swiggy delivery when you want to order instead\n\n⭐ RASOI PLUS SUBSCRIPTION\n• Monthly ₹49 or Yearly ₹499 (save 15% vs monthly)\n• Ad-free experience across the app\n• Partner grocery & delivery checkout links\n• Cancel anytime in Google Play → Subscriptions\n\n🆓 FREE TO START\n• Free plan with recipes & pantry matching\n• Optional 3-day in-app trial for partner features (managed in-app, not a Play free trial)\n\nRasoi may use your city (optional location permission) for local recipe relevance and sponsor analytics.\n\nWebsite: https://rasoiapplication.in\nPrivacy: https://rasoiapplication.in/privacy\nTerms: https://rasoiapplication.in/terms\nSupport: cooking@rasoiapplication.in",
     "website": "https://rasoiapplication.in",
@@ -39,7 +39,7 @@
       "collectsOrSharesData": true,
       "encryptedInTransit": true,
       "accountCreationMethods": ["usernameAndOtherAuthentication"],
-      "deleteAccountUrl": "https://rasoiapplication.in/privacy",
+      "deleteAccountUrl": "https://rasoiapplication.in/delete-account",
       "partialDeletionWithoutAccountDelete": false
     },
     "step3DataTypes": [
@@ -101,6 +101,10 @@
     "revenueCatPackages": {
       "monthly": "$rc_monthly",
       "annual": "$rc_annual"
+    },
+    "revenueCatPlayProducts": {
+      "monthly": "rasoi_plus_monthly:monthly",
+      "yearly": "rasoi_plus_yearly:yearly"
     },
     "products": [
       {
@@ -175,12 +179,46 @@
     "countries": ["IN"],
     "testerLimit": "unlimited",
     "optInUrl": "https://play.google.com/apps/testing/com.bhagihiri.rasoiapp",
-    "versionCodeLink": "https://play.google.com/apps/test/com.bhagihiri.rasoiapp/4",
+    "versionCodeLink": "https://play.google.com/apps/test/com.bhagihiri.rasoiapp/5",
     "storeListingUrl": "https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp",
     "release": {
-      "versionName": "1.0.3",
-      "versionCode": 4
+      "versionName": "1.0.4",
+      "versionCode": 5
     }
+  },
+  "firebaseIntegrations": {
+    "projectId": "rasoi-app-prod",
+    "primaryGoogleAccount": "devsp1901@gmail.com",
+    "consoleUrl": "https://console.firebase.google.com/u/0/project/rasoi-app-prod/overview",
+    "androidAppId": "1:304365765846:android:85492c6a6786f4cec27577",
+    "admob": {
+      "publisherCode": "pub-4173581536398147",
+      "androidAppId": "ca-app-pub-4173581536398147~9898362276",
+      "googleAccount": "my.website.email2@gmail.com",
+      "linkInConsole": "AdMob → Settings → Linked services → Rasoi App → Firebase",
+      "status": "pending_console_link",
+      "verifiedAt": "2026-06-21",
+      "note": "Package com.bhagihiri.rasoiapp confirmed in AdMob; link did not complete — AdMob offered only create-new-Firebase-app (no existing rasoi-app-prod match). Play store search also failed for this account."
+    },
+    "googlePlay": {
+      "developerAccount": "Bhagihiri Applications",
+      "linkInConsole": "Firebase → Project settings → Integrations → Google Play",
+      "status": "linked",
+      "verifiedAt": "2026-06-21",
+      "note": "Firebase Integrations shows Project connected + 1 linked app"
+    },
+    "googleAnalytics": {
+      "linkInConsole": "Firebase → Project settings → Integrations → Google Analytics",
+      "status": "enabled",
+      "verifiedAt": "2026-06-21"
+    },
+    "googleAds": {
+      "admobAccountLink": "not_linked",
+      "firebaseLink": "via_google_analytics",
+      "verifiedAt": "2026-06-21",
+      "note": "AdMob: no accessible Google Ads account for my.website.email2@gmail.com. Firebase: link Google Ads in GA property (Manage linking in Google Analytics)."
+    },
+    "docsPath": "rasoi_mobile/docs/FIREBASE_INTEGRATIONS.md"
   },
   "sourceFiles": [
     "rasoi_mobile/app.json",

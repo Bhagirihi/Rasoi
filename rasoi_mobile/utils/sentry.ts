@@ -1,35 +1,74 @@
 import * as Sentry from '@sentry/react-native';
 
+import { recordFirebaseError } from '@/utils/firebase';
+
 const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
+
+export type SentryEnvironment = 'Development' | 'Production';
 
 let initialized = false;
 
+function parseEnvironmentOverride(value: string | undefined): SentryEnvironment | null {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === 'development' || normalized === 'dev') return 'Development';
+  if (normalized === 'production' || normalized === 'prod') return 'Production';
+  return null;
+}
+
+/** Sentry environment tag — `Development` for Expo dev, `Production` for release builds. */
+export function getSentryEnvironment(): SentryEnvironment {
+  const override = parseEnvironmentOverride(process.env.EXPO_PUBLIC_SENTRY_ENVIRONMENT);
+  if (override) return override;
+  return __DEV__ ? 'Development' : 'Production';
+}
+
+function shouldEnableSentry(): boolean {
+  if (!DSN) return false;
+  if (!__DEV__) return true;
+  return process.env.EXPO_PUBLIC_SENTRY_DISABLE_IN_DEV !== '1';
+}
+
 export function initSentry(): void {
-  if (initialized || !DSN) {
+  if (initialized || !shouldEnableSentry()) {
     return;
   }
 
   initialized = true;
 
+  const environment = getSentryEnvironment();
+  const isDevelopment = environment === 'Development';
+
   Sentry.init({
     dsn: DSN,
-    enabled: !__DEV__,
-    debug: __DEV__ && Boolean(process.env.EXPO_PUBLIC_SENTRY_DEBUG),
-    environment: __DEV__ ? 'development' : 'production',
-    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+    enabled: true,
+    environment,
+    debug: isDevelopment && process.env.EXPO_PUBLIC_SENTRY_DEBUG === '1',
+    tracesSampleRate: isDevelopment ? 1.0 : 0.2,
     enableAutoSessionTracking: true,
     attachStacktrace: true,
     enableLogs: true,
-    replaysSessionSampleRate: __DEV__ ? 0 : 1.0,
-    replaysOnErrorSampleRate: 1.0,
+    replaysSessionSampleRate: isDevelopment ? 1.0 : 0.1,
+    replaysOnErrorSampleRate: isDevelopment ? 1.0 : 0.5,
     integrations: [
       Sentry.reactNativeTracingIntegration(),
       Sentry.expoRouterIntegration(),
-      Sentry.mobileReplayIntegration(),
+      Sentry.mobileReplayIntegration({
+        maskAllText: !isDevelopment,
+        maskAllImages: !isDevelopment,
+        maskAllVectors: !isDevelopment,
+        screenshotStrategy: 'pixelCopy',
+        captureSurfaceViews: !isDevelopment,
+        enableViewRendererV2: true,
+      }),
       Sentry.consoleLoggingIntegration({ levels: ['warn', 'error'] }),
       Sentry.screenshotIntegration(),
       Sentry.viewHierarchyIntegration(),
     ],
+    initialScope: {
+      tags: {
+        rasoi_env: environment,
+      },
+    },
   });
 }
 
@@ -41,7 +80,12 @@ export function captureException(
   error: unknown,
   context?: Record<string, unknown>,
 ): void {
-  if (!DSN) {
+  void recordFirebaseError(
+    error,
+    context as Record<string, string | number | boolean | null | undefined> | undefined,
+  );
+
+  if (!isSentryEnabled()) {
     return;
   }
 
@@ -57,7 +101,7 @@ export function captureMessage(
   message: string,
   level: Sentry.SeverityLevel = 'info',
 ): void {
-  if (!DSN) {
+  if (!isSentryEnabled()) {
     return;
   }
 
@@ -70,7 +114,7 @@ export function setSentryUser(user: {
   name?: string;
   isGuest?: boolean;
 }): void {
-  if (!DSN) {
+  if (!isSentryEnabled()) {
     return;
   }
 
@@ -83,7 +127,7 @@ export function setSentryUser(user: {
 }
 
 export function clearSentryUser(): void {
-  if (!DSN) {
+  if (!isSentryEnabled()) {
     return;
   }
 
@@ -95,7 +139,7 @@ export function addSentryBreadcrumb(
   category: string,
   data?: Record<string, unknown>,
 ): void {
-  if (!DSN) {
+  if (!isSentryEnabled()) {
     return;
   }
 

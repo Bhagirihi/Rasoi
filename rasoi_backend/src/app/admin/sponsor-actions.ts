@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { sponsorCreateSchema, sponsorUpdateSchema } from '@/lib/validators';
 
 async function requireAdminSession() {
@@ -15,20 +15,20 @@ async function requireAdminSession() {
 export async function createSponsorAction(raw: unknown) {
   await requireAdminSession();
   const input = sponsorCreateSchema.parse(raw);
-  await prisma.sponsor.create({ data: input });
+  await db.sponsor.create({ data: input });
   revalidatePath('/admin/sponsors');
 }
 
 export async function updateSponsorAction(id: string, raw: unknown) {
   await requireAdminSession();
   const input = sponsorUpdateSchema.parse(raw);
-  await prisma.sponsor.update({ where: { id }, data: input });
+  await db.sponsor.update({ where: { id }, data: input });
   revalidatePath('/admin/sponsors');
 }
 
 export async function setSponsorActiveAction(id: string, active: boolean) {
   await requireAdminSession();
-  await prisma.sponsor.update({
+  await db.sponsor.update({
     where: { id },
     data: { active },
   });
@@ -38,6 +38,6 @@ export async function setSponsorActiveAction(id: string, active: boolean) {
 
 export async function deleteSponsorAction(id: string) {
   await requireAdminSession();
-  await prisma.sponsor.delete({ where: { id } });
+  await db.sponsor.delete({ where: { id } });
   revalidatePath('/admin/sponsors');
 }

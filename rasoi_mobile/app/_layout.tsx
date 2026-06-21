@@ -12,6 +12,8 @@ enableScreens(true);
 import LaunchSplash, { LAUNCH_SPLASH_DURATION_MS } from '@/components/LaunchSplash';
 import AppDialogHost from '@/components/AppDialogHost';
 import TrialExpiredPaywallModal from '@/components/paywall/TrialExpiredPaywallModal';
+import TrialEndingSoonModal from '@/components/paywall/TrialEndingSoonModal';
+import EmailVerificationBridge from '@/components/auth/EmailVerificationBridge';
 import NotificationNavigationBridge from '@/components/NotificationNavigationBridge';
 import LocationSyncBridge from '@/components/LocationSyncBridge';
 import RevenueCatBridge from '@/components/RevenueCatBridge';
@@ -23,11 +25,11 @@ import { RecipesProvider } from '@/context/RecipesContext';
 import { TonightRecipesProvider } from '@/context/TonightRecipesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { initializeMobileAds } from '@/utils/admob';
-import { initSentry, Sentry } from '@/utils/sentry';
+import { ensureTelemetryStarted } from '@/utils/telemetry';
+import { Sentry } from '@/utils/sentry';
 import { warmRasoiRealtime } from '@/utils/realtime';
 import { warmSupabaseClient } from '@/utils/supabase';
 
-initSentry();
 warmSupabaseClient();
 warmRasoiRealtime();
 
@@ -66,6 +68,7 @@ function RootLayoutInner({
   const { colors, isDark } = useTheme();
 
   useEffect(() => {
+    void ensureTelemetryStarted().catch(() => undefined);
     void initializeMobileAds().catch(() => undefined);
   }, []);
 
@@ -110,13 +113,24 @@ function RootLayoutInner({
                         fullScreenGestureEnabled: true,
                       }}
                     />
+                    <Stack.Screen
+                      name="paywall"
+                      options={{
+                        presentation: 'card',
+                        animation: 'slide_from_right',
+                        gestureEnabled: true,
+                        fullScreenGestureEnabled: true,
+                      }}
+                    />
                   </Stack>
                   {!launchDone && <LaunchSplash />}
                   <NotificationNavigationBridge />
                   <LocationSyncBridge />
                   <RevenueCatBridge />
                   <AppDialogHost />
+                  <TrialEndingSoonModal />
                   <TrialExpiredPaywallModal />
+                  <EmailVerificationBridge />
                 </View>
               </PartnersProvider>
               </AppDialogProvider>

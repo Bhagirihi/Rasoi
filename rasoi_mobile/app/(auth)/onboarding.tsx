@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, Redirect } from 'expo-router';
 import {
   ArrowLeft,
   ArrowRight,
@@ -40,7 +40,7 @@ type OnboardingStep = 'diet' | 'cuisine' | 'notifications';
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding } = useAppContext();
+  const { completeOnboarding, isHydrated, isLoggedIn } = useAppContext();
   const { kitchenStyles, refreshReference } = useReferenceData();
 
   useFocusEffect(
@@ -103,7 +103,7 @@ export default function OnboardingScreen() {
 
     finishingRef.current = true;
     try {
-      await completeOnboarding({
+      const showTrialWelcome = await completeOnboarding({
         dietPreference: dietChoiceToFilter(selectedDiet),
         dietChoice: selectedDiet,
         favoriteCuisines: selectedCuisines,
@@ -112,12 +112,20 @@ export default function OnboardingScreen() {
       });
 
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(auth)/register');
+      if (!isLoggedIn) {
+        router.replace('/(auth)/login');
+        return;
+      }
+      router.replace(showTrialWelcome ? '/(auth)/trial-welcome' : '/(tabs)');
     } catch {
       finishingRef.current = false;
       throw new Error('Could not save onboarding. Please try again.');
     }
   };
+
+  if (isHydrated && !isLoggedIn) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   if (step === 'notifications') {
     return (

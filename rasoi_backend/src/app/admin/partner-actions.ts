@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { partnerLinksSchema } from '@/lib/validators';
 
 async function requireAdminSession() {
@@ -17,7 +17,7 @@ export async function updatePartnerLinksAction(raw: unknown) {
   const input = partnerLinksSchema.parse(raw);
 
   for (const link of input.links) {
-    await prisma.partnerLink.upsert({
+    await db.partnerLink.upsert({
       where: { partnerId: link.partnerId },
       update: {
         label: link.label,

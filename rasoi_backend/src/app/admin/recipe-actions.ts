@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { deletePublicRecipe, syncPublicRecipe } from '@/lib/sync-public-recipe';
 import { recipeCreateSchema, recipeUpdateSchema } from '@/lib/validators';
 
@@ -17,7 +17,7 @@ export async function createRecipeAction(raw: unknown) {
   await requireAdminSession();
   const input = recipeCreateSchema.parse(raw);
 
-  const recipe = await prisma.recipe.create({
+  const recipe = await db.recipe.create({
     data: {
       title: input.title,
       prepTime: input.prepTime,
@@ -52,7 +52,7 @@ export async function updateRecipeAction(id: string, raw: unknown) {
   await requireAdminSession();
   const input = recipeUpdateSchema.parse(raw);
 
-  const recipe = await prisma.recipe.update({
+  const recipe = await db.recipe.update({
     where: { id },
     data: {
       title: input.title,
@@ -95,7 +95,7 @@ export async function updateRecipeAction(id: string, raw: unknown) {
 
 export async function deleteRecipeAction(id: string) {
   await requireAdminSession();
-  await prisma.recipe.delete({ where: { id } });
+  await db.recipe.delete({ where: { id } });
   try {
     await deletePublicRecipe(id);
   } catch (error) {

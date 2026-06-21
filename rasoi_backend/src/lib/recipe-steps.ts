@@ -1,4 +1,4 @@
-import type { Recipe } from '@/generated/prisma/client';
+import type { Recipe } from '@/lib/db/types';
 import type { RecipeIngredient } from '@/lib/types';
 
 function parseJsonArray<T>(value: string, fallback: T): T {

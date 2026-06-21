@@ -1,8 +1,43 @@
 export type PaymentProviderId = 'stub' | 'revenuecat' | 'razorpay';
 
-/** Product ids — map in RevenueCat / Play / App Store later. */
+export type RasoiPlusCatalogProductId = 'rasoi_plus_monthly' | 'rasoi_plus_yearly';
+
+/** Product ids — map in RevenueCat / Play / App Store. */
 export const RASOI_PLUS_MONTHLY_PRODUCT_ID = 'rasoi_plus_monthly';
 export const RASOI_PLUS_YEARLY_PRODUCT_ID = 'rasoi_plus_yearly';
+/** Google Play Billing Library v5+ includes base plan id. */
+export const RASOI_PLUS_MONTHLY_PLAY_PRODUCT_ID = 'rasoi_plus_monthly:monthly';
+export const RASOI_PLUS_YEARLY_PLAY_PRODUCT_ID = 'rasoi_plus_yearly:yearly';
+
+const RASOI_PLUS_STORE_PRODUCT_IDS = new Set([
+  RASOI_PLUS_MONTHLY_PRODUCT_ID,
+  RASOI_PLUS_YEARLY_PRODUCT_ID,
+  RASOI_PLUS_MONTHLY_PLAY_PRODUCT_ID,
+  RASOI_PLUS_YEARLY_PLAY_PRODUCT_ID,
+]);
+
+/** Normalize Play/App Store product id to Rasoi catalog id. */
+export function normalizeRasoiPlusProductId(
+  storeProductId: string,
+): RasoiPlusCatalogProductId | null {
+  if (
+    storeProductId === RASOI_PLUS_MONTHLY_PRODUCT_ID ||
+    storeProductId === RASOI_PLUS_MONTHLY_PLAY_PRODUCT_ID
+  ) {
+    return RASOI_PLUS_MONTHLY_PRODUCT_ID;
+  }
+  if (
+    storeProductId === RASOI_PLUS_YEARLY_PRODUCT_ID ||
+    storeProductId === RASOI_PLUS_YEARLY_PLAY_PRODUCT_ID
+  ) {
+    return RASOI_PLUS_YEARLY_PRODUCT_ID;
+  }
+  return null;
+}
+
+export function isRasoiPlusStoreProductId(storeProductId: string): boolean {
+  return RASOI_PLUS_STORE_PRODUCT_IDS.has(storeProductId);
+}
 
 /** @deprecated Use RASOI_PLUS_MONTHLY_PRODUCT_ID */
 export const RASOI_PLUS_PRODUCT_ID = RASOI_PLUS_MONTHLY_PRODUCT_ID;

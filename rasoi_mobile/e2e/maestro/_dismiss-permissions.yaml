@@ -1,0 +1,18 @@
+# Dismiss common Android system permission dialogs (best-effort).
+appId: com.bhagihiri.rasoiapp
+---
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+- runFlow:
+    when:
+      visible: "Only this time"
+    commands:
+      - tapOn: "Only this time"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"

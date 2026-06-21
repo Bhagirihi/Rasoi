@@ -2,37 +2,42 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail, Phone, User } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, type RefObject } from 'react';
 import {
-  KeyboardAvoidingView,
+  Keyboard,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import PreferencesSummaryCard from '@/components/auth/PreferencesSummaryCard';
+import GuestContinueModal from '@/components/auth/GuestContinueModal';
+import { FieldLabel } from '@/components/auth/FieldLabel';
 import TermsAcceptanceModal from '@/components/auth/TermsAcceptanceModal';
 import { authStyles as styles } from '@/components/auth/authStyles';
 import { gradients, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
-import { useReferenceData } from '@/context/ReferenceContext';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { useAppContext } from '@/context/AppContext';
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
-import { FreeBadge } from '@/components/ui/Primitives';
+import { isEmailDeliveryUnavailableError } from '@/utils/emailDeliveryErrors';
+import { warmApiConnection } from '@/utils/api';
 import {
+  getIndianPhoneError,
   isValidEmail,
   isValidPhoneLength,
   normalizeEmail,
   normalizeIndianPhone,
 } from '@/utils/storage';
+import { scrollFieldIntoView } from '@/utils/scrollFieldIntoView';
 
 type RegisterStep = 'details' | 'otp';
 type FieldError = 'name' | 'phone' | 'email' | 'otp' | 'general' | null;
+type BusyAction = 'send' | 'verify' | 'resend' | 'guest' | null;
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -40,15 +45,13 @@ export default function RegisterScreen() {
     sendEmailOtp,
     verifyEmailOtpAndLogin,
     loginAsGuest,
+    hasCompletedOnboarding,
     userName,
     userPhone,
     userEmail,
     isGuest,
-    dietChoice,
-    regionalCuisine,
-    favoriteCuisines,
+    continueWithPendingEmailVerification,
   } = useAppContext();
-  const { kitchenStyles } = useReferenceData();
 
   const [step, setStep] = useState<RegisterStep>('details');
   const [name, setName] = useState('');
@@ -57,9 +60,13 @@ export default function RegisterScreen() {
   const [otp, setOtp] = useState('');
   const [fieldError, setFieldError] = useState<FieldError>(null);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busyAction, setBusyAction] = useState<BusyAction>(null);
+  const isSubmitting = busyAction !== null;
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [guestName, setGuestName] = useState('');
+  const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
 
   useEffect(() => {
     if (!isGuest && userName && userName !== 'Guest') {
@@ -69,7 +76,59 @@ export default function RegisterScreen() {
     }
   }, [isGuest, userName, userPhone, userEmail]);
 
+  useEffect(() => {
+    if (step === 'otp') warmApiConnection();
+  }, [step]);
+
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
+  const nameFieldRef = useRef<View>(null);
+  const phoneFieldRef = useRef<View>(null);
+  const emailFieldRef = useRef<View>(null);
+  const otpFieldRef = useRef<View>(null);
+  const focusedFieldRef = useRef<View | null>(null);
+  const keyboardLayoutRef = useRef({ height: 0, screenY: 0 });
+
+  const focusField = (fieldRef: RefObject<View | null>) => {
+    focusedFieldRef.current = fieldRef.current;
+    const { height, screenY } = keyboardLayoutRef.current;
+    scrollFieldIntoView(scrollRef, fieldRef, scrollYRef, height, screenY);
+  };
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      const { height, screenY } = event.endCoordinates;
+      keyboardLayoutRef.current = { height, screenY };
+      setKeyboardInset(height);
+      if (focusedFieldRef.current) {
+        scrollFieldIntoView(
+          scrollRef,
+          { current: focusedFieldRef.current },
+          scrollYRef,
+          height,
+          screenY,
+        );
+      }
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      keyboardLayoutRef.current = { height: 0, screenY: 0 };
+      setKeyboardInset(0);
+      focusedFieldRef.current = null;
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
   const navigateAfterAuth = (showTrialWelcome: boolean) => {
+    if (!hasCompletedOnboarding) {
+      router.replace('/(auth)/onboarding');
+      return;
+    }
     if (showTrialWelcome) {
       router.replace('/(auth)/trial-welcome');
       return;
@@ -90,7 +149,10 @@ export default function RegisterScreen() {
 
     if (!isValidPhoneLength(normalizedPhone)) {
       setFieldError('phone');
-      setErrorMessage('Enter your 10-digit mobile number for Blinkit, Zepto & delivery partners.');
+      setErrorMessage(
+        getIndianPhoneError(normalizedPhone) ??
+          'Enter a valid 10-digit Indian mobile number (starts with 6–9).',
+      );
       return null;
     }
 
@@ -123,7 +185,8 @@ export default function RegisterScreen() {
   };
 
   const sendOtpForDetails = async (details: { name: string; phone: string; email: string }) => {
-    setIsSubmitting(true);
+    setBusyAction('send');
+    setEmailDeliveryBlocked(false);
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       authLog('register:sendOtp', { email: maskEmail(details.email) });
@@ -133,11 +196,46 @@ export default function RegisterScreen() {
     } catch (error) {
       authError('register:sendOtp_failed', error, { email: maskEmail(details.email) });
       setFieldError('general');
+      if (isEmailDeliveryUnavailableError(error)) {
+        setEmailDeliveryBlocked(true);
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : 'Email delivery is temporarily unavailable. You can keep using Rasoi and verify later.',
+        );
+      } else {
+        setErrorMessage(
+          error instanceof Error ? error.message : 'Could not send verification code. Try again.',
+        );
+      }
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const handleContinueWithoutEmailVerification = async (details: {
+    name: string;
+    phone: string;
+    email: string;
+  }) => {
+    setBusyAction('guest');
+    try {
+      await continueWithPendingEmailVerification({
+        email: details.email,
+        flow: 'signup',
+        name: details.name,
+        phone: details.phone,
+        termsAccepted,
+      });
+      setEmailDeliveryBlocked(false);
+      navigateAfterAuth(false);
+    } catch (error) {
+      setFieldError('general');
       setErrorMessage(
-        error instanceof Error ? error.message : 'Could not send verification code. Try again.',
+        error instanceof Error ? error.message : 'Could not continue to the app. Please try again.',
       );
     } finally {
-      setIsSubmitting(false);
+      setBusyAction(null);
     }
   };
 
@@ -158,7 +256,8 @@ export default function RegisterScreen() {
       return;
     }
 
-    setIsSubmitting(true);
+    setBusyAction('verify');
+    let verified = false;
     try {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       authLog('register:verifyOtp', { email: maskEmail(details.email), otpLength: code.length });
@@ -170,6 +269,7 @@ export default function RegisterScreen() {
         { acceptedTerms: true },
       );
       authLog('register:verifyOtp_success');
+      verified = true;
       navigateAfterAuth(showTrialWelcome);
     } catch (error) {
       authError('register:verifyOtp_failed', error, { email: maskEmail(details.email) });
@@ -178,14 +278,14 @@ export default function RegisterScreen() {
         error instanceof Error ? error.message : 'Invalid or expired code. Please try again.',
       );
     } finally {
-      setIsSubmitting(false);
+      if (!verified) setBusyAction(null);
     }
   };
 
   const handleResendOtp = async () => {
     setFieldError(null);
     setErrorMessage('');
-    setIsSubmitting(true);
+    setBusyAction('resend');
     try {
       const details = validateDetails();
       if (!details) {
@@ -193,24 +293,30 @@ export default function RegisterScreen() {
         return;
       }
       await sendEmailOtp(details.name, details.phone, details.email);
+      setEmailDeliveryBlocked(false);
       setErrorMessage('A new code was sent to your email.');
     } catch (error) {
       setFieldError('general');
+      if (isEmailDeliveryUnavailableError(error)) {
+        setEmailDeliveryBlocked(true);
+      }
       setErrorMessage(
         error instanceof Error ? error.message : 'Could not resend code. Try again.',
       );
     } finally {
-      setIsSubmitting(false);
+      setBusyAction(null);
     }
   };
 
   const handleGuest = async () => {
     setFieldError(null);
     setErrorMessage('');
-    setIsSubmitting(true);
+    setBusyAction('guest');
     try {
       void Haptics.selectionAsync();
-      await loginAsGuest();
+      const trimmed = guestName.trim();
+      await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
+      setShowGuestModal(false);
       navigateAfterAuth(false);
     } catch (error) {
       setFieldError('general');
@@ -218,8 +324,13 @@ export default function RegisterScreen() {
         error instanceof Error ? error.message : 'Could not continue as guest. Please try again.',
       );
     } finally {
-      setIsSubmitting(false);
+      setBusyAction(null);
     }
+  };
+
+  const requestGuest = () => {
+    setGuestName('');
+    setShowGuestModal(true);
   };
 
   const backToDetails = () => {
@@ -229,21 +340,32 @@ export default function RegisterScreen() {
     setErrorMessage('');
   };
 
+  const overlaySteps = useMemo(() => {
+    switch (busyAction) {
+      case 'guest':
+        return [
+          { message: 'Starting guest mode…', subtitle: 'Setting up your kitchen' },
+          { message: 'Almost ready…', subtitle: 'Opening Rasoi' },
+        ];
+      case 'verify':
+        return [{ message: 'Signing you in…', subtitle: 'Verifying code and setting up your account' }];
+      case 'resend':
+        return [{ message: 'Sending a new code…', subtitle: 'Check your email inbox' }];
+      case 'send':
+        return [
+          {
+            message: 'Sending verification code…',
+            subtitle: 'Usually arrives in under a minute',
+          },
+        ];
+      default:
+        return undefined;
+    }
+  }, [busyAction]);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']} testID={testIds.screenRegister}>
-      <AppSavingOverlay
-        visible={isSubmitting}
-        message={
-          step === 'otp'
-            ? 'Creating your Rasoi account…'
-            : 'Sending verification code…'
-        }
-        subtitle={
-          step === 'otp'
-            ? 'Syncing your account and preferences'
-            : 'Sending via email — usually arrives in under a minute'
-        }
-      />
+      <AppSavingOverlay visible={isSubmitting} steps={overlaySteps} />
       <TermsAcceptanceModal
         visible={showTermsModal}
         checked={termsAccepted}
@@ -256,19 +378,31 @@ export default function RegisterScreen() {
           if (details) void sendOtpForDetails(details);
         }}
       />
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
-      >
-        <ScrollViewWithFloatingIndicator
+      <GuestContinueModal
+        visible={showGuestModal}
+        name={guestName}
+        onChangeName={setGuestName}
+        onClose={() => setShowGuestModal(false)}
+        onContinue={() => void handleGuest()}
+        busy={busyAction === 'guest'}
+      />
+      <ScrollViewWithFloatingIndicator
           {...scrollIndicator}
-          contentContainerStyle={styles.scrollContent}
+          scrollRef={scrollRef}
+          style={styles.flex}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: keyboardInset > 0 ? keyboardInset + 32 : 32 },
+          ]}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          onScroll={(event) => {
+            scrollYRef.current = event.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={16}
         >
           <View style={styles.topRow}>
             <Text style={styles.brand}>RASOI</Text>
-            <FreeBadge />
           </View>
 
           {step === 'otp' && (
@@ -283,21 +417,14 @@ export default function RegisterScreen() {
           </Text>
           <Text style={styles.subtitle}>
             {step === 'details'
-              ? 'Add your details — we’ll send a one-time code to verify your email.'
+              ? 'Create your account first — you’ll pick diet & cuisines next.'
               : `Enter the code sent to ${normalizeEmail(email)}`}
           </Text>
 
-          <PreferencesSummaryCard
-            dietChoice={dietChoice}
-            regionalCuisine={regionalCuisine}
-            favoriteCuisines={favoriteCuisines}
-            kitchenStyles={kitchenStyles ?? []}
-          />
-
           {step === 'details' ? (
             <View style={styles.form}>
-              <View style={styles.field}>
-                <Text style={styles.label}>Your Name</Text>
+              <View ref={nameFieldRef} collapsable={false} style={styles.field}>
+                <FieldLabel required>Your Name</FieldLabel>
                 <View style={[styles.inputRow, fieldError === 'name' && styles.inputRowError]}>
                   <User size={20} color="#6b6560" />
                   <TextInput
@@ -306,6 +433,7 @@ export default function RegisterScreen() {
                       setName(value);
                       if (fieldError === 'name') setFieldError(null);
                     }}
+                    onFocus={() => focusField(nameFieldRef)}
                     placeholder="e.g. Priya Sharma"
                     placeholderTextColor="#a39e96"
                     autoCapitalize="words"
@@ -315,8 +443,8 @@ export default function RegisterScreen() {
                 </View>
               </View>
 
-              <View style={styles.field}>
-                <Text style={styles.label}>Mobile Number</Text>
+              <View ref={phoneFieldRef} collapsable={false} style={styles.field}>
+                <FieldLabel required>Mobile Number</FieldLabel>
                 <View style={[styles.inputRow, fieldError === 'phone' && styles.inputRowError]}>
                   <Phone size={20} color="#6b6560" />
                   <Text style={styles.countryCode}>+91</Text>
@@ -326,6 +454,7 @@ export default function RegisterScreen() {
                       setPhone(normalizeIndianPhone(value));
                       if (fieldError === 'phone') setFieldError(null);
                     }}
+                    onFocus={() => focusField(phoneFieldRef)}
                     placeholder="9876543210"
                     placeholderTextColor="#a39e96"
                     keyboardType="phone-pad"
@@ -334,11 +463,11 @@ export default function RegisterScreen() {
                     style={styles.input}
                   />
                 </View>
-                <Text style={styles.hint}>Required for Blinkit, Zepto, Instamart, Zomato & Swiggy checkout</Text>
+                <Text style={styles.hint}>10 digits, starting with 6–9 · for partner checkout</Text>
               </View>
 
-              <View style={styles.field}>
-                <Text style={styles.label}>Email</Text>
+              <View ref={emailFieldRef} collapsable={false} style={styles.field}>
+                <FieldLabel required>Email</FieldLabel>
                 <View style={[styles.inputRow, fieldError === 'email' && styles.inputRowError]}>
                   <Mail size={20} color="#6b6560" />
                   <TextInput
@@ -347,6 +476,7 @@ export default function RegisterScreen() {
                       setEmail(value);
                       if (fieldError === 'email') setFieldError(null);
                     }}
+                    onFocus={() => focusField(emailFieldRef)}
                     placeholder="you@example.com"
                     placeholderTextColor="#a39e96"
                     keyboardType="email-address"
@@ -362,8 +492,8 @@ export default function RegisterScreen() {
             </View>
           ) : (
             <View style={styles.form}>
-              <View style={styles.field}>
-                <Text style={styles.label}>Verification code</Text>
+              <View ref={otpFieldRef} collapsable={false} style={styles.field}>
+                <FieldLabel required>Verification code</FieldLabel>
                 <View style={[styles.inputRow, fieldError === 'otp' && styles.inputRowError]}>
                   <Mail size={20} color="#6b6560" />
                   <TextInput
@@ -372,6 +502,7 @@ export default function RegisterScreen() {
                       setOtp(value.replace(/\D/g, '').slice(0, 8));
                       if (fieldError === 'otp') setFieldError(null);
                     }}
+                    onFocus={() => focusField(otpFieldRef)}
                     placeholder="123456"
                     placeholderTextColor="#a39e96"
                     keyboardType="number-pad"
@@ -391,64 +522,88 @@ export default function RegisterScreen() {
           )}
 
           {errorMessage.length > 0 && (
-            <View style={[styles.errorBox, fieldError !== 'general' && fieldError !== 'otp' && styles.infoBox]}>
-              <Text style={[styles.error, fieldError !== 'general' && fieldError !== 'otp' && styles.infoText]}>
+            <View
+              style={[
+                styles.errorBox,
+                fieldError === null && styles.infoBox,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.error,
+                  fieldError === null && styles.infoText,
+                ]}
+              >
                 {errorMessage}
               </Text>
             </View>
           )}
-        </ScrollViewWithFloatingIndicator>
 
-        <View style={styles.footer}>
-          <Pressable
-            onPress={step === 'details' ? handleSendOtp : handleVerifyOtp}
-            disabled={isSubmitting}
-            testID={step === 'details' ? testIds.registerSendOtp : undefined}
-            style={[styles.submitWrap, isSubmitting && styles.buttonDisabled]}
-          >
-            <LinearGradient
-              colors={[...gradients.cta]}
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.submitButton}
+          <View style={styles.actions}>
+            <Pressable
+              onPress={step === 'details' ? handleSendOtp : handleVerifyOtp}
+              disabled={isSubmitting}
+              testID={step === 'details' ? testIds.registerSendOtp : undefined}
+              style={[styles.submitWrap, isSubmitting && styles.buttonDisabled]}
             >
-              <Text style={styles.submitButtonText}>
-                {step === 'details' ? 'Send verification code' : 'Create account'}
-              </Text>
-            </LinearGradient>
-          </Pressable>
+              <LinearGradient
+                colors={[...gradients.cta]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={styles.submitButton}
+              >
+                <Text style={styles.submitButtonText}>
+                  {step === 'details' ? 'Send verification code' : 'Create account'}
+                </Text>
+              </LinearGradient>
+            </Pressable>
 
-          {step === 'details' && (
-            <>
+            {emailDeliveryBlocked && step === 'details' ? (
               <Pressable
-                onPress={handleGuest}
+                onPress={() => {
+                  const details = validateDetails();
+                  if (details) void handleContinueWithoutEmailVerification(details);
+                }}
                 disabled={isSubmitting}
-                testID={testIds.loginGuest}
                 style={styles.guestButton}
               >
-                <Text style={styles.guestButtonText}>Explore as Guest</Text>
+                <Text style={styles.guestButtonText}>Continue to app — verify email later</Text>
               </Pressable>
+            ) : null}
 
-              <Pressable
-                onPress={() => router.push('/(auth)/login')}
-                disabled={isSubmitting}
-                style={styles.switchAuthWrap}
-              >
-                <Text style={styles.switchAuthText}>
-                  Already have an account?{' '}
-                  <Text style={styles.switchAuthLink}>Log in</Text>
+            {step === 'details' ? (
+              <>
+                <Pressable
+                  onPress={requestGuest}
+                  disabled={isSubmitting}
+                  testID={testIds.loginGuest}
+                  style={styles.guestButton}
+                >
+                  <Text style={styles.guestButtonText}>Explore as Guest</Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => router.push('/(auth)/login')}
+                  disabled={isSubmitting}
+                  style={styles.switchAuthWrap}
+                >
+                  <Text style={styles.switchAuthText}>
+                    Already have an account?{' '}
+                    <Text style={styles.switchAuthLink}>Log in</Text>
+                  </Text>
+                </Pressable>
+
+                <Text style={styles.disclaimer}>
+                  Mobile is required for partner checkout. Email is verified with a one-time code.
                 </Text>
-              </Pressable>
-            </>
-          )}
-
-          <Text style={styles.disclaimer}>
-            {step === 'details'
-              ? 'Mobile is required for partner checkout. Email is verified with a one-time code.'
-              : 'Did not get the email? Check spam or tap Resend code.'}
-          </Text>
-        </View>
-      </KeyboardAvoidingView>
+              </>
+            ) : (
+              <Text style={styles.disclaimer}>
+                Did not get the email? Check spam or tap Resend code.
+              </Text>
+            )}
+          </View>
+        </ScrollViewWithFloatingIndicator>
     </SafeAreaView>
   );
 }

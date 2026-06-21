@@ -1,9 +1,9 @@
 import { DEFAULT_PARTNER_LINKS } from '@/lib/partners';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export async function ensurePartnerLinks() {
   for (const link of DEFAULT_PARTNER_LINKS) {
-    await prisma.partnerLink.upsert({
+    await db.partnerLink.upsert({
       where: { partnerId: link.partnerId },
       update: {
         label: link.label,

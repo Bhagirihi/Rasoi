@@ -47,6 +47,7 @@ export default function HomeScreen() {
     recipes,
     recipesLoading,
     recipesError,
+    rankingReady,
     rankedRecipes,
     topPick,
     tonightCards,
@@ -67,10 +68,11 @@ export default function HomeScreen() {
 
   const { greeting, subtitle } = getLocalizedGreeting();
   const isLateNight = meal.slot === 'lateNight';
-  const heroDataReady = !!topPick && !recipesLoading;
+  const discoveryReady = !recipesLoading && rankingReady;
+  const heroDataReady = discoveryReady && !!topPick;
   const showHeroIntro = !heroIntroFinished;
   const showHeroCard = heroIntroFinished && !!topPick;
-  const showTonightSkeleton = recipesLoading && tonightCards.length === 0;
+  const showTonightSkeleton = !discoveryReady && tonightCards.length === 0;
 
   const topPickMissing = useMemo(() => {
     if (!topPick) return [];
@@ -348,7 +350,7 @@ export default function HomeScreen() {
             </View>
           )}
 
-          {!recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
+          {discoveryReady && !recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
             <View
               style={[
                 styles.noMatchCard,
@@ -371,18 +373,20 @@ export default function HomeScreen() {
             </View>
           )}
 
-          <Pressable
-            onPress={() => router.push('/(tabs)/recipes')}
-            style={[
-              styles.browseCard,
-              { backgroundColor: themeColors.white, borderColor: themeColors.border },
-            ]}
-          >
-            <Text style={[styles.browseTitle, { color: themeColors.charcoal }]}>More ideas</Text>
-            <Text style={[styles.browseSub, { color: themeColors.muted }]}>
-              Browse {Math.max(rankedRecipes.length - 4, 0)} more dishes on the Recipe tab →
-            </Text>
-          </Pressable>
+          {discoveryReady && (
+            <Pressable
+              onPress={() => router.push('/(tabs)/recipes')}
+              style={[
+                styles.browseCard,
+                { backgroundColor: themeColors.white, borderColor: themeColors.border },
+              ]}
+            >
+              <Text style={[styles.browseTitle, { color: themeColors.charcoal }]}>More ideas</Text>
+              <Text style={[styles.browseSub, { color: themeColors.muted }]}>
+                Browse {Math.max(rankedRecipes.length - 4, 0)} more dishes on the Recipe tab →
+              </Text>
+            </Pressable>
+          )}
         </View>
       </ScrollViewWithFloatingIndicator>
 

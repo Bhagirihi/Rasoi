@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import KitchenStyleForm from '@/app/admin/(console)/kitchen-styles/KitchenStyleForm';
 import { PageHeader } from '@/app/admin/_components/ui';
 import { ensureKitchenStyles } from '@/lib/kitchen-styles';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export default async function EditKitchenStylePage({
   params,
@@ -13,7 +13,7 @@ export default async function EditKitchenStylePage({
   const { id } = await params;
   await ensureKitchenStyles();
 
-  const style = await prisma.kitchenStyle.findUnique({ where: { id } });
+  const style = await db.kitchenStyle.findUnique({ where: { id } });
   if (!style) notFound();
 
   return (

@@ -5,6 +5,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+if [[ -z "${JAVA_HOME:-}" || ! -d "${JAVA_HOME}/bin" ]]; then
+  if [[ -d "/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" ]]; then
+    export JAVA_HOME="/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+  elif command -v /usr/libexec/java_home >/dev/null 2>&1; then
+    export JAVA_HOME="$(/usr/libexec/java_home 2>/dev/null || true)"
+  fi
+fi
+
 SUITE="${1:-smoke}"
 MAESTRO_BIN="${MAESTRO_BIN:-maestro}"
 APP_ID="${RASOI_APP_ID:-com.bhagihiri.rasoiapp}"

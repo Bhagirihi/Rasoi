@@ -117,3 +117,33 @@ Send test: Admin → user → **Send meal notification** → pick **Dinner**.
 | Late night | 10:00 PM |
 
 Cron: GitHub Actions every 15 min → `/api/cron/meal-notifications`
+
+---
+
+## Firebase Analytics + Crashlytics
+
+Rasoi uses **React Native Firebase** (native SDKs) for:
+
+- **Analytics** — partner taps, sponsor impressions, sign-up/login
+- **Crashlytics** — native crash + non-fatal reports (alongside Sentry)
+
+These require a **release APK/AAB** (not Expo Go). `google-services.json` must be present before prebuild.
+
+### Enable Google Analytics in Firebase console
+
+1. [Firebase Console](https://console.firebase.google.com/project/rasoi-app-prod/settings/integrations) → **Integrations** → **Google Analytics** → Link
+2. Rebuild after any native config change: `npm run android:release-apk`
+
+### Verify after install
+
+- **Analytics:** Firebase → Analytics → DebugView (enable debug mode on device for test events)
+- **Crashlytics:** Firebase → Crashlytics — first report appears after a crash or `recordError` in production
+
+### Optional `.env` flags (dev testing on device)
+
+```bash
+EXPO_PUBLIC_FIREBASE_ANALYTICS_ENABLED=1
+EXPO_PUBLIC_FIREBASE_CRASHLYTICS_ENABLED=1
+```
+
+Default: both **on in production**, **off in `__DEV__`** unless flags are set.

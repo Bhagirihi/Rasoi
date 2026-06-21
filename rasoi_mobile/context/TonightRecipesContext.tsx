@@ -22,22 +22,33 @@ type TonightRecipesContextValue = {
   alsoFor: Recipe[];
   readyToCookCount: number;
   readyToCookReady: boolean;
+  /** False while tonight picks are still being ranked after the recipe list loads. */
+  rankingReady: boolean;
 };
 
 const TonightRecipesContext = createContext<TonightRecipesContextValue | undefined>(undefined);
 
 export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   const { dietChoice, regionalCuisine, favoriteCuisines, pantryIngredients } = useAppContext();
-  const { recipes } = useRecipes();
+  const { recipes, loading: recipesLoading } = useRecipes();
   const meal = getMealContext();
   const deferredPantryIngredients = useDeferredValue(pantryIngredients);
   const [rankedRecipes, setRankedRecipes] = useState<Recipe[]>([]);
+  const [rankingReady, setRankingReady] = useState(false);
 
   useEffect(() => {
-    if (recipes.length === 0) {
-      setRankedRecipes([]);
+    if (recipesLoading) {
+      setRankingReady(false);
       return;
     }
+
+    if (recipes.length === 0) {
+      setRankedRecipes([]);
+      setRankingReady(true);
+      return;
+    }
+
+    setRankingReady(false);
 
     const task = InteractionManager.runAfterInteractions(() => {
       const filtered = filterRecipes(recipes, {
@@ -55,11 +66,13 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           mealSlot: meal.slot,
         }),
       );
+      setRankingReady(true);
     });
 
     return () => task.cancel();
   }, [
     recipes,
+    recipesLoading,
     dietChoice,
     regionalCuisine,
     favoriteCuisines,
@@ -102,8 +115,9 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       alsoFor,
       readyToCookCount,
       readyToCookReady,
+      rankingReady,
     }),
-    [rankedRecipes, topPick, alsoFor, readyToCookCount, readyToCookReady],
+    [rankedRecipes, topPick, alsoFor, readyToCookCount, readyToCookReady, rankingReady],
   );
 
   return <TonightRecipesContext.Provider value={value}>{children}</TonightRecipesContext.Provider>;

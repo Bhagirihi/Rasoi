@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin';
 import { jsonOk, handleApiError } from '@/lib/api';
 import { buildRecipeWhere } from '@/lib/recipe-filters';
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const serialize =
       view === 'list' || view === 'mobile' ? serializeRecipeListItem : serializeRecipe;
 
-    const recipes = await prisma.recipe.findMany({
+    const recipes = await db.recipe.findMany({
       where,
       orderBy: { createdAt: 'desc' },
     });
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const input = recipeCreateSchema.parse(body);
 
-    const recipe = await prisma.recipe.create({
+    const recipe = await db.recipe.create({
       data: {
         title: input.title,
         prepTime: input.prepTime,

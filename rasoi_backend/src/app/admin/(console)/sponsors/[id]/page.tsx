@@ -2,14 +2,14 @@ import { redirect } from 'next/navigation';
 
 import SponsorForm from '@/app/admin/(console)/sponsors/SponsorForm';
 import { GhostButton, PageHeader } from '@/app/admin/_components/ui';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { serializeSponsor } from '@/lib/serializers';
 
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function EditSponsorPage({ params }: PageProps) {
   const { id } = await params;
-  const sponsor = await prisma.sponsor.findUnique({ where: { id } });
+  const sponsor = await db.sponsor.findUnique({ where: { id } });
   if (!sponsor) redirect('/admin/sponsors');
 
   const serialized = serializeSponsor(sponsor);

@@ -1,26 +1,56 @@
 import { Redirect } from 'expo-router';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { colors } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { hasLegalConsent, saveLegalConsent } from '@/utils/legalConsent';
+import { ensureTelemetryStarted } from '@/utils/telemetry';
+
+const BOOTSTRAP_STEPS = [
+  { message: 'Opening Rasoi…', subtitle: 'Loading your kitchen' },
+  { message: 'Syncing preferences…', subtitle: 'Just a moment' },
+];
 
 export default function Index() {
   const { isHydrated, hasCompletedOnboarding, isLoggedIn, pendingTrialWelcome } = useAppContext();
+  const [legalReady, setLegalReady] = useState(false);
+  const [legalConsented, setLegalConsented] = useState(false);
 
-  if (!isHydrated) {
+  useEffect(() => {
+    void (async () => {
+      let consented = await hasLegalConsent();
+      if (!consented && isHydrated && (isLoggedIn || hasCompletedOnboarding)) {
+        await saveLegalConsent();
+        consented = true;
+      }
+      setLegalConsented(consented);
+      if (consented) {
+        await ensureTelemetryStarted();
+      }
+      setLegalReady(true);
+    })();
+  }, [hasCompletedOnboarding, isHydrated, isLoggedIn]);
+
+  if (!legalReady || !isHydrated) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <AppSavingOverlay visible steps={BOOTSTRAP_STEPS} />
       </View>
     );
   }
 
-  if (!hasCompletedOnboarding) {
-    return <Redirect href="/(auth)/onboarding" />;
+  if (!legalConsented) {
+    return <Redirect href="/(auth)/legal-consent" />;
   }
 
   if (!isLoggedIn) {
     return <Redirect href="/(auth)/login" />;
+  }
+
+  if (!hasCompletedOnboarding) {
+    return <Redirect href="/(auth)/onboarding" />;
   }
 
   if (pendingTrialWelcome) {
@@ -33,8 +63,6 @@ export default function Index() {
 const styles = StyleSheet.create({
   loading: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: colors.cream,
   },
 });

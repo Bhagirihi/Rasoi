@@ -1,44 +1,48 @@
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
+import type { AffiliateEventWithUser } from '@/lib/db/types';
 
-export type AffiliateEventListItem = Awaited<ReturnType<typeof getAffiliateEventList>>[number];
+export type AffiliateEventListItem = AffiliateEventWithUser;
 
 export async function getAffiliateEventStats(days = 30) {
   const since = new Date();
   since.setDate(since.getDate() - days);
 
-  const [totalCount, sponsorRailCount, groceryCount, foodCount, uniqueUsers] = await Promise.all([
-    prisma.affiliateEvent.count({ where: { createdAt: { gte: since } } }),
-    prisma.affiliateEvent.count({
+  const [totalCount, sponsorRailCount, groceryCount, foodCount, userRows] = await Promise.all([
+    db.affiliateEvent.count({ where: { createdAt: { gte: since } } }),
+    db.affiliateEvent.count({
       where: { createdAt: { gte: since }, context: 'sponsor_rail' },
     }),
-    prisma.affiliateEvent.count({
+    db.affiliateEvent.count({
       where: {
         createdAt: { gte: since },
         context: { in: ['grocery_checkout', 'brand_search', 'sponsor_rail'] },
       },
     }),
-    prisma.affiliateEvent.count({
+    db.affiliateEvent.count({
       where: { createdAt: { gte: since }, context: 'food_delivery' },
     }),
-    prisma.affiliateEvent.findMany({
+    db.affiliateEvent.findMany({
       where: { createdAt: { gte: since }, userId: { not: null } },
-      distinct: ['userId'],
       select: { userId: true },
     }),
   ]);
+
+  const uniqueUserCount = new Set(
+    userRows.map((row) => row.userId).filter((id): id is string => Boolean(id)),
+  ).size;
 
   return {
     totalCount,
     sponsorRailCount,
     groceryCount,
     foodCount,
-    uniqueUserCount: uniqueUsers.length,
+    uniqueUserCount,
     days,
   };
 }
 
-export async function getAffiliateEventList(limit = 200) {
-  return prisma.affiliateEvent.findMany({
+export async function getAffiliateEventList(limit = 200): Promise<AffiliateEventWithUser[]> {
+  return db.affiliateEvent.findMany({
     orderBy: { createdAt: 'desc' },
     take: limit,
     include: {
@@ -53,5 +57,5 @@ export async function getAffiliateEventList(limit = 200) {
         },
       },
     },
-  });
+  }) as Promise<AffiliateEventWithUser[]>;
 }

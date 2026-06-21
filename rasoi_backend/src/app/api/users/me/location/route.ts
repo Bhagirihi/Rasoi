@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { userLocationSchema } from '@/lib/validators';
 import { serializeUser } from '@/lib/serializers';
@@ -14,7 +14,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const input = userLocationSchema.parse(body);
 
-    const updated = await prisma.user.update({
+    const updated = await db.user.update({
       where: { id: user.id },
       data: {
         city: input.city,

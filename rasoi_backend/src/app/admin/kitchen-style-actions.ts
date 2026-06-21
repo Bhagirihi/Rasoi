@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import {
   deletePublicKitchenStyle,
   syncPublicKitchenStyle,
@@ -19,7 +19,7 @@ async function requireAdminSession() {
 export async function createKitchenStyleAction(raw: unknown) {
   await requireAdminSession();
   const input = kitchenStyleCreateSchema.parse(raw);
-  const style = await prisma.kitchenStyle.create({ data: input });
+  const style = await db.kitchenStyle.create({ data: input });
   try {
     await syncPublicKitchenStyle(style);
   } catch (error) {
@@ -31,7 +31,7 @@ export async function createKitchenStyleAction(raw: unknown) {
 export async function updateKitchenStyleAction(id: string, raw: unknown) {
   await requireAdminSession();
   const input = kitchenStyleUpdateSchema.parse(raw);
-  const style = await prisma.kitchenStyle.update({ where: { id }, data: input });
+  const style = await db.kitchenStyle.update({ where: { id }, data: input });
   try {
     await syncPublicKitchenStyle(style);
   } catch (error) {
@@ -43,7 +43,7 @@ export async function updateKitchenStyleAction(id: string, raw: unknown) {
 
 export async function toggleKitchenStyleActiveAction(id: string, active: boolean) {
   await requireAdminSession();
-  const style = await prisma.kitchenStyle.update({ where: { id }, data: { active } });
+  const style = await db.kitchenStyle.update({ where: { id }, data: { active } });
   try {
     await syncPublicKitchenStyle(style);
   } catch (error) {
@@ -55,7 +55,7 @@ export async function toggleKitchenStyleActiveAction(id: string, active: boolean
 
 export async function deleteKitchenStyleAction(id: string) {
   await requireAdminSession();
-  await prisma.kitchenStyle.delete({ where: { id } });
+  await db.kitchenStyle.delete({ where: { id } });
   try {
     await deletePublicKitchenStyle(id);
   } catch (error) {

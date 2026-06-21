@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { jsonOk, handleApiError } from '@/lib/api';
 import { sponsorEventSchema } from '@/lib/validators';
 
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const input = sponsorEventSchema.parse(body);
     const user = await getUserFromRequest(request);
 
-    const event = await prisma.sponsorEvent.create({
+    const event = await db.sponsorEvent.create({
       data: {
         userId: user?.id,
         eventType: input.eventType,

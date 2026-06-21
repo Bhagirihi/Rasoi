@@ -4,15 +4,15 @@ import StatCard from '@/app/admin/_components/StatCard';
 import { AdminCard, GhostButton, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 import { getAppConfig } from '@/lib/app-settings';
 import { getFeedbackStats, getRecentPendingFeedback } from '@/lib/feedback-stats';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export default async function AdminDashboardPage() {
   const [recipeCount, sponsorCount, userCount, guestCount, appConfig, feedbackStats, recentPendingFeedback] =
     await Promise.all([
-      prisma.recipe.count(),
-      prisma.sponsor.count({ where: { active: true } }),
-      prisma.user.count(),
-      prisma.user.count({ where: { isGuest: true } }),
+      db.recipe.count(),
+      db.sponsor.count({ where: { active: true } }),
+      db.user.count(),
+      db.user.count({ where: { isGuest: true } }),
       getAppConfig(),
       getFeedbackStats(),
       getRecentPendingFeedback(3),

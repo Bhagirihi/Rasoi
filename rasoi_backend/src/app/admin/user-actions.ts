@@ -12,7 +12,10 @@ import {
   getUserNotificationEligibility,
   runMealNotifications,
 } from '@/lib/meal-notifications';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
+import type { UserWithRelations } from '@/lib/db/types';
+import { isActiveTrial } from '@/lib/promo-codes';
+import { getTrialTotalDays, TRIAL_DURATION_DAYS } from '@/lib/plan-pricing';
 
 async function requireAdminSession() {
   const admin = await getAdminFromCookies();
@@ -46,7 +49,7 @@ async function deliverMealNotification(
   mealSlot: MealSlot,
   dryRun: boolean,
 ): Promise<SendMealNotificationResult> {
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id: userId },
     select: { name: true },
   });
@@ -232,7 +235,7 @@ export async function sendCustomNotificationAction(
     return { ok: false, message: 'Message must be 500 characters or fewer.' };
   }
 
-  const user = await prisma.user.findUnique({
+  const user = (await db.user.findUnique({
     where: { id: userId },
     select: {
       name: true,
@@ -241,7 +244,7 @@ export async function sendCustomNotificationAction(
         select: { expoPushToken: true },
       },
     },
-  });
+  })) as (UserWithRelations & { pushTokens: { expoPushToken: string }[] }) | null;
 
   if (!user) {
     return { ok: false, message: 'User not found.' };
@@ -296,7 +299,7 @@ export async function setUserActiveAction(
 ): Promise<SetUserActiveResult> {
   await requireAdminSession();
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: { id: userId },
     select: { name: true, isActive: true },
   });
@@ -313,7 +316,7 @@ export async function setUserActiveAction(
     };
   }
 
-  await prisma.user.update({
+  await db.user.update({
     where: { id: userId },
     data: { isActive },
   });
@@ -326,5 +329,137 @@ export async function setUserActiveAction(
     message: isActive
       ? `${user.name} has been reactivated. They can sign in again.`
       : `${user.name} has been deactivated. They cannot use the app until reactivated.`,
+  };
+}
+
+export type AdminUserPlanResult = {
+  ok: boolean;
+  message: string;
+  planTier?: string;
+  trialBonusDays?: number;
+};
+
+function rejectAuthOnlyUser(userId: string): AdminUserPlanResult | null {
+  if (userId.startsWith('auth:')) {
+    return { ok: false, message: 'Plan changes require a synced Rasoi app profile.' };
+  }
+  return null;
+}
+
+export async function adminSetUserPlanAction(
+  userId: string,
+  target: 'free' | 'trial',
+): Promise<AdminUserPlanResult> {
+  await requireAdminSession();
+
+  const authOnly = rejectAuthOnlyUser(userId);
+  if (authOnly) return authOnly;
+
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    return { ok: false, message: 'User not found.' };
+  }
+
+  if (target === 'free') {
+    if (user.planTier === 'free' && !user.trialStartedAt && !user.yearlyPromoOfferTag) {
+      return { ok: true, planTier: 'free', message: `${user.name} is already on Free.` };
+    }
+
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        planTier: 'free',
+        trialStartedAt: null,
+        yearlyPromoOfferTag: null,
+      },
+    });
+
+    revalidatePath('/admin/users');
+
+    return {
+      ok: true,
+      planTier: 'free',
+      message: `${user.name} downgraded to Free. Partners locked in the app after refresh.`,
+    };
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      planTier: 'trial',
+      trialStartedAt: new Date(),
+      hasUsedTrial: true,
+      trialBonusDays: 0,
+      yearlyPromoOfferTag: null,
+    },
+  });
+
+  revalidatePath('/admin/users');
+
+  return {
+    ok: true,
+    planTier: 'trial',
+    trialBonusDays: 0,
+    message: `${user.name} reset to a fresh ${TRIAL_DURATION_DAYS}-day trial.`,
+  };
+}
+
+export async function adminExtendUserTrialAction(
+  userId: string,
+  extraDays: number,
+): Promise<AdminUserPlanResult> {
+  await requireAdminSession();
+
+  const authOnly = rejectAuthOnlyUser(userId);
+  if (authOnly) return authOnly;
+
+  if (!Number.isInteger(extraDays) || extraDays < 1 || extraDays > 90) {
+    return { ok: false, message: 'Extra days must be a whole number between 1 and 90.' };
+  }
+
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    return { ok: false, message: 'User not found.' };
+  }
+
+  const onActiveTrial = isActiveTrial(user);
+
+  if (onActiveTrial && user.trialStartedAt) {
+    const nextBonusDays = (user.trialBonusDays ?? 0) + extraDays;
+    await db.user.update({
+      where: { id: userId },
+      data: { trialBonusDays: nextBonusDays },
+    });
+
+    revalidatePath('/admin/users');
+
+    const totalDays = getTrialTotalDays(nextBonusDays);
+    return {
+      ok: true,
+      planTier: 'trial',
+      trialBonusDays: nextBonusDays,
+      message: `${user.name}: +${extraDays} trial days (${totalDays} days total).`,
+    };
+  }
+
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      planTier: 'trial',
+      trialStartedAt: new Date(),
+      hasUsedTrial: true,
+      trialBonusDays: extraDays,
+      yearlyPromoOfferTag: null,
+    },
+  });
+
+  revalidatePath('/admin/users');
+
+  const totalDays = getTrialTotalDays(extraDays);
+  return {
+    ok: true,
+    planTier: 'trial',
+    trialBonusDays: extraDays,
+    message: `${user.name} moved to trial with ${totalDays} days (${TRIAL_DURATION_DAYS} base + ${extraDays} bonus).`,
   };
 }

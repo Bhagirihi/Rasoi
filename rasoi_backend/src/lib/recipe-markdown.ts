@@ -16,7 +16,7 @@ calories: 420
 region: South
 diet: Veg
 difficulty: Medium
-image: https://images.unsplash.com/photo-1632517355606-632f38f4b6da?w=800
+image: https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800
 tags: quick, under20
 published: false
 

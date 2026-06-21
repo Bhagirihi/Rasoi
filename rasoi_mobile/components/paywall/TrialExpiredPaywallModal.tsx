@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import PaidPlanFeaturesList from '@/components/paywall/PaidPlanFeaturesList';
 import PaywallActions from '@/components/paywall/PaywallActions';
 import PaywallCompareTable from '@/components/paywall/PaywallCompareTable';
 import SmoothModal from '@/components/ui/SmoothModal';
@@ -37,6 +38,7 @@ export default function TrialExpiredPaywallModal() {
     trialExpired,
     effectiveTier,
     canStartTrial,
+    yearlyPromoOfferTag,
     upgradeToPaid,
     restorePurchases,
     refreshPlan,
@@ -128,6 +130,8 @@ export default function TrialExpiredPaywallModal() {
             </Text>
           </View>
 
+          <PaidPlanFeaturesList />
+
           <Text style={styles.sectionLabel}>Compare plans</Text>
           <Text style={styles.pricingNote}>
             {PAID_PLAN_YEARLY_DETAIL} · {PAID_PLAN_YEARLY_SAVINGS_LABEL}
@@ -142,8 +146,10 @@ export default function TrialExpiredPaywallModal() {
               isBusy={paywall.isBusy}
               paymentDisclaimer={paywall.paymentDisclaimer}
               providerLabel={paywall.providerLabel}
+              providerId={paywall.providerId}
               supportsRestore={paywall.supportsRestore}
               lastError={paywall.lastError}
+              yearlyPromoOfferTag={yearlyPromoOfferTag}
               onStartTrial={() => undefined}
               onSubscribe={(interval) => void handleSubscribe(interval)}
               onRestore={() => void handleRestore()}

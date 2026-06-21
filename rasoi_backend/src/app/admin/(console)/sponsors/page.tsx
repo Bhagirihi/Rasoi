@@ -5,12 +5,12 @@ import { DataTable } from '@/app/admin/_components/DataTable';
 import SponsorActiveToggle from '@/app/admin/_components/SponsorActiveToggle';
 import { Badge, GhostButton, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteSponsorAction } from '@/app/admin/sponsor-actions';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { getSponsorPlacementLabel } from '@/lib/sponsor-placements';
 import { serializeSponsor } from '@/lib/serializers';
 
 export default async function AdminSponsorsPage() {
-  const sponsors = await prisma.sponsor.findMany({
+  const sponsors = await db.sponsor.findMany({
     orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
   });
 

@@ -13,7 +13,7 @@ export default function TermsPage() {
     <LegalDocumentPage
       title="Terms of Service"
       description="Please read these terms before using Rasoi. They govern your use of the app and website."
-      lastUpdated="17 June 2026"
+      lastUpdated="21 June 2026"
       sections={termsSections}
     />
   );

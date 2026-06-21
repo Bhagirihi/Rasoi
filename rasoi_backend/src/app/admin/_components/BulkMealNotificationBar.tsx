@@ -22,7 +22,9 @@ export default function BulkMealNotificationBar({ users }: { users: AdminUserRow
   const [mealSlot, setMealSlot] = useState<(typeof MEAL_SLOTS)[number]>('dinner');
   const [loading, setLoading] = useState<'preview' | 'send' | null>(null);
 
-  const eligibleIds = users.filter((user) => user.pushTokenCount > 0).map((user) => user.id);
+  const eligibleIds = users
+    .filter((user) => user.canManage && user.pushTokenCount > 0)
+    .map((user) => user.id);
   const eligibleCount = eligibleIds.length;
 
   const handleAction = async (dryRun: boolean) => {

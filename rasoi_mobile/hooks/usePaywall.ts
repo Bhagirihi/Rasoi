@@ -38,7 +38,13 @@ export function usePaywall({ upgradeToPaid, restorePurchases }: UsePaywallOption
         await upgradeToPaid(interval);
         return {
           ok: true,
-          planState: { planTier: 'paid', trialStartedAt: null, hasUsedTrial: true },
+          planState: {
+            planTier: 'paid',
+            trialStartedAt: null,
+            hasUsedTrial: true,
+            trialBonusDays: 0,
+            yearlyPromoOfferTag: null,
+          },
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Purchase could not be completed.';
@@ -56,7 +62,16 @@ export function usePaywall({ upgradeToPaid, restorePurchases }: UsePaywallOption
     setLastError(null);
     try {
       await restorePurchases();
-      return { ok: true, planState: { planTier: 'paid', trialStartedAt: null, hasUsedTrial: true } };
+      return {
+        ok: true,
+        planState: {
+          planTier: 'paid',
+          trialStartedAt: null,
+          hasUsedTrial: true,
+          trialBonusDays: 0,
+          yearlyPromoOfferTag: null,
+        },
+      };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not restore purchases.';
       setLastError(message);

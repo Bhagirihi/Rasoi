@@ -22,6 +22,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RecipeImage from '@/components/RecipeImage';
+import RecipeDetailSkeleton from '@/components/RecipeDetailSkeleton';
 
 import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
 import SponsorOrAd from '@/components/SponsorOrAd';
@@ -29,6 +30,7 @@ import FoodDeliveryModal from '@/components/FoodDeliveryModal';
 import FoodDeliveryStrip from '@/components/FoodDeliveryStrip';
 import IngredientList from '@/components/IngredientList';
 import PartnerUpsellCard from '@/components/PartnerUpsellCard';
+import RecipeSafetyDisclaimer from '@/components/RecipeSafetyDisclaimer';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import { PlanBadge } from '@/components/ui/Primitives';
 import { SCREENSHOT_MODE } from '@/constants/screenshotMode';
@@ -174,11 +176,7 @@ export default function RecipeDetailScreen() {
   }, [recipeId, showPartners]);
 
   if (recipeLoading) {
-    return (
-      <SafeAreaView style={styles.notFound}>
-        <Text style={styles.notFoundTitle}>Loading recipe…</Text>
-      </SafeAreaView>
-    );
+    return <RecipeDetailSkeleton />;
   }
 
   if (!recipe) {
@@ -312,6 +310,8 @@ export default function RecipeDetailScreen() {
           </View>
 
           <Text style={styles.description}>{recipe.description}</Text>
+
+          <RecipeSafetyDisclaimer />
 
           <View style={styles.statsRow}>
             <View style={styles.statCard}>

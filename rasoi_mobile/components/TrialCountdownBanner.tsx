@@ -3,25 +3,29 @@ import { useRouter } from 'expo-router';
 import { Clock, Crown } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { TRIAL_DURATION_DAYS } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useTrialClock } from '@/hooks/useTrialClock';
+import { getTrialTimeRemaining, getTrialTotalDays } from '@/utils/planLogic';
 import { PAYWALL_HREF } from '@/utils/routes';
 
 export default function TrialCountdownBanner() {
   const router = useRouter();
-  const { effectiveTier, trialStartedAt, showPaywall } = useAppContext();
+  const { effectiveTier, trialStartedAt, trialBonusDays, showPaywall } = useAppContext();
   const { trialTimeLabel, trialEndsAtLabel, trialDaysLeft } = useTrialClock(
     trialStartedAt,
     effectiveTier,
+    trialBonusDays,
   );
 
-  if (!showPaywall || effectiveTier !== 'trial' || trialDaysLeft === null || trialDaysLeft <= 0) {
+  const remaining = getTrialTimeRemaining(trialStartedAt, Date.now(), trialBonusDays);
+
+  if (!showPaywall || effectiveTier !== 'trial' || !remaining || remaining.totalMs <= 0) {
     return null;
   }
 
-  const isDayTwoReminder = trialDaysLeft === TRIAL_DURATION_DAYS - 1;
+  const totalTrialDays = getTrialTotalDays(trialBonusDays);
+  const isDayTwoReminder = trialDaysLeft === totalTrialDays - 2;
 
   return (
     <Pressable onPress={() => router.push(PAYWALL_HREF)} style={styles.wrap}>

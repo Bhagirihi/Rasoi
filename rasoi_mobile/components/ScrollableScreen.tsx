@@ -23,17 +23,21 @@ export function FlatListWithFloatingIndicator<T>({
   );
 }
 
-type ScrollViewScreenProps = ScrollViewProps;
+type ScrollViewScreenProps = ScrollViewProps & {
+  scrollRef?: Ref<ScrollView>;
+};
 
 export function ScrollViewWithFloatingIndicator({
   children,
   horizontal,
   style,
   contentContainerStyle,
+  scrollRef,
   ...rest
 }: ScrollViewScreenProps): ReactElement {
   return (
     <ScrollView
+      ref={scrollRef}
       horizontal={horizontal}
       {...scrollIndicator}
       {...rest}

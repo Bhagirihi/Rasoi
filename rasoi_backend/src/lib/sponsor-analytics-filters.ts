@@ -1,4 +1,4 @@
-import type { Prisma } from '@/generated/prisma/client';
+import type { SponsorEventWhereInput } from '@/lib/db/types';
 
 export type SponsorAnalyticsFilters = {
   brand?: string;
@@ -34,8 +34,8 @@ export function sponsorAnalyticsSince(days: number): Date {
   return since;
 }
 
-export function buildSponsorEventWhere(filters: SponsorAnalyticsFilters): Prisma.SponsorEventWhereInput {
-  const where: Prisma.SponsorEventWhereInput = {
+export function buildSponsorEventWhere(filters: SponsorAnalyticsFilters): SponsorEventWhereInput {
+  const where: SponsorEventWhereInput = {
     createdAt: { gte: sponsorAnalyticsSince(filters.days ?? 30) },
   };
 

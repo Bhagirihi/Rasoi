@@ -32,6 +32,12 @@
         "track": "internal",
         "releaseStatus": "draft"
       }
+    },
+    "openTesting": {
+      "android": {
+        "track": "beta",
+        "releaseStatus": "completed"
+      }
     }
   }
 }

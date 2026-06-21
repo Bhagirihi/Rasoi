@@ -1,10 +1,49 @@
-# Fresh install → onboarding → guest login → all tabs
+# Guest smoke — current: legal → login → guest → onboarding → trial → tabs.
+# Legacy APK (onboarding-first) falls back to register guest after onboarding.
 appId: com.bhagihiri.rasoiapp
 ---
 - launchApp:
     clearState: true
     permissions:
       all: allow
+- runFlow:
+    file: _dismiss-permissions.yaml
+- runFlow:
+    when:
+      visible:
+        id: screen-legal-consent
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: legal-consent-checkbox
+          direction: DOWN
+      - tapOn:
+          id: legal-consent-checkbox
+      - scrollUntilVisible:
+          element:
+            id: legal-consent-continue
+          direction: DOWN
+      - tapOn:
+          id: legal-consent-continue
+- runFlow:
+    when:
+      visible:
+        id: screen-login
+    commands:
+      - tapOn:
+          id: login-guest
+      - runFlow:
+          when:
+            visible:
+              id: guest-continue-button
+          commands:
+            - tapOn:
+                id: guest-continue-button
+      - runFlow:
+          when:
+            visible: "Continue as guest"
+          commands:
+            - tapOn: "Continue as guest"
 - extendedWaitUntil:
     visible:
       id: screen-onboarding
@@ -23,16 +62,54 @@ appId: com.bhagihiri.rasoiapp
     id: onboarding-cuisine-continue
 - tapOn:
     id: onboarding-skip-notify
-- extendedWaitUntil:
-    visible:
-      id: screen-login
-    timeout: 20000
-- tapOn:
-    id: login-guest
+- runFlow:
+    when:
+      visible:
+        id: screen-login
+    commands:
+      - tapOn:
+          id: login-guest
+      - runFlow:
+          when:
+            visible:
+              id: guest-continue-button
+          commands:
+            - tapOn:
+                id: guest-continue-button
+- runFlow:
+    when:
+      visible:
+        id: login-guest
+    commands:
+      - tapOn:
+          id: login-guest
+      - runFlow:
+          when:
+            visible:
+              id: guest-continue-button
+          commands:
+            - tapOn:
+                id: guest-continue-button
+      - runFlow:
+          when:
+            visible: "Continue as guest"
+          commands:
+            - tapOn: "Continue as guest"
+- runFlow:
+    file: _dismiss-permissions.yaml
+- runFlow:
+    when:
+      visible:
+        id: screen-trial-welcome
+    commands:
+      - tapOn:
+          id: trial-continue
+- runFlow:
+    file: _dismiss-permissions.yaml
 - extendedWaitUntil:
     visible:
       id: screen-home
-    timeout: 45000
+    timeout: 60000
 - tapOn:
     id: tab-pantry
 - assertVisible:

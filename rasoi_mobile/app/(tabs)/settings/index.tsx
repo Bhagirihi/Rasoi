@@ -3,6 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
   Crown,
+  Download,
   Drumstick,
   Egg,
   Hand,
@@ -10,12 +11,15 @@ import {
   Moon,
   SlidersHorizontal,
   Sun,
+  Trash2,
   User,
 } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AdMobBanner from '@/components/AdMobBanner';
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import RateRasoiCard from '@/components/settings/RateRasoiCard';
 import FeedbackLinkCard from '@/components/settings/FeedbackLinkCard';
@@ -29,14 +33,13 @@ import {
   SettingsCard,
   SettingsFooter,
   SettingsGroupLabel,
+  SettingsNavRow,
   SettingsProfileHero,
   SettingsQuickTile,
 } from '@/components/settings/SettingsBlocks';
 import { AppTabHeader } from '@/components/AppTabHeader';
 import {
   PAID_PLAN_MONTHLY_PRICE,
-  PAID_PLAN_YEARLY_DETAIL,
-  PAID_PLAN_YEARLY_PRICE,
   PAID_PLAN_YEARLY_SAVINGS_LABEL,
   PLAN_LABELS,
 } from '@/constants/plans';
@@ -81,18 +84,22 @@ export default function SettingsScreen() {
     notificationsEnabled,
     setNotificationsEnabled,
     logout,
+    deleteAccount,
+    exportAccountData,
     resetAppFlow,
     effectiveTier,
-    planLabel,
     trialStartedAt,
-    trialDaysLeft,
+    trialExpired,
     showAds,
     showPartners,
     showPaywall,
     paymentsEnabled,
+    pendingEmailVerification,
+    openEmailVerificationModal,
   } = useAppContext();
   const { trialTimeLabel, trialEndsAtLabel } = useTrialClock(trialStartedAt, effectiveTier);
   const { showDialog } = useAppDialog();
+  const [isSessionEnding, setIsSessionEnding] = useState(false);
 
   const dietMeta = DIET_META[dietChoice];
   const displayName = userName || 'Guest';
@@ -128,12 +135,21 @@ export default function SettingsScreen() {
   const planStatusLine = !paymentsEnabled
     ? PAYMENTS_DISABLED_NOTE
     : effectiveTier === 'trial' && trialTimeLabel
-      ? `${trialTimeLabel}${trialEndsAtLabel ? ` · Ends ${trialEndsAtLabel}` : ''}`
+      ? `${trialTimeLabel} left${trialEndsAtLabel ? ` · Ends ${trialEndsAtLabel}` : ''}`
       : effectiveTier === 'paid'
-        ? 'All partners · No ads'
-        : showAds
-          ? 'Free · Ads on · Partners locked'
-          : planLabel;
+        ? 'Active subscription'
+        : trialExpired
+          ? 'Trial ended · Upgrade to unlock partners'
+          : 'Upgrade to unlock partners and remove ads';
+
+  const planCtaLabel =
+    !showPaywall
+      ? null
+      : effectiveTier === 'paid'
+        ? 'Manage subscription'
+        : effectiveTier === 'trial'
+          ? 'Subscribe before trial ends'
+          : 'View Rasoi Plus plans';
 
   const openLogin = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -143,6 +159,33 @@ export default function SettingsScreen() {
   const handleNotificationsToggle = async (next: boolean) => {
     void Haptics.selectionAsync();
     await setNotificationsEnabled(next);
+  };
+
+  const handleSwitchAccount = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    showDialog({
+      title: 'Switch account?',
+      message:
+        'Your current session will be logged out so you can sign in with a different account.',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Okay',
+          onPress: () => {
+            void (async () => {
+              void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+              setIsSessionEnding(true);
+              try {
+                await logout();
+                router.replace('/(auth)/login');
+              } finally {
+                setIsSessionEnding(false);
+              }
+            })();
+          },
+        },
+      ],
+    });
   };
 
   const handleLogout = () => {
@@ -157,8 +200,13 @@ export default function SettingsScreen() {
           onPress: () => {
             void (async () => {
               void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              await logout();
-              router.replace('/(auth)/login');
+              setIsSessionEnding(true);
+              try {
+                await logout();
+                router.replace('/(auth)/login');
+              } finally {
+                setIsSessionEnding(false);
+              }
             })();
           },
         },
@@ -179,8 +227,96 @@ export default function SettingsScreen() {
             void (async () => {
               void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
               await resetAppFlow();
-              router.replace('/(auth)/onboarding');
+              router.replace('/(auth)/legal-consent');
             })();
+          },
+        },
+      ],
+    });
+  };
+
+  const handleExportData = () => {
+    void (async () => {
+      try {
+        setIsSessionEnding(true);
+        const data = await exportAccountData();
+        await Share.share({
+          message: JSON.stringify(data, null, 2),
+          title: 'Rasoi account export',
+        });
+      } catch {
+        showDialog({
+          title: 'Export failed',
+          message: 'Could not export your data right now. Try again or email cooking@rasoiapplication.in.',
+          buttons: [{ text: 'OK' }],
+        });
+      } finally {
+        setIsSessionEnding(false);
+      }
+    })();
+  };
+
+  const handleDeleteAccount = () => {
+    showDialog({
+      title: isGuest ? 'Delete guest session?' : 'Delete account permanently?',
+      message: isGuest
+        ? 'This removes your guest profile and saved data on our servers.'
+        : 'This permanently deletes your profile, saved recipes, pantry, and sign-in. Active Google Play subscriptions must be cancelled separately.',
+      buttons: [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            if (isGuest) {
+              void (async () => {
+                setIsSessionEnding(true);
+                try {
+                  await deleteAccount();
+                  router.replace('/(auth)/login');
+                } finally {
+                  setIsSessionEnding(false);
+                }
+              })();
+              return;
+            }
+
+            showDialog({
+              title: 'Confirm your email',
+              message: `Type your email (${userEmail ?? 'your account email'}) in the next step to confirm deletion.`,
+              buttons: [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Continue',
+                  style: 'destructive',
+                  onPress: () => {
+                    if (!userEmail) {
+                      showDialog({
+                        title: 'Email required',
+                        message: 'Add your email to your profile before deleting, or contact cooking@rasoiapplication.in.',
+                        buttons: [{ text: 'OK' }],
+                      });
+                      return;
+                    }
+                    void (async () => {
+                      setIsSessionEnding(true);
+                      try {
+                        await deleteAccount(userEmail);
+                        router.replace('/(auth)/login');
+                      } catch {
+                        showDialog({
+                          title: 'Deletion failed',
+                          message: 'Could not delete your account. Email cooking@rasoiapplication.in for help.',
+                          buttons: [{ text: 'OK' }],
+                        });
+                      } finally {
+                        setIsSessionEnding(false);
+                      }
+                    })();
+                  },
+                },
+              ],
+            });
           },
         },
       ],
@@ -198,6 +334,13 @@ export default function SettingsScreen() {
       edges={['top']}
       testID={testIds.screenSettings}
     >
+      <AppSavingOverlay
+        visible={isSessionEnding}
+        steps={[
+          { message: 'Signing you out…', subtitle: 'Saving your preferences on this device' },
+          { message: 'Almost done…', subtitle: 'Clearing your session' },
+        ]}
+      />
       <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
         contentContainerStyle={[styles.content, { paddingBottom: tabBarHeight + spacing.xxxl }]}
@@ -214,6 +357,23 @@ export default function SettingsScreen() {
           isGuest={isGuest}
           onPress={openEditProfile}
         />
+
+        {pendingEmailVerification ? (
+          <Pressable
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              openEmailVerificationModal();
+            }}
+            style={[styles.verifyBanner, { backgroundColor: colors.white, borderColor: colors.border }]}
+          >
+            <Text style={[styles.verifyBannerTitle, { color: colors.charcoal }]}>
+              Email verification pending
+            </Text>
+            <Text style={[styles.verifyBannerBody, { color: colors.muted }]}>
+              Tap to enter your code or resend when email delivery is back.
+            </Text>
+          </Pressable>
+        ) : null}
 
         <View style={styles.tileRow}>
           <SettingsQuickTile
@@ -271,11 +431,7 @@ export default function SettingsScreen() {
 
         <SettingsGroupLabel label="Your plan" />
         <SettingsCard style={styles.planCard}>
-          <Pressable
-            onPress={openPaywall}
-            disabled={!showPaywall}
-            style={[styles.planRow, !showPaywall && styles.planRowStatic]}
-          >
+          <View style={styles.planHeader}>
             <View style={styles.planIcon}>
               <Crown size={20} color={colors.primary} />
             </View>
@@ -285,25 +441,32 @@ export default function SettingsScreen() {
               </Text>
               <Text style={[styles.planSub, { color: colors.muted }]}>{planStatusLine}</Text>
             </View>
-            {showPaywall ? (
-              <Text style={[styles.planCta, { color: colors.primary }]}>Manage →</Text>
-            ) : null}
-          </Pressable>
-          <View style={[styles.planMeta, { borderTopColor: colors.border }]}>
-            <Text style={[styles.planMetaText, { color: colors.muted }]}>
-              {paymentsEnabled
-                ? `${showAds ? 'AdMob enabled' : 'No ads'} · ${showPartners ? 'Partners unlocked' : 'Partners locked'}`
-                : `${showAds ? 'AdMob enabled' : 'No ads'} · Partners unlocked · Paywall off`}
-            </Text>
-            {paymentsEnabled && effectiveTier !== 'paid' && (
-              <>
-                <Text style={[styles.planPrice, { color: colors.primary }]}>
-                  Rasoi Plus · {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE}
-                </Text>
-                <Text style={[styles.planSavings, { color: colors.muted }]}>{PAID_PLAN_YEARLY_DETAIL}</Text>
-              </>
-            )}
           </View>
+
+          <View style={styles.planBenefits}>
+            <View style={[styles.planBenefitChip, showAds && styles.planBenefitChipMuted]}>
+              <Text style={[styles.planBenefitText, { color: showAds ? colors.muted : brandColors.green }]}>
+                {showAds ? 'Ads on' : 'No ads'}
+              </Text>
+            </View>
+            <View style={[styles.planBenefitChip, !showPartners && styles.planBenefitChipMuted]}>
+              <Text style={[styles.planBenefitText, { color: showPartners ? brandColors.green : colors.muted }]}>
+                {showPartners ? 'Partners unlocked' : 'Partners locked'}
+              </Text>
+            </View>
+          </View>
+
+          {showPaywall ? (
+            <Pressable onPress={openPaywall} style={[styles.planActionBtn, { borderColor: colors.primary }]}>
+              <Text style={[styles.planActionText, { color: colors.primary }]}>{planCtaLabel}</Text>
+            </Pressable>
+          ) : null}
+
+          {paymentsEnabled && effectiveTier !== 'paid' && showPaywall ? (
+            <Text style={[styles.planPriceHint, { color: colors.muted }]}>
+              From {PAID_PLAN_MONTHLY_PRICE} · {PAID_PLAN_YEARLY_SAVINGS_LABEL}
+            </Text>
+          ) : null}
         </SettingsCard>
 
         <AdMobBanner placement="settings" />
@@ -345,11 +508,33 @@ export default function SettingsScreen() {
         <View style={styles.supportSpacer} />
         <RateRasoiCard />
 
+        <SettingsGroupLabel label="Privacy & data" />
+        <SettingsCard>
+          <SettingsNavRow
+            icon={Download}
+            iconBg="rgba(0,168,107,0.12)"
+            iconColor={brandColors.green}
+            label="Export my data"
+            value="JSON copy"
+            onPress={handleExportData}
+          />
+          <SettingsNavRow
+            icon={Trash2}
+            iconBg="rgba(229,57,53,0.1)"
+            iconColor={brandColors.danger}
+            label="Delete account"
+            value={isGuest ? 'Guest session' : 'Permanent'}
+            onPress={handleDeleteAccount}
+            destructive
+            isLast
+          />
+        </SettingsCard>
+
         <SettingsGroupLabel label="Account" />
         <AccountActionsCard
           isGuest={isGuest}
           onSignIn={openEditProfile}
-          onSwitchAccount={openLogin}
+          onSwitchAccount={handleSwitchAccount}
           onLogout={handleLogout}
           onReset={handleResetFlow}
         />
@@ -365,6 +550,22 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: {
     paddingHorizontal: layout.screenPadding,
+  },
+  verifyBanner: {
+    marginTop: spacing.md,
+    marginBottom: spacing.sm,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: spacing.lg,
+  },
+  verifyBannerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  verifyBannerBody: {
+    marginTop: spacing.xs,
+    fontSize: 13,
+    lineHeight: 18,
   },
   appearanceCard: {
     padding: spacing.lg,
@@ -408,14 +609,12 @@ const styles = StyleSheet.create({
   },
   planCard: {
     padding: spacing.lg,
+    gap: spacing.md,
   },
-  planRow: {
+  planHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-  },
-  planRowStatic: {
-    opacity: 1,
   },
   planIcon: {
     width: 44,
@@ -429,34 +628,47 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   planTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '800',
   },
   planSub: {
-    marginTop: 2,
+    marginTop: 4,
     fontSize: 13,
+    lineHeight: 18,
   },
-  planCta: {
-    fontSize: 13,
-    fontWeight: '800',
+  planBenefits: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
   },
-  planMeta: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    gap: 4,
+  planBenefitChip: {
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(0,168,107,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  planMetaText: {
-    fontSize: 12,
+  planBenefitChipMuted: {
+    backgroundColor: 'rgba(107,114,128,0.1)',
   },
-  planPrice: {
+  planBenefitText: {
     fontSize: 12,
     fontWeight: '700',
   },
-  planSavings: {
-    marginTop: 4,
-    fontSize: 11,
+  planActionBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.md,
+    borderWidth: 2,
+    paddingVertical: spacing.md,
+  },
+  planActionText: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  planPriceHint: {
+    fontSize: 12,
     lineHeight: 16,
+    textAlign: 'center',
     fontWeight: '600',
   },
   revenueCard: {

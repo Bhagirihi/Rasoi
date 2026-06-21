@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { jsonOk, handleApiError } from '@/lib/api';
 import { affiliateEventSchema } from '@/lib/validators';
 
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const input = affiliateEventSchema.parse(body);
     const user = await getUserFromRequest(request);
 
-    const event = await prisma.affiliateEvent.create({
+    const event = await db.affiliateEvent.create({
       data: {
         userId: user?.id,
         partner: input.partner,

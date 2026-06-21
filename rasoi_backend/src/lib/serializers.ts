@@ -1,9 +1,9 @@
-import type { Recipe, Sponsor, User } from '@/generated/prisma/client';
+import type { Recipe, Sponsor, User } from '@/lib/db/types';
+import { serializeUserPlan } from '@/lib/plan-serializer';
 import type {
   CuisineId,
   DietChoice,
   DietType,
-  PlanTier,
   RecipeDifficulty,
   RecipeIngredient,
   RecipeResponse,
@@ -91,13 +91,10 @@ export function serializeUser(user: User): UserProfileResponse {
     longitude: user.longitude ?? null,
     locationUpdatedAt: user.locationUpdatedAt?.toISOString() ?? null,
     termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
+    termsAcceptedVersion: user.termsAcceptedVersion ?? null,
     createdAt: user.createdAt.toISOString(),
     pantryIngredients: parseJson<string[]>(user.pantryIngredients, []),
     savedRecipeIds: parseJson<string[]>(user.savedRecipeIds, []),
-    plan: {
-      planTier: user.planTier as PlanTier,
-      trialStartedAt: user.trialStartedAt?.toISOString() ?? null,
-      hasUsedTrial: user.hasUsedTrial,
-    },
+    plan: serializeUserPlan(user),
   };
 }

@@ -1,17 +1,15 @@
 import 'dotenv/config';
 
-import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
+import { db } from '../src/lib/db';
 import { getDirectDatabaseUrl } from '../src/lib/database-url';
-import { PrismaClient } from '../src/generated/prisma/client';
 import { pruneOrphanPublicRecipes, syncPublicRecipe } from '../src/lib/sync-public-recipe';
 
 const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
-const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 async function main() {
-  const recipes = await prisma.recipe.findMany({ orderBy: { id: 'asc' } });
+  const recipes = await db.recipe.findMany({ orderBy: { id: 'asc' } });
   const validIds = recipes.map((recipe) => recipe.id);
 
   const removed = await pruneOrphanPublicRecipes(validIds);
@@ -62,6 +60,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
     await pool.end();
   });

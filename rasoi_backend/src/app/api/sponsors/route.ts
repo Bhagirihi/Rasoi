@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin';
 import { jsonOk, handleApiError } from '@/lib/api';
 import { sponsorCreateSchema } from '@/lib/validators';
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const placement = searchParams.get('placement');
     const activeOnly = searchParams.get('active') !== 'false';
 
-    const sponsors = await prisma.sponsor.findMany({
+    const sponsors = await db.sponsor.findMany({
       where: {
         placement: placement ?? undefined,
         active: activeOnly ? true : undefined,
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const input = sponsorCreateSchema.parse(body);
 
-    const sponsor = await prisma.sponsor.create({
+    const sponsor = await db.sponsor.create({
       data: input,
     });
 

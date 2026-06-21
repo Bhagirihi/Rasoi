@@ -1,5 +1,6 @@
 /** Verified working Unsplash photo IDs (GET returns 200). */
 export const WORKING_UNSPLASH_PHOTOS = [
+  'photo-1563379091339-03b21ab4a4f8',
   'photo-1585937421612-70a008356fbe',
   'photo-1631452180519-c014fe946bc7',
   'photo-1601050690597-df0568f70950',

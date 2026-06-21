@@ -5,11 +5,14 @@ export type PurchaseProductId = 'rasoi_plus_monthly' | 'rasoi_plus_yearly';
 
 export interface PurchaseRequest {
   productId: PurchaseProductId;
+  googlePlayOfferTag?: string | null;
 }
 
 export interface PurchaseResult {
   success: boolean;
   provider: PaymentProviderId;
+  productId?: PurchaseProductId;
+  storeProductId?: string;
   transactionId?: string;
   errorMessage?: string;
   cancelled?: boolean;
@@ -29,4 +32,5 @@ export type PurchaseFlowResult =
 export interface ApplyPaidPlanOptions {
   isLoggedIn: boolean;
   trialStartedAt: string | null;
+  yearlyPromoOfferTag?: string | null;
 }

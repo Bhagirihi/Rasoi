@@ -2,11 +2,11 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 
-import { prisma } from '@/lib/prisma';
+import { getJwtSecretBytes } from '@/lib/env';
+import { db } from '@/lib/db';
+import { createSupabaseAdmin } from '@/lib/supabase-admin';
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? 'rasoi-dev-secret-change-in-production',
-);
+const JWT_SECRET = getJwtSecretBytes();
 
 export type TokenPayload = {
   sub: string;
@@ -15,7 +15,8 @@ export type TokenPayload = {
   name?: string;
 };
 
-export async function signToken(payload: TokenPayload, expiresIn = '30d') {
+/** Long-lived until explicit logout; Supabase sessions refresh independently on mobile. */
+export async function signToken(payload: TokenPayload, expiresIn = '400d') {
   return new SignJWT({
     type: payload.type,
     ...(payload.name ? { name: payload.name } : {}),
@@ -51,14 +52,42 @@ export function getBearerToken(request: NextRequest): string | null {
   return header.slice(7).trim();
 }
 
+async function getUserFromSupabaseToken(token: string) {
+  try {
+    const supabase = createSupabaseAdmin();
+    const {
+      data: { user: authUser },
+      error,
+    } = await supabase.auth.getUser(token);
+
+    if (error || !authUser?.id) {
+      return null;
+    }
+
+    return db.user.findFirst({
+      where: {
+        supabaseUserId: authUser.id,
+        isActive: true,
+      },
+    });
+  } catch {
+    return null;
+  }
+}
+
 export async function getUserFromRequest(request: NextRequest) {
   const token = getBearerToken(request);
   if (!token) return null;
 
+  const supabaseUser = await getUserFromSupabaseToken(token);
+  if (supabaseUser) {
+    return supabaseUser;
+  }
+
   const payload = await verifyToken(token);
   if (!payload || payload.type !== 'user') return null;
 
-  const user = await prisma.user.findUnique({ where: { id: payload.sub } });
+  const user = await db.user.findUnique({ where: { id: payload.sub } });
   if (!user || !user.isActive) return null;
   return user;
 }
@@ -70,7 +99,7 @@ export async function getAdminFromRequest(request: NextRequest) {
   const payload = await verifyToken(token);
   if (!payload || payload.type !== 'admin') return null;
 
-  return prisma.admin.findUnique({ where: { id: payload.sub } });
+  return db.admin.findUnique({ where: { id: payload.sub } });
 }
 
 export async function getAdminFromCookies() {
@@ -85,5 +114,5 @@ export async function getAdminFromCookies() {
     return { id: payload.sub, name: payload.name, email: '' };
   }
 
-  return prisma.admin.findUnique({ where: { id: payload.sub } });
+  return db.admin.findUnique({ where: { id: payload.sub } });
 }

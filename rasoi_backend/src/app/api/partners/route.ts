@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { ensurePartnerLinks } from '@/lib/partner-seed';
 import { jsonOk, handleApiError } from '@/lib/api';
 
@@ -6,7 +6,7 @@ export async function GET() {
   try {
     await ensurePartnerLinks();
 
-    const links = await prisma.partnerLink.findMany({
+    const links = await db.partnerLink.findMany({
       orderBy: { partnerId: 'asc' },
     });
 

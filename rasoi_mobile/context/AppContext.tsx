@@ -17,10 +17,12 @@ import { useRecipes } from '@/context/RecipesContext';
 import { DietType, Recipe } from '@/data/mockRecipes';
 import { loginAsGuestUser, logoutSession, syncSupabaseAccount } from '@/services/auth';
 import { purchaseRasoiPlusDefault, restoreRasoiPlus } from '@/services/payments';
-import { getSupabaseSession, sendEmailOtp, sendLoginEmailOtp, verifyEmailOtp } from '@/services/supabaseAuth';
+import { getSupabaseSession, sendEmailOtp, sendLoginEmailOtp, verifyEmailOtp, ensureValidSupabaseSession } from '@/services/supabaseAuth';
 import {
   completeUserOnboarding,
   deactivatePushTokens,
+  deleteUserAccount,
+  exportUserData,
   fetchCurrentUser,
   registerPushToken,
   updatePantryIngredients,
@@ -31,8 +33,10 @@ import {
 } from '@/services/user';
 import type { UserProfileResponse } from '@/types/api';
 import { authError, authLog } from '@/utils/authLogger';
-import { clearAuthToken, getAuthToken } from '@/utils/authToken';
+import { useRasoiUserPlanRealtime } from '@/utils/realtime';
+import { clearUserLoggedOut, getAuthToken, isUserLoggedOut, markUserLoggedOut } from '@/utils/authToken';
 import { clearSentryUser, captureException, captureMessage, setSentryUser } from '@/utils/sentry';
+import { setFirebaseUserId, setFirebaseUserProperties, logFirebaseEvent } from '@/utils/firebase';
 import { resolvePlanState, type ResolvedPlan } from '@/utils/planLogic';
 import {
   syncDailyReminder,
@@ -60,7 +64,20 @@ import {
 } from '@/utils/storage';
 import { cuisinesToRegion } from '@/utils/kitchenStyles';
 import type { StoredPlanState } from '@/utils/planStorage';
+import { savePlanState } from '@/utils/planStorage';
+import { redeemPromoCode as redeemPromoCodeApi } from '@/services/promo';
 import type { UserLocationSnapshot } from '@/utils/location';
+import {
+  clearPendingEmailVerification as clearPendingEmailVerificationStorage,
+  loadPendingEmailVerification,
+  savePendingEmailVerification,
+  type PendingEmailVerification,
+} from '@/utils/pendingEmailVerification';
+import {
+  clearCachedUserProfile,
+  loadCachedUserProfile,
+  saveCachedUserProfile,
+} from '@/utils/userProfileCache';
 
 export type FoodPreferencesPayload = {
   dietChoice: DietChoice;
@@ -89,7 +106,7 @@ interface AppContextValue extends ResolvedPlan {
   notificationsEnabled: boolean;
   savedRecipeIds: string[];
   pantryFilterActive: boolean;
-  completeOnboarding: (payload: OnboardingPayload) => Promise<void>;
+  completeOnboarding: (payload: OnboardingPayload) => Promise<boolean>;
   sendEmailOtp: (name: string, phone: string, email: string) => Promise<void>;
   sendLoginEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtpAndLogin: (
@@ -100,10 +117,12 @@ interface AppContextValue extends ResolvedPlan {
     options?: { acceptedTerms?: boolean },
   ) => Promise<boolean>;
   verifyLoginEmailOtp: (email: string, otp: string) => Promise<boolean>;
-  loginAsGuest: () => Promise<void>;
+  loginAsGuest: (options?: { name?: string }) => Promise<void>;
   updateProfile: (name: string, phone: string) => Promise<void>;
   syncUserLocation: (snapshot: UserLocationSnapshot) => Promise<boolean>;
   logout: () => Promise<void>;
+  deleteAccount: (confirmEmail?: string) => Promise<void>;
+  exportAccountData: () => Promise<unknown>;
   resetAppFlow: () => Promise<void>;
   togglePantryIngredient: (ingredient: string) => void;
   setDietChoice: (choice: DietChoice) => Promise<void>;
@@ -119,8 +138,19 @@ interface AppContextValue extends ResolvedPlan {
   upgradeToPaid: (interval?: BillingInterval) => Promise<void>;
   restorePurchases: () => Promise<void>;
   refreshPlan: () => Promise<void>;
+  redeemPromoCode: (code: string) => Promise<{ message: string }>;
   pendingTrialWelcome: boolean;
   dismissTrialWelcome: () => void;
+  pendingEmailVerification: PendingEmailVerification | null;
+  emailVerificationModalVisible: boolean;
+  openEmailVerificationModal: () => void;
+  closeEmailVerificationModal: () => void;
+  continueWithPendingEmailVerification: (
+    pending: Omit<PendingEmailVerification, 'savedAt' | 'reason'>,
+  ) => Promise<void>;
+  verifyPendingEmailOtp: (otp: string) => Promise<boolean>;
+  resendPendingEmailVerificationOtp: () => Promise<void>;
+  clearPendingEmailVerification: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | undefined>(undefined);
@@ -129,6 +159,8 @@ const DEFAULT_PLAN: StoredPlanState = {
   planTier: 'free',
   trialStartedAt: null,
   hasUsedTrial: false,
+  trialBonusDays: 0,
+  yearlyPromoOfferTag: null,
 };
 
 function planFromUser(user: UserProfileResponse): StoredPlanState {
@@ -136,6 +168,8 @@ function planFromUser(user: UserProfileResponse): StoredPlanState {
     planTier: user.plan.planTier,
     trialStartedAt: user.plan.trialStartedAt,
     hasUsedTrial: user.plan.hasUsedTrial,
+    trialBonusDays: user.plan.trialBonusDays ?? 0,
+    yearlyPromoOfferTag: user.plan.yearlyPromoOfferTag ?? null,
   };
 }
 
@@ -160,17 +194,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [savedRecipeIds, setSavedRecipeIds] = useState<string[]>([]);
   const [pantryFilterActive, setPantryFilterActive] = useState(false);
   const [pendingTrialWelcome, setPendingTrialWelcomeState] = useState(false);
+  const [pendingEmailVerification, setPendingEmailVerificationState] =
+    useState<PendingEmailVerification | null>(null);
+  const [emailVerificationModalVisible, setEmailVerificationModalVisible] = useState(false);
 
-  const setPendingTrialWelcome = useCallback(async (pending: boolean) => {
+  const setPendingTrialWelcome = useCallback((pending: boolean) => {
     setPendingTrialWelcomeState(pending);
-    await savePendingTrialWelcome(pending);
+    void savePendingTrialWelcome(pending);
   }, []);
   const [planState, setPlanState] = useState<StoredPlanState>(DEFAULT_PLAN);
   const pendingOnboardingRef = useRef<OnboardingPayload | null>(null);
+  const profileRefreshInFlightRef = useRef(false);
 
   const syncPushTokenToServer = useCallback(async (enabled: boolean) => {
-    const authToken = await getAuthToken();
-    if (!authToken) return;
+    const hasLegacyToken = Boolean(await getAuthToken());
+    const session = await getSupabaseSession();
+    if (!hasLegacyToken && !session?.access_token) return;
 
     try {
       if (!enabled) {
@@ -203,6 +242,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const applyPlanState = useCallback(
     (next: StoredPlanState) => {
       setPlanState(next);
+      void savePlanState(next);
       const resolved = resolvePlanState(next, paymentsEnabled);
       if (resolved.effectiveTier === 'free' && next.planTier === 'trial' && resolved.trialExpired) {
         setPlanState((current) => ({ ...current, planTier: 'free' }));
@@ -239,15 +279,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
       );
       setSavedRecipeIds(user.savedRecipeIds);
       applyPlanState(planFromUser(user));
+      void saveCachedUserProfile(user);
+      void clearUserLoggedOut();
+      if (user.plan.planTier === 'trial' && user.plan.trialStartedAt) {
+        void setPendingTrialWelcome(false);
+        void scheduleTrialDayTwoReminder(user.plan.trialStartedAt);
+      }
       setSentryUser({
         id: user.id,
         email: user.email,
         name: user.name,
         isGuest: user.isGuest,
       });
+      void setFirebaseUserId(user.id);
+      void setFirebaseUserProperties({
+        account_type: user.isGuest ? 'guest' : 'member',
+        plan_tier: user.plan.planTier,
+      });
     },
-    [applyPlanState],
+    [applyPlanState, setPendingTrialWelcome],
   );
+
+  const refreshUserProfileFromServer = useCallback(async () => {
+    if (profileRefreshInFlightRef.current) return;
+    profileRefreshInFlightRef.current = true;
+    try {
+      const user = await fetchCurrentUser();
+      applyUserProfile(user);
+    } catch (error) {
+      authError('refreshUserProfile:failed', error);
+    } finally {
+      profileRefreshInFlightRef.current = false;
+    }
+  }, [applyUserProfile]);
 
   const syncPendingOnboarding = useCallback(async (): Promise<UserProfileResponse | null> => {
     const pending = pendingOnboardingRef.current;
@@ -266,56 +330,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [applyUserProfile]);
 
-  const maybeStartTrialAfterAuth = useCallback(
-    async (user: UserProfileResponse, options?: { showWelcome?: boolean }) => {
-      if (!paymentsEnabled || !user.hasCompletedOnboarding || user.plan.hasUsedTrial) return false;
-      const startedAt = new Date().toISOString();
-      const plan = await updateUserPlan({
-        planTier: 'trial',
-        trialStartedAt: startedAt,
-        hasUsedTrial: true,
-      });
-      applyPlanState({
-        planTier: plan.planTier,
-        trialStartedAt: plan.trialStartedAt,
-        hasUsedTrial: plan.hasUsedTrial,
-      });
-      if (plan.trialStartedAt) {
-        void scheduleTrialDayTwoReminder(plan.trialStartedAt);
-      }
-      if (options?.showWelcome) {
-        await setPendingTrialWelcome(true);
-        return true;
-      }
-      return false;
-    },
-    [applyPlanState, paymentsEnabled, setPendingTrialWelcome],
-  );
-
   const finishAuthAfterSync = useCallback(
-    async (user: UserProfileResponse) => {
+    (user: UserProfileResponse): boolean => {
       applyUserProfile(user);
 
-      let syncedUser = user;
-      if (pendingOnboardingRef.current && !user.hasCompletedOnboarding) {
-        const updated = await syncPendingOnboarding();
-        if (updated) syncedUser = updated;
-      }
+      void (async () => {
+        let notificationsOn = user.notificationsEnabled;
+        try {
+          if (pendingOnboardingRef.current && !user.hasCompletedOnboarding) {
+            const updated = await syncPendingOnboarding();
+            if (updated) notificationsOn = updated.notificationsEnabled;
+          } else if (user.hasCompletedOnboarding) {
+            pendingOnboardingRef.current = null;
+          }
+        } catch (error) {
+          authError('finishAuthAfterSync:onboarding_failed', error);
+        }
 
-      let showTrialWelcome = false;
-      if (syncedUser.hasCompletedOnboarding && !syncedUser.plan.hasUsedTrial) {
-        const [trialWelcome] = await Promise.all([
-          maybeStartTrialAfterAuth(syncedUser, { showWelcome: true }),
-          syncPushTokenToServer(syncedUser.notificationsEnabled),
-        ]);
-        showTrialWelcome = trialWelcome;
-      } else {
-        void syncPushTokenToServer(syncedUser.notificationsEnabled);
-      }
+        void syncPushTokenToServer(notificationsOn);
+      })();
 
-      return showTrialWelcome;
+      return false;
     },
-    [applyUserProfile, maybeStartTrialAfterAuth, syncPendingOnboarding, syncPushTokenToServer],
+    [applyUserProfile, syncPendingOnboarding, syncPushTokenToServer],
   );
 
   const refreshPlan = useCallback(async () => {
@@ -328,58 +365,106 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [applyPlanState, isLoggedIn]);
 
+  useRasoiUserPlanRealtime(isLoggedIn && isHydrated ? userId : null, () => {
+    authLog('realtime:user_plan_changed');
+    void refreshPlan();
+  });
+
   useEffect(() => {
     void (async () => {
       try {
-        const [local, pendingWelcome, appToken] = await Promise.all([
-          loadLocalOnboardingState(),
-          loadPendingTrialWelcome(),
-          getAuthToken(),
-        ]);
+        await ensureValidSupabaseSession();
+
+        const [local, pendingWelcome, pendingEmail, appToken, session, userLoggedOut, cachedProfile] =
+          await Promise.all([
+            loadLocalOnboardingState(),
+            loadPendingTrialWelcome(),
+            loadPendingEmailVerification(),
+            getAuthToken(),
+            getSupabaseSession(),
+            isUserLoggedOut(),
+            loadCachedUserProfile(),
+          ]);
         applyLocalOnboarding(local);
         setPendingTrialWelcomeState(pendingWelcome);
+        setPendingEmailVerificationState(pendingEmail);
         const pendingPayload = localStateToOnboardingPayload(local);
         if (pendingPayload) {
           pendingOnboardingRef.current = pendingPayload;
           authLog('hydrate:restored_pending_onboarding');
         }
 
-        if (appToken) {
+        if (userLoggedOut) {
+          authLog('hydrate:skipped_auth_restore_logged_out');
+          return;
+        }
+
+        const hasCredentials = Boolean(session?.access_token || appToken);
+        if (!hasCredentials) {
+          return;
+        }
+
+        const syncOnboardingIfNeeded = async (user: UserProfileResponse) => {
+          if (!user.hasCompletedOnboarding && pendingOnboardingRef.current) {
+            await syncPendingOnboarding();
+          }
+        };
+
+        try {
+          const user = await fetchCurrentUser();
+          applyUserProfile(user);
+          await syncOnboardingIfNeeded(user);
+          return;
+        } catch (error) {
+          authError('hydrate:fetch_user_failed', error);
+        }
+
+        if (session?.access_token) {
           try {
-            const user = await fetchCurrentUser();
-            applyUserProfile(user);
-            if (!user.hasCompletedOnboarding && pendingOnboardingRef.current) {
-              await syncPendingOnboarding();
-            }
+            const metadata = session.user.user_metadata as { name?: string; phone?: string };
+            const name = metadata.name?.trim() || session.user.email?.split('@')[0] || 'User';
+            const phone = metadata.phone ?? '';
+            const { user } = await syncSupabaseAccount(session.access_token, name, phone);
+            finishAuthAfterSync(user);
             return;
           } catch (error) {
-            authError('hydrate:fetch_user_failed', error);
-            await clearAuthToken();
+            authError('hydrate:sync_supabase_failed', error);
           }
         }
 
-        const session = await getSupabaseSession();
-        if (session?.access_token) {
-          const metadata = session.user.user_metadata as { name?: string; phone?: string };
-          const name = metadata.name?.trim() || session.user.email?.split('@')[0] || 'User';
-          const phone = metadata.phone ?? '';
-          const { user } = await syncSupabaseAccount(session.access_token, name, phone);
-          await finishAuthAfterSync(user);
+        if (cachedProfile) {
+          applyUserProfile(cachedProfile);
+          authLog('hydrate:restored_from_cache');
+          void refreshUserProfileFromServer();
         }
       } catch (error) {
         authError('hydrate:failed', error);
-        await logoutSession();
-        setIsLoggedIn(false);
-        setIsGuestUser(false);
-        setUserId(null);
-        setUserName('');
-        setUserPhone('');
-        setUserEmail('');
+        try {
+          const [userLoggedOut, cachedProfile, appToken, session] = await Promise.all([
+            isUserLoggedOut(),
+            loadCachedUserProfile(),
+            getAuthToken(),
+            getSupabaseSession(),
+          ]);
+          if (!userLoggedOut && cachedProfile && (session?.access_token || appToken)) {
+            applyUserProfile(cachedProfile);
+            authLog('hydrate:restored_from_cache_after_error');
+            void refreshUserProfileFromServer();
+          }
+        } catch (fallbackError) {
+          authError('hydrate:cache_fallback_failed', fallbackError);
+        }
       } finally {
         setIsHydrated(true);
       }
     })();
-  }, [applyLocalOnboarding, applyUserProfile, finishAuthAfterSync, syncPendingOnboarding]);
+  }, [
+    applyLocalOnboarding,
+    applyUserProfile,
+    finishAuthAfterSync,
+    refreshUserProfileFromServer,
+    syncPendingOnboarding,
+  ]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -395,44 +480,62 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [isHydrated, isLoggedIn, notificationsEnabled, syncPushTokenToServer]);
 
   useEffect(() => {
-    if (!isHydrated || !isLoggedIn || !notificationsEnabled) return;
+    if (!isHydrated || !isLoggedIn) return;
 
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
-        void syncPushTokenToServer(true);
+        void (async () => {
+          await ensureValidSupabaseSession();
+          await refreshUserProfileFromServer();
+        })();
+        if (notificationsEnabled) {
+          void syncPushTokenToServer(true);
+        }
       }
     });
 
     return () => sub.remove();
-  }, [isHydrated, isLoggedIn, notificationsEnabled, syncPushTokenToServer]);
+  }, [
+    isHydrated,
+    isLoggedIn,
+    notificationsEnabled,
+    refreshUserProfileFromServer,
+    syncPushTokenToServer,
+  ]);
 
   const startTrial = useCallback(
     async (options?: { showWelcome?: boolean }) => {
       if (!paymentsEnabled || planState.hasUsedTrial) return false;
 
+      const startedAt = new Date().toISOString();
+      const optimisticPlan: StoredPlanState = {
+        planTier: 'trial',
+        trialStartedAt: startedAt,
+        hasUsedTrial: true,
+        trialBonusDays: planState.trialBonusDays,
+        yearlyPromoOfferTag: planState.yearlyPromoOfferTag,
+      };
+
+      applyPlanState(optimisticPlan);
+      void scheduleTrialDayTwoReminder(startedAt);
+
       if (isLoggedIn) {
-        const startedAt = new Date().toISOString();
-        const plan = await updateUserPlan({
-          planTier: 'trial',
-          trialStartedAt: startedAt,
-          hasUsedTrial: true,
-        });
-        applyPlanState({
-          planTier: plan.planTier,
-          trialStartedAt: plan.trialStartedAt,
-          hasUsedTrial: plan.hasUsedTrial,
-        });
-        if (plan.trialStartedAt) {
-          void scheduleTrialDayTwoReminder(plan.trialStartedAt);
+        try {
+          const plan = await updateUserPlan({
+            planTier: 'trial',
+            trialStartedAt: startedAt,
+            hasUsedTrial: true,
+          });
+          applyPlanState({
+            planTier: plan.planTier,
+            trialStartedAt: plan.trialStartedAt,
+            hasUsedTrial: plan.hasUsedTrial,
+            trialBonusDays: plan.trialBonusDays ?? 0,
+            yearlyPromoOfferTag: plan.yearlyPromoOfferTag ?? null,
+          });
+        } catch (error) {
+          authError('startTrial:sync_failed', error);
         }
-      } else {
-        const startedAt = new Date().toISOString();
-        applyPlanState({
-          planTier: 'trial',
-          trialStartedAt: startedAt,
-          hasUsedTrial: true,
-        });
-        void scheduleTrialDayTwoReminder(startedAt);
       }
 
       if (options?.showWelcome) {
@@ -440,7 +543,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return true;
     },
-    [applyPlanState, isLoggedIn, paymentsEnabled, planState.hasUsedTrial, setPendingTrialWelcome],
+    [applyPlanState, isLoggedIn, paymentsEnabled, planState.hasUsedTrial, planState.trialBonusDays, planState.yearlyPromoOfferTag, setPendingTrialWelcome],
   );
 
   const dismissTrialWelcome = useCallback(() => {
@@ -449,12 +552,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const upgradeToPaid = useCallback(async (interval: BillingInterval = 'monthly') => {
     if (!paymentsEnabled) {
-      throw new Error('Payments are disabled in admin settings.');
+      throw new Error('Subscriptions are not available right now.');
     }
     const result = await purchaseRasoiPlusDefault(
       {
         isLoggedIn,
         trialStartedAt: planState.trialStartedAt,
+        yearlyPromoOfferTag: planState.yearlyPromoOfferTag,
       },
       interval,
     );
@@ -462,7 +566,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       throw new Error(result.error);
     }
     applyPlanState(result.planState);
-  }, [applyPlanState, isLoggedIn, paymentsEnabled, planState.trialStartedAt]);
+  }, [applyPlanState, isLoggedIn, paymentsEnabled, planState.trialStartedAt, planState.yearlyPromoOfferTag]);
+
+  const redeemPromoCode = useCallback(
+    async (code: string) => {
+      if (!isLoggedIn) {
+        throw new Error('Sign in to redeem a promo code.');
+      }
+      const result = await redeemPromoCodeApi(code);
+      applyPlanState({
+        planTier: result.plan.planTier,
+        trialStartedAt: result.plan.trialStartedAt,
+        hasUsedTrial: result.plan.hasUsedTrial,
+        trialBonusDays: result.plan.trialBonusDays ?? 0,
+        yearlyPromoOfferTag: result.plan.yearlyPromoOfferTag ?? null,
+      });
+      return { message: result.message };
+    },
+    [applyPlanState, isLoggedIn],
+  );
 
   const restorePurchases = useCallback(async () => {
     const result = await restoreRasoiPlus({
@@ -476,7 +598,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [applyPlanState, isLoggedIn, planState.trialStartedAt]);
 
   const completeOnboarding = useCallback(
-    async (payload: OnboardingPayload) => {
+    async (payload: OnboardingPayload): Promise<boolean> => {
       authLog('completeOnboarding:start', {
         notificationsEnabled: payload.notificationsEnabled,
         dietChoice: payload.dietChoice,
@@ -495,11 +617,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
       });
 
-      const token = await getAuthToken();
-      if (token) {
+      let showTrialWelcome = false;
+      const session = await getSupabaseSession();
+      const legacyToken = await getAuthToken();
+      if (session?.access_token || legacyToken) {
         await syncPendingOnboarding();
       }
-      authLog('completeOnboarding:done', { syncedToServer: Boolean(token) });
+      authLog('completeOnboarding:done', {
+        syncedToServer: Boolean(session?.access_token || legacyToken),
+        showTrialWelcome,
+      });
+      return showTrialWelcome;
     },
     [syncPendingOnboarding],
   );
@@ -532,23 +660,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
       phone: string,
       options?: { acceptedTerms?: boolean },
     ) => {
-      authLog('verifyEmailOtpAndLogin:start');
+      authLog('verifyEmailOtpAndLogin:start', { upgradingGuest: isGuestUser });
       try {
-        const session = await verifyEmailOtp(email, otp, 'signup');
-        const { user } = await syncSupabaseAccount(session.access_token, name, phone, options);
-        const showTrialWelcome = await finishAuthAfterSync(user);
+        const otpFlow = isGuestUser ? 'guest_upgrade' : 'signup';
+        const session = await verifyEmailOtp(email, otp, otpFlow);
+        const pendingOnboarding = pendingOnboardingRef.current ?? undefined;
+        const { user } = await syncSupabaseAccount(session.access_token, name, phone, {
+          ...options,
+          linkGuestUserId: isGuestUser && userId ? userId : undefined,
+          onboarding: pendingOnboarding,
+        });
+        if (pendingOnboarding && user.hasCompletedOnboarding) {
+          pendingOnboardingRef.current = null;
+        }
+        const showTrialWelcome = finishAuthAfterSync(user);
         authLog('verifyEmailOtpAndLogin:success', {
           onboardingDone: user.hasCompletedOnboarding,
+          upgradedGuest: isGuestUser,
+          userId: user.id.slice(0, 8),
           pendingSync: Boolean(pendingOnboardingRef.current),
           showTrialWelcome,
         });
+        void logFirebaseEvent('sign_up', { method: isGuestUser ? 'email_guest_upgrade' : 'email' });
         return showTrialWelcome;
       } catch (error) {
         authError('verifyEmailOtpAndLogin:failed', error);
         throw error;
       }
     },
-    [finishAuthAfterSync],
+    [finishAuthAfterSync, isGuestUser, userId],
   );
 
   const verifyLoginEmailOtp = useCallback(
@@ -563,9 +703,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
           email.split('@')[0]?.replace(/[^a-zA-Z\s]/g, ' ').trim() || 'Rasoi User';
         const name = metaName.length >= 2 ? metaName : fallbackName.length >= 2 ? fallbackName : 'Rasoi User';
         const phone = metaPhone.replace(/\D/g, '').replace(/^91/, '').slice(0, 10);
-        const { user } = await syncSupabaseAccount(session.access_token, name, phone);
-        const showTrialWelcome = await finishAuthAfterSync(user);
+        const pendingOnboarding = pendingOnboardingRef.current ?? undefined;
+        const { user } = await syncSupabaseAccount(session.access_token, name, phone, {
+          onboarding: pendingOnboarding,
+        });
+        if (pendingOnboarding && user.hasCompletedOnboarding) {
+          pendingOnboardingRef.current = null;
+        }
+        const showTrialWelcome = finishAuthAfterSync(user);
         authLog('verifyLoginEmailOtp:success');
+        void logFirebaseEvent('login', { method: 'email' });
         return showTrialWelcome;
       } catch (error) {
         authError('verifyLoginEmailOtp:failed', error);
@@ -575,11 +722,88 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [finishAuthAfterSync],
   );
 
-  const loginAsGuest = useCallback(async () => {
+  const loginAsGuest = useCallback(async (options?: { name?: string }) => {
     authLog('loginAsGuest:context_start');
-    const { user } = await loginAsGuestUser();
-    await finishAuthAfterSync(user);
+    const { user } = await loginAsGuestUser(options);
+    finishAuthAfterSync(user);
+    void logFirebaseEvent('guest_login');
   }, [finishAuthAfterSync]);
+
+  const openEmailVerificationModal = useCallback(() => {
+    setEmailVerificationModalVisible(true);
+  }, []);
+
+  const closeEmailVerificationModal = useCallback(() => {
+    setEmailVerificationModalVisible(false);
+  }, []);
+
+  const clearPendingEmailVerification = useCallback(async () => {
+    await clearPendingEmailVerificationStorage();
+    setPendingEmailVerificationState(null);
+    setEmailVerificationModalVisible(false);
+  }, []);
+
+  const continueWithPendingEmailVerification = useCallback(
+    async (pending: Omit<PendingEmailVerification, 'savedAt' | 'reason'>) => {
+      const payload: PendingEmailVerification = {
+        ...pending,
+        reason: 'email_delivery_unavailable',
+        savedAt: new Date().toISOString(),
+      };
+      await savePendingEmailVerification(payload);
+      setPendingEmailVerificationState(payload);
+
+      if (!isLoggedIn) {
+        await loginAsGuest(pending.name?.trim().length ? { name: pending.name.trim() } : undefined);
+      }
+    },
+    [isLoggedIn, loginAsGuest],
+  );
+
+  const resendPendingEmailVerificationOtp = useCallback(async () => {
+    const pending = pendingEmailVerification;
+    if (!pending) {
+      throw new Error('No pending email verification.');
+    }
+
+    if (pending.flow === 'login') {
+      await sendLoginEmailOtpCode(pending.email);
+      return;
+    }
+
+    await sendEmailOtpCode(pending.name ?? 'User', pending.phone ?? '', pending.email);
+  }, [pendingEmailVerification, sendEmailOtpCode, sendLoginEmailOtpCode]);
+
+  const verifyPendingEmailOtp = useCallback(
+    async (otp: string) => {
+      const pending = pendingEmailVerification;
+      if (!pending) {
+        throw new Error('No pending email verification.');
+      }
+
+      let showTrialWelcome = false;
+      if (pending.flow === 'login') {
+        showTrialWelcome = await verifyLoginEmailOtp(pending.email, otp);
+      } else {
+        showTrialWelcome = await verifyEmailOtpAndLogin(
+          pending.email,
+          otp,
+          pending.name ?? 'User',
+          pending.phone ?? '',
+          { acceptedTerms: pending.termsAccepted },
+        );
+      }
+
+      await clearPendingEmailVerification();
+      return showTrialWelcome;
+    },
+    [
+      clearPendingEmailVerification,
+      pendingEmailVerification,
+      verifyEmailOtpAndLogin,
+      verifyLoginEmailOtp,
+    ],
+  );
 
   const updateProfile = useCallback(
     async (name: string, phone: string) => {
@@ -610,8 +834,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    await syncPushTokenToServer(false);
+    await markUserLoggedOut();
+    await Promise.race([
+      syncPushTokenToServer(false),
+      new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+    ]);
     await logoutSession();
+    await clearCachedUserProfile();
     setIsLoggedIn(false);
     setIsGuestUser(false);
     setUserId(null);
@@ -624,9 +853,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSavedRecipeIds([]);
     applyPlanState(DEFAULT_PLAN);
     clearSentryUser();
+    void setFirebaseUserId(null);
+    await clearPendingEmailVerificationStorage();
+    setPendingEmailVerificationState(null);
+    setEmailVerificationModalVisible(false);
   }, [applyPlanState, syncPushTokenToServer]);
 
+  const deleteAccount = useCallback(
+    async (confirmEmail?: string) => {
+      await markUserLoggedOut();
+      await syncPushTokenToServer(false);
+      await deleteUserAccount(confirmEmail);
+      await logoutSession();
+      await clearAuthState();
+      pendingOnboardingRef.current = null;
+      setHasCompletedOnboarding(false);
+      setIsLoggedIn(false);
+      setIsGuestUser(false);
+      setUserId(null);
+      setUserName('');
+      setUserPhone('');
+      setUserEmail('');
+      setUserCity(null);
+      setUserState(null);
+      setPantryIngredients([...DEFAULT_PANTRY]);
+      setSavedRecipeIds([]);
+      applyPlanState(DEFAULT_PLAN);
+      clearSentryUser();
+      void setFirebaseUserId(null);
+    },
+    [applyPlanState, syncPushTokenToServer],
+  );
+
+  const exportAccountData = useCallback(async () => {
+    return exportUserData();
+  }, []);
+
   const resetAppFlow = useCallback(async () => {
+    await markUserLoggedOut();
     await syncPushTokenToServer(false);
     await logoutSession();
     await clearAuthState();
@@ -651,6 +915,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPlanState(DEFAULT_PLAN);
     await syncDailyReminder(false);
     clearSentryUser();
+    void setFirebaseUserId(null);
   }, [syncPushTokenToServer]);
 
   const setDietChoice = useCallback(
@@ -828,6 +1093,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateProfile,
       syncUserLocation,
       logout,
+      deleteAccount,
+      exportAccountData,
       resetAppFlow,
       togglePantryIngredient,
       setDietChoice,
@@ -843,8 +1110,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       upgradeToPaid,
       restorePurchases,
       refreshPlan,
+      redeemPromoCode,
       pendingTrialWelcome,
       dismissTrialWelcome,
+      pendingEmailVerification,
+      emailVerificationModalVisible,
+      openEmailVerificationModal,
+      closeEmailVerificationModal,
+      continueWithPendingEmailVerification,
+      verifyPendingEmailOtp,
+      resendPendingEmailVerificationOtp,
+      clearPendingEmailVerification,
     }),
     [
       resolvedPlan,
@@ -876,6 +1152,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateProfile,
       syncUserLocation,
       logout,
+      deleteAccount,
+      exportAccountData,
       resetAppFlow,
       togglePantryIngredient,
       setDietChoice,
@@ -890,8 +1168,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       upgradeToPaid,
       restorePurchases,
       refreshPlan,
+      redeemPromoCode,
       pendingTrialWelcome,
       dismissTrialWelcome,
+      pendingEmailVerification,
+      emailVerificationModalVisible,
+      openEmailVerificationModal,
+      closeEmailVerificationModal,
+      continueWithPendingEmailVerification,
+      verifyPendingEmailOtp,
+      resendPendingEmailVerificationOtp,
+      clearPendingEmailVerification,
     ],
   );
 

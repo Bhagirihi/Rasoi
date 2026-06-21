@@ -11,7 +11,8 @@ import {
   minutesUntilNextMeal,
   type MealSlot,
 } from '@/lib/meal-time';
-import { prisma } from '@/lib/prisma';
+import { db, loadEligibleUsers, type UserWithTokens } from '@/lib/db';
+import type { UserWithRelations } from '@/lib/db/types';
 import {
   buildMealNotificationBody,
   pickTopRecipeForMeal,
@@ -54,25 +55,17 @@ export interface MealNotificationRunResult {
   }>;
 }
 
-type UserWithTokens = {
-  id: string;
-  dietChoice: string;
-  regionalCuisine: string;
-  favoriteCuisines: string;
-  pantryIngredients: string;
-  timezone: string;
-  pushTokens: { expoPushToken: string }[];
-};
+type UserWithTokensLocal = UserWithTokens;
 
 async function loadPublishedRecipes(): Promise<RecipeResponse[]> {
-  const rows = await prisma.recipe.findMany({ where: { published: true } });
+  const rows = await db.recipe.findMany({ where: { published: true } });
   return rows.map(serializeRecipe);
 }
 
 export async function getUserNotificationEligibility(
   userId: string,
 ): Promise<UserNotificationEligibility> {
-  const user = await prisma.user.findUnique({
+  const user = (await db.user.findUnique({
     where: { id: userId },
     select: {
       isGuest: true,
@@ -81,7 +74,7 @@ export async function getUserNotificationEligibility(
       notificationsEnabled: true,
       pushTokens: { where: { active: true }, select: { id: true } },
     },
-  });
+  })) as (UserWithRelations & { pushTokens: { id: string }[] }) | null;
 
   if (!user) {
     return { eligible: false, reasons: ['User not found'], pushTokenCount: 0 };
@@ -101,36 +94,11 @@ export async function getUserNotificationEligibility(
   };
 }
 
-async function loadEligibleUsers(
+async function loadEligibleUsersForNotifications(
   userId?: string,
   adminOverride?: boolean,
-): Promise<UserWithTokens[]> {
-  return prisma.user.findMany({
-    where: {
-      ...(adminOverride
-        ? {}
-        : {
-            isActive: true,
-            notificationsEnabled: true,
-            isGuest: false,
-            hasCompletedOnboarding: true,
-          }),
-      ...(userId ? { id: userId } : {}),
-      pushTokens: { some: { active: true } },
-    },
-    select: {
-      id: true,
-      dietChoice: true,
-      regionalCuisine: true,
-      favoriteCuisines: true,
-      pantryIngredients: true,
-      timezone: true,
-      pushTokens: {
-        where: { active: true },
-        select: { expoPushToken: true },
-      },
-    },
-  });
+): Promise<UserWithTokensLocal[]> {
+  return loadEligibleUsers(userId, adminOverride);
 }
 
 async function getSentRecipeIdsToday(
@@ -138,7 +106,7 @@ async function getSentRecipeIdsToday(
   mealSlot: MealSlot,
   dayKey: string,
 ): Promise<string[]> {
-  const logs = await prisma.mealNotificationLog.findMany({
+  const logs = await db.mealNotificationLog.findMany({
     where: { userId, mealSlot, dayKey },
     select: { recipeId: true },
   });
@@ -148,7 +116,7 @@ async function getSentRecipeIdsToday(
 function buildPayload(
   recipe: RecipeResponse,
   mealSlot: MealSlot,
-  user: UserWithTokens,
+  user: UserWithTokensLocal,
   now: Date,
 ): MealPushPayload {
   const timezone = user.timezone || 'Asia/Kolkata';
@@ -196,7 +164,7 @@ export async function runMealNotifications(
   const skipDedup = options.skipDedup ?? false;
 
   const [users, recipes] = await Promise.all([
-    loadEligibleUsers(options.userId, options.adminOverride),
+    loadEligibleUsersForNotifications(options.userId, options.adminOverride),
     loadPublishedRecipes(),
   ]);
 
@@ -233,7 +201,7 @@ export async function runMealNotifications(
       slotSet.add(mealSlot);
 
       if (!skipDedup) {
-        const existing = await prisma.mealNotificationLog.findUnique({
+        const existing = await db.mealNotificationLog.findUnique({
           where: {
             userId_mealSlot_dayKey: {
               userId: user.id,
@@ -294,7 +262,7 @@ export async function runMealNotifications(
         continue;
       }
 
-      await prisma.mealNotificationLog.upsert({
+      await db.mealNotificationLog.upsert({
         where: {
           userId_mealSlot_dayKey: {
             userId: user.id,

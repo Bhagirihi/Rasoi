@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -10,11 +10,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import RasoiBrandIcon from '@/components/RasoiBrandIcon';
+import SplashFoodCollage from '@/components/SplashFoodCollage';
 import { colors, spacing } from '@/constants/theme';
 
 export const LAUNCH_SPLASH_DURATION_MS = 2600;
-
-const splashIcon = require('../assets/images/splash-icon.png');
 
 export default function LaunchSplash() {
   const scale = useSharedValue(0.92);
@@ -55,13 +55,14 @@ export default function LaunchSplash() {
       />
       <View style={styles.glowGreen} />
       <View style={styles.glowOrange} />
+      <SplashFoodCollage variant="fullscreen" />
 
       <View style={styles.center}>
         <Animated.View style={[styles.ringOuter, ringStyle]} />
         <Animated.View style={[styles.ringInner, ringStyle]} />
 
         <Animated.View style={iconStyle}>
-          <Image source={splashIcon} style={styles.icon} resizeMode="contain" />
+          <RasoiBrandIcon size={120} borderRadius={28} />
         </Animated.View>
       </View>
 
@@ -110,6 +111,7 @@ const styles = StyleSheet.create({
     height: 240,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
   },
   ringOuter: {
     position: 'absolute',
@@ -127,16 +129,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  icon: {
-    width: 168,
-    height: 168,
-    borderRadius: 36,
-  },
   footer: {
     position: 'absolute',
     bottom: 72,
     alignItems: 'center',
     gap: spacing.sm,
+    zIndex: 2,
   },
   brand: {
     fontSize: 32,

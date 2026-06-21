@@ -1,0 +1,74 @@
+RASOI — CANVA IMPORT GUIDE
+==========================
+
+Upload-ready files in this folder. No code required.
+
+QUICK START (5 minutes)
+-----------------------
+1. Open Canva → Create design → Custom size
+2. For each screenshot: 1290 × 2796 px (iPhone App Store)
+3. Upload the matching PNG from ../ (parent folder) OR edit from panoramic master
+
+FILES IN THIS FOLDER
+--------------------
+canva-panoramic-full-res.png   10320×2796 — Full 8-frame strip (best for editing all at once)
+canva-8-frame-strip.png          3840×1040  — Preview strip (quick overview)
+canva-panoramic-master.png       AI panoramic reference
+canva-panoramic-portrait-strip.png  AI wide reference
+brand-logo-splash-icon.png       Official kadai app icon (Screens 1 & 8)
+influencer-front-face.png        Lifestyle human (Screen 7)
+influencer-character-sheet.png   Expression/angle reference
+
+STORE-READY PNGs (parent folder: app-store-assets/)
+---------------------------------------------------
+01-hero.png              1290×2796  Aaj Kya Banaye?
+02-todays-picks.png      1290×2796  Dinner, Decided.
+03-pantry-match.png      1290×2796  Cook From Your Pantry
+04-indian-regions.png    1290×2796  1,200+ Recipes
+05-smart-filters.png     1290×2796  Find What Fits Today
+06-cook-shop-order.png   1290×2796  Shop. Order. Eat.
+07-personalization.png   1290×2796  Less Deciding. More Cooking.
+08-final.png             1290×2796  Cook Smarter With Rasoi
+
+GOOGLE PLAY (play-store/ subfolder)
+-----------------------------------
+Same 8 files at 1080×2337 (Play Store phone minimum)
+play-store-feature-graphic.png — Feature banner for Play Console
+
+CANVA WORKFLOW — OPTION A (Edit individual frames)
+--------------------------------------------------
+1. Create design 1290 × 2796
+2. Upload 01-hero.png (or any frame)
+3. Adjust text if needed — keep headlines under 7 words
+4. Duplicate page 7 times for remaining frames
+5. Replace image on each page with 02…08 PNGs
+6. Download each page as PNG
+
+CANVA WORKFLOW — OPTION B (Panoramic master)
+-------------------------------------------
+1. Create design 10320 × 2796 (or use canva-panoramic-full-res.png as base)
+2. Upload canva-panoramic-full-res.png
+3. Slice into 8 equal columns (each 1290px wide) using Canva crop or “Split”
+4. Export 8 PNGs at 1290×2796
+
+BRAND COLORS (add to Canva brand kit)
+-------------------------------------
+Saffron top:    #FF9933
+Orange primary: #FF6B35
+Cream body:     #FFF9F6
+Green proof:    #00A86B
+Charcoal:       #1A1A2E
+White:          #FFFFFF
+
+TYPOGRAPHY
+----------
+Font: Inter (or Canva substitute: Montserrat / Poppins)
+Headlines: 800 weight, white on orange band
+Max 4 words per headline line
+
+UPLOAD CHECKLIST
+----------------
+[ ] 8 phone screenshots uploaded to Play Console / App Store Connect
+[ ] Feature graphic 1024×500 (play-store/play-store-feature-graphic.png)
+[ ] Screenshot order: 01 → 08 as listed above
+[ ] Headlines readable at 25% zoom (search thumbnail test)

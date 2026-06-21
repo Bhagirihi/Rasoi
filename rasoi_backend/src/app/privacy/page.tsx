@@ -14,7 +14,7 @@ export default function PrivacyPage() {
     <LegalDocumentPage
       title="Privacy Policy"
       description="This policy explains what data Rasoi collects when you use our Android app and website, and how we use it."
-      lastUpdated="17 June 2026"
+      lastUpdated="21 June 2026"
       sections={privacySections}
     />
   );

@@ -1,3 +1,5 @@
+import { UNSPLASH, unsplashPhotoUrl } from '@/constants/unsplashPhotos';
+
 export const colors = {
   primary: '#FF6B35',
   green: '#00A86B',
@@ -92,8 +94,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Light, sweet-savoury everyday thali vibes',
     mood: 'Comfort',
     region: 'West',
-    heroImage:
-      'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.dal, 400),
   },
   {
     id: 'street',
@@ -101,8 +102,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Pav bhaji, chaat & late-evening cravings',
     mood: 'Bold',
     region: 'West',
-    heroImage:
-      'https://images.unsplash.com/photo-1626700051175-6818013e1d2f?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.streetFood, 400),
   },
   {
     id: 'south',
@@ -110,8 +110,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Crisp dosas, sambar & coconut-led flavours',
     mood: 'Fresh',
     region: 'South',
-    heroImage:
-      'https://images.unsplash.com/photo-1630384060427-c20d1e256a5e?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.dosa, 400),
   },
   {
     id: 'north',
@@ -119,8 +118,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Rich gravies, tandoori warmth & parathas',
     mood: 'Hearty',
     region: 'North',
-    heroImage:
-      'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.paratha, 400),
   },
   {
     id: 'punjabi',
@@ -128,8 +126,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Butter-laden dal, tandoori & hearty sarson ka saag',
     mood: 'Hearty',
     region: 'North',
-    heroImage:
-      'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.punjabi, 400),
   },
   {
     id: 'rajasthani',
@@ -137,8 +134,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Dal baati, gatte ki sabzi & desert spice warmth',
     mood: 'Royal',
     region: 'West',
-    heroImage:
-      'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.rajasthani, 400),
   },
   {
     id: 'bengali',
@@ -146,8 +142,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Mustard fish, mishti & subtle layered flavours',
     mood: 'Delicate',
     region: 'East',
-    heroImage:
-      'https://images.unsplash.com/photo-1589302160288-aecb502ff3b5?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.fish, 400),
   },
   {
     id: 'maharashtrian',
@@ -155,8 +150,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Poha, vada pav & bold Kolhapuri heat',
     mood: 'Spicy',
     region: 'West',
-    heroImage:
-      'https://images.unsplash.com/photo-1606491956689-2ea866880ad6?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.maharashtrian, 400),
   },
   {
     id: 'hyderabadi',
@@ -164,8 +158,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Biryani royalty, haleem & slow-cooked gravies',
     mood: 'Rich',
     region: 'South',
-    heroImage:
-      'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.biryani, 400),
   },
   {
     id: 'goan',
@@ -173,8 +166,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Coconut curries, seafood & Portuguese spice',
     mood: 'Coastal',
     region: 'West',
-    heroImage:
-      'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.streetFood, 400),
   },
   {
     id: 'kerala',
@@ -182,8 +174,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Appam, avial & coconut-forward coastal meals',
     mood: 'Coastal',
     region: 'South',
-    heroImage:
-      'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.dal, 400),
   },
   {
     id: 'chinese',
@@ -191,8 +182,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Hakka noodles, manchurian & wok-tossed comfort',
     mood: 'Fusion',
     region: 'West',
-    heroImage:
-      'https://images.unsplash.com/photo-1563379926893-7c9e0c4e0b0e?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.noodles, 400),
   },
   {
     id: 'assamese',
@@ -200,8 +190,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Smoked fish, bamboo shoot & earthy Northeast plates',
     mood: 'Earthy',
     region: 'East',
-    heroImage:
-      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.thali, 400),
   },
   {
     id: 'kashmiri',
@@ -209,8 +198,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Rogan josh, saffron rice & aromatic wazwan',
     mood: 'Aromatic',
     region: 'North',
-    heroImage:
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.kashmiri, 400),
   },
   {
     id: 'chettinad',
@@ -218,8 +206,7 @@ export const CUISINE_OPTIONS = [
     tagline: 'Fiery pepper masala & bold Tamil Nadu spice',
     mood: 'Fiery',
     region: 'South',
-    heroImage:
-      'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&q=80',
+    heroImage: unsplashPhotoUrl(UNSPLASH.curry, 400),
   },
 ] as const;
 

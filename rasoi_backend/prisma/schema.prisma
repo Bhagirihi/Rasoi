@@ -1,14 +1,7 @@
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
+// Reference only — schema is applied via Supabase SQL migrations (see rasoi_mobile/supabase/migrations/).
+// Backend uses @/lib/db (Supabase service role + pg), not Prisma.
 
 // Isolated from Supabase `public` tables (profiles → auth.users) and `auth` schema.
-datasource db {
-  provider = "postgresql"
-  schemas  = ["rasoi"]
-}
-
 enum UserRole {
   USER
   ADMIN
@@ -18,6 +11,7 @@ enum UserRole {
 
 model User {
   id                     String    @id @default(cuid())
+  supabaseUserId         String?   @unique
   email                  String?   @unique
   phone                  String?   @unique
   name                   String
@@ -41,7 +35,10 @@ model User {
   planTier               String    @default("free")
   trialStartedAt         DateTime?
   hasUsedTrial           Boolean   @default(false)
+  trialBonusDays         Int       @default(0)
+  yearlyPromoOfferTag    String?
   termsAcceptedAt        DateTime?
+  termsAcceptedVersion   String?
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   pushTokens             PushToken[]
@@ -49,7 +46,49 @@ model User {
   sponsorEvents          SponsorEvent[]
   mealNotificationLogs   MealNotificationLog[]
   feedback               UserFeedback[]
+  promoRedemptions       PromoRedemption[]
 
+  @@schema("rasoi")
+}
+
+model PromoCode {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  kind             String
+  trialExtendDays  Int?
+  playOfferTag     String?
+  maxRedemptions   Int       @default(10000)
+  redemptionCount  Int       @default(0)
+  expiresAt        DateTime?
+  active           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  redemptions      PromoRedemption[]
+
+  @@schema("rasoi")
+}
+
+model PromoRedemption {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCodeId  String
+  promoCode    PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  redeemedAt   DateTime  @default(now())
+  consumedAt   DateTime?
+
+  @@unique([userId, promoCodeId])
+  @@schema("rasoi")
+}
+
+model ProcessedWebhookEvent {
+  eventId   String   @id
+  source    String   @default("revenuecat")
+  eventType String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
   @@schema("rasoi")
 }
 

@@ -4,12 +4,12 @@ import { useAppContext } from '@/context/AppContext';
 import { requestUserLocation } from '@/utils/location';
 
 /** Sync GPS city to backend once per session when logged in and location is missing. */
-export function useSyncUserLocation() {
+export function useSyncUserLocation(enabled = true) {
   const { isLoggedIn, isHydrated, userCity, syncUserLocation } = useAppContext();
   const attemptedRef = useRef(false);
 
   useEffect(() => {
-    if (!isHydrated || !isLoggedIn || userCity || attemptedRef.current) return;
+    if (!enabled || !isHydrated || !isLoggedIn || userCity || attemptedRef.current) return;
     attemptedRef.current = true;
 
     void (async () => {
@@ -21,7 +21,7 @@ export function useSyncUserLocation() {
         // Location sync is optional — missing permission or undeployed API is OK.
       }
     })().catch(() => undefined);
-  }, [isHydrated, isLoggedIn, syncUserLocation, userCity]);
+  }, [enabled, isHydrated, isLoggedIn, syncUserLocation, userCity]);
 }
 
 export function useRefreshUserLocation() {

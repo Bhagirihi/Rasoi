@@ -1,13 +1,14 @@
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
+import type { UserFeedbackWithUser } from '@/lib/db/types';
 
-export type FeedbackListItem = Awaited<ReturnType<typeof getFeedbackList>>[number];
+export type FeedbackListItem = UserFeedbackWithUser;
 
 export async function getFeedbackStats() {
   const [pendingCount, issueCount, suggestionCount, totalCount] = await Promise.all([
-    prisma.userFeedback.count({ where: { status: 'pending' } }),
-    prisma.userFeedback.count({ where: { category: 'issue' } }),
-    prisma.userFeedback.count({ where: { category: 'suggestion' } }),
-    prisma.userFeedback.count(),
+    db.userFeedback.count({ where: { status: 'pending' } }),
+    db.userFeedback.count({ where: { category: 'issue' } }),
+    db.userFeedback.count({ where: { category: 'suggestion' } }),
+    db.userFeedback.count(),
   ]);
 
   return {
@@ -18,8 +19,8 @@ export async function getFeedbackStats() {
   };
 }
 
-export async function getFeedbackList(limit = 200) {
-  return prisma.userFeedback.findMany({
+export async function getFeedbackList(limit = 200): Promise<UserFeedbackWithUser[]> {
+  return db.userFeedback.findMany({
     orderBy: { createdAt: 'desc' },
     take: limit,
     include: {
@@ -27,18 +28,18 @@ export async function getFeedbackList(limit = 200) {
         select: { id: true, name: true, email: true, phone: true },
       },
     },
-  });
+  }) as Promise<UserFeedbackWithUser[]>;
 }
 
-export async function getRecentPendingFeedback(limit = 5) {
-  return prisma.userFeedback.findMany({
+export async function getRecentPendingFeedback(limit = 5): Promise<UserFeedbackWithUser[]> {
+  return db.userFeedback.findMany({
     where: { status: 'pending' },
     orderBy: { createdAt: 'desc' },
     take: limit,
     include: {
       user: {
-        select: { name: true, email: true },
+        select: { name: true, email: true, phone: true },
       },
     },
-  });
+  }) as Promise<UserFeedbackWithUser[]>;
 }
