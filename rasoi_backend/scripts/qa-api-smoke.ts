@@ -95,23 +95,38 @@ async function main(): Promise<void> {
       'POST /api/users/me/onboarding',
     );
 
-    const plan = await request<{ planTier: string; hasUsedTrial: boolean }>('/api/users/me/plan', {
-      method: 'PUT',
+    const mePlan = await request<{ planTier: string; hasUsedTrial: boolean }>('/api/users/me/plan', {
       headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({
-        planTier: 'trial',
-        trialStartedAt: new Date().toISOString(),
-        hasUsedTrial: true,
-      }),
     });
-    const planData = plan.body.data;
-    record(
-      'TC-API-07',
-      plan.body.ok &&
-        planData?.planTier === 'trial' &&
-        !('id' in (planData ?? {})),
-      'PUT /api/users/me/plan returns plan object only',
-    );
+    let planData = mePlan.body.data;
+    if (mePlan.body.ok && planData?.planTier !== 'trial') {
+      const plan = await request<{ planTier: string; hasUsedTrial: boolean }>('/api/users/me/plan', {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          planTier: 'trial',
+          trialStartedAt: new Date().toISOString(),
+          hasUsedTrial: true,
+        }),
+      });
+      planData = plan.body.data;
+      record(
+        'TC-API-07',
+        plan.body.ok &&
+          planData?.planTier === 'trial' &&
+          !('id' in (planData ?? {})),
+        'PUT /api/users/me/plan returns plan object only',
+      );
+    } else {
+      record(
+        'TC-API-07',
+        mePlan.body.ok &&
+          planData?.planTier === 'trial' &&
+          planData?.hasUsedTrial === true &&
+          !('id' in (planData ?? {})),
+        'GET /api/users/me/plan returns plan object only (auto-trial)',
+      );
+    }
 
     const paidBlocked = await request<{ planTier: string }>('/api/users/me/plan', {
       method: 'PUT',
