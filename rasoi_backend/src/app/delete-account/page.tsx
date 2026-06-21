@@ -1,11 +1,12 @@
 import LegalDocumentPage from '@/app/_components/LegalDocumentPage';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
+import { APP_NAME } from '@/lib/app-download';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata = buildPageMetadata({
-  title: 'Delete Account — Rasoi App',
+  title: `Delete Account — ${APP_NAME}`,
   description:
-    'How to delete your Rasoi account and personal data from the Rasoi Android app or by email.',
+    `How to delete your ${APP_NAME} account and personal data from the Android app or by email.`,
   path: '/delete-account',
 });
 

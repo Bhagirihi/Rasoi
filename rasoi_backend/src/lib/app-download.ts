@@ -1,6 +1,13 @@
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
 
+/** Matches Google Play listing title — use in SEO titles and JSON-LD. */
+export const APP_NAME = 'Rasoi: Aaj Kya Banaye?';
+
+export const APP_SHORT_NAME = 'Rasoi';
+
+export const APP_DEVELOPER = 'Karbh It Solutions';
+
 export const ANDROID_PACKAGE = 'com.bhagihiri.rasoiapp';
 
 /** Google Play open testing — anyone can opt in and install from Play Store. */

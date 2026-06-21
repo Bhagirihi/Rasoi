@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { Cormorant_Garamond, DM_Sans } from 'next/font/google';
 
 import './globals.css';
-import { rootMetadata } from '@/lib/seo';
+import { ANDROID_PACKAGE } from '@/lib/app-download';
+import { rootMetadata, SITE_URL } from '@/lib/seo';
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -25,6 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-IN" className={`${dmSans.variable} ${cormorant.variable} h-full`}>
+      <head>
+        <link
+          rel="alternate"
+          href={`android-app://${ANDROID_PACKAGE}/${SITE_URL.replace(/^https:\/\//, '')}`}
+        />
+      </head>
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );

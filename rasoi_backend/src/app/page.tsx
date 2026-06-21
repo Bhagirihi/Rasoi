@@ -3,7 +3,7 @@ import Link from 'next/link';
 import JsonLd from '@/app/_components/JsonLd';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import SponsorApplyForm from '@/app/_components/SponsorApplyForm';
-import { PLAY_STORE_LISTING_URL } from '@/lib/app-download';
+import { APP_NAME, PLAY_STORE_LISTING_URL } from '@/lib/app-download';
 import {
   FAQ_ITEMS,
   faqJsonLd,
@@ -64,19 +64,19 @@ export default async function HomePage() {
           <div className="grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
-                Aaj kya banaye? · Cook tonight, effortlessly
+                Free on Google Play · Android
               </p>
               <h1 className="font-display mt-4 text-5xl font-semibold leading-[1.05] tracking-tight lg:text-6xl">
-                Indian recipe app for
-                <br />
-                <span className="text-[#c45c2a]">your pantry</span>
-                <br />
-                and your region.
+                {APP_NAME}
               </h1>
+              <p className="font-display mt-4 text-3xl font-semibold leading-tight tracking-tight text-[#6b6560] lg:text-4xl">
+                Indian recipe app for{' '}
+                <span className="text-[#c45c2a]">your pantry</span> and your region.
+              </p>
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#6b6560]">
-                Rasoi is free on Google Play for Android. Discover regional dishes, match recipes
-                to what you already have, save favourites, and order missing ingredients from
-                Blinkit, Zepto, Instamart, Zomato, or Swiggy in one tap.
+                Download free on Google Play. Discover regional dishes, match recipes to what you
+                already have, save favourites, and order missing ingredients from Blinkit, Zepto,
+                Instamart, Zomato, or Swiggy in one tap.
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <a

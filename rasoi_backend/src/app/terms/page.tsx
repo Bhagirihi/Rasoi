@@ -1,10 +1,11 @@
 import LegalDocumentPage from '@/app/_components/LegalDocumentPage';
 import { termsSections } from '@/lib/legal-content';
+import { APP_NAME } from '@/lib/app-download';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata = buildPageMetadata({
-  title: 'Terms of Service — Rasoi App',
-  description: 'Terms for using the Rasoi Indian home-cooking app and rasoiapplication.in.',
+  title: `Terms of Service — ${APP_NAME}`,
+  description: `Terms for using ${APP_NAME}, the Indian home-cooking app, and rasoiapplication.in.`,
   path: '/terms',
 });
 

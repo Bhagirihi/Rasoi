@@ -1,11 +1,12 @@
 import LegalDocumentPage from '@/app/_components/LegalDocumentPage';
 import { privacySections } from '@/lib/legal-content';
+import { APP_NAME } from '@/lib/app-download';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata = buildPageMetadata({
-  title: 'Privacy Policy — Rasoi App',
+  title: `Privacy Policy — ${APP_NAME}`,
   description:
-    'How Rasoi collects, uses, and protects your information when you use the Indian recipe app and rasoiapplication.in.',
+    `How ${APP_NAME} collects, uses, and protects your information when you use the Indian recipe app and rasoiapplication.in.`,
   path: '/privacy',
 });
 

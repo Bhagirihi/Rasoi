@@ -4,18 +4,21 @@ import Link from 'next/link';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 
 import RasoiLogo from '@/app/_components/RasoiLogo';
+import JsonLd from '@/app/_components/JsonLd';
 import {
   ANDROID_APK_URL,
   APP_FEATURES,
+  APP_NAME,
   PLAY_STORE_LISTING_URL,
 } from '@/lib/app-download';
-import { downloadMetadata } from '@/lib/seo';
+import { absoluteUrl, downloadMetadata, mobileAppJsonLd } from '@/lib/seo';
 
 export const metadata = downloadMetadata;
 
 export default function DownloadPage() {
   return (
     <div className="landing-grain min-h-screen text-[#1a1a2e]">
+      <JsonLd data={mobileAppJsonLd(absoluteUrl('/download'))} />
       <header className="border-b border-[#e8dfd3] bg-[#fcf9f4]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
@@ -54,11 +57,11 @@ export default function DownloadPage() {
               Available on Google Play
             </p>
             <h1 className="font-display mt-4 text-4xl font-semibold leading-tight tracking-tight lg:text-5xl">
-              Download Rasoi free on Android
+              Download {APP_NAME} on Google Play
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-[#6b6560]">
-              Rasoi is live on Google Play. Install in one tap for regional recipes, smart pantry
-              matching, saved favourites, and automatic updates.
+              {APP_NAME} is live on Google Play. Install in one tap for regional recipes, smart
+              pantry matching, saved favourites, and automatic updates.
             </p>
           </div>
 
