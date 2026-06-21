@@ -17,8 +17,15 @@ async function request<T>(
       ...init?.headers,
     },
   });
-  const body = (await response.json()) as Envelope<T>;
-  return { status: response.status, body };
+  const raw = await response.text();
+  try {
+    const body = JSON.parse(raw) as Envelope<T>;
+    return { status: response.status, body };
+  } catch {
+    throw new Error(
+      `${path} returned ${response.status} (expected JSON, got ${raw.slice(0, 80).replace(/\s+/g, ' ')}…)`,
+    );
+  }
 }
 
 function assert(condition: boolean, message: string): void {

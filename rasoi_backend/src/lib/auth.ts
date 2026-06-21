@@ -6,7 +6,14 @@ import { getJwtSecretBytes } from '@/lib/env';
 import { db } from '@/lib/db';
 import { createSupabaseAdmin } from '@/lib/supabase-admin';
 
-const JWT_SECRET = getJwtSecretBytes();
+let jwtSecretBytes: Uint8Array | null = null;
+
+function jwtSecret(): Uint8Array {
+  if (!jwtSecretBytes) {
+    jwtSecretBytes = getJwtSecretBytes();
+  }
+  return jwtSecretBytes;
+}
 
 export type TokenPayload = {
   sub: string;
@@ -25,12 +32,12 @@ export async function signToken(payload: TokenPayload, expiresIn = '400d') {
     .setSubject(payload.sub)
     .setIssuedAt()
     .setExpirationTime(expiresIn)
-    .sign(JWT_SECRET);
+    .sign(jwtSecret());
 }
 
 export async function verifyToken(token: string): Promise<TokenPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, jwtSecret());
     const sub = payload.sub;
     if (!sub || typeof sub !== 'string') return null;
     const type = payload.type;
