@@ -3,6 +3,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CuisineId, DietChoice } from '@/constants/theme';
 import { DietType } from '@/data/mockRecipes';
 import { clearAuthToken } from '@/utils/authToken';
+import {
+  getDisposableEmailError,
+  getDummyPhoneError,
+  isDisposableEmail,
+  isDummyIndianPhone,
+} from '@/utils/identityValidation';
 
 const KEYS = {
   onboardingComplete: '@rasoi/onboarding_complete',
@@ -124,7 +130,8 @@ export function normalizeIndianPhone(input: string): string {
 }
 
 export function isValidIndianPhone(phone: string): boolean {
-  return /^[6-9]\d{9}$/.test(normalizeIndianPhone(phone));
+  const normalized = normalizeIndianPhone(phone);
+  return /^[6-9]\d{9}$/.test(normalized) && !isDummyIndianPhone(normalized);
 }
 
 export function isValidPhoneLength(phone: string): boolean {
@@ -143,11 +150,26 @@ export function getIndianPhoneError(phone: string): string | null {
   if (!/^[6-9]/.test(normalized)) {
     return 'Indian mobile numbers start with 6, 7, 8, or 9 — e.g. 9876543210.';
   }
+  if (isDummyIndianPhone(normalized)) {
+    return getDummyPhoneError();
+  }
   return null;
 }
 
 export function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
+  const normalized = email.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) && !isDisposableEmail(normalized);
+}
+
+export function getEmailValidationError(email: string): string | null {
+  const normalized = normalizeEmail(email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    return 'Enter a valid email address.';
+  }
+  if (isDisposableEmail(normalized)) {
+    return getDisposableEmailError();
+  }
+  return null;
 }
 
 export function normalizeEmail(email: string): string {

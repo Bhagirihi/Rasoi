@@ -65,8 +65,10 @@ export default function TrialWelcomeScreen() {
             finishWelcome();
           }}
           onSubscribe={async (interval) => {
-            await upgradeToPaid(interval);
-            finishWelcome();
+            const result = await upgradeToPaid(interval);
+            if (result.ok) {
+              finishWelcome();
+            }
           }}
         />
       </ScrollViewWithFloatingIndicator>

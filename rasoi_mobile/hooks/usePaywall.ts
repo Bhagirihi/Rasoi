@@ -12,7 +12,7 @@ import type { PurchaseFlowResult } from '@/services/payments/types';
 import { useAppContext } from '@/context/AppContext';
 
 export type UsePaywallOptions = {
-  upgradeToPaid: (interval?: BillingInterval) => Promise<void>;
+  upgradeToPaid: (interval?: BillingInterval) => Promise<PurchaseFlowResult>;
   restorePurchases: () => Promise<void>;
 };
 
@@ -35,17 +35,11 @@ export function usePaywall({ upgradeToPaid, restorePurchases }: UsePaywallOption
       setIsPurchasing(true);
       setLastError(null);
       try {
-        await upgradeToPaid(interval);
-        return {
-          ok: true,
-          planState: {
-            planTier: 'paid',
-            trialStartedAt: null,
-            hasUsedTrial: true,
-            trialBonusDays: 0,
-            yearlyPromoOfferTag: null,
-          },
-        };
+        const result = await upgradeToPaid(interval);
+        if (!result.ok) {
+          setLastError(result.error ?? 'Purchase could not be completed.');
+        }
+        return result;
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Purchase could not be completed.';
         setLastError(message);

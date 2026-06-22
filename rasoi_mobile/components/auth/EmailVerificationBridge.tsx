@@ -2,17 +2,16 @@ import { useRouter } from 'expo-router';
 
 import EmailVerificationModal from '@/components/auth/EmailVerificationModal';
 import EmailVerificationPendingBanner from '@/components/auth/EmailVerificationPendingBanner';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext, type AuthNavigationResult } from '@/context/AppContext';
 
 export default function EmailVerificationBridge() {
   const router = useRouter();
   const {
     emailVerificationModalVisible,
     closeEmailVerificationModal,
-    hasCompletedOnboarding,
   } = useAppContext();
 
-  const navigateAfterVerify = (showTrialWelcome: boolean) => {
+  const navigateAfterVerify = ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
     if (!hasCompletedOnboarding) {
       router.replace('/(auth)/onboarding');
       return;

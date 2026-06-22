@@ -6,6 +6,12 @@ import {
   readPaymentsEnabled,
 } from '../_shared/autoTrial.ts';
 import { corsHeaders, fail, ok } from '../_shared/http.ts';
+import {
+  getDisposableEmailError,
+  getDummyPhoneError,
+  isDisposableEmail,
+  isDummyIndianPhone,
+} from '../_shared/identityValidation.ts';
 import { normalizePhone, serializeUser } from '../_shared/serializeUser.ts';
 
 const CURRENT_TERMS_VERSION = Deno.env.get('RASOI_TERMS_VERSION') ?? '2025-06-01';
@@ -66,6 +72,10 @@ Deno.serve(async (request) => {
     return fail('Invalid or expired email verification', 401);
   }
 
+  if (isDisposableEmail(authUser.email)) {
+    return fail(getDisposableEmailError(), 400);
+  }
+
   let body: SyncBody;
   try {
     body = (await request.json()) as SyncBody;
@@ -79,6 +89,9 @@ Deno.serve(async (request) => {
   }
 
   const phone = normalizePhone(body.phone);
+  if (phone && isDummyIndianPhone(phone)) {
+    return fail(getDummyPhoneError(), 400);
+  }
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });

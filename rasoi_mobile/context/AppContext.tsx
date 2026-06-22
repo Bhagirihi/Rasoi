@@ -17,6 +17,7 @@ import { useRecipes } from '@/context/RecipesContext';
 import { DietType, Recipe } from '@/data/mockRecipes';
 import { loginAsGuestUser, logoutSession, syncSupabaseAccount } from '@/services/auth';
 import { purchaseRasoiPlusDefault, restoreRasoiPlus } from '@/services/payments';
+import type { PurchaseFlowResult } from '@/services/payments/types';
 import { getSupabaseSession, sendEmailOtp, sendLoginEmailOtp, verifyEmailOtp, ensureValidSupabaseSession } from '@/services/supabaseAuth';
 import {
   completeUserOnboarding,
@@ -86,6 +87,11 @@ export type FoodPreferencesPayload = {
   notificationsEnabled: boolean;
 };
 
+export type AuthNavigationResult = {
+  showTrialWelcome: boolean;
+  hasCompletedOnboarding: boolean;
+};
+
 interface AppContextValue extends ResolvedPlan {
   paymentsEnabled: boolean;
   isHydrated: boolean;
@@ -115,9 +121,9 @@ interface AppContextValue extends ResolvedPlan {
     name: string,
     phone: string,
     options?: { acceptedTerms?: boolean },
-  ) => Promise<boolean>;
-  verifyLoginEmailOtp: (email: string, otp: string) => Promise<boolean>;
-  loginAsGuest: (options?: { name?: string }) => Promise<void>;
+  ) => Promise<AuthNavigationResult>;
+  verifyLoginEmailOtp: (email: string, otp: string) => Promise<AuthNavigationResult>;
+  loginAsGuest: (options?: { name?: string }) => Promise<AuthNavigationResult>;
   updateProfile: (name: string, phone: string) => Promise<void>;
   syncUserLocation: (snapshot: UserLocationSnapshot) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -135,7 +141,7 @@ interface AppContextValue extends ResolvedPlan {
   setPantryFilterActive: (active: boolean) => void;
   getSavedRecipes: () => Recipe[];
   startTrial: (options?: { showWelcome?: boolean }) => Promise<boolean>;
-  upgradeToPaid: (interval?: BillingInterval) => Promise<void>;
+  upgradeToPaid: (interval?: BillingInterval) => Promise<PurchaseFlowResult>;
   restorePurchases: () => Promise<void>;
   refreshPlan: () => Promise<void>;
   redeemPromoCode: (code: string) => Promise<{ message: string }>;
@@ -147,8 +153,8 @@ interface AppContextValue extends ResolvedPlan {
   closeEmailVerificationModal: () => void;
   continueWithPendingEmailVerification: (
     pending: Omit<PendingEmailVerification, 'savedAt' | 'reason'>,
-  ) => Promise<void>;
-  verifyPendingEmailOtp: (otp: string) => Promise<boolean>;
+  ) => Promise<AuthNavigationResult | null>;
+  verifyPendingEmailOtp: (otp: string) => Promise<AuthNavigationResult>;
   resendPendingEmailVerificationOtp: () => Promise<void>;
   clearPendingEmailVerification: () => Promise<void>;
 }
@@ -274,6 +280,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setRegionalCuisine(user.regionalCuisine);
       setFavoriteCuisines(user.favoriteCuisines);
       setNotificationsEnabledState(user.notificationsEnabled);
+      if (user.hasCompletedOnboarding) {
+        void saveOnboardingComplete({
+          dietPreference: user.dietPreference,
+          dietChoice: user.dietChoice,
+          regionalCuisine: user.regionalCuisine,
+          favoriteCuisines: user.favoriteCuisines,
+          notificationsEnabled: user.notificationsEnabled,
+        });
+      }
       setPantryIngredients(
         user.pantryIngredients,
       );
@@ -331,26 +346,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [applyUserProfile]);
 
   const finishAuthAfterSync = useCallback(
-    (user: UserProfileResponse): boolean => {
+    async (user: UserProfileResponse): Promise<AuthNavigationResult> => {
       applyUserProfile(user);
 
-      void (async () => {
-        let notificationsOn = user.notificationsEnabled;
-        try {
-          if (pendingOnboardingRef.current && !user.hasCompletedOnboarding) {
-            const updated = await syncPendingOnboarding();
-            if (updated) notificationsOn = updated.notificationsEnabled;
-          } else if (user.hasCompletedOnboarding) {
-            pendingOnboardingRef.current = null;
+      let notificationsOn = user.notificationsEnabled;
+      let onboardingDone = user.hasCompletedOnboarding;
+
+      try {
+        if (pendingOnboardingRef.current && !user.hasCompletedOnboarding) {
+          const updated = await syncPendingOnboarding();
+          if (updated) {
+            notificationsOn = updated.notificationsEnabled;
+            onboardingDone = updated.hasCompletedOnboarding;
           }
-        } catch (error) {
-          authError('finishAuthAfterSync:onboarding_failed', error);
+        } else if (user.hasCompletedOnboarding) {
+          pendingOnboardingRef.current = null;
         }
+      } catch (error) {
+        authError('finishAuthAfterSync:onboarding_failed', error);
+      }
 
-        void syncPushTokenToServer(notificationsOn);
-      })();
+      void syncPushTokenToServer(notificationsOn);
 
-      return false;
+      return {
+        showTrialWelcome: false,
+        hasCompletedOnboarding: onboardingDone,
+      };
     },
     [applyUserProfile, syncPendingOnboarding, syncPushTokenToServer],
   );
@@ -425,7 +446,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const name = metadata.name?.trim() || session.user.email?.split('@')[0] || 'User';
             const phone = metadata.phone ?? '';
             const { user } = await syncSupabaseAccount(session.access_token, name, phone);
-            finishAuthAfterSync(user);
+            void finishAuthAfterSync(user);
             return;
           } catch (error) {
             authError('hydrate:sync_supabase_failed', error);
@@ -550,9 +571,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void setPendingTrialWelcome(false);
   }, [setPendingTrialWelcome]);
 
-  const upgradeToPaid = useCallback(async (interval: BillingInterval = 'monthly') => {
+  const upgradeToPaid = useCallback(async (interval: BillingInterval = 'monthly'): Promise<PurchaseFlowResult> => {
     if (!paymentsEnabled) {
-      throw new Error('Subscriptions are not available right now.');
+      return { ok: false, error: 'Subscriptions are not available right now.' };
     }
     const result = await purchaseRasoiPlusDefault(
       {
@@ -562,10 +583,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       },
       interval,
     );
-    if (!result.ok) {
-      throw new Error(result.error);
+    if (result.ok) {
+      applyPlanState(result.planState);
     }
-    applyPlanState(result.planState);
+    return result;
   }, [applyPlanState, isLoggedIn, paymentsEnabled, planState.trialStartedAt, planState.yearlyPromoOfferTag]);
 
   const redeemPromoCode = useCallback(
@@ -673,16 +694,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (pendingOnboarding && user.hasCompletedOnboarding) {
           pendingOnboardingRef.current = null;
         }
-        const showTrialWelcome = finishAuthAfterSync(user);
+        const nav = await finishAuthAfterSync(user);
         authLog('verifyEmailOtpAndLogin:success', {
-          onboardingDone: user.hasCompletedOnboarding,
+          onboardingDone: nav.hasCompletedOnboarding,
           upgradedGuest: isGuestUser,
           userId: user.id.slice(0, 8),
           pendingSync: Boolean(pendingOnboardingRef.current),
-          showTrialWelcome,
+          showTrialWelcome: nav.showTrialWelcome,
         });
         void logFirebaseEvent('sign_up', { method: isGuestUser ? 'email_guest_upgrade' : 'email' });
-        return showTrialWelcome;
+        return nav;
       } catch (error) {
         authError('verifyEmailOtpAndLogin:failed', error);
         throw error;
@@ -710,10 +731,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (pendingOnboarding && user.hasCompletedOnboarding) {
           pendingOnboardingRef.current = null;
         }
-        const showTrialWelcome = finishAuthAfterSync(user);
-        authLog('verifyLoginEmailOtp:success');
+        const nav = await finishAuthAfterSync(user);
+        authLog('verifyLoginEmailOtp:success', { onboardingDone: nav.hasCompletedOnboarding });
         void logFirebaseEvent('login', { method: 'email' });
-        return showTrialWelcome;
+        return nav;
       } catch (error) {
         authError('verifyLoginEmailOtp:failed', error);
         throw error;
@@ -725,8 +746,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const loginAsGuest = useCallback(async (options?: { name?: string }) => {
     authLog('loginAsGuest:context_start');
     const { user } = await loginAsGuestUser(options);
-    finishAuthAfterSync(user);
+    const nav = await finishAuthAfterSync(user);
     void logFirebaseEvent('guest_login');
+    return nav;
   }, [finishAuthAfterSync]);
 
   const openEmailVerificationModal = useCallback(() => {
@@ -754,8 +776,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setPendingEmailVerificationState(payload);
 
       if (!isLoggedIn) {
-        await loginAsGuest(pending.name?.trim().length ? { name: pending.name.trim() } : undefined);
+        return loginAsGuest(pending.name?.trim().length ? { name: pending.name.trim() } : undefined);
       }
+      return null;
     },
     [isLoggedIn, loginAsGuest],
   );
@@ -781,11 +804,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw new Error('No pending email verification.');
       }
 
-      let showTrialWelcome = false;
+      let nav: AuthNavigationResult;
       if (pending.flow === 'login') {
-        showTrialWelcome = await verifyLoginEmailOtp(pending.email, otp);
+        nav = await verifyLoginEmailOtp(pending.email, otp);
       } else {
-        showTrialWelcome = await verifyEmailOtpAndLogin(
+        nav = await verifyEmailOtpAndLogin(
           pending.email,
           otp,
           pending.name ?? 'User',
@@ -795,7 +818,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       await clearPendingEmailVerification();
-      return showTrialWelcome;
+      return nav;
     },
     [
       clearPendingEmailVerification,

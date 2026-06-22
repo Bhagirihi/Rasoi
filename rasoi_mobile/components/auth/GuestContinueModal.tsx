@@ -13,6 +13,7 @@ type GuestContinueModalProps = {
   onClose: () => void;
   onContinue: () => void;
   busy?: boolean;
+  errorMessage?: string;
 };
 
 export default function GuestContinueModal({
@@ -22,6 +23,7 @@ export default function GuestContinueModal({
   onClose,
   onContinue,
   busy = false,
+  errorMessage,
 }: GuestContinueModalProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -52,6 +54,12 @@ export default function GuestContinueModal({
               />
             </View>
           </View>
+
+          {errorMessage ? (
+            <Text style={localStyles.error} accessibilityRole="alert">
+              {errorMessage}
+            </Text>
+          ) : null}
 
           <Pressable
             onPress={onContinue}
@@ -106,6 +114,12 @@ const localStyles = StyleSheet.create({
   field: {
     marginTop: spacing.lg,
     marginBottom: spacing.lg,
+  },
+  error: {
+    marginBottom: spacing.md,
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.danger,
   },
   continueWrap: {
     borderRadius: 16,

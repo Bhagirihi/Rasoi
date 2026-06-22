@@ -17,6 +17,8 @@ import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/th
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import { usePaywall } from '@/hooks/usePaywall';
+import { useRevenueCatPricing } from '@/hooks/useRevenueCatPricing';
+import { getEffectivePaymentProviderId } from '@/constants/payments';
 import { useTrialClock } from '@/hooks/useTrialClock';
 
 export default function PaywallScreen() {
@@ -47,6 +49,9 @@ export default function PaywallScreen() {
   }, [router, showPaywall]);
 
   const paywall = usePaywall({ upgradeToPaid, restorePurchases });
+  const { pricing, storeReady } = useRevenueCatPricing(
+    paymentsEnabled && getEffectivePaymentProviderId() === 'revenuecat',
+  );
 
   const handleStartTrial = async () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -163,6 +168,7 @@ export default function PaywallScreen() {
           onRedeemPromo={redeemPromoCode}
           onPromoSuccess={(message) => showDialog({ title: 'Promo applied', message })}
           onPromoError={(message) => showDialog({ title: 'Promo code', message })}
+          storePricing={storeReady ? pricing : null}
         />
 
         <Text style={styles.sectionLabel}>Compare plans</Text>

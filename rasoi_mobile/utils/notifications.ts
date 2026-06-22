@@ -155,14 +155,23 @@ export async function setupRemoteMealNotifications(): Promise<void> {
   ]);
 }
 
-export async function ensureNotificationPermissions(): Promise<boolean> {
+export async function isNotificationPermissionGranted(): Promise<boolean> {
   if (Platform.OS === 'web') return false;
 
   const Notifications = await getNotifications();
   if (!Notifications) return false;
 
-  const { status: existing } = await Notifications.getPermissionsAsync();
-  if (existing === 'granted') return true;
+  const { status } = await Notifications.getPermissionsAsync();
+  return status === 'granted';
+}
+
+export async function ensureNotificationPermissions(): Promise<boolean> {
+  if (Platform.OS === 'web') return false;
+
+  if (await isNotificationPermissionGranted()) return true;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return false;
 
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';

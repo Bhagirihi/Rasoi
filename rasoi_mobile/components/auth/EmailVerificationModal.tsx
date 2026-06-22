@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 
 import { colors, gradients, radius, spacing } from '@/constants/theme';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext, type AuthNavigationResult } from '@/context/AppContext';
 import { maskEmail } from '@/utils/authLogger';
 import {
   EmailDeliveryUnavailableError,
@@ -23,7 +23,7 @@ import {
 type EmailVerificationModalProps = {
   visible: boolean;
   onClose: () => void;
-  onVerified?: (showTrialWelcome: boolean) => void;
+  onVerified?: (result: AuthNavigationResult) => void;
 };
 
 export default function EmailVerificationModal({
@@ -70,8 +70,8 @@ export default function EmailVerificationModal({
     setBusy(true);
     try {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      const showTrialWelcome = await verifyPendingEmailOtp(code);
-      onVerified?.(showTrialWelcome);
+      const nav = await verifyPendingEmailOtp(code);
+      onVerified?.(nav);
       onClose();
     } catch (error) {
       setErrorMessage(

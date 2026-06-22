@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { getAutoTrialWriteForNewUser, getAutoTrialWriteIfEligible } from '@/lib/auto-trial';
 import { signToken } from '@/lib/auth';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
+import { assertAllowedEmail } from '@/lib/identity-validation';
 import { validateFavoriteCuisines } from '@/lib/kitchen-styles';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal-version';
 import { enforceRateLimit } from '@/lib/rate-limit';
@@ -87,6 +88,15 @@ export async function POST(request: NextRequest) {
         hasEmail: Boolean(authUser?.email),
       });
       return jsonError('Invalid or expired email verification', 401);
+    }
+
+    try {
+      assertAllowedEmail(authUser.email);
+    } catch (error) {
+      return jsonError(
+        error instanceof Error ? error.message : 'Temporary email addresses are not allowed',
+        400,
+      );
     }
 
     const input = supabaseSyncSchema.parse(body);

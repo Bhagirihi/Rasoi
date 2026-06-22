@@ -15,14 +15,20 @@ import {
   type BillingInterval,
 } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
+import type { RevenueCatStorePricing } from '@/services/payments/revenueCatClient';
 
 type PlanCardProps = {
   disabled?: boolean;
   onPress: () => void;
   yearlyPromoOfferTag?: string | null;
+  storePricing?: RevenueCatStorePricing | null;
 };
 
-export function MonthlyPlanCard({ disabled, onPress }: PlanCardProps) {
+export function MonthlyPlanCard({ disabled, onPress, storePricing }: PlanCardProps) {
+  const live = storePricing?.monthly;
+  const priceLabel = live?.priceString ?? formatInr(PAID_PLAN_MONTHLY_AMOUNT_INR);
+  const subline = live?.subline ?? `Pay ${PAID_PLAN_MONTHLY_PRICE} · Cancel anytime`;
+
   return (
     <Pressable
       onPress={onPress}
@@ -33,7 +39,7 @@ export function MonthlyPlanCard({ disabled, onPress }: PlanCardProps) {
         disabled && styles.disabled,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`Subscribe monthly for ${PAID_PLAN_MONTHLY_PRICE}`}
+      accessibilityLabel={`Subscribe monthly for ${priceLabel}`}
     >
       <LinearGradient
         colors={['#1A1A2E', '#2A2A3E']}
@@ -49,16 +55,32 @@ export function MonthlyPlanCard({ disabled, onPress }: PlanCardProps) {
           <Text style={styles.monthlyPopular}>Popular</Text>
         </View>
         <Text style={styles.monthlyTitle}>Monthly</Text>
-        <Text style={styles.monthlyPrice}>{formatInr(PAID_PLAN_MONTHLY_AMOUNT_INR)}</Text>
+        <Text style={styles.monthlyPrice}>{priceLabel}</Text>
         <Text style={styles.monthlyPeriod}>per month</Text>
-        <Text style={styles.monthlySub}>Pay {PAID_PLAN_MONTHLY_PRICE} · Cancel anytime</Text>
+        <Text style={styles.monthlySub}>{subline}</Text>
       </LinearGradient>
     </Pressable>
   );
 }
 
-export function YearlyPlanCard({ disabled, onPress, yearlyPromoOfferTag = null }: PlanCardProps) {
+export function YearlyPlanCard({
+  disabled,
+  onPress,
+  yearlyPromoOfferTag = null,
+  storePricing,
+}: PlanCardProps) {
   const hasPromo = yearlyPromoOfferTag === YEARLY_PROMO_OFFER_TAG;
+  const live = storePricing?.yearly;
+  const priceLabel = hasPromo
+    ? PAID_PLAN_YEARLY_PROMO_LABEL.split(' · ')[0]
+    : live?.priceString ?? formatInr(PAID_PLAN_YEARLY_AMOUNT_INR);
+  const savingsLabel = hasPromo
+    ? 'Promo applied'
+    : live?.savingsLabel ?? PAID_PLAN_YEARLY_SAVINGS_LABEL.split(' · ')[0];
+  const subline = hasPromo
+    ? PAID_PLAN_YEARLY_PROMO_LABEL
+    : live?.subline ??
+      `${formatInr(PAID_PLAN_YEARLY_MONTHLY_EQUIV_INR)}/mo · ${PAID_PLAN_YEARLY_PRICE}`;
 
   return (
     <Pressable
@@ -70,7 +92,7 @@ export function YearlyPlanCard({ disabled, onPress, yearlyPromoOfferTag = null }
         disabled && styles.disabled,
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`Subscribe yearly for ${PAID_PLAN_YEARLY_PRICE}`}
+      accessibilityLabel={`Subscribe yearly for ${priceLabel}`}
     >
       <LinearGradient
         colors={[colors.primary, colors.saffron]}
@@ -83,22 +105,12 @@ export function YearlyPlanCard({ disabled, onPress, yearlyPromoOfferTag = null }
             <Crown size={12} color={colors.primary} />
             <Text style={styles.yearlyBadgeText}>Best value</Text>
           </View>
-          <Text style={styles.yearlySavings}>
-            {hasPromo ? 'Promo applied' : PAID_PLAN_YEARLY_SAVINGS_LABEL.split(' · ')[0]}
-          </Text>
+          <Text style={styles.yearlySavings}>{savingsLabel}</Text>
         </View>
         <Text style={styles.yearlyTitle}>Yearly</Text>
-        <Text style={styles.yearlyPrice}>
-          {hasPromo
-            ? PAID_PLAN_YEARLY_PROMO_LABEL.split(' · ')[0]
-            : formatInr(PAID_PLAN_YEARLY_AMOUNT_INR)}
-        </Text>
+        <Text style={styles.yearlyPrice}>{priceLabel}</Text>
         <Text style={styles.yearlyPeriod}>per year</Text>
-        <Text style={styles.yearlySub}>
-          {hasPromo
-            ? PAID_PLAN_YEARLY_PROMO_LABEL
-            : `${formatInr(PAID_PLAN_YEARLY_MONTHLY_EQUIV_INR)}/mo · ${PAID_PLAN_YEARLY_PRICE}`}
-        </Text>
+        <Text style={styles.yearlySub}>{subline}</Text>
       </LinearGradient>
     </Pressable>
   );
@@ -107,10 +119,12 @@ export function YearlyPlanCard({ disabled, onPress, yearlyPromoOfferTag = null }
 export function PaywallPlanGrid({
   disabled,
   yearlyPromoOfferTag,
+  storePricing,
   onSubscribe,
 }: {
   disabled?: boolean;
   yearlyPromoOfferTag?: string | null;
+  storePricing?: RevenueCatStorePricing | null;
   onSubscribe: (interval: BillingInterval) => void;
 }) {
   return (
@@ -118,11 +132,13 @@ export function PaywallPlanGrid({
       <MonthlyPlanCard
         disabled={disabled}
         yearlyPromoOfferTag={yearlyPromoOfferTag}
+        storePricing={storePricing}
         onPress={() => onSubscribe('monthly')}
       />
       <YearlyPlanCard
         disabled={disabled}
         yearlyPromoOfferTag={yearlyPromoOfferTag}
+        storePricing={storePricing}
         onPress={() => onSubscribe('yearly')}
       />
     </View>

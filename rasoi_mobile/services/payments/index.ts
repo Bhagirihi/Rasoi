@@ -157,7 +157,17 @@ export async function purchaseRasoiPlus(
   productId: PurchaseProductId,
   options: ApplyPaidPlanOptions,
 ): Promise<PurchaseFlowResult> {
+  const configuredId = getConfiguredPaymentProviderId();
   const provider = getPaymentProvider();
+
+  if (configuredId === 'revenuecat' && provider.id === 'stub') {
+    return {
+      ok: false,
+      error:
+        'Google Play / App Store billing is not configured in this build. Add RevenueCat keys to EAS and rebuild.',
+    };
+  }
+
   const purchase = await provider.purchase({
     productId,
     googlePlayOfferTag:

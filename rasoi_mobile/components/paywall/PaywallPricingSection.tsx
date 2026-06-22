@@ -11,6 +11,8 @@ import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 
+import type { RevenueCatStorePricing } from '@/services/payments/revenueCatClient';
+
 type PaywallPricingSectionProps = {
   effectiveTier: 'free' | 'trial' | 'paid';
   trialExpired: boolean;
@@ -28,6 +30,7 @@ type PaywallPricingSectionProps = {
   onPromoSuccess: (message: string) => void;
   onPromoError: (message: string) => void;
   onRedeemPromo: (code: string) => Promise<{ message: string }>;
+  storePricing?: RevenueCatStorePricing | null;
 };
 
 export default function PaywallPricingSection({
@@ -47,6 +50,7 @@ export default function PaywallPricingSection({
   onPromoSuccess,
   onPromoError,
   onRedeemPromo,
+  storePricing = null,
 }: PaywallPricingSectionProps) {
   const { paymentsEnabled, isLoggedIn } = useAppContext();
 
@@ -96,10 +100,11 @@ export default function PaywallPricingSection({
 
       {showSubscribeOptions && (
         <>
-          <Text style={styles.planHint}>Tap a plan to subscribe — monthly is flexible, yearly saves more.</Text>
+          <Text style={styles.planHint}>Tap a plan to subscribe — Google Play or App Store checkout opens next.</Text>
           <PaywallPlanGrid
             disabled={isBusy}
             yearlyPromoOfferTag={yearlyPromoOfferTag}
+            storePricing={storePricing}
             onSubscribe={onSubscribe}
           />
         </>

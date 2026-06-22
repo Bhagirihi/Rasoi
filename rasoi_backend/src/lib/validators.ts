@@ -1,6 +1,12 @@
 import { z } from 'zod';
 
 import {
+  getDisposableEmailError,
+  getDummyPhoneError,
+  isDisposableEmail,
+  isDummyIndianPhone,
+} from '@/lib/identity-validation';
+import {
   SPONSOR_APPLICATION_PLACEMENT_VALUES,
   SPONSOR_PLACEMENT_VALUES,
 } from '@/lib/sponsor-placements';
@@ -13,6 +19,19 @@ const recipeTag = z.enum(['under20', 'leftover', 'kids', 'quick', 'festive']);
 const sponsorPlacement = z.enum(SPONSOR_PLACEMENT_VALUES);
 const planTier = z.enum(['free', 'trial', 'paid']);
 const favoriteCuisines = z.array(z.string().trim().min(1).max(40));
+
+const indianPhone = z
+  .string()
+  .transform((value) => value.replace(/\D/g, '').replace(/^91/, '').slice(0, 10))
+  .refine((value) => /^[6-9]\d{9}$/.test(value), 'Invalid Indian phone number')
+  .refine((value) => !isDummyIndianPhone(value), getDummyPhoneError());
+
+const allowedEmail = z
+  .string()
+  .trim()
+  .email()
+  .transform((value) => value.toLowerCase())
+  .refine((value) => !isDisposableEmail(value), getDisposableEmailError());
 
 const recommendedBrand = z.object({
   name: z.string().min(1),
@@ -27,10 +46,7 @@ const ingredient = z.object({
 
 export const loginSchema = z.object({
   name: z.string().trim().min(2).max(80),
-  phone: z
-    .string()
-    .transform((value) => value.replace(/\D/g, '').replace(/^91/, '').slice(0, 10))
-    .refine((value) => /^[6-9]\d{9}$/.test(value), 'Invalid Indian phone number'),
+  phone: indianPhone,
 });
 
 export const onboardingSchema = z.object({
@@ -53,6 +69,10 @@ export const supabaseSyncSchema = z.object({
     .refine(
       (value) => value === undefined || /^[6-9]\d{9}$/.test(value),
       'Invalid Indian phone number',
+    )
+    .refine(
+      (value) => value === undefined || !isDummyIndianPhone(value),
+      getDummyPhoneError(),
     ),
   acceptedTerms: z.literal(true).optional(),
   /** Rasoi guest user id to upgrade when converting guest → registered member. */
@@ -63,11 +83,7 @@ export const supabaseSyncSchema = z.object({
 
 export const profileUpdateSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
-  phone: z
-    .string()
-    .transform((value) => value.replace(/\D/g, '').replace(/^91/, '').slice(0, 10))
-    .refine((value) => /^[6-9]\d{9}$/.test(value), 'Invalid Indian phone number')
-    .optional(),
+  phone: indianPhone.optional(),
   dietChoice: dietChoice.optional(),
   dietPreference: dietType.optional(),
   regionalCuisine: z.string().min(1).optional(),
@@ -260,9 +276,7 @@ export const feedbackSchema = z.object({
     .max(80)
     .optional()
     .transform((value) => (value?.trim() ? value.trim() : undefined)),
-  email: z
-    .string()
-    .email()
+  email: allowedEmail
     .max(120)
     .optional()
     .or(z.literal(''))
@@ -274,7 +288,7 @@ export const feedbackSchema = z.object({
 export const sponsorApplicationSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
   contactName: z.string().trim().min(2).max(80),
-  email: z.string().email().max(120),
+  email: allowedEmail.max(120),
   phone: z
     .string()
     .optional()

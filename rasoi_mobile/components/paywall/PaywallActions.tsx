@@ -9,6 +9,7 @@ import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS, RECURRING_PAYMENT_
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import type { RevenueCatStorePricing } from '@/services/payments/revenueCatClient';
 
 type PaywallActionsProps = {
   effectiveTier: 'free' | 'trial' | 'paid';
@@ -24,6 +25,7 @@ type PaywallActionsProps = {
   onSubscribe: (interval: BillingInterval) => void;
   onRestore?: () => void;
   yearlyPromoOfferTag?: string | null;
+  storePricing?: RevenueCatStorePricing | null;
 };
 
 /** Compact pricing block for trial modals — full paywall uses PaywallPricingSection. */
@@ -41,6 +43,7 @@ export default function PaywallActions({
   onSubscribe,
   onRestore,
   yearlyPromoOfferTag = null,
+  storePricing = null,
 }: PaywallActionsProps) {
   const { paymentsEnabled } = useAppContext();
 
@@ -74,11 +77,15 @@ export default function PaywallActions({
       )}
 
       {showSubscribeOptions && (
-        <PaywallPlanGrid
-          disabled={isBusy}
-          yearlyPromoOfferTag={yearlyPromoOfferTag}
-          onSubscribe={onSubscribe}
-        />
+        <>
+          <Text style={styles.planHint}>Tap a plan — Google Play or App Store checkout opens next.</Text>
+          <PaywallPlanGrid
+            disabled={isBusy}
+            yearlyPromoOfferTag={yearlyPromoOfferTag}
+            storePricing={storePricing}
+            onSubscribe={onSubscribe}
+          />
+        </>
       )}
 
       {paymentsEnabled && effectiveTier === 'paid' && providerId === 'revenuecat' && (
@@ -148,6 +155,13 @@ const styles = StyleSheet.create({
     color: colors.danger,
     textAlign: 'center',
     fontWeight: '600',
+  },
+  planHint: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.muted,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   manageNote: {
     fontSize: 13,

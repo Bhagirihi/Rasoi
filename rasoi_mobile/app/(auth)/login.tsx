@@ -26,18 +26,18 @@ import {
   spacing,
 } from "@/constants/theme";
 import { testIds } from "@/constants/testIds";
-import { useAppContext } from "@/context/AppContext";
+import { useAppContext, type AuthNavigationResult } from "@/context/AppContext";
 import { authError, authLog, maskEmail } from "@/utils/authLogger";
 import { isEmailDeliveryUnavailableError } from "@/utils/emailDeliveryErrors";
 import { warmApiConnection } from "@/utils/api";
-import { isValidEmail, normalizeEmail } from "@/utils/storage";
+import { getEmailValidationError, normalizeEmail } from "@/utils/storage";
 
 type LoginStep = "email" | "otp";
 type FieldError = "email" | "otp" | "general" | null;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, hasCompletedOnboarding, continueWithPendingEmailVerification } =
+  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, continueWithPendingEmailVerification } =
     useAppContext();
 
   const [step, setStep] = useState<LoginStep>("email");
@@ -48,6 +48,7 @@ export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestName, setGuestName] = useState("");
+  const [guestError, setGuestError] = useState("");
   const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
 
@@ -70,7 +71,7 @@ export default function LoginScreen() {
     if (step === "otp") warmApiConnection();
   }, [step]);
 
-  const navigateAfterAuth = (showTrialWelcome: boolean) => {
+  const navigateAfterAuth = ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
     if (!hasCompletedOnboarding) {
       router.replace("/(auth)/onboarding");
       return;
@@ -83,28 +84,33 @@ export default function LoginScreen() {
   };
 
   const validateEmail = (): string | null => {
-    const normalizedEmail = normalizeEmail(email);
-    if (!isValidEmail(normalizedEmail)) {
+    const emailError = getEmailValidationError(email);
+    if (emailError) {
       setFieldError("email");
-      setErrorMessage("Enter a valid email address.");
+      setErrorMessage(emailError);
       return null;
     }
-    return normalizedEmail;
+    return normalizeEmail(email);
   };
 
   const handleGuest = async () => {
+    setGuestError("");
+    setFieldError(null);
+    setErrorMessage("");
     setIsSubmitting(true);
     try {
       void Haptics.selectionAsync();
+      Keyboard.dismiss();
       const trimmed = guestName.trim();
-      await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
+      const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
       setShowGuestModal(false);
-      navigateAfterAuth(false);
+      navigateAfterAuth(nav);
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not continue as guest. Please try again.";
+      setGuestError(message);
       setFieldError("general");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Could not continue as guest. Please try again.",
-      );
+      setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -113,12 +119,14 @@ export default function LoginScreen() {
   const handleContinueWithoutEmailVerification = async (normalizedEmail: string) => {
     setIsSubmitting(true);
     try {
-      await continueWithPendingEmailVerification({
+      const nav = await continueWithPendingEmailVerification({
         email: normalizedEmail,
         flow: "login",
       });
       setEmailDeliveryBlocked(false);
-      navigateAfterAuth(false);
+      if (nav) {
+        navigateAfterAuth(nav);
+      }
     } catch (error) {
       setFieldError("general");
       setErrorMessage(
@@ -193,10 +201,10 @@ export default function LoginScreen() {
         email: maskEmail(normalizedEmail),
         otpLength: code.length,
       });
-      const showTrialWelcome = await verifyLoginEmailOtp(normalizedEmail, code);
+      const nav = await verifyLoginEmailOtp(normalizedEmail, code);
       authLog("login:verifyOtp_success");
       verified = true;
-      navigateAfterAuth(showTrialWelcome);
+      navigateAfterAuth(nav);
     } catch (error) {
       authError("login:verifyOtp_failed", error, {
         email: maskEmail(normalizedEmail),
@@ -264,7 +272,12 @@ export default function LoginScreen() {
         <AppSavingOverlay
           visible={isSubmitting}
           steps={
-            step === "otp"
+            showGuestModal
+              ? [
+                  { message: "Starting guest mode…", subtitle: "Setting up your kitchen" },
+                  { message: "Almost ready…", subtitle: "Opening Rasoi" },
+                ]
+              : step === "otp"
               ? [{ message: "Signing you in…", subtitle: "Verifying code and loading your profile" }]
               : [
                   {
@@ -435,7 +448,10 @@ export default function LoginScreen() {
             {step === "email" ? (
               <>
                 <Pressable
-                  onPress={() => setShowGuestModal(true)}
+                  onPress={() => {
+                    setGuestError("");
+                    setShowGuestModal(true);
+                  }}
                   disabled={isSubmitting}
                   testID={testIds.loginGuest}
                   style={styles.guestButton}
@@ -464,9 +480,13 @@ export default function LoginScreen() {
         visible={showGuestModal}
         name={guestName}
         onChangeName={setGuestName}
-        onClose={() => setShowGuestModal(false)}
+        onClose={() => {
+          setShowGuestModal(false);
+          setGuestError("");
+        }}
         onContinue={() => void handleGuest()}
         busy={isSubmitting}
+        errorMessage={guestError}
       />
     </View>
   );

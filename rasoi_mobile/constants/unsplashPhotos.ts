@@ -16,6 +16,8 @@ export const UNSPLASH = {
   pulao: 'photo-1582878826629-29b7ad1cdc43',
   tikka: 'photo-1567620905732-2d1ec7ab7445',
   maharashtrian: 'photo-1512058564366-18510be2db19',
+  pavBhaji: 'photo-1606491956689-2ea866880c84',
+  vadaPav: 'photo-1630383249896-424e482df921',
   salad: 'photo-1540189549336-e6e99c3679fe',
   pizza: 'photo-1565299624946-b28f40a0ae38',
 } as const;

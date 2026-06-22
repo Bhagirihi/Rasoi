@@ -18,6 +18,12 @@ export const RECIPE_IMAGE_KEYWORDS: Record<string, string> = {
   noodles: '1617093727343-374698b1b08d',
   manchurian: '1534939561126-855b8675edd7',
   'pav-bhaji': '1606491956689-2ea866880c84',
+  'vada-pav': '1630383249896-424e482df921',
+  'misal-pav': '1606491956689-2ea866880c84',
+  'usal-pav': '1606491956689-2ea866880c84',
+  'dabeli': '1606491956689-2ea866880c84',
+  'keema-pav': '1603360946369-dc9bb6258143',
+  'omelette-pav': '1559847844-5315695dadae',
   vada: '1630383249896-424e482df921',
   poha: '1630914947470-8ef0f3f1298c',
   roti: '1601050690597-df0568f70950',
@@ -187,33 +193,54 @@ export const RECIPE_IMAGE_KEYWORDS: Record<string, string> = {
   "karaikudi-tomato-rice": "1536304993881-ff6e9eefa2a6",
 };
 
+function normalizeImageKeyword(keyword: string): string {
+  return keyword.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 function resolveImageId(keyword: string): string | undefined {
-  const normalized = keyword.trim().toLowerCase();
+  const normalized = normalizeImageKeyword(keyword);
   if (!normalized) return undefined;
   if (RECIPE_IMAGE_KEYWORDS[normalized]) return RECIPE_IMAGE_KEYWORDS[normalized];
   for (const part of normalized.split('-')) {
-    if (RECIPE_IMAGE_KEYWORDS[part]) return RECIPE_IMAGE_KEYWORDS[part];
+    if (part && RECIPE_IMAGE_KEYWORDS[part]) return RECIPE_IMAGE_KEYWORDS[part];
   }
+  return undefined;
+}
+
+function buildImageUrl(imageId: string): string {
+  return `${UNSPLASH_BASE_URL}${imageId}${UNSPLASH_QUERY}`;
+}
+
+/** Prefer the longest matching dish keyword so "Paneer Pav Bhaji" maps to pav-bhaji, not paneer. */
+function resolveImageIdFromTitle(normalizedTitle: string): string | undefined {
+  if (RECIPE_IMAGE_KEYWORDS[normalizedTitle]) {
+    return RECIPE_IMAGE_KEYWORDS[normalizedTitle];
+  }
+
+  const sortedKeywords = Object.entries(RECIPE_IMAGE_KEYWORDS).sort(
+    (a, b) => b[0].length - a[0].length,
+  );
+
+  for (const [keyword, imageId] of sortedKeywords) {
+    if (normalizedTitle.includes(keyword)) {
+      return imageId;
+    }
+  }
+
   return undefined;
 }
 
 export function imageForRecipe(title: string, imageKeyword?: string): string {
   const fromKeyword = imageKeyword ? resolveImageId(imageKeyword) : undefined;
   if (fromKeyword) {
-    return `${UNSPLASH_BASE_URL}${fromKeyword}${UNSPLASH_QUERY}`;
+    return buildImageUrl(fromKeyword);
   }
 
-  const normalizedTitle = title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const fromTitleSlug = resolveImageId(normalizedTitle);
-  if (fromTitleSlug) {
-    return `${UNSPLASH_BASE_URL}${fromTitleSlug}${UNSPLASH_QUERY}`;
+  const normalizedTitle = normalizeImageKeyword(title);
+  const fromTitle = resolveImageIdFromTitle(normalizedTitle);
+  if (fromTitle) {
+    return buildImageUrl(fromTitle);
   }
 
-  for (const [keyword, imageId] of Object.entries(RECIPE_IMAGE_KEYWORDS)) {
-    if (normalizedTitle.includes(keyword)) {
-      return `${UNSPLASH_BASE_URL}${imageId}${UNSPLASH_QUERY}`;
-    }
-  }
-
-  return `${UNSPLASH_BASE_URL}${RECIPE_IMAGE_KEYWORDS.curry}${UNSPLASH_QUERY}`;
+  return buildImageUrl(RECIPE_IMAGE_KEYWORDS.curry);
 }

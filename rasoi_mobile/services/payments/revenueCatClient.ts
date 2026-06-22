@@ -94,6 +94,82 @@ async function getCurrentOffering(): Promise<PurchasesOffering | null> {
   return offerings.current ?? offerings.all.default ?? null;
 }
 
+export type RevenueCatStorePricing = {
+  monthly: {
+    priceString: string;
+    subline: string;
+  } | null;
+  yearly: {
+    priceString: string;
+    subline: string;
+    savingsLabel: string | null;
+  } | null;
+  storeReady: boolean;
+};
+
+function formatSavingsLabel(monthlyPrice: number, yearlyPrice: number, currencyCode: string): string | null {
+  if (monthlyPrice <= 0 || yearlyPrice <= 0) return null;
+  const fullYearMonthly = monthlyPrice * 12;
+  const savings = fullYearMonthly - yearlyPrice;
+  if (savings <= 0) return null;
+  const pct = Math.round((savings / fullYearMonthly) * 100);
+  try {
+    const formatted = new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currencyCode,
+      maximumFractionDigits: 0,
+    }).format(savings);
+    return `Save ${pct}% · ${formatted}/year`;
+  } catch {
+    return `Save ${pct}%`;
+  }
+}
+
+/** Live prices from the current RevenueCat offering (Play / App Store). */
+export async function fetchRevenueCatStorePricing(): Promise<RevenueCatStorePricing> {
+  const empty: RevenueCatStorePricing = {
+    monthly: null,
+    yearly: null,
+    storeReady: false,
+  };
+
+  if (!(await configureRevenueCat())) return empty;
+
+  try {
+    const offering = await getCurrentOffering();
+    if (!offering) return empty;
+
+    const monthlyPkg = findPackage(offering, RASOI_PLUS_MONTHLY_PRODUCT_ID);
+    const yearlyPkg = findPackage(offering, RASOI_PLUS_YEARLY_PRODUCT_ID);
+
+    const monthlyPrice = monthlyPkg?.product.price ?? 0;
+    const yearlyPrice = yearlyPkg?.product.price ?? 0;
+    const currencyCode = yearlyPkg?.product.currencyCode ?? monthlyPkg?.product.currencyCode ?? 'INR';
+
+    return {
+      monthly: monthlyPkg
+        ? {
+            priceString: monthlyPkg.product.priceString,
+            subline: `${monthlyPkg.product.priceString} · Cancel anytime`,
+          }
+        : null,
+      yearly: yearlyPkg
+        ? {
+            priceString: yearlyPkg.product.priceString,
+            subline: yearlyPkg.product.pricePerMonthString
+              ? `${yearlyPkg.product.pricePerMonthString}/mo billed yearly`
+              : `${yearlyPkg.product.priceString} per year`,
+            savingsLabel: formatSavingsLabel(monthlyPrice, yearlyPrice, currencyCode),
+          }
+        : null,
+      storeReady: Boolean(monthlyPkg || yearlyPkg),
+    };
+  } catch (error) {
+    console.warn('[RevenueCat] fetchRevenueCatStorePricing failed', error);
+    return empty;
+  }
+}
+
 function findPackage(
   offering: PurchasesOffering,
   productId: PurchaseProductId,

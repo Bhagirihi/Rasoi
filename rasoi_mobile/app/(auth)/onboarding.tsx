@@ -33,14 +33,14 @@ import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { cuisinesToRegion, getKitchenStyleLabel } from '@/utils/kitchenStyles';
 import { dietChoiceToFilter } from '@/utils/storage';
-import { DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions } from '@/utils/notifications';
+import { DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions, isNotificationPermissionGranted } from '@/utils/notifications';
 import { useAppContext } from '@/context/AppContext';
 
 type OnboardingStep = 'diet' | 'cuisine' | 'notifications';
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, isHydrated, isLoggedIn } = useAppContext();
+  const { completeOnboarding, isHydrated, isLoggedIn, hasCompletedOnboarding } = useAppContext();
   const { kitchenStyles, refreshReference } = useReferenceData();
 
   useFocusEffect(
@@ -73,16 +73,33 @@ export default function OnboardingScreen() {
     setStep('cuisine');
   };
 
-  const handleCuisineContinue = () => {
+  const handleCuisineContinue = async () => {
     if (selectedCuisines.length === 0) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    const alreadyGranted =
+      Platform.OS !== 'web' && (await isNotificationPermissionGranted());
+    if (alreadyGranted) {
+      setIsSubmitting(true);
+      try {
+        await finishOnboarding(true);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
     setStep('notifications');
   };
 
   const handleEnableNotifications = async () => {
     setIsSubmitting(true);
     try {
-      const enabled = Platform.OS !== 'web' ? await ensureNotificationPermissions() : false;
+      const enabled =
+        Platform.OS !== 'web'
+          ? (await isNotificationPermissionGranted()) ||
+            (await ensureNotificationPermissions())
+          : false;
       await finishOnboarding(enabled);
     } finally {
       setIsSubmitting(false);
@@ -125,6 +142,10 @@ export default function OnboardingScreen() {
 
   if (isHydrated && !isLoggedIn) {
     return <Redirect href="/(auth)/login" />;
+  }
+
+  if (isHydrated && hasCompletedOnboarding) {
+    return <Redirect href="/(tabs)" />;
   }
 
   if (step === 'notifications') {
@@ -204,6 +225,11 @@ export default function OnboardingScreen() {
 
   return (
     <View style={styles.darkRoot}>
+      <AppSavingOverlay
+        visible={isSubmitting}
+        message="Setting up your Rasoi…"
+        subtitle="Saving tastes and reminders"
+      />
       <LinearGradient
         colors={['#0A0908', '#0F1210', '#0A0908']}
         style={StyleSheet.absoluteFillObject}

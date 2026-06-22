@@ -1,24 +1,20 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Crown, X } from 'lucide-react-native';
+import { Check, Crown, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import PaidPlanFeaturesList from '@/components/paywall/PaidPlanFeaturesList';
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import PaywallActions from '@/components/paywall/PaywallActions';
-import PaywallCompareTable from '@/components/paywall/PaywallCompareTable';
 import SmoothModal from '@/components/ui/SmoothModal';
-import {
-  PAID_PLAN_YEARLY_DETAIL,
-  PAID_PLAN_YEARLY_SAVINGS_LABEL,
-  PLAN_LABELS,
-  type BillingInterval,
-} from '@/constants/plans';
+import { PAID_PLAN_FEATURES, type BillingInterval } from '@/constants/plans';
+import { getEffectivePaymentProviderId } from '@/constants/payments';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import { usePaywall } from '@/hooks/usePaywall';
+import { useRevenueCatPricing } from '@/hooks/useRevenueCatPricing';
 
 let dismissedThisSession = false;
 
@@ -46,6 +42,9 @@ export default function TrialExpiredPaywallModal() {
 
   const [visible, setVisible] = useState(false);
   const paywall = usePaywall({ upgradeToPaid, restorePurchases });
+  const { pricing, loading: pricingLoading, storeReady } = useRevenueCatPricing(
+    paymentsEnabled && getEffectivePaymentProviderId() === 'revenuecat',
+  );
 
   const shouldOffer =
     isHydrated &&
@@ -105,39 +104,55 @@ export default function TrialExpiredPaywallModal() {
     closeModal();
   };
 
+  const billingLabel =
+    Platform.OS === 'ios' ? 'App Store' : Platform.OS === 'android' ? 'Google Play' : 'your store';
+
   return (
-    <SmoothModal visible={visible} onClose={closeModal} variant="center" dismissOnBackdrop>
-      <View style={[styles.card, { paddingBottom: insets.bottom + spacing.lg }]}>
+    <SmoothModal visible={visible} onClose={closeModal} variant="sheet" dismissOnBackdrop>
+      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }]}>
+        <AppSavingOverlay
+          visible={paywall.isBusy}
+          message="Opening checkout…"
+          subtitle={`Confirm in ${billingLabel}`}
+        />
+
+        <View style={styles.handle} />
+
         <View style={styles.headerRow}>
-          <Text style={styles.headerTitle}>Trial ended</Text>
+          <View style={styles.headerTextWrap}>
+            <Text style={styles.headerTitle}>Trial ended</Text>
+            <Text style={styles.headerSub}>Subscribe to keep Rasoi Plus unlocked</Text>
+          </View>
           <Pressable onPress={closeModal} hitSlop={12} accessibilityLabel="Close paywall">
-            <X size={22} color={colors.charcoal} />
+            <X size={22} color={colors.muted} />
           </Pressable>
         </View>
 
-        <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
-          <LinearGradient colors={['#FF6B35', '#FF9933']} style={styles.hero}>
-            <Crown size={24} color={colors.white} />
-            <Text style={styles.heroTitle}>Keep Rasoi Plus</Text>
-            <Text style={styles.heroSub}>
-              Your free trial has ended. Subscribe to keep partner checkout and remove ads.
-            </Text>
-          </LinearGradient>
-
-          <View style={styles.statusCard}>
-            <Text style={styles.statusText}>
-              You&apos;re on {PLAN_LABELS.free} · Partners are locked again
-            </Text>
+        <LinearGradient colors={['#1A1A2E', '#2A2A3E']} style={styles.hero}>
+          <View style={styles.heroIconWrap}>
+            <Crown size={22} color={colors.primary} />
           </View>
-
-          <PaidPlanFeaturesList />
-
-          <Text style={styles.sectionLabel}>Compare plans</Text>
-          <Text style={styles.pricingNote}>
-            {PAID_PLAN_YEARLY_DETAIL} · {PAID_PLAN_YEARLY_SAVINGS_LABEL}
+          <Text style={styles.heroTitle}>Partners are locked again</Text>
+          <Text style={styles.heroSub}>
+            Blinkit, Zepto, Zomato & Swiggy links need an active Rasoi Plus plan.
           </Text>
-          <PaywallCompareTable />
+        </LinearGradient>
 
+        <View style={styles.features}>
+          {PAID_PLAN_FEATURES.slice(0, 3).map((feature) => (
+            <View key={feature} style={styles.featureRow}>
+              <Check size={16} color={colors.primary} strokeWidth={3} />
+              <Text style={styles.featureText}>{feature}</Text>
+            </View>
+          ))}
+        </View>
+
+        {pricingLoading && getEffectivePaymentProviderId() === 'revenuecat' ? (
+          <View style={styles.pricingLoading}>
+            <ActivityIndicator color={colors.primary} />
+            <Text style={styles.pricingLoadingText}>Loading prices from {billingLabel}…</Text>
+          </View>
+        ) : (
           <View style={styles.actions}>
             <PaywallActions
               effectiveTier={effectiveTier}
@@ -150,100 +165,120 @@ export default function TrialExpiredPaywallModal() {
               supportsRestore={paywall.supportsRestore}
               lastError={paywall.lastError}
               yearlyPromoOfferTag={yearlyPromoOfferTag}
+              storePricing={storeReady ? pricing : null}
               onStartTrial={() => undefined}
               onSubscribe={(interval) => void handleSubscribe(interval)}
               onRestore={() => void handleRestore()}
             />
           </View>
+        )}
 
-          <Pressable onPress={closeModal} style={styles.laterBtn}>
-            <Text style={styles.laterText}>Maybe later</Text>
-          </Pressable>
-        </ScrollView>
+        <Pressable onPress={closeModal} style={styles.laterBtn}>
+          <Text style={styles.laterText}>Continue with ads for now</Text>
+        </Pressable>
       </View>
     </SmoothModal>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    maxHeight: '88%',
-    borderRadius: radius.lg,
+  sheet: {
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     backgroundColor: colors.cream,
-    overflow: 'hidden',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    maxHeight: '92%',
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(0,0,0,0.12)',
+    marginBottom: spacing.md,
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
+    gap: spacing.md,
+    marginBottom: spacing.md,
+  },
+  headerTextWrap: {
+    flex: 1,
+    gap: 4,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '800',
     color: colors.charcoal,
+    letterSpacing: -0.3,
+  },
+  headerSub: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: colors.muted,
+    fontWeight: '600',
   },
   hero: {
-    marginHorizontal: spacing.lg,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  heroIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,107,53,0.15)',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
   heroTitle: {
-    marginTop: spacing.sm,
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: '800',
     color: colors.white,
-    textAlign: 'center',
   },
   heroSub: {
-    marginTop: spacing.sm,
+    marginTop: 6,
     fontSize: 13,
     lineHeight: 20,
-    color: 'rgba(255,255,255,0.92)',
-    textAlign: 'center',
+    color: 'rgba(255,255,255,0.82)',
   },
-  statusCard: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: 'rgba(229,57,53,0.08)',
-    padding: spacing.md,
+  features: {
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+    paddingHorizontal: spacing.xs,
   },
-  statusText: {
-    fontSize: 13,
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  featureText: {
+    flex: 1,
+    fontSize: 14,
     lineHeight: 20,
+    color: colors.charcoal,
     fontWeight: '600',
-    color: colors.danger,
-    textAlign: 'center',
   },
-  sectionLabel: {
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.lg,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    color: colors.muted,
+  pricingLoading: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.xl,
   },
-  pricingNote: {
-    marginTop: spacing.xs,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    fontSize: 12,
+  pricingLoadingText: {
+    fontSize: 13,
     color: colors.muted,
+    fontWeight: '600',
   },
   actions: {
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
   },
   laterBtn: {
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
   },
   laterText: {
     fontSize: 14,

@@ -139,11 +139,6 @@ export async function loginAsGuestUser(options?: { name?: string }): Promise<Aut
     supabaseAccessToken = session.access_token;
   } catch (error) {
     authError('loginAsGuest:supabase_anonymous_failed', error);
-    if (isSupabaseDirectMode()) {
-      throw new Error(
-        formatUserFacingApiError(error, 'Guest mode is temporarily unavailable. Please try again.'),
-      );
-    }
     authLog('loginAsGuest:fallback_without_supabase');
   }
 
@@ -169,18 +164,24 @@ export async function loginAsGuestUser(options?: { name?: string }): Promise<Aut
     }
   }
 
-  const response = await apiFetch<AuthResponse>('/api/auth/guest', {
-    method: 'POST',
-    headers: supabaseAccessToken
-      ? {
-          Authorization: `Bearer ${supabaseAccessToken}`,
-        }
-      : undefined,
-    body: JSON.stringify({
-      acceptedTerms: true,
-      termsVersion: CURRENT_TERMS_VERSION,
-      ...(guestName ? { name: guestName } : {}),
-    }),
+  const response = await apiFetch<AuthResponse>(
+    '/api/auth/guest',
+    {
+      method: 'POST',
+      headers: supabaseAccessToken
+        ? {
+            Authorization: `Bearer ${supabaseAccessToken}`,
+          }
+        : undefined,
+      body: JSON.stringify({
+        acceptedTerms: true,
+        termsVersion: CURRENT_TERMS_VERSION,
+        ...(guestName ? { name: guestName } : {}),
+      }),
+    },
+    { timeoutMs: 20_000 },
+  ).catch((error) => {
+    throw new Error(formatUserFacingApiError(error, 'Could not continue as guest. Please try again.'));
   });
 
   if (response.token) {

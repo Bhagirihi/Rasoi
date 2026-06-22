@@ -22,12 +22,13 @@ import { gradients, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
-import { useAppContext } from '@/context/AppContext';
+import { useAppContext, type AuthNavigationResult } from '@/context/AppContext';
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
 import { isEmailDeliveryUnavailableError } from '@/utils/emailDeliveryErrors';
 import { warmApiConnection } from '@/utils/api';
 import {
   getIndianPhoneError,
+  getEmailValidationError,
   isValidEmail,
   isValidPhoneLength,
   normalizeEmail,
@@ -45,7 +46,6 @@ export default function RegisterScreen() {
     sendEmailOtp,
     verifyEmailOtpAndLogin,
     loginAsGuest,
-    hasCompletedOnboarding,
     userName,
     userPhone,
     userEmail,
@@ -66,6 +66,7 @@ export default function RegisterScreen() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [guestName, setGuestName] = useState('');
+  const [guestError, setGuestError] = useState('');
   const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
 
   useEffect(() => {
@@ -124,7 +125,7 @@ export default function RegisterScreen() {
     };
   }, []);
 
-  const navigateAfterAuth = (showTrialWelcome: boolean) => {
+  const navigateAfterAuth = ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
     if (!hasCompletedOnboarding) {
       router.replace('/(auth)/onboarding');
       return;
@@ -158,7 +159,9 @@ export default function RegisterScreen() {
 
     if (!isValidEmail(normalizedEmail)) {
       setFieldError('email');
-      setErrorMessage('Enter a valid email address.');
+      setErrorMessage(
+        getEmailValidationError(normalizedEmail) ?? 'Enter a valid email address.',
+      );
       return null;
     }
 
@@ -220,7 +223,7 @@ export default function RegisterScreen() {
   }) => {
     setBusyAction('guest');
     try {
-      await continueWithPendingEmailVerification({
+      const nav = await continueWithPendingEmailVerification({
         email: details.email,
         flow: 'signup',
         name: details.name,
@@ -228,7 +231,9 @@ export default function RegisterScreen() {
         termsAccepted,
       });
       setEmailDeliveryBlocked(false);
-      navigateAfterAuth(false);
+      if (nav) {
+        navigateAfterAuth(nav);
+      }
     } catch (error) {
       setFieldError('general');
       setErrorMessage(
@@ -261,7 +266,7 @@ export default function RegisterScreen() {
     try {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       authLog('register:verifyOtp', { email: maskEmail(details.email), otpLength: code.length });
-      const showTrialWelcome = await verifyEmailOtpAndLogin(
+      const nav = await verifyEmailOtpAndLogin(
         details.email,
         code,
         details.name,
@@ -270,7 +275,7 @@ export default function RegisterScreen() {
       );
       authLog('register:verifyOtp_success');
       verified = true;
-      navigateAfterAuth(showTrialWelcome);
+      navigateAfterAuth(nav);
     } catch (error) {
       authError('register:verifyOtp_failed', error, { email: maskEmail(details.email) });
       setFieldError('otp');
@@ -309,20 +314,23 @@ export default function RegisterScreen() {
   };
 
   const handleGuest = async () => {
+    setGuestError('');
     setFieldError(null);
     setErrorMessage('');
     setBusyAction('guest');
     try {
       void Haptics.selectionAsync();
+      Keyboard.dismiss();
       const trimmed = guestName.trim();
-      await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
+      const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
       setShowGuestModal(false);
-      navigateAfterAuth(false);
+      navigateAfterAuth(nav);
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Could not continue as guest. Please try again.';
+      setGuestError(message);
       setFieldError('general');
-      setErrorMessage(
-        error instanceof Error ? error.message : 'Could not continue as guest. Please try again.',
-      );
+      setErrorMessage(message);
     } finally {
       setBusyAction(null);
     }
@@ -330,6 +338,7 @@ export default function RegisterScreen() {
 
   const requestGuest = () => {
     setGuestName('');
+    setGuestError('');
     setShowGuestModal(true);
   };
 
@@ -382,9 +391,13 @@ export default function RegisterScreen() {
         visible={showGuestModal}
         name={guestName}
         onChangeName={setGuestName}
-        onClose={() => setShowGuestModal(false)}
+        onClose={() => {
+          setShowGuestModal(false);
+          setGuestError('');
+        }}
         onContinue={() => void handleGuest()}
         busy={busyAction === 'guest'}
+        errorMessage={guestError}
       />
       <ScrollViewWithFloatingIndicator
           {...scrollIndicator}

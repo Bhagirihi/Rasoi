@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 export type PaymentProviderId = 'stub' | 'revenuecat' | 'razorpay';
 
 export type RasoiPlusCatalogProductId = 'rasoi_plus_monthly' | 'rasoi_plus_yearly';
@@ -49,6 +51,16 @@ export function getConfiguredPaymentProviderId(): PaymentProviderId {
     return configured;
   }
   return 'stub';
+}
+
+/** Actual provider at runtime (RevenueCat falls back to stub when API keys are missing). */
+export function getEffectivePaymentProviderId(): PaymentProviderId {
+  const id = getConfiguredPaymentProviderId();
+  if (id !== 'revenuecat') return id;
+
+  const platform = Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'web';
+  if (platform === 'web') return 'stub';
+  return getRevenueCatApiKey(platform).length > 0 ? 'revenuecat' : 'stub';
 }
 
 export const PAYMENT_PROVIDER_LABELS: Record<PaymentProviderId, string> = {

@@ -18,6 +18,8 @@ import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import { usePaywall } from '@/hooks/usePaywall';
+import { useRevenueCatPricing } from '@/hooks/useRevenueCatPricing';
+import { getEffectivePaymentProviderId } from '@/constants/payments';
 import { useTrialClock } from '@/hooks/useTrialClock';
 import { getTrialNudgeCopy, getTrialNudgeKind, type TrialNudgeKind } from '@/utils/trialNudge';
 import { markTrialNudgeShown, wasTrialNudgeShown } from '@/utils/trialNudgeStorage';
@@ -44,6 +46,9 @@ export default function TrialEndingSoonModal() {
 
   const { trialTimeLabel } = useTrialClock(trialStartedAt, effectiveTier, trialBonusDays);
   const paywall = usePaywall({ upgradeToPaid, restorePurchases });
+  const { pricing, storeReady } = useRevenueCatPricing(
+    paymentsEnabled && getEffectivePaymentProviderId() === 'revenuecat',
+  );
 
   const [visible, setVisible] = useState(false);
   const [activeNudge, setActiveNudge] = useState<TrialNudgeKind | null>(null);
@@ -180,6 +185,7 @@ export default function TrialEndingSoonModal() {
               supportsRestore={paywall.supportsRestore}
               lastError={paywall.lastError}
               yearlyPromoOfferTag={yearlyPromoOfferTag}
+              storePricing={storeReady ? pricing : null}
               onStartTrial={() => undefined}
               onSubscribe={(interval) => void handleSubscribe(interval)}
               onRestore={() => void handleRestore()}

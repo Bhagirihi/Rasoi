@@ -66,6 +66,18 @@ function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean })
   };
 }
 
+function applyFetchFilters(recipes: Recipe[], filters?: RecipeFetchFilters): Recipe[] {
+  const dietType =
+    filters?.dietType ??
+    (filters?.dietChoice ? dietChoiceToDietType(filters.dietChoice) : undefined);
+
+  if (!dietType) {
+    return recipes;
+  }
+
+  return recipes.filter((recipe) => recipe.dietType === dietType);
+}
+
 async function fetchPublishedRecipesFromSupabase(filters?: RecipeFetchFilters): Promise<Recipe[]> {
   let query = getRasoiDb().from('Recipe').select('*').eq('published', true);
 
@@ -92,7 +104,7 @@ async function fetchPublishedRecipesFromSupabase(filters?: RecipeFetchFilters): 
     throw new Error(error.message);
   }
 
-  return (data as DbRecipeRow[]).map((row) => mapRecipeRow(row));
+  return applyFetchFilters((data as DbRecipeRow[]).map((row) => mapRecipeRow(row)), filters);
 }
 
 async function fetchRecipeByIdFromSupabase(id: string): Promise<Recipe> {
@@ -187,7 +199,7 @@ export async function fetchPublishedRecipes(filters?: RecipeFetchFilters): Promi
   }
 
   const recipes = await apiFetch<ApiRecipe[]>(`/api/recipes${buildRecipesQuery(filters)}`);
-  return recipes.map(mapApiRecipe);
+  return applyFetchFilters(recipes.map(mapApiRecipe), filters);
 }
 
 export async function fetchRecipeById(id: string): Promise<Recipe> {
