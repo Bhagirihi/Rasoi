@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 import { useAppContext } from '@/context/AppContext';
-import { requestUserLocation } from '@/utils/location';
+import { ensureLocationPermissions, requestUserLocation } from '@/utils/location';
 
 /** Sync GPS city to backend once per session when logged in and location is missing. */
 export function useSyncUserLocation(enabled = true) {
@@ -28,10 +28,12 @@ export function useRefreshUserLocation() {
   const { syncUserLocation } = useAppContext();
 
   return useCallback(async () => {
-    const snapshot = await requestUserLocation();
-    if (!snapshot) {
+    const granted = await ensureLocationPermissions();
+    if (!granted) {
       return { ok: false as const, reason: 'permission_denied' as const };
     }
+
+    const snapshot = await requestUserLocation();
     if (snapshot.latitude == null || snapshot.longitude == null) {
       return { ok: false as const, reason: 'unavailable' as const };
     }

@@ -1,28 +1,64 @@
-# Rasoi Mobile — Device UI Test Cases
+# Rasoi Mobile — Device UI Test Cases (v2)
 
-Full module coverage on a **real Android device** with Gmail OTP auth (`dvesp1901+{timestamp}@gmail.com`).
+Full module coverage on a **real Android device** with Gmail OTP auth.
+
+**Auth email pattern:** `dvesp1901+{unix_timestamp}@gmail.com`  
+**OTP source:** Gmail inbox (`Rasoi sign-in code`) via IMAP or Gmail MCP  
+**Stability:** Each TC must pass **3 consecutive runs** (`npm run qa:stability`)
+
+---
+
+## UI standard rules (automated)
+
+| Rule ID | Check | Pass criteria |
+|---------|-------|---------------|
+| UI-01 | No crash/redbox | No Metro redbox, crash dialog, or "Unable to load script" |
+| UI-02 | Tab bar complete | All 5 tabs visible on main screens: Home, Recipe, Pantry, Saved, Settings |
+| UI-03 | Touch targets | Tab bar items ≥ 48px height (Material minimum) |
+| UI-04 | Safe area | No tappable controls under status bar (y < 80px) |
+| UI-05 | Screen identity | Module-specific `testID` screen marker visible |
+| UI-06 | Content loaded | Module shows expected headings, cards, or empty-state copy |
+| UI-07 | Keyboard dismiss | Inputs hide keyboard before primary CTA tap |
+| UI-08 | Back navigation | Recipe detail and modals return to previous screen |
+
+---
 
 ## Test matrix
 
-| ID | Module | Steps | Expected | Maestro |
-|----|--------|-------|----------|---------|
-| TC-001 | Legal consent | Fresh install → accept terms | `screen-login` visible | `_bootstrap.yaml` |
-| TC-002 | Register — details | Name, phone, email → Send code → accept terms modal | OTP step visible | `01-register-send-otp.yaml` |
-| TC-003 | Register — OTP | Enter Gmail OTP → Create account | Onboarding or trial/home | `02-register-verify.yaml` |
-| TC-004 | Onboarding | Veg diet → cuisine → skip notify | Reaches tabs or trial welcome | `02-register-verify.yaml` |
-| TC-005 | Trial welcome | Tap continue (if shown) | `screen-home` visible | `02-register-verify.yaml` |
-| TC-006 | Home | Open Home tab | Recipe content loads, `screen-home` | `03-home.yaml` |
-| TC-007 | Recipes | Open Recipes tab | `screen-recipes-tab`, first card visible | `04-recipes-tab.yaml` |
-| TC-008 | Recipe detail | Tap first recipe card | `screen-recipe`, title + image | `05-recipe-detail.yaml` |
-| TC-009 | Save recipe | Tap Save on detail → open Saved tab | Recipe appears in saved list | `05-recipe-detail.yaml` |
-| TC-010 | Saved | Open Saved tab | `screen-saved` loads | `06-saved-tab.yaml` |
-| TC-011 | Pantry | Open Pantry tab | `screen-pantry` loads | `07-pantry-tab.yaml` |
-| TC-012 | Settings | Open Settings → theme toggle | Light/dark switch works | `08-settings.yaml` |
-| TC-013 | Logout | Settings → Log out → confirm | Returns to `screen-login` | `09-logout.yaml` |
-| TC-014 | Login — email | Enter registered email → Send code | OTP step visible | `10-login-send-otp.yaml` |
-| TC-015 | Login — OTP | Enter Gmail OTP → Sign in | `screen-home` visible | `11-login-verify.yaml` |
-| TC-016 | Login navigation | From login → Create account link | `screen-register` visible | `01-register-send-otp.yaml` |
-| TC-017 | Register navigation | From register → Log in link | `screen-login` visible | Manual / partial |
+| ID | Module | Preconditions | Steps | Expected | Automation |
+|----|--------|---------------|-------|----------|------------|
+| TC-001 | Legal consent | Fresh install | Accept terms checkbox → Continue | `screen-login` visible, UI-01/04/05 | `_legal-consent.yaml` / adb |
+| TC-002 | Register — form | On login screen | Tap Create account → fill name, phone, email → Send code → accept terms modal | OTP step visible, `screen-register` | `01-register-send-otp.yaml` |
+| TC-003 | Register — OTP | TC-002 done | Fetch Gmail OTP → enter code → Create account | Onboarding or home reached | `02-register-verify.yaml` / adb |
+| TC-004 | Onboarding — diet | Post-register | Select Veg → Continue | Cuisine step visible | `02-register-verify.yaml` |
+| TC-005 | Onboarding — cuisine | TC-004 done | Select cuisine → Save & continue | Notifications or trial step | `02-register-verify.yaml` |
+| TC-006 | Onboarding — notify | TC-005 done | Skip / Maybe later | Trial welcome or home | `_onboarding.yaml` |
+| TC-007 | Trial welcome | New account | Tap Continue (if shown) | `screen-home` visible | `02-register-verify.yaml` |
+| TC-008 | Home | Logged in | Open Home tab | Recipe content, greeting, UI-02/06 | `03-home.yaml` |
+| TC-009 | Recipes tab | Logged in | Open Recipe tab | `screen-recipes-tab`, dish count, first card | `04-recipes-tab.yaml` |
+| TC-010 | Recipe search | On recipes tab | Type in search field | Filtered results or empty state | Manual / partial |
+| TC-011 | Recipe detail | On recipes tab | Tap first recipe card | `screen-recipe`, title, image, ingredients | `05-recipe-detail.yaml` |
+| TC-012 | Save recipe | On recipe detail | Tap Save → open Saved tab | Recipe appears in saved list | `05-recipe-detail.yaml` |
+| TC-013 | Saved tab | Logged in | Open Saved tab | `screen-saved` loads, UI-02 | `06-saved-tab.yaml` |
+| TC-014 | Pantry tab | Logged in | Open Pantry tab | `screen-pantry` loads, add/remove UI | `07-pantry-tab.yaml` |
+| TC-015 | Settings | Logged in | Open Settings | Profile, theme, preferences visible | `08-settings.yaml` |
+| TC-016 | Settings — theme | On settings | Toggle Light ↔ Dark | Theme switches without crash | `08-settings.yaml` |
+| TC-017 | Logout | Logged in | Settings → Log out → confirm | `screen-login` visible | `09-logout.yaml` |
+| TC-018 | Login — email | Post-logout | Enter registered email → Send code | OTP step visible | `10-login-send-otp.yaml` |
+| TC-019 | Login — OTP | TC-018 done | Fetch Gmail OTP → Sign in | `screen-home` visible | `11-login-verify.yaml` |
+| TC-020 | Login navigation | On login | Tap Create account link | `screen-register` visible | adb / `01-register-send-otp.yaml` |
+| TC-021 | Register navigation | On register | Tap Log in link | `screen-login` visible | adb |
+
+### Guest & account deletion
+
+| ID | Module | Preconditions | Steps | Expected | Automation |
+|----|--------|---------------|-------|----------|------------|
+| TC-GUEST-001 | Legal → login | Fresh install | Accept terms | `screen-login` visible | `run-guest-delete-qa.py` |
+| TC-GUEST-002 | Explore as Guest | On login | Guest → continue → onboarding | `screen-home`, greeting shows Guest | `01-guest-smoke.yaml` / adb |
+| TC-GUEST-003 | Guest tab navigation | Guest on home | Visit Recipe, Pantry, Saved, Settings | Each tab loads | `run-guest-delete-qa.py` |
+| TC-GUEST-004 | Delete guest account | Guest in Settings | Privacy → Delete account → confirm | `screen-login` visible | `12-guest-delete-account.yaml` / adb |
+
+---
 
 ## Auth test email
 
@@ -30,7 +66,9 @@ Full module coverage on a **real Android device** with Gmail OTP auth (`dvesp190
 dvesp1901+{unix_timestamp}@gmail.com
 ```
 
-Generated automatically by `scripts/run-full-device-qa.sh`. OTP fetched via Gmail IMAP (`scripts/fetch-otp.py`).
+Generated by `scripts/run-full-device-qa.sh`, `scripts/run-new-qa.py`, and `scripts/run-stability-3x.py`.
+
+---
 
 ## Running
 
@@ -38,23 +76,34 @@ Generated automatically by `scripts/run-full-device-qa.sh`. OTP fetched via Gmai
 cd rasoi_mobile
 
 # Build & install debug APK (first time or after native changes)
-npm run android
+npm run android:apk && adb install -r dist/rasoi-debug.apk
 
-# Preflight checks
+# Start Metro (required for debug builds)
+npx expo start --dev-client
+
+# Preflight
 npm run qa:preflight
 
-# Full module QA (register → all tabs → logout → login)
+# Full module QA (register → all tabs → logout → login) — single pass
+npm run qa:new
+
+# Maestro full flow (alternative)
 npm run qa:full
 
-# Individual suites
-npm run qa:smoke      # TC-001 + guest tab navigation (legacy)
-npm run qa:auth       # TC-002–TC-015 register + login OTP flows
-npm run qa:modules    # TC-006–TC-012 (requires logged-in session)
+# Guest + delete account QA
+npm run qa:guest-delete
+
+# 3× stability on all TCs
+npm run qa:stability
 ```
+
+---
 
 ## Evidence
 
-JUnit XML and screenshots saved under `rasoi_mobile/.qa/` (gitignored).
+JUnit XML, UI dumps, and screenshots under `rasoi_mobile/.qa/` (gitignored).
+
+---
 
 ## Severity guide
 
@@ -63,17 +112,4 @@ JUnit XML and screenshots saved under `rasoi_mobile/.qa/` (gitignored).
 | Critical | Crash, blank screen, cannot login/register, zero recipes when API has data |
 | Major | OTP never arrives, broken navigation, images fail to load |
 | Minor | Alignment, slow load, copy typo |
-
-## Stability requirement
-
-Each test case must pass **3 consecutive runs** on a real device (`npm run qa:stability`).
-
-## UI standard rules (automated checks)
-
-| Rule | Description |
-|------|-------------|
-| No crash/redbox | No Metro redbox or crash dialog |
-| Tab bar complete | All 5 tabs when on main screens |
-| Touch targets | Tab items ≥48px height |
-| Safe area | No tappable controls under status bar |
-| Screen content | Module-specific headings/data visible |
+| Cosmetic | Color nuance, icon size |

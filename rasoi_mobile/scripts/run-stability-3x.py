@@ -314,7 +314,10 @@ def check_ui_standards(context: str) -> list[UiCheck]:
         checks.append(UiCheck("Home content loaded", bool(re.search(r"Good Morning|Good Afternoon|Good Evening|Good Night|LATE-NIGHT|RECIPES", text, re.I))))
 
     if context == "recipes":
-        checks.append(UiCheck("Recipes list loaded", bool(re.search(r"\d+ dishes|Recipes", text))))
+        checks.append(UiCheck(
+            "Recipes list loaded",
+            bool(re.search(r"screen-recipes-tab|Recipes|recipe-card-first|\d+ dishes", text)),
+        ))
 
     if context == "recipe_detail":
         checks.append(UiCheck("Recipe detail loaded", bool(re.search(r"min|Ingredients|Save", text))))
@@ -541,13 +544,23 @@ def flow_onboarding_to_home() -> bool:
     )
 
 
+def wait_for_home(timeout: int = 60) -> bool:
+    return wait_for(
+        r"screen-home|Good Morning|Good Afternoon|Good Evening|Good Night|LATE-NIGHT|View Rasoi Plus",
+        timeout,
+    )
+
+
 def flow_register_verify_otp(otp: str) -> bool:
     if not wait_for(r"Verify your email", 30):
         return False
     enter_otp_code(otp, "register-otp-input")
     tap_test_id("register-verify-otp") or tap_text_contains("Create account")
-    time.sleep(8)
-    return flow_onboarding_to_home()
+    time.sleep(3)
+    if flow_onboarding_to_home():
+        return True
+    # Grace period — onboarding/trial can finish after primary wait
+    return wait_for_home(45)
 
 
 def flow_login_send_otp(email: str) -> bool:
@@ -563,31 +576,86 @@ def flow_login_send_otp(email: str) -> bool:
     time.sleep(0.5)
     tap_test_id("login-send-otp") or tap_text_contains("Send sign-in code")
     time.sleep(4)
-    return wait_for(r"Check your email|Verify|Enter the code", 60)
+    return wait_for(r"Check your email|Enter the code", 60)
 
 
 def flow_login_verify_otp(otp: str) -> bool:
-    if not wait_for(r"Check your email|Verify|code", 15):
+    if not wait_for(r"Check your email|Enter the code", 15):
         return False
     enter_otp_code(otp, "login-otp-input")
     tap_test_id("login-verify-otp") or tap_text_contains("Sign in")
-    time.sleep(8)
-    return wait_for(r"Good Morning|Good Afternoon|Good Evening|Good Night|LATE-NIGHT|Welcome back", 30)
+    time.sleep(4)
+    if wait_for_home(30):
+        return True
+    # Post-login trial welcome for returning accounts
+    if wait_for(r"trial|Rasoi Plus|Start your", 12):
+        tap_test_id("trial-continue") or tap_text_contains("Continue") or tap_xy(540, 1800)
+        time.sleep(4)
+    return wait_for_home(30)
 
 
 def flow_logout() -> bool:
     tap_test_id("tab-settings") or tap_desc("Settings")
     time.sleep(2)
-    for _ in range(4):
-        adb("shell", "input", "swipe", "540", "1800", "540", "400", "300")
-        time.sleep(0.5)
-        if re.search(r"Log out", ui_text(), re.I):
+    for _ in range(8):
+        adb("shell", "input", "swipe", "540", "1800", "540", "300", "280")
+        time.sleep(0.4)
+        if tap_test_id("settings-logout"):
             break
-    tap_test_id("settings-logout") or tap_text_contains("Log out")
-    time.sleep(1)
-    tap_text_exact("Log out") or tap_text_contains("Log out")
-    time.sleep(3)
+        if re.search(r"Log out", ui_text(), re.I) and tap_text_contains("Log out"):
+            break
+    else:
+        tap_test_id("settings-logout") or tap_text_contains("Log out")
+    time.sleep(1.5)
+    if wait_for(r"Log out\?", 8):
+        tap_test_id("settings-logout-confirm") or tap_text_exact("Log out")
+        time.sleep(3)
     return wait_for(r"Welcome back", 25)
+
+
+def flow_delete_guest_account() -> bool:
+    tap_test_id("tab-settings") or tap_desc("Settings")
+    time.sleep(2)
+    for _ in range(12):
+        adb("shell", "input", "swipe", "540", "1800", "540", "250", "300")
+        time.sleep(0.4)
+        if tap_test_id("settings-delete-account"):
+            break
+        if re.search(r"Delete account", ui_text(), re.I) and tap_text_contains("Delete account"):
+            break
+    else:
+        tap_test_id("settings-delete-account") or tap_text_contains("Delete account")
+    time.sleep(1.5)
+    if wait_for(r"Delete guest session", 10):
+        tap_test_id("settings-delete-confirm") or tap_text_exact("Delete")
+        time.sleep(4)
+    return wait_for(r"Welcome back", 30)
+
+
+def run_maestro_flow(flow_path: str, env: dict[str, str] | None = None) -> bool:
+    """Run a Maestro YAML flow; returns True on success."""
+    maestro = os.environ.get("MAESTRO_BIN", "maestro")
+    cmd = [maestro, "test"]
+    for key, val in (env or {}).items():
+        cmd.extend(["-e", f"{key}={val}"])
+    cmd.append(str(ROOT / flow_path))
+    proc = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        cwd=str(ROOT),
+        env={
+            **os.environ,
+            "JAVA_HOME": os.environ.get(
+                "JAVA_HOME",
+                "/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home",
+            ),
+        },
+    )
+    if proc.returncode != 0:
+        tail = (proc.stdout + proc.stderr)[-800:]
+        print(f"  Maestro failed: {tail}", file=sys.stderr)
+    return proc.returncode == 0
 
 
 def fetch_otp_from_gmail(max_wait: int = 120, known_old: str | None = None) -> str | None:
@@ -602,6 +670,10 @@ def fetch_otp_from_gmail(max_wait: int = 120, known_old: str | None = None) -> s
             capture_output=True,
             text=True,
             cwd=str(ROOT),
+            env={
+                **os.environ,
+                "QA_OTP_KNOWN_OLD": known_old or os.environ.get("QA_OTP_KNOWN_OLD", ""),
+            },
         )
         otp = proc.stdout.strip() if proc.returncode == 0 else ""
         if otp and otp != known_old:

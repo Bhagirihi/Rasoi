@@ -525,6 +525,7 @@ export default function SettingsScreen() {
             label="Delete account"
             value={isGuest ? 'Guest session' : 'Permanent'}
             onPress={handleDeleteAccount}
+            testID={testIds.settingsDeleteAccount}
             destructive
             isLast
           />

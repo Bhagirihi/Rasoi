@@ -13,6 +13,7 @@ export type AppDialogButton = {
   text: string;
   style?: AppDialogButtonStyle;
   onPress?: () => void;
+  testID?: string;
 };
 
 export type AppDialogOptions = {

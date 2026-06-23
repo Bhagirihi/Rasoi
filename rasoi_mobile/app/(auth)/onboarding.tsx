@@ -5,7 +5,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bell,
-  Info,
+  MapPin,
 } from 'lucide-react-native';
 import { useRef, useState, useCallback, useEffect } from 'react';
 import {
@@ -21,6 +21,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CuisinePreferenceList from '@/components/CuisinePreferenceList';
 import DietPreferenceList from '@/components/DietPreferenceList';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
+import PermissionOnboardingStep, { PermissionIconBadge } from '@/components/auth/PermissionOnboardingStep';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   CuisineId,
@@ -34,13 +35,18 @@ import { useReferenceData } from '@/context/ReferenceContext';
 import { cuisinesToRegion, getKitchenStyleLabel } from '@/utils/kitchenStyles';
 import { dietChoiceToFilter } from '@/utils/storage';
 import { DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions, isNotificationPermissionGranted } from '@/utils/notifications';
+import {
+  ensureLocationPermissions,
+  isLocationPermissionGranted,
+  requestUserLocation,
+} from '@/utils/location';
 import { useAppContext } from '@/context/AppContext';
 
-type OnboardingStep = 'diet' | 'cuisine' | 'notifications';
+type OnboardingStep = 'diet' | 'cuisine' | 'notifications' | 'location';
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, isHydrated, isLoggedIn, hasCompletedOnboarding } = useAppContext();
+  const { completeOnboarding, isHydrated, isLoggedIn, hasCompletedOnboarding, syncUserLocation } = useAppContext();
   const { kitchenStyles, refreshReference } = useReferenceData();
 
   useFocusEffect(
@@ -52,6 +58,7 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<OnboardingStep>('diet');
   const [selectedDiet, setSelectedDiet] = useState<DietChoice | null>(null);
   const [selectedCuisines, setSelectedCuisines] = useState<CuisineId[]>([]);
+  const [notificationsPreference, setNotificationsPreference] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const finishingRef = useRef(false);
 
@@ -73,23 +80,36 @@ export default function OnboardingScreen() {
     setStep('cuisine');
   };
 
+  const proceedToLocationOrFinish = async (notificationsEnabled: boolean) => {
+    setNotificationsPreference(notificationsEnabled);
+
+    const locationGranted =
+      Platform.OS === 'web' || (await isLocationPermissionGranted());
+    if (!locationGranted) {
+      setStep('location');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await finishOnboarding(notificationsEnabled);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleCuisineContinue = async () => {
     if (selectedCuisines.length === 0) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    const alreadyGranted =
-      Platform.OS !== 'web' && (await isNotificationPermissionGranted());
-    if (alreadyGranted) {
-      setIsSubmitting(true);
-      try {
-        await finishOnboarding(true);
-      } finally {
-        setIsSubmitting(false);
-      }
+    const notificationsGranted =
+      Platform.OS === 'web' || (await isNotificationPermissionGranted());
+    if (!notificationsGranted) {
+      setStep('notifications');
       return;
     }
 
-    setStep('notifications');
+    await proceedToLocationOrFinish(true);
   };
 
   const handleEnableNotifications = async () => {
@@ -100,7 +120,7 @@ export default function OnboardingScreen() {
           ? (await isNotificationPermissionGranted()) ||
             (await ensureNotificationPermissions())
           : false;
-      await finishOnboarding(enabled);
+      await proceedToLocationOrFinish(enabled);
     } finally {
       setIsSubmitting(false);
     }
@@ -109,7 +129,35 @@ export default function OnboardingScreen() {
   const handleSkipNotifications = async () => {
     setIsSubmitting(true);
     try {
-      await finishOnboarding(false);
+      await proceedToLocationOrFinish(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEnableLocation = async () => {
+    setIsSubmitting(true);
+    try {
+      const granted =
+        Platform.OS !== 'web'
+          ? (await isLocationPermissionGranted()) || (await ensureLocationPermissions())
+          : false;
+      if (granted) {
+        const snapshot = await requestUserLocation();
+        if (snapshot?.latitude != null && snapshot.longitude != null) {
+          await syncUserLocation(snapshot);
+        }
+      }
+      await finishOnboarding(notificationsPreference);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSkipLocation = async () => {
+    setIsSubmitting(true);
+    try {
+      await finishOnboarding(notificationsPreference);
     } finally {
       setIsSubmitting(false);
     }
@@ -150,76 +198,65 @@ export default function OnboardingScreen() {
 
   if (step === 'notifications') {
     return (
-      <View style={styles.darkRoot}>
-        <AppSavingOverlay
-          visible={isSubmitting}
-          message="Setting up your Rasoi…"
-          subtitle="Saving tastes and reminders"
-        />
-        <LinearGradient
-          colors={['#0A0908', '#0F1210', '#0A0908']}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <View style={styles.glowGreen} />
+      <PermissionOnboardingStep
+        isSubmitting={isSubmitting}
+        onEnable={handleEnableNotifications}
+        onSkip={handleSkipNotifications}
+        skipTestID={testIds.onboardingSkipNotify}
+        title={
+          <>
+            Never ask <Text style={styles.notifyHighlight}>&quot;What&apos;s for dinner?&quot;</Text>{' '}
+            again.
+          </>
+        }
+        subtitle={
+          <>
+            Rasoi works best with daily nudges at{' '}
+            <Text style={styles.notifyBold}>{DAILY_REMINDER_TIME_LABEL}</Text>. Enable notifications
+            to unlock dinner inspiration.
+          </>
+        }
+        icon={
+          <PermissionIconBadge>
+            <Bell size={36} color={colors.primary} fill={colors.primary} />
+          </PermissionIconBadge>
+        }
+        enableLabel="Enable & Continue"
+        enableIcon={<Bell size={18} color={colors.charcoal} />}
+        infoText="Required for Rasoi's smart curation"
+      />
+    );
+  }
 
-        <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={testIds.screenOnboarding}>
-          <View style={styles.header}>
-            <Text style={styles.brand}>Rasoi</Text>
-          </View>
-
-          <ScrollViewWithFloatingIndicator
-            {...scrollIndicator}
-            contentContainerStyle={styles.notifyContent}
-          >
-            <Text style={styles.notifyTitle}>
-              Never ask <Text style={styles.notifyHighlight}>&quot;What&apos;s for dinner?&quot;</Text>{' '}
-              again.
-            </Text>
-            <Text style={styles.notifySubtitle}>
-              Rasoi works best with daily nudges at{' '}
-              <Text style={styles.notifyBold}>{DAILY_REMINDER_TIME_LABEL}</Text>. Enable notifications
-              to unlock dinner inspiration.
-            </Text>
-
-            <View style={styles.bellWrap}>
-              <View style={styles.bellRingOuter} />
-              <View style={styles.bellRingInner} />
-              <View style={styles.bellDotGreen} />
-              <View style={styles.bellDotOrange} />
-              <View style={styles.bellCircle}>
-                <Bell size={36} color={colors.primary} fill={colors.primary} />
-              </View>
-            </View>
-          </ScrollViewWithFloatingIndicator>
-
-          <View style={styles.notifyFooter}>
-            <Pressable
-              onPress={handleEnableNotifications}
-              disabled={isSubmitting}
-              style={[styles.notifyButtonWrap, isSubmitting && styles.buttonDisabled]}
-            >
-              <LinearGradient
-                colors={[...gradients.cta]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.notifyButton}
-              >
-                <Text style={styles.notifyButtonText}>Enable & Continue</Text>
-                <Bell size={18} color={colors.charcoal} />
-              </LinearGradient>
-            </Pressable>
-
-            <View style={styles.infoPill}>
-              <Info size={14} color={colors.white} />
-              <Text style={styles.infoPillText}>Required for Rasoi&apos;s smart curation</Text>
-            </View>
-
-            <Pressable onPress={handleSkipNotifications} disabled={isSubmitting} testID={testIds.onboardingSkipNotify}>
-              <Text style={styles.skipNotify}>Maybe later</Text>
-            </Pressable>
-          </View>
-        </SafeAreaView>
-      </View>
+  if (step === 'location') {
+    return (
+      <PermissionOnboardingStep
+        isSubmitting={isSubmitting}
+        onEnable={handleEnableLocation}
+        onSkip={handleSkipLocation}
+        skipTestID={testIds.onboardingSkipLocation}
+        savingSubtitle="Saving your city for local picks"
+        title={
+          <>
+            Discover what&apos;s cooking in{' '}
+            <Text style={styles.notifyHighlight}>your city</Text>.
+          </>
+        }
+        subtitle={
+          <>
+            Allow location so Rasoi can surface local recipes and help sponsors reach home cooks
+            near you.
+          </>
+        }
+        icon={
+          <PermissionIconBadge>
+            <MapPin size={36} color={colors.primary} fill={colors.primary} />
+          </PermissionIconBadge>
+        }
+        enableLabel="Enable & Continue"
+        enableIcon={<MapPin size={18} color={colors.charcoal} />}
+        infoText="We only use your city — never track you in the background"
+      />
     );
   }
 
@@ -304,7 +341,7 @@ export default function OnboardingScreen() {
               {...scrollIndicator}
               contentContainerStyle={styles.cuisineContent}
             >
-              <Text style={styles.cuisineEyebrow}>Step 2 of 3</Text>
+              <Text style={styles.cuisineEyebrow}>Step 2 of 4</Text>
               <Text style={styles.darkTitle}>Shape your Rasoi feed</Text>
               <Text style={styles.darkSubtitle}>
                 Which kitchen styles do you actually cook? Choose every vibe that feels like

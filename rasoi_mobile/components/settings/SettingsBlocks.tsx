@@ -271,6 +271,7 @@ export function SettingsNavRow({
   onPress,
   destructive = false,
   isLast = false,
+  testID,
 }: {
   icon: LucideIcon;
   iconBg: string;
@@ -280,11 +281,13 @@ export function SettingsNavRow({
   onPress: () => void;
   destructive?: boolean;
   isLast?: boolean;
+  testID?: string;
 }) {
   const { colors: themeColors } = useTheme();
 
   return (
     <Pressable
+      testID={testID}
       onPress={onPress}
       style={({ pressed }) => [
         styles.row,

@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import SmoothModal from '@/components/ui/SmoothModal';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 import {
   useAppDialog,
   type AppDialogButton,
@@ -54,6 +55,14 @@ export default function AppDialogHost() {
           {orderedButtons.map((button, index) => (
             <Pressable
               key={`${button.text}-${index}`}
+              testID={
+                button.testID ??
+                (content.title === 'Log out?' && button.style === 'destructive'
+                  ? testIds.settingsLogoutConfirm
+                  : content.title === 'Delete guest session?' && button.text === 'Delete'
+                    ? testIds.settingsDeleteConfirm
+                    : undefined)
+              }
               onPress={() => handlePress(button)}
               style={({ pressed }) => [
                 styles.button,

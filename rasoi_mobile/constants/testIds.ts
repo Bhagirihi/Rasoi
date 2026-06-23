@@ -43,6 +43,7 @@ export const testIds = {
   onboardingCuisineFirst: 'onboarding-cuisine-first',
   onboardingCuisineContinue: 'onboarding-cuisine-continue',
   onboardingSkipNotify: 'onboarding-skip-notify',
+  onboardingSkipLocation: 'onboarding-skip-location',
 
   trialContinue: 'trial-continue',
 
@@ -55,4 +56,6 @@ export const testIds = {
 
   settingsLogout: 'settings-logout',
   settingsLogoutConfirm: 'settings-logout-confirm',
+  settingsDeleteAccount: 'settings-delete-account',
+  settingsDeleteConfirm: 'settings-delete-confirm',
 } as const;
