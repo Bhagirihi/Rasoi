@@ -13,6 +13,10 @@
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/gmail-imap/run.sh",
       "args": []
     },
+    "gmail-dvesp": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/gmail-dvesp/run.sh",
+      "args": []
+    },
     "hostinger": {
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/hostinger/run.sh",
       "args": []
@@ -32,6 +36,33 @@
     "google-play": {
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/google-play/run.sh",
       "args": []
+    },
+    "reactotron": {
+      "command": "npx",
+      "args": ["-y", "reactotron-mcp"],
+      "env": {
+        "REACTOTRON_PROXY_PORT": "9091",
+        "REACTOTRON_PORT": "9090"
+      }
+    },
+    "radon": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "radon-mcp@latest",
+        "rasoi_mobile"
+      ]
+    },
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "android-mcp": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/android-mcp/run.sh",
+      "args": []
+    },
+    "mobile-mcp": {
+      "command": "npx",
+      "args": ["-y", "@mobilenext/mobile-mcp@latest"]
     }
   }
 }

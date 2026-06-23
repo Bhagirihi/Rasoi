@@ -4,6 +4,7 @@ import { Check } from 'lucide-react-native';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { authStyles as styles } from '@/components/auth/authStyles';
+import { testIds } from '@/constants/testIds';
 import {
   LEGAL_URLS,
   PRIVACY_HIGHLIGHTS,
@@ -79,7 +80,7 @@ export default function TermsAcceptanceModal({
           </ScrollView>
 
           <View style={localStyles.footer}>
-            <Pressable onPress={onToggleChecked} style={localStyles.checkRow}>
+            <Pressable onPress={onToggleChecked} style={localStyles.checkRow} testID={testIds.registerTermsCheckbox}>
               <View style={[localStyles.checkbox, checked && localStyles.checkboxChecked]}>
                 {checked ? <Check size={14} color={colors.white} strokeWidth={3} /> : null}
               </View>
@@ -92,6 +93,7 @@ export default function TermsAcceptanceModal({
               onPress={onContinue}
               disabled={!checked}
               style={[localStyles.continueWrap, !checked && styles.buttonDisabled]}
+              testID={testIds.registerTermsContinue}
             >
               <LinearGradient
                 colors={[...gradients.cta]}

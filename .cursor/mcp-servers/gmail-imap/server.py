@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gmail IMAP MCP server for reading my.website.email2@gmail.com (or any Gmail account)."""
+"""Gmail IMAP MCP server — reads inbox via GMAIL_USER / GMAIL_APP_PASSWORD env vars."""
 
 from __future__ import annotations
 

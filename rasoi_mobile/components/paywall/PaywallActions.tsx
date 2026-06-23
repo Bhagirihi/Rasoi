@@ -26,6 +26,7 @@ type PaywallActionsProps = {
   onRestore?: () => void;
   yearlyPromoOfferTag?: string | null;
   storePricing?: RevenueCatStorePricing | null;
+  hideExpiredNote?: boolean;
 };
 
 /** Compact pricing block for trial modals — full paywall uses PaywallPricingSection. */
@@ -44,6 +45,7 @@ export default function PaywallActions({
   onRestore,
   yearlyPromoOfferTag = null,
   storePricing = null,
+  hideExpiredNote = false,
 }: PaywallActionsProps) {
   const { paymentsEnabled } = useAppContext();
 
@@ -70,7 +72,7 @@ export default function PaywallActions({
         </Pressable>
       )}
 
-      {paymentsEnabled && trialExpired && effectiveTier === 'free' && (
+      {paymentsEnabled && trialExpired && effectiveTier === 'free' && !hideExpiredNote && (
         <Text style={styles.expiredNote}>
           Your trial has ended. Subscribe to restore partner checkout.
         </Text>

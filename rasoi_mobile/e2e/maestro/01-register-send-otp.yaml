@@ -1,0 +1,69 @@
+# TC-002: Register — fill details and send OTP (OTP entered in 02-register-verify.yaml)
+# Env: QA_NAME, QA_PHONE, QA_EMAIL
+appId: com.bhagihiri.rasoiapp
+---
+- runFlow:
+    file: _bootstrap.yaml
+- runFlow:
+    when:
+      visible:
+        id: login-go-register
+    commands:
+      - tapOn:
+          id: login-go-register
+- runFlow:
+    when:
+      visible: "Create account"
+    commands:
+      - tapOn: "Create account"
+- extendedWaitUntil:
+    visible:
+      id: screen-register
+    timeout: 15000
+- runFlow:
+    when:
+      visible:
+        id: register-name-input
+    commands:
+      - tapOn:
+          id: register-name-input
+      - inputText: ${QA_NAME}
+      - tapOn:
+          id: register-phone-input
+      - inputText: ${QA_PHONE}
+      - tapOn:
+          id: register-email-input
+      - inputText: ${QA_EMAIL}
+- runFlow:
+    when:
+      notVisible:
+        id: register-name-input
+    commands:
+      - tapOn: "e.g. Priya Sharma"
+      - inputText: ${QA_NAME}
+      - tapOn: "9820174653"
+      - inputText: ${QA_PHONE}
+      - tapOn: "you@example.com"
+      - inputText: ${QA_EMAIL}
+- hideKeyboard
+- tapOn:
+    text: "Send verification code"
+- runFlow:
+    when:
+      visible:
+        id: register-terms-checkbox
+    commands:
+      - tapOn:
+          id: register-terms-checkbox
+      - tapOn:
+          id: register-terms-continue
+- runFlow:
+    when:
+      visible: "I have read and agree"
+    commands:
+      - tapOn: "I have read and agree"
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      text: "Verify your email"
+    timeout: 90000

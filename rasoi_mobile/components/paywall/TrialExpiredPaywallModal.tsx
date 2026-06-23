@@ -1,14 +1,23 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Check, Crown, X } from 'lucide-react-native';
+import { Crown, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AppSavingOverlay from '@/components/AppSavingOverlay';
+import PaidPlanFeaturesList from '@/components/paywall/PaidPlanFeaturesList';
 import PaywallActions from '@/components/paywall/PaywallActions';
 import SmoothModal from '@/components/ui/SmoothModal';
-import { PAID_PLAN_FEATURES, type BillingInterval } from '@/constants/plans';
+import { type BillingInterval } from '@/constants/plans';
 import { getEffectivePaymentProviderId } from '@/constants/payments';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
@@ -109,7 +118,7 @@ export default function TrialExpiredPaywallModal() {
 
   return (
     <SmoothModal visible={visible} onClose={closeModal} variant="sheet" dismissOnBackdrop>
-      <View style={[styles.sheet, { paddingBottom: insets.bottom + spacing.md }]}>
+      <View style={[styles.sheet, { maxHeight: '92%' }]}>
         <AppSavingOverlay
           visible={paywall.isBusy}
           message="Opening checkout…"
@@ -121,39 +130,43 @@ export default function TrialExpiredPaywallModal() {
         <View style={styles.headerRow}>
           <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle}>Trial ended</Text>
-            <Text style={styles.headerSub}>Subscribe to keep Rasoi Plus unlocked</Text>
+            <Text style={styles.headerSub}>Subscribe to keep partner checkout unlocked</Text>
           </View>
           <Pressable onPress={closeModal} hitSlop={12} accessibilityLabel="Close paywall">
             <X size={22} color={colors.muted} />
           </Pressable>
         </View>
 
-        <LinearGradient colors={['#1A1A2E', '#2A2A3E']} style={styles.hero}>
-          <View style={styles.heroIconWrap}>
-            <Crown size={22} color={colors.primary} />
-          </View>
-          <Text style={styles.heroTitle}>Partners are locked again</Text>
-          <Text style={styles.heroSub}>
-            Blinkit, Zepto, Zomato & Swiggy links need an active Rasoi Plus plan.
-          </Text>
-        </LinearGradient>
-
-        <View style={styles.features}>
-          {PAID_PLAN_FEATURES.slice(0, 3).map((feature) => (
-            <View key={feature} style={styles.featureRow}>
-              <Check size={16} color={colors.primary} strokeWidth={3} />
-              <Text style={styles.featureText}>{feature}</Text>
+        <ScrollView
+          bounces={false}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + spacing.lg },
+          ]}
+        >
+          <LinearGradient colors={['#FF6B35', '#FF9933']} style={styles.hero}>
+            <View style={styles.heroIconWrap}>
+              <Crown size={22} color={colors.white} />
             </View>
-          ))}
-        </View>
+            <Text style={styles.heroTitle}>Partners are locked again</Text>
+            <Text style={styles.heroSub}>
+              Blinkit, Zepto, Instamart, Zomato & Swiggy need an active Rasoi Plus plan.
+            </Text>
+          </LinearGradient>
 
-        {pricingLoading && getEffectivePaymentProviderId() === 'revenuecat' ? (
-          <View style={styles.pricingLoading}>
-            <ActivityIndicator color={colors.primary} />
-            <Text style={styles.pricingLoadingText}>Loading prices from {billingLabel}…</Text>
+          <View style={styles.featuresWrap}>
+            <PaidPlanFeaturesList />
           </View>
-        ) : (
-          <View style={styles.actions}>
+
+          {pricingLoading && getEffectivePaymentProviderId() === 'revenuecat' ? (
+            <View style={styles.pricingLoading}>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={styles.pricingLoadingText}>Loading prices from {billingLabel}…</Text>
+            </View>
+          ) : (
             <PaywallActions
               effectiveTier={effectiveTier}
               trialExpired={trialExpired}
@@ -166,16 +179,17 @@ export default function TrialExpiredPaywallModal() {
               lastError={paywall.lastError}
               yearlyPromoOfferTag={yearlyPromoOfferTag}
               storePricing={storeReady ? pricing : null}
+              hideExpiredNote
               onStartTrial={() => undefined}
               onSubscribe={(interval) => void handleSubscribe(interval)}
               onRestore={() => void handleRestore()}
             />
-          </View>
-        )}
+          )}
 
-        <Pressable onPress={closeModal} style={styles.laterBtn}>
-          <Text style={styles.laterText}>Continue with ads for now</Text>
-        </Pressable>
+          <Pressable onPress={closeModal} style={styles.laterBtn}>
+            <Text style={styles.laterText}>Continue with ads for now</Text>
+          </Pressable>
+        </ScrollView>
       </View>
     </SmoothModal>
   );
@@ -188,7 +202,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.cream,
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
-    maxHeight: '92%',
   },
   handle: {
     alignSelf: 'center',
@@ -221,47 +234,38 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontWeight: '600',
   },
+  scroll: {
+    flexShrink: 1,
+  },
+  scrollContent: {
+    gap: spacing.md,
+  },
   hero: {
     borderRadius: radius.lg,
     padding: spacing.lg,
-    marginBottom: spacing.md,
   },
   heroIconWrap: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,107,53,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
   heroTitle: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '800',
     color: colors.white,
   },
   heroSub: {
     marginTop: 6,
-    fontSize: 13,
-    lineHeight: 20,
-    color: 'rgba(255,255,255,0.82)',
-  },
-  features: {
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-    paddingHorizontal: spacing.xs,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  featureText: {
-    flex: 1,
     fontSize: 14,
-    lineHeight: 20,
-    color: colors.charcoal,
-    fontWeight: '600',
+    lineHeight: 21,
+    color: 'rgba(255,255,255,0.92)',
+  },
+  featuresWrap: {
+    marginTop: spacing.xs,
   },
   pricingLoading: {
     alignItems: 'center',
@@ -272,9 +276,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.muted,
     fontWeight: '600',
-  },
-  actions: {
-    marginBottom: spacing.sm,
   },
   laterBtn: {
     alignItems: 'center',

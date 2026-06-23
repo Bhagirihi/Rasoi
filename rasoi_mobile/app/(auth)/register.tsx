@@ -452,6 +452,7 @@ export default function RegisterScreen() {
                     autoCapitalize="words"
                     returnKeyType="next"
                     style={styles.input}
+                    testID={testIds.registerNameInput}
                   />
                 </View>
               </View>
@@ -474,6 +475,7 @@ export default function RegisterScreen() {
                     maxLength={10}
                     returnKeyType="next"
                     style={styles.input}
+                    testID={testIds.registerPhoneInput}
                   />
                 </View>
                 <Text style={styles.hint}>10 digits, starting with 6–9 · for partner checkout</Text>
@@ -498,6 +500,7 @@ export default function RegisterScreen() {
                     returnKeyType="done"
                     onSubmitEditing={handleSendOtp}
                     style={styles.input}
+                    testID={testIds.registerEmailInput}
                   />
                 </View>
                 <Text style={styles.hint}>We send a one-time verification code to this email</Text>
@@ -524,6 +527,7 @@ export default function RegisterScreen() {
                     onSubmitEditing={handleVerifyOtp}
                     style={[styles.input, styles.otpInput]}
                     autoFocus
+                    testID={testIds.registerOtpInput}
                   />
                 </View>
               </View>
@@ -556,7 +560,7 @@ export default function RegisterScreen() {
             <Pressable
               onPress={step === 'details' ? handleSendOtp : handleVerifyOtp}
               disabled={isSubmitting}
-              testID={step === 'details' ? testIds.registerSendOtp : undefined}
+              testID={step === 'details' ? testIds.registerSendOtp : testIds.registerVerifyOtp}
               style={[styles.submitWrap, isSubmitting && styles.buttonDisabled]}
             >
               <LinearGradient
@@ -599,6 +603,7 @@ export default function RegisterScreen() {
                   onPress={() => router.push('/(auth)/login')}
                   disabled={isSubmitting}
                   style={styles.switchAuthWrap}
+                  testID={testIds.registerGoLogin}
                 >
                   <Text style={styles.switchAuthText}>
                     Already have an account?{' '}

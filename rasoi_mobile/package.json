@@ -56,7 +56,12 @@
     "store-preview": "cd screenshots && npm run dev",
     "qa:preflight": "bash scripts/qa-preflight.sh",
     "qa:smoke": "bash scripts/run-device-qa.sh smoke",
-    "qa:device": "bash scripts/run-device-qa.sh all"
+    "qa:auth": "bash scripts/run-device-qa.sh auth",
+    "qa:modules": "bash scripts/run-device-qa.sh modules",
+    "qa:device": "bash scripts/run-device-qa.sh all",
+    "qa:full": "bash scripts/run-full-device-qa.sh",
+    "qa:stability": "python3 scripts/run-stability-3x.py",
+    "qa:new": "python3 scripts/run-new-qa.py"
   },
   "private": true
 }

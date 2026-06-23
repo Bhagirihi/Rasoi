@@ -1,0 +1,36 @@
+# Complete onboarding: diet → cuisine → skip notifications
+appId: com.bhagihiri.rasoiapp
+---
+- extendedWaitUntil:
+    visible:
+      id: screen-onboarding
+    timeout: 45000
+- tapOn:
+    id: onboarding-diet-veg
+- tapOn:
+    id: onboarding-diet-continue
+- extendedWaitUntil:
+    visible:
+      id: onboarding-cuisine-first
+    timeout: 20000
+- tapOn:
+    id: onboarding-cuisine-first
+- tapOn:
+    id: onboarding-cuisine-continue
+- tapOn:
+    id: onboarding-skip-notify
+- runFlow:
+    file: _dismiss-permissions.yaml
+- runFlow:
+    when:
+      visible:
+        id: screen-trial-welcome
+    commands:
+      - tapOn:
+          id: trial-continue
+- runFlow:
+    file: _dismiss-permissions.yaml
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 60000

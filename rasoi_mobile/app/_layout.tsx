@@ -34,10 +34,7 @@ warmSupabaseClient();
 warmRasoiRealtime();
 
 if (__DEV__) {
-  LogBox.ignoreLogs([
-    '`expo-notifications` functionality is not fully supported in Expo Go',
-    'expo-notifications: Android Push notifications (remote notifications) functionality',
-  ]);
+  LogBox.ignoreAllLogs(true);
 }
 
 export { ErrorBoundary } from 'expo-router';

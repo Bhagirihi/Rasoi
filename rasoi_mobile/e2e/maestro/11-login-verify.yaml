@@ -1,0 +1,33 @@
+# TC-015: Login — verify OTP and reach home
+# Env: QA_OTP
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      text: "Check your email"
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: login-otp-input
+    commands:
+      - tapOn:
+          id: login-otp-input
+      - inputText: ${QA_OTP}
+- runFlow:
+    when:
+      notVisible:
+        id: login-otp-input
+    commands:
+      - tapOn: "123456"
+      - inputText: ${QA_OTP}
+- hideKeyboard
+- tapOn:
+    text: "Sign in"
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 60000
+- assertVisible:
+    id: screen-home

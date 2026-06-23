@@ -5,15 +5,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import PaidPlanFeaturesList from '@/components/paywall/PaidPlanFeaturesList';
+import PaywallBenefitsStrip from '@/components/paywall/PaywallBenefitsStrip';
 import PaywallActions from '@/components/paywall/PaywallActions';
-import PaywallCompareTable from '@/components/paywall/PaywallCompareTable';
 import SmoothModal from '@/components/ui/SmoothModal';
-import {
-  PAID_PLAN_YEARLY_DETAIL,
-  PAID_PLAN_YEARLY_SAVINGS_LABEL,
-  type BillingInterval,
-} from '@/constants/plans';
+import { type BillingInterval } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
@@ -145,18 +140,31 @@ export default function TrialEndingSoonModal() {
   }
 
   return (
-    <SmoothModal visible={visible} onClose={closeModal} variant="center" dismissOnBackdrop>
-      <View style={[styles.card, { paddingBottom: insets.bottom + spacing.lg }]}>
+    <SmoothModal visible={visible} onClose={closeModal} variant="sheet" dismissOnBackdrop>
+      <View style={[styles.sheet, { maxHeight: '92%' }]}>
+        <View style={styles.handle} />
+
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>{copy.headerTitle}</Text>
           <Pressable onPress={closeModal} hitSlop={12} accessibilityLabel="Close upgrade prompt">
-            <X size={22} color={colors.charcoal} />
+            <X size={22} color={colors.muted} />
           </Pressable>
         </View>
 
-        <ScrollView bounces={false} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          bounces={false}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: insets.bottom + spacing.lg },
+          ]}
+        >
           <LinearGradient colors={['#FF6B35', '#FF9933']} style={styles.hero}>
-            <Crown size={24} color={colors.white} />
+            <View style={styles.heroIconWrap}>
+              <Crown size={22} color={colors.white} />
+            </View>
             <Text style={styles.heroTitle}>{copy.heroTitle}</Text>
             <Text style={styles.heroSub}>{copy.heroSub}</Text>
           </LinearGradient>
@@ -165,32 +173,24 @@ export default function TrialEndingSoonModal() {
             <Text style={styles.statusText}>{copy.statusText}</Text>
           </View>
 
-          <PaidPlanFeaturesList />
+          <PaywallBenefitsStrip />
 
-          <Text style={styles.sectionLabel}>Compare plans</Text>
-          <Text style={styles.pricingNote}>
-            {PAID_PLAN_YEARLY_DETAIL} · {PAID_PLAN_YEARLY_SAVINGS_LABEL}
-          </Text>
-          <PaywallCompareTable />
-
-          <View style={styles.actions}>
-            <PaywallActions
-              effectiveTier={effectiveTier}
-              trialExpired={trialExpired}
-              canStartTrial={canStartTrial}
-              isBusy={paywall.isBusy}
-              paymentDisclaimer={paywall.paymentDisclaimer}
-              providerLabel={paywall.providerLabel}
-              providerId={paywall.providerId}
-              supportsRestore={paywall.supportsRestore}
-              lastError={paywall.lastError}
-              yearlyPromoOfferTag={yearlyPromoOfferTag}
-              storePricing={storeReady ? pricing : null}
-              onStartTrial={() => undefined}
-              onSubscribe={(interval) => void handleSubscribe(interval)}
-              onRestore={() => void handleRestore()}
-            />
-          </View>
+          <PaywallActions
+            effectiveTier={effectiveTier}
+            trialExpired={trialExpired}
+            canStartTrial={canStartTrial}
+            isBusy={paywall.isBusy}
+            paymentDisclaimer={paywall.paymentDisclaimer}
+            providerLabel={paywall.providerLabel}
+            providerId={paywall.providerId}
+            supportsRestore={paywall.supportsRestore}
+            lastError={paywall.lastError}
+            yearlyPromoOfferTag={yearlyPromoOfferTag}
+            storePricing={storeReady ? pricing : null}
+            onStartTrial={() => undefined}
+            onSubscribe={(interval) => void handleSubscribe(interval)}
+            onRestore={() => void handleRestore()}
+          />
 
           <Pressable onPress={closeModal} style={styles.laterBtn}>
             <Text style={styles.laterText}>Maybe later</Text>
@@ -202,48 +202,66 @@ export default function TrialEndingSoonModal() {
 }
 
 const styles = StyleSheet.create({
-  card: {
-    maxHeight: '88%',
-    borderRadius: radius.lg,
+  sheet: {
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     backgroundColor: colors.cream,
-    overflow: 'hidden',
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+  },
+  handle: {
+    alignSelf: 'center',
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(0,0,0,0.12)',
+    marginBottom: spacing.md,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
+    gap: spacing.md,
+    marginBottom: spacing.md,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.charcoal,
-  },
-  hero: {
-    marginHorizontal: spacing.lg,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  heroTitle: {
-    marginTop: spacing.sm,
+    flex: 1,
     fontSize: 20,
     fontWeight: '800',
+    color: colors.charcoal,
+    letterSpacing: -0.2,
+  },
+  scroll: {
+    flexShrink: 1,
+  },
+  scrollContent: {
+    gap: spacing.md,
+  },
+  hero: {
+    borderRadius: radius.lg,
+    padding: spacing.lg,
+  },
+  heroIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+  },
+  heroTitle: {
+    fontSize: 18,
+    fontWeight: '800',
     color: colors.white,
-    textAlign: 'center',
   },
   heroSub: {
-    marginTop: spacing.sm,
-    fontSize: 13,
-    lineHeight: 20,
+    marginTop: 6,
+    fontSize: 14,
+    lineHeight: 21,
     color: 'rgba(255,255,255,0.92)',
-    textAlign: 'center',
   },
   statusCard: {
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.md,
     borderRadius: radius.md,
     backgroundColor: 'rgba(255,107,53,0.1)',
     padding: spacing.md,
@@ -255,31 +273,9 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textAlign: 'center',
   },
-  sectionLabel: {
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.lg,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.6,
-    textTransform: 'uppercase',
-    color: colors.muted,
-  },
-  pricingNote: {
-    marginTop: spacing.xs,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    fontSize: 12,
-    color: colors.muted,
-  },
-  actions: {
-    marginTop: spacing.lg,
-    marginHorizontal: spacing.lg,
-  },
   laterBtn: {
-    marginTop: spacing.md,
-    marginBottom: spacing.lg,
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
   },
   laterText: {
     fontSize: 14,

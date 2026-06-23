@@ -1,0 +1,20 @@
+# TC-007: Recipes tab loads with recipe cards
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 30000
+- tapOn:
+    id: tab-recipes
+- extendedWaitUntil:
+    visible:
+      id: screen-recipes-tab
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: recipe-card-first
+    timeout: 45000
+- assertVisible:
+    id: recipe-card-first

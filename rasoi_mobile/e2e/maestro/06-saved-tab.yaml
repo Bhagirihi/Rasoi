@@ -1,0 +1,12 @@
+# TC-010: Saved tab
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 30000
+- tapOn:
+    id: tab-saved
+- assertVisible:
+    id: screen-saved

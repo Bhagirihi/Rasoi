@@ -1,37 +1,79 @@
-# Device UI Test Cases (Maestro)
+# Rasoi Mobile — Device UI Test Cases
 
-Automated flows linked to `QA_CROSSCHECK.md` navigation and auth cases.
+Full module coverage on a **real Android device** with Gmail OTP auth (`dvesp1901+{timestamp}@gmail.com`).
 
-## Automated (Maestro)
+## Test matrix
 
-| ID | Flow | Steps | Expected | Maestro |
-|----|------|-------|----------|---------|
-| TC-DEV-01 | Guest smoke | `clearState` → onboarding (Veg → cuisine → skip notify) → guest → tabs | Home, Pantry, Saved, Settings visible | `01-guest-smoke.yaml` |
-| TC-DEV-02 | Tab navigation | Tap each bottom tab | Correct `screen-*` testID visible | `01-guest-smoke.yaml` |
-| TC-DEV-03 | Recipe detail | Tap `recipe-card-first` on Home | `screen-recipe` visible; back returns | `02-recipe-detail.yaml` |
-| TC-DEV-04 | Theme toggle | Settings → Dark → Light | Settings remains usable | `03-settings-theme.yaml` |
+| ID | Module | Steps | Expected | Maestro |
+|----|--------|-------|----------|---------|
+| TC-001 | Legal consent | Fresh install → accept terms | `screen-login` visible | `_bootstrap.yaml` |
+| TC-002 | Register — details | Name, phone, email → Send code → accept terms modal | OTP step visible | `01-register-send-otp.yaml` |
+| TC-003 | Register — OTP | Enter Gmail OTP → Create account | Onboarding or trial/home | `02-register-verify.yaml` |
+| TC-004 | Onboarding | Veg diet → cuisine → skip notify | Reaches tabs or trial welcome | `02-register-verify.yaml` |
+| TC-005 | Trial welcome | Tap continue (if shown) | `screen-home` visible | `02-register-verify.yaml` |
+| TC-006 | Home | Open Home tab | Recipe content loads, `screen-home` | `03-home.yaml` |
+| TC-007 | Recipes | Open Recipes tab | `screen-recipes-tab`, first card visible | `04-recipes-tab.yaml` |
+| TC-008 | Recipe detail | Tap first recipe card | `screen-recipe`, title + image | `05-recipe-detail.yaml` |
+| TC-009 | Save recipe | Tap Save on detail → open Saved tab | Recipe appears in saved list | `05-recipe-detail.yaml` |
+| TC-010 | Saved | Open Saved tab | `screen-saved` loads | `06-saved-tab.yaml` |
+| TC-011 | Pantry | Open Pantry tab | `screen-pantry` loads | `07-pantry-tab.yaml` |
+| TC-012 | Settings | Open Settings → theme toggle | Light/dark switch works | `08-settings.yaml` |
+| TC-013 | Logout | Settings → Log out → confirm | Returns to `screen-login` | `09-logout.yaml` |
+| TC-014 | Login — email | Enter registered email → Send code | OTP step visible | `10-login-send-otp.yaml` |
+| TC-015 | Login — OTP | Enter Gmail OTP → Sign in | `screen-home` visible | `11-login-verify.yaml` |
+| TC-016 | Login navigation | From login → Create account link | `screen-register` visible | `01-register-send-otp.yaml` |
+| TC-017 | Register navigation | From register → Log in link | `screen-login` visible | Manual / partial |
 
-Maps to manual cases:
+## Auth test email
 
-- **TC-AUTH-04** — Explore as Guest
-- **TC-REC-01** — Home loads recipes (card visible)
-- **TC-REC-02** — Tap recipe card → detail
-- **TC-UI-01** — Tabs layout
-- **TC-UI-02** — Dark/light appearance (new)
+```
+dvesp1901+{unix_timestamp}@gmail.com
+```
 
-## Manual only (not automated)
-
-| ID | Reason |
-|----|--------|
-| TC-AUTH-02/03 | OTP + Supabase + Gmail — use `.cursor/skills/expo-mobile-qa` adb workflow |
-| TC-PART-02 | External deep links (Blinkit/Zomato) |
-| TC-USER-05 | Paid upgrade requires payment provider |
-| TC-REC-05 | Realtime admin edit |
+Generated automatically by `scripts/run-full-device-qa.sh`. OTP fetched via Gmail IMAP (`scripts/fetch-otp.py`).
 
 ## Running
 
 ```bash
-npm run qa:preflight   # checks only
-npm run qa:smoke       # TC-DEV-01 + TC-DEV-02
-npm run qa:device      # all TC-DEV-* flows
+cd rasoi_mobile
+
+# Build & install debug APK (first time or after native changes)
+npm run android
+
+# Preflight checks
+npm run qa:preflight
+
+# Full module QA (register → all tabs → logout → login)
+npm run qa:full
+
+# Individual suites
+npm run qa:smoke      # TC-001 + guest tab navigation (legacy)
+npm run qa:auth       # TC-002–TC-015 register + login OTP flows
+npm run qa:modules    # TC-006–TC-012 (requires logged-in session)
 ```
+
+## Evidence
+
+JUnit XML and screenshots saved under `rasoi_mobile/.qa/` (gitignored).
+
+## Severity guide
+
+| Level | Examples |
+|-------|----------|
+| Critical | Crash, blank screen, cannot login/register, zero recipes when API has data |
+| Major | OTP never arrives, broken navigation, images fail to load |
+| Minor | Alignment, slow load, copy typo |
+
+## Stability requirement
+
+Each test case must pass **3 consecutive runs** on a real device (`npm run qa:stability`).
+
+## UI standard rules (automated checks)
+
+| Rule | Description |
+|------|-------------|
+| No crash/redbox | No Metro redbox or crash dialog |
+| Tab bar complete | All 5 tabs when on main screens |
+| Touch targets | Tab items ≥48px height |
+| Safe area | No tappable controls under status bar |
+| Screen content | Module-specific headings/data visible |

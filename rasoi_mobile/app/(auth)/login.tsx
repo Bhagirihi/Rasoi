@@ -345,6 +345,7 @@ export default function LoginScreen() {
                       returnKeyType="done"
                       onSubmitEditing={handleSendOtp}
                       style={styles.input}
+                      testID={testIds.loginEmailInput}
                     />
                   </View>
                 </View>
@@ -374,6 +375,7 @@ export default function LoginScreen() {
                       onSubmitEditing={handleVerifyOtp}
                       style={[styles.input, styles.otpInput]}
                       autoFocus
+                      testID={testIds.loginOtpInput}
                     />
                   </View>
                   <Pressable
@@ -390,17 +392,13 @@ export default function LoginScreen() {
                 <View
                   style={[
                     styles.messageBox,
-                    fieldError !== "general" &&
-                      fieldError !== "otp" &&
-                      styles.messageBoxInfo,
+                    fieldError === null && styles.messageBoxInfo,
                   ]}
                 >
                   <Text
                     style={[
                       styles.messageText,
-                      fieldError !== "general" &&
-                        fieldError !== "otp" &&
-                        styles.messageTextInfo,
+                      fieldError === null && styles.messageTextInfo,
                     ]}
                   >
                     {errorMessage}
@@ -411,7 +409,7 @@ export default function LoginScreen() {
               <Pressable
                 onPress={step === "email" ? handleSendOtp : handleVerifyOtp}
                 disabled={isSubmitting}
-                testID={step === "email" ? testIds.loginSendOtp : undefined}
+                testID={step === "email" ? testIds.loginSendOtp : testIds.loginVerifyOtp}
                 style={[
                   styles.submitWrap,
                   isSubmitting && styles.buttonDisabled,
@@ -462,6 +460,7 @@ export default function LoginScreen() {
                   onPress={() => router.push("/(auth)/register")}
                   disabled={isSubmitting}
                   style={styles.switchAuthWrap}
+                  testID={testIds.loginGoRegister}
                 >
                   <Text style={styles.switchAuthText}>
                     New to Rasoi?{" "}

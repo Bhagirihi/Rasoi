@@ -1,0 +1,31 @@
+# TC-014: Login — send OTP to registered email
+# Env: QA_EMAIL
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: screen-login
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: login-email-input
+    commands:
+      - tapOn:
+          id: login-email-input
+      - inputText: ${QA_EMAIL}
+- runFlow:
+    when:
+      notVisible:
+        id: login-email-input
+    commands:
+      - tapOn: "you@example.com"
+      - inputText: ${QA_EMAIL}
+- hideKeyboard
+- tapOn:
+    text: "Send sign-in code"
+- extendedWaitUntil:
+    visible:
+      text: "Check your email"
+    timeout: 90000

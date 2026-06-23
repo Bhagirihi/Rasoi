@@ -24,7 +24,19 @@ export const testIds = {
   loginGuest: 'login-guest',
   guestContinue: 'guest-continue',
   loginSendOtp: 'login-send-otp',
+  loginVerifyOtp: 'login-verify-otp',
+  loginEmailInput: 'login-email-input',
+  loginOtpInput: 'login-otp-input',
+  loginGoRegister: 'login-go-register',
   registerSendOtp: 'register-send-otp',
+  registerVerifyOtp: 'register-verify-otp',
+  registerNameInput: 'register-name-input',
+  registerPhoneInput: 'register-phone-input',
+  registerEmailInput: 'register-email-input',
+  registerOtpInput: 'register-otp-input',
+  registerGoLogin: 'register-go-login',
+  registerTermsCheckbox: 'register-terms-checkbox',
+  registerTermsContinue: 'register-terms-continue',
 
   onboardingDietVeg: 'onboarding-diet-veg',
   onboardingDietContinue: 'onboarding-diet-continue',
@@ -39,4 +51,8 @@ export const testIds = {
 
   recipeCardFirst: 'recipe-card-first',
   recipesSearchInput: 'recipes-search-input',
+  recipeSaveButton: 'recipe-save-button',
+
+  settingsLogout: 'settings-logout',
+  settingsLogoutConfirm: 'settings-logout-confirm',
 } as const;

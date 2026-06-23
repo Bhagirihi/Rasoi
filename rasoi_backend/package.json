@@ -13,6 +13,7 @@
     "db:realtime": "tsx scripts/enable-realtime.ts",
     "db:ping": "tsx scripts/db-ping.ts",
     "db:sync-public": "tsx scripts/sync-public-recipes.ts",
+    "db:sync-public:bulk": "tsx scripts/run-bulk-sync-public-recipes.ts",
     "db:sync-public-cuisines": "tsx scripts/sync-public-kitchen-styles.ts",
     "db:seed-recipes": "tsx scripts/seed-recipes-to-supabase.ts",
     "db:seed-recipes:dry": "tsx scripts/seed-recipes-to-supabase.ts --dry-run",

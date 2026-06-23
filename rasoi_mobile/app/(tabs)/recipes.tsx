@@ -18,6 +18,7 @@ import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { useRecipeDiscovery } from '@/hooks/useRecipeDiscovery';
+import { useRecipeListAdIndices } from '@/hooks/useRecipeListAdIndices';
 import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
@@ -74,6 +75,8 @@ export default function RecipesTabScreen() {
     if (!query) return moreRecipes;
     return moreRecipes.filter((recipe) => recipeMatchesSearch(recipe, query));
   }, [moreRecipes, searchQuery]);
+
+  const recipeAdIndices = useRecipeListAdIndices(searchedMoreRecipes);
 
   const activeFilterLabels = useMemo(
     () => getQuickFilterLabels(activeFilters),
@@ -179,11 +182,12 @@ export default function RecipesTabScreen() {
 
   const renderItem = ({ item, index }: { item: Recipe; index: number }) => (
     <View>
-      {index === 1 && (
+      {recipeAdIndices.has(index) && (
         <SponsorOrAd
           sponsor={recipesSponsor}
           loading={recipesSponsorLoading}
           placement="recipes"
+          compact
           style={styles.listSponsorInset}
         />
       )}

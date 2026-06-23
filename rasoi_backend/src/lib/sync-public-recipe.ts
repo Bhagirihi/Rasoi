@@ -124,10 +124,14 @@ async function syncPublicRecipeIngredients(
   await client.query('DELETE FROM public.recipe_ingredients WHERE recipe_id = $1', [recipeId]);
 
   const uniqueIngredients = dedupeIngredients(ingredients);
+  const usedIngredientIds = new Set<string>();
+  let sortOrder = 0;
 
-  for (let index = 0; index < uniqueIngredients.length; index += 1) {
-    const ingredient = uniqueIngredients[index];
+  for (const ingredient of uniqueIngredients) {
     const ingredientId = await ensurePublicIngredient(client, ingredient);
+    if (usedIngredientIds.has(ingredientId)) continue;
+    usedIngredientIds.add(ingredientId);
+    sortOrder += 1;
 
     await client.query(
       `
@@ -139,11 +143,15 @@ async function syncPublicRecipeIngredients(
           brand_logo_url
         )
         VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (recipe_id, ingredient_id) DO UPDATE SET
+          sort_order = EXCLUDED.sort_order,
+          brand_name = EXCLUDED.brand_name,
+          brand_logo_url = EXCLUDED.brand_logo_url
       `,
       [
         recipeId,
         ingredientId,
-        index + 1,
+        sortOrder,
         ingredient.recommendedBrand?.name ?? null,
         ingredient.recommendedBrand?.logo ?? null,
       ],

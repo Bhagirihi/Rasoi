@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Moon, Timer } from 'lucide-react-native';
 import { useMemo, useState, useCallback } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
@@ -12,6 +12,7 @@ import CookTonightSheet from '@/components/CookTonightSheet';
 import MissingShopInline, { missingShopActionStyles } from '@/components/MissingShopInline';
 import { AppTabHeader } from '@/components/AppTabHeader';
 import RecipeCard from '@/components/RecipeCard';
+import RecipeImage from '@/components/RecipeImage';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import TrialCountdownBanner from '@/components/TrialCountdownBanner';
@@ -21,6 +22,7 @@ import { EmptyState } from '@/components/ui/Primitives';
 import { useRecipeDiscovery } from '@/hooks/useRecipeDiscovery';
 import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
+import { useRecipeListAdIndices } from '@/hooks/useRecipeListAdIndices';
 import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
@@ -58,6 +60,11 @@ export default function HomeScreen() {
     regionalCuisine,
   } = useRecipeDiscovery();
   const { sponsor: homeSponsor, loading: homeSponsorLoading } = usePlacementSponsor('home');
+  const tonightAdIndices = useRecipeListAdIndices(tonightCards, {
+    minRecipesBeforeFirstAd: 1,
+    minGap: 2,
+    maxAds: 1,
+  });
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
@@ -274,14 +281,10 @@ export default function HomeScreen() {
                       </Pressable>
                     )}
                   </View>
-                  <Image
-                    source={{ uri: topPick.imageUrl }}
-                    style={[
-                      styles.heroImage,
-                      isLateNight && styles.heroImageLateNight,
-                      { backgroundColor: semantic.surfaceMuted },
-                    ]}
-                    resizeMode="cover"
+                  <RecipeImage
+                    uri={topPick.imageUrl}
+                    tone="onDark"
+                    style={[styles.heroImage, isLateNight && styles.heroImageLateNight]}
                   />
                 </View>
 
@@ -330,22 +333,32 @@ export default function HomeScreen() {
                   {meal.alsoLabel}
                 </Text>
               </View>
-              {tonightCards.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  recipe={recipe}
-                  variant="tonight"
-                  cookCtaLabel={meal.cookCta}
-                  pickReason={getRecipePickReason(recipe, {
-                    regionalCuisine,
-                    pantryIngredients,
-                    dietChoice,
-                    mealSlot: meal.slot,
-                  })}
-                  pantryMatchPercent={getPantryMatchPercent(recipe, pantryIngredients)}
-                  onShopMissing={openShopModal}
-                  onCookTonight={openCookTonight}
-                />
+              {tonightCards.map((recipe, index) => (
+                <View key={recipe.id}>
+                  {tonightAdIndices.has(index) && (
+                    <SponsorOrAd
+                      sponsor={homeSponsor}
+                      loading={homeSponsorLoading}
+                      placement="home"
+                      compact
+                      style={styles.tonightSponsorInset}
+                    />
+                  )}
+                  <RecipeCard
+                    recipe={recipe}
+                    variant="tonight"
+                    cookCtaLabel={meal.cookCta}
+                    pickReason={getRecipePickReason(recipe, {
+                      regionalCuisine,
+                      pantryIngredients,
+                      dietChoice,
+                      mealSlot: meal.slot,
+                    })}
+                    pantryMatchPercent={getPantryMatchPercent(recipe, pantryIngredients)}
+                    onShopMissing={openShopModal}
+                    onCookTonight={openCookTonight}
+                  />
+                </View>
               ))}
             </View>
           )}
@@ -546,6 +559,9 @@ const styles = StyleSheet.create({
   },
   tonightCards: {
     gap: spacing.md,
+  },
+  tonightSponsorInset: {
+    marginBottom: spacing.md,
   },
   tonightSectionHeader: {
     flexDirection: 'row',

@@ -1,0 +1,31 @@
+# TC-003–TC-005: Enter OTP, complete onboarding, reach home
+# Env: QA_OTP (required). Run after 01-register-send-otp.yaml without clearState.
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      text: "Verify your email"
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: register-otp-input
+    commands:
+      - tapOn:
+          id: register-otp-input
+      - inputText: ${QA_OTP}
+- runFlow:
+    when:
+      notVisible:
+        id: register-otp-input
+    commands:
+      - tapOn: "123456"
+      - inputText: ${QA_OTP}
+- hideKeyboard
+- tapOn:
+    text: "Create account"
+- runFlow:
+    file: _onboarding.yaml
+- assertVisible:
+    id: screen-home

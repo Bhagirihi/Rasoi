@@ -43,6 +43,15 @@ else
   fail "App $APP_ID not installed. Build and install: npm run android"
 fi
 
+# Debug builds need Metro + USB reverse
+if curl -sf --max-time 3 "http://localhost:8081/status" >/dev/null 2>&1; then
+  adb reverse tcp:8081 tcp:8081 >/dev/null 2>&1 || true
+  ok "Metro running (adb reverse tcp:8081 set)"
+else
+  echo "⚠ Metro not running — start: cd rasoi_mobile && npx expo start"
+  echo "  Debug builds will show redbox until Metro is reachable."
+fi
+
 if curl -sf --max-time 8 "https://rasoiapplication.in/api/recipes" >/dev/null 2>&1; then
   ok "Backend API reachable"
 else

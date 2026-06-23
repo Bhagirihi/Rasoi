@@ -16,6 +16,7 @@ import {
 import { usePartners } from '@/context/PartnersContext';
 import { useTheme } from '@/context/ThemeContext';
 import { colors, layout, radius, shadows, spacing } from '@/constants/theme';
+import { testIds } from '@/constants/testIds';
 import { CONTACT_EMAIL, CONTACT_MAILTO, SITE_BASE_URL } from '@/constants/links';
 import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
 
@@ -219,6 +220,7 @@ export function AccountActionsCard({
         </Pressable>
         <Pressable
           onPress={onLogout}
+          testID={testIds.settingsLogout}
           style={({ pressed }) => [
             styles.accountBtn,
             styles.accountBtnOutline,

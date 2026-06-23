@@ -1,9 +1,7 @@
 import * as Linking from 'expo-linking';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Check } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { authStyles as styles } from '@/components/auth/authStyles';
@@ -13,7 +11,7 @@ import {
   PRIVACY_HIGHLIGHTS,
   TERMS_HIGHLIGHTS,
 } from '@/constants/legalHighlights';
-import { colors, gradients, radius, spacing } from '@/constants/theme';
+import { colors, radius, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { saveLegalConsent } from '@/utils/legalConsent';
 import { markTelemetryStarted } from '@/utils/telemetry';
@@ -81,33 +79,40 @@ export default function LegalConsentScreen() {
       </ScrollView>
 
       <View style={localStyles.footer}>
-        <Pressable
-          onPress={() => setChecked((value) => !value)}
-          style={localStyles.checkRow}
-          testID={testIds.legalConsentCheckbox}
-        >
-          <View style={[localStyles.checkbox, checked && localStyles.checkboxChecked]}>
-            {checked ? <Check size={14} color={colors.white} strokeWidth={3} /> : null}
-          </View>
-          <Text style={localStyles.checkLabel}>
-            I have read and agree to the Terms of Service and Privacy Policy.
-          </Text>
-        </Pressable>
+        <View style={localStyles.checkRow}>
+          <Switch
+            value={checked}
+            onValueChange={setChecked}
+            testID={testIds.legalConsentCheckbox}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={colors.white}
+          />
+          <Pressable
+            onPress={() => setChecked((value) => !value)}
+            style={localStyles.checkLabelPressable}
+            accessibilityLabel="I have read and agree to the Terms of Service and Privacy Policy."
+          >
+            <Text style={localStyles.checkLabel}>
+              I have read and agree to the Terms of Service and Privacy Policy.
+            </Text>
+          </Pressable>
+        </View>
 
         <Pressable
-          onPress={() => void handleContinue()}
-          disabled={!checked || busy}
+          onPress={() => {
+            if (!checked || busy) return;
+            void handleContinue();
+          }}
           testID={testIds.legalConsentContinue}
-          style={[localStyles.continueWrap, (!checked || busy) && styles.buttonDisabled]}
+          accessibilityRole="button"
+          accessibilityLabel="Continue"
+          style={[
+            styles.submitButton,
+            localStyles.continueButton,
+            (!checked || busy) && styles.buttonDisabled,
+          ]}
         >
-          <LinearGradient
-            colors={[...gradients.cta]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={styles.submitButton}
-          >
-            <Text style={styles.submitButtonText}>{busy ? 'Please wait…' : 'Continue'}</Text>
-          </LinearGradient>
+          <Text style={styles.submitButtonText}>{busy ? 'Please wait…' : 'Continue'}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -133,6 +138,8 @@ const localStyles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.border,
     backgroundColor: colors.cream,
+    zIndex: 2,
+    elevation: 4,
   },
   brand: {
     fontSize: 14,
@@ -211,27 +218,17 @@ const localStyles = StyleSheet.create({
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+  checkLabelPressable: {
+    flex: 1,
+    paddingTop: 2,
   },
   checkLabel: {
-    flex: 1,
     fontSize: 14,
     lineHeight: 22,
     color: colors.charcoal,
   },
-  continueWrap: {
+  continueButton: {
+    backgroundColor: colors.primary,
     borderRadius: 16,
     overflow: 'hidden',
   },

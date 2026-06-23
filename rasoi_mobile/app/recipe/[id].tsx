@@ -262,6 +262,7 @@ export default function RecipeDetailScreen() {
               <Pressable
                 onPress={handleSavePress}
                 style={[styles.saveBtn, saved && styles.saveBtnActive]}
+                testID={testIds.recipeSaveButton}
               >
                 <Bookmark size={16} color={colors.white} />
                 <Text style={styles.saveBtnText}>{saved ? 'Saved' : 'Save'}</Text>

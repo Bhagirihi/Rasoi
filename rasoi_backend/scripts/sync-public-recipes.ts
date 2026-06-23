@@ -2,14 +2,41 @@ import 'dotenv/config';
 
 import { Pool } from 'pg';
 
-import { db } from '../src/lib/db';
+import type { Recipe } from '../src/lib/db/types';
 import { getDirectDatabaseUrl } from '../src/lib/database-url';
 import { pruneOrphanPublicRecipes, syncPublicRecipe } from '../src/lib/sync-public-recipe';
 
 const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 
+/** PostgREST caps findMany at 1000 rows — use direct SQL for full catalog sync. */
+async function fetchAllRecipes(): Promise<Recipe[]> {
+  const result = await pool.query<Recipe>(`
+    SELECT
+      id,
+      title,
+      "prepTime",
+      calories,
+      region,
+      "kitchenStyleId",
+      "kitchenStyleIds",
+      "dietType",
+      difficulty,
+      description,
+      "imageUrl",
+      tags,
+      ingredients,
+      steps,
+      published,
+      "createdAt",
+      "updatedAt"
+    FROM rasoi."Recipe"
+    ORDER BY id ASC
+  `);
+  return result.rows;
+}
+
 async function main() {
-  const recipes = await db.recipe.findMany({ orderBy: { id: 'asc' } });
+  const recipes = await fetchAllRecipes();
   const validIds = recipes.map((recipe) => recipe.id);
 
   const removed = await pruneOrphanPublicRecipes(validIds);

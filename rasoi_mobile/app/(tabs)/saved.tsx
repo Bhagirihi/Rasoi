@@ -13,6 +13,7 @@ import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import { EmptyState, InsightBanner } from '@/components/ui/Primitives';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
+import { useRecipeListAdIndices } from '@/hooks/useRecipeListAdIndices';
 import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
 import { colors, layout, scrollIndicator, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
@@ -44,6 +45,7 @@ export default function SavedScreen() {
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
   const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
   const { sponsor: savedSponsor, loading: savedSponsorLoading } = usePlacementSponsor('saved');
+  const savedAdIndices = useRecipeListAdIndices(savedRecipes);
 
   const totalMissing = useMemo(() => {
     return savedRecipes.reduce((sum, recipe) => {
@@ -134,33 +136,35 @@ export default function SavedScreen() {
               />
             )}
 
-            {savedRecipes.length > 0 && (
+            {savedRecipes.length > 0 && <View style={styles.listDivider} />}
+          </View>
+        }
+        renderItem={({ item, index }) => (
+          <View>
+            {savedAdIndices.has(index) && (
               <SponsorOrAd
                 sponsor={savedSponsor}
                 loading={savedSponsorLoading}
                 placement="saved"
                 compact
+                style={styles.listSponsorInset}
               />
             )}
-
-            {savedRecipes.length > 0 && <View style={styles.listDivider} />}
+            <RecipeCard
+              recipe={item}
+              variant="list"
+              pickReason={getRecipePickReason(item, {
+                regionalCuisine,
+                pantryIngredients,
+                dietChoice,
+                mealSlot: meal.slot,
+              })}
+              pantryMatchPercent={getPantryMatchPercent(item, pantryIngredients)}
+              onShopMissing={openShopModal}
+              onCookTonight={openCookTonight}
+              cookCtaLabel={meal.cookCta}
+            />
           </View>
-        }
-        renderItem={({ item }) => (
-          <RecipeCard
-            recipe={item}
-            variant="list"
-            pickReason={getRecipePickReason(item, {
-              regionalCuisine,
-              pantryIngredients,
-              dietChoice,
-              mealSlot: meal.slot,
-            })}
-            pantryMatchPercent={getPantryMatchPercent(item, pantryIngredients)}
-            onShopMissing={openShopModal}
-            onCookTonight={openCookTonight}
-            cookCtaLabel={meal.cookCta}
-          />
         )}
         ListEmptyComponent={
           <EmptyState
@@ -214,6 +218,9 @@ const styles = StyleSheet.create({
   },
   listDivider: {
     height: spacing.sm,
+  },
+  listSponsorInset: {
+    marginBottom: spacing.lg,
   },
   itemGap: {
     height: spacing.md,

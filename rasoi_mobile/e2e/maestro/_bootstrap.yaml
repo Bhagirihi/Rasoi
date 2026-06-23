@@ -1,0 +1,22 @@
+# Fresh install: legal consent → login screen
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- extendedWaitUntil:
+    visible:
+      id: legal-consent-checkbox
+    timeout: 60000
+- waitForAnimationToEnd
+- tapOn:
+    id: legal-consent-checkbox
+- tapOn:
+    id: legal-consent-continue
+- extendedWaitUntil:
+    visible:
+      id: screen-login
+    timeout: 30000
+- runFlow:
+    file: _dismiss-permissions.yaml
