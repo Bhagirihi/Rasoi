@@ -24,12 +24,22 @@ def adb(*args: str, check: bool = True) -> subprocess.CompletedProcess:
 
 
 def dump_ui() -> ET.Element:
-    adb("shell", "uiautomator", "dump", "/sdcard/uidump.xml")
-    adb("pull", "/sdcard/uidump.xml", str(QA_DIR / "_uidump.xml"), check=False)
     local = QA_DIR / "_uidump.xml"
-    if not local.exists():
-        raise RuntimeError("UI dump failed")
-    return ET.parse(local).getroot()
+    last_err: str | None = None
+    for _ in range(5):
+        proc = adb("shell", "uiautomator", "dump", "/sdcard/uidump.xml", check=False)
+        if proc.returncode != 0:
+            last_err = proc.stderr.strip() or f"exit {proc.returncode}"
+            time.sleep(1.5)
+            continue
+        adb("pull", "/sdcard/uidump.xml", str(local), check=False)
+        if local.exists() and local.stat().st_size > 100:
+            try:
+                return ET.parse(local).getroot()
+            except ET.ParseError as exc:
+                last_err = str(exc)
+        time.sleep(1.5)
+    raise RuntimeError(f"UI dump failed after retries: {last_err}")
 
 
 def ui_text() -> str:
