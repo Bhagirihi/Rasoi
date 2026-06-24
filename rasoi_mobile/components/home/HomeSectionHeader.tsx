@@ -1,17 +1,17 @@
-import { Sparkles, type LucideIcon } from 'lucide-react-native';
-import { StyleSheet, View } from 'react-native';
+import { Sparkles, type LucideIcon } from "lucide-react-native";
+import { StyleSheet, View } from "react-native";
 
-import Text from '@/components/ui/Text';
-import { appFonts } from '@/constants/fonts';
-import { colors, spacing } from '@/constants/theme';
-import { useTheme } from '@/context/ThemeContext';
+import Text from "@/components/ui/Text";
+import { appFonts } from "@/constants/fonts";
+import { colors, spacing } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 type HomeSectionHeaderProps = {
   title: string;
   subtitle?: string;
   icon?: LucideIcon;
   iconColor?: string;
-  variant?: 'default' | 'featured';
+  variant?: "default" | "featured";
 };
 
 export default function HomeSectionHeader({
@@ -19,10 +19,10 @@ export default function HomeSectionHeader({
   subtitle,
   icon: Icon,
   iconColor,
-  variant = 'default',
+  variant = "default",
 }: HomeSectionHeaderProps) {
   const { colorScheme } = useTheme();
-  const isFeatured = variant === 'featured';
+  const isFeatured = variant === "featured";
 
   return (
     <View style={styles.wrap}>
@@ -44,7 +44,7 @@ export default function HomeSectionHeader({
       {subtitle ? (
         <Text
           variant="body"
-          color={isFeatured ? 'accent' : 'secondary'}
+          color={isFeatured ? "accent" : "secondary"}
           scheme={colorScheme}
           style={[styles.subtitle, isFeatured && styles.featuredSubtitle]}
         >
@@ -58,8 +58,8 @@ export default function HomeSectionHeader({
 const styles = StyleSheet.create({
   wrap: {},
   titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   title: {
