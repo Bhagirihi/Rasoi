@@ -1,6 +1,18 @@
 import { dietChoiceToDietType } from '@/lib/recipe-filters';
+import { canonicalizeIngredientName, expandIngredientAliasKeys } from '@/lib/ingredient-canonical';
 import { scoreRecipeForMealSlot, type MealSlot } from '@/lib/meal-time';
-import type { DietType, RecipeResponse } from '@/lib/types';
+import type { RecipeResponse } from '@/lib/types';
+
+function pantryHasIngredient(pantryIngredients: string[], ingredientName: string): boolean {
+  const needed = expandIngredientAliasKeys(canonicalizeIngredientName(ingredientName));
+  const pantryKeys = new Set<string>();
+  for (const item of pantryIngredients) {
+    for (const alias of expandIngredientAliasKeys(canonicalizeIngredientName(item))) {
+      pantryKeys.add(alias);
+    }
+  }
+  return [...needed].some((key) => pantryKeys.has(key));
+}
 
 export function getRegionalMatchPercent(recipeRegion: string, preferredRegion: string): number {
   if (!preferredRegion || preferredRegion === 'All India') return 100;
@@ -21,9 +33,8 @@ export function getRegionalMatchPercent(recipeRegion: string, preferredRegion: s
 export function getPantryMatchPercent(recipe: RecipeResponse, pantryIngredients: string[]): number {
   if (recipe.ingredients.length === 0 || pantryIngredients.length === 0) return 0;
 
-  const pantrySet = new Set(pantryIngredients.map((item) => item.toLowerCase()));
   const available = recipe.ingredients.filter((ingredient) =>
-    pantrySet.has(ingredient.name.toLowerCase()),
+    pantryHasIngredient(pantryIngredients, ingredient.name),
   ).length;
 
   return Math.round((available / recipe.ingredients.length) * 100);

@@ -253,9 +253,10 @@ model PantrySection {
 }
 
 model AppSettings {
-  id              String   @id @default("default")
-  paymentsEnabled Boolean  @default(false)
-  updatedAt       DateTime @updatedAt
+  id                        String   @id @default("default")
+  paymentsEnabled           Boolean  @default(false)
+  defaultPantryIngredients  String   @default("[]")
+  updatedAt                 DateTime @updatedAt
 
   @@schema("rasoi")
 }

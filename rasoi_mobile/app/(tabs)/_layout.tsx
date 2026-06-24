@@ -36,6 +36,7 @@ export default function TabLayout() {
     hasCompletedOnboarding,
     isLoggedIn,
     pendingTrialWelcome,
+    pendingPantrySetup,
   } = useAppContext();
 
   const screenOptions = useMemo(
@@ -77,7 +78,7 @@ export default function TabLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (pendingTrialWelcome) {
+  if (pendingTrialWelcome && !pendingPantrySetup) {
     return <Redirect href="/(auth)/trial-welcome" />;
   }
 

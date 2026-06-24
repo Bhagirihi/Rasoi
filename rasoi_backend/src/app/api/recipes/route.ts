@@ -1,8 +1,9 @@
 import { NextRequest } from 'next/server';
 
-import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin';
 import { jsonOk, handleApiError } from '@/lib/api';
+import { db } from '@/lib/db';
+import { buildPaginationMeta, parsePaginationParams } from '@/lib/pagination';
 import { buildRecipeWhere } from '@/lib/recipe-filters';
 import { serializeRecipe, serializeRecipeListItem } from '@/lib/serializers';
 import { recipeCreateSchema } from '@/lib/validators';
@@ -24,12 +25,27 @@ export async function GET(request: NextRequest) {
     const serialize =
       view === 'list' || view === 'mobile' ? serializeRecipeListItem : serializeRecipe;
 
-    const recipes = await db.recipe.findMany({
-      where,
-      orderBy: { createdAt: 'desc' },
+    const { limit, offset } = parsePaginationParams(searchParams, {
+      defaultLimit: 100,
+      maxLimit: 200,
     });
 
-    return jsonOk(recipes.map(serialize));
+    const [recipes, total] = await Promise.all([
+      db.recipe.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      db.recipe.count({ where }),
+    ]);
+
+    const items = recipes.map(serialize);
+
+    return jsonOk({
+      items,
+      pagination: buildPaginationMeta(limit, offset, total, items.length),
+    });
   } catch (error) {
     return handleApiError(error);
   }

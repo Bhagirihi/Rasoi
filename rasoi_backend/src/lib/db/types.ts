@@ -171,6 +171,7 @@ export type PantrySection = {
 export type AppSettings = {
   id: string;
   paymentsEnabled: boolean;
+  defaultPantryIngredients: string;
   updatedAt: Date;
 };
 

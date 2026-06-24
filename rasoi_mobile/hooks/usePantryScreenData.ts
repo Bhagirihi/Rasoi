@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { useAppContext } from '@/context/AppContext';
+import { useReferenceData } from '@/context/ReferenceContext';
 import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { useRecipes } from '@/context/RecipesContext';
 import { getMealContext } from '@/utils/mealTime';
@@ -14,7 +15,8 @@ import {
 
 export function usePantryScreenData() {
   const meal = getMealContext();
-  const { pantryIngredients, savedRecipeIds } = useAppContext();
+  const { pantryIngredients, savedRecipeIds, dietChoice, favoriteCuisines } = useAppContext();
+  const { kitchenStyles } = useReferenceData();
   const { recipes } = useRecipes();
   const { topPick, alsoFor, readyToCookCount } = useTonightRecipes();
 
@@ -33,7 +35,15 @@ export function usePantryScreenData() {
     [topPick, alsoFor, savedRecipes],
   );
 
-  const essentialSections = useMemo(() => getPantryEssentialSections(), []);
+  const { sections: essentialSections, preferenceSummary } = useMemo(
+    () =>
+      getPantryEssentialSections({
+        dietChoice,
+        favoriteCuisines,
+        kitchenStyles,
+      }),
+    [dietChoice, favoriteCuisines, kitchenStyles],
+  );
 
   const personalSection = useMemo(
     () => buildPersonalPantrySection(contextRecipes, meal, savedRecipes.length),
@@ -58,6 +68,7 @@ export function usePantryScreenData() {
   return {
     meal,
     essentialSections,
+    preferenceSummary,
     personalSection,
     stockStats,
     restockItems,

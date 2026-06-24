@@ -6,6 +6,11 @@ import { dietChoiceToDietType } from '@/utils/recipeFilters';
 import { getRasoiDb, isDirectSupabaseReadsEnabled } from '@/utils/rasoiDb';
 import { resolveStepsForRecipe } from '@/utils/generateRecipeSteps';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
+import {
+  RECIPE_PAGE_SIZE,
+  type PaginatedItems,
+  type PaginationMeta,
+} from '@/types/pagination';
 
 type DbRecipeRow = {
   id: string;
@@ -78,8 +83,8 @@ function applyFetchFilters(recipes: Recipe[], filters?: RecipeFetchFilters): Rec
   return recipes.filter((recipe) => recipe.dietType === dietType);
 }
 
-async function fetchPublishedRecipesFromSupabase(filters?: RecipeFetchFilters): Promise<Recipe[]> {
-  let query = getRasoiDb().from('Recipe').select('*').eq('published', true);
+function buildPublishedRecipeQuery(filters?: RecipeFetchFilters) {
+  let query = getRasoiDb().from('Recipe').select('*', { count: 'exact' }).eq('published', true);
 
   const region = filters?.region?.trim();
   if (region && region !== 'All India') {
@@ -98,13 +103,36 @@ async function fetchPublishedRecipesFromSupabase(filters?: RecipeFetchFilters): 
     query = query.ilike('tags', `%"${tag}"%`);
   }
 
-  const { data, error } = await query.order('createdAt', { ascending: false });
+  return query.order('createdAt', { ascending: false });
+}
+
+async function fetchPublishedRecipesPageFromSupabase(
+  filters: RecipeFetchFilters | undefined,
+  offset: number,
+  limit: number,
+): Promise<PaginatedItems<Recipe>> {
+  const from = offset;
+  const to = offset + limit - 1;
+  const { data, error, count } = await buildPublishedRecipeQuery(filters).range(from, to);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return applyFetchFilters((data as DbRecipeRow[]).map((row) => mapRecipeRow(row)), filters);
+  const items = applyFetchFilters((data as DbRecipeRow[]).map((row) => mapRecipeRow(row)), filters);
+  const total = count ?? items.length;
+  const hasMore = offset + items.length < total;
+
+  return {
+    items,
+    pagination: {
+      limit,
+      offset,
+      total,
+      hasMore,
+      nextOffset: hasMore ? offset + items.length : null,
+    },
+  };
 }
 
 async function fetchRecipeByIdFromSupabase(id: string): Promise<Recipe> {
@@ -125,7 +153,10 @@ async function fetchRecipeByIdFromSupabase(id: string): Promise<Recipe> {
   return mapRecipeRow(data as DbRecipeRow, { includeSteps: true });
 }
 
-function buildRecipesQuery(filters?: RecipeFetchFilters): string {
+function buildRecipesQuery(
+  filters?: RecipeFetchFilters,
+  pagination?: { limit: number; offset: number },
+): string {
   const params = new URLSearchParams();
   params.set('view', 'list');
   if (filters?.region && filters.region !== 'All India') {
@@ -139,6 +170,10 @@ function buildRecipesQuery(filters?: RecipeFetchFilters): string {
   }
   if (filters?.tag && filters.tag !== 'all') {
     params.set('tag', filters.tag);
+  }
+  if (pagination) {
+    params.set('limit', String(pagination.limit));
+    params.set('offset', String(pagination.offset));
   }
 
   const query = params.toString();
@@ -161,6 +196,11 @@ type ApiRecipe = {
   ingredients: Recipe['ingredients'];
   steps?: string[];
   published: boolean;
+};
+
+type ApiPaginatedRecipes = {
+  items: ApiRecipe[];
+  pagination: PaginationMeta;
 };
 
 function mapApiRecipe(recipe: ApiRecipe): Recipe {
@@ -189,17 +229,50 @@ function mapApiRecipe(recipe: ApiRecipe): Recipe {
   };
 }
 
-export async function fetchPublishedRecipes(filters?: RecipeFetchFilters): Promise<Recipe[]> {
+async function fetchPublishedRecipesPageFromApi(
+  filters: RecipeFetchFilters | undefined,
+  offset: number,
+  limit: number,
+): Promise<PaginatedItems<Recipe>> {
+  const response = await apiFetch<ApiPaginatedRecipes>(
+    `/api/recipes${buildRecipesQuery(filters, { limit, offset })}`,
+  );
+
+  return {
+    items: applyFetchFilters(response.items.map(mapApiRecipe), filters),
+    pagination: response.pagination,
+  };
+}
+
+export async function fetchPublishedRecipesPage(
+  filters: RecipeFetchFilters | undefined,
+  offset = 0,
+  limit = RECIPE_PAGE_SIZE,
+): Promise<PaginatedItems<Recipe>> {
   if (isDirectSupabaseReadsEnabled()) {
     try {
-      return await fetchPublishedRecipesFromSupabase(filters);
+      return await fetchPublishedRecipesPageFromSupabase(filters, offset, limit);
     } catch (error) {
-      console.warn('[recipes] Supabase read failed, falling back to API', error);
+      console.warn('[recipes] Supabase page read failed, falling back to API', error);
     }
   }
 
-  const recipes = await apiFetch<ApiRecipe[]>(`/api/recipes${buildRecipesQuery(filters)}`);
-  return applyFetchFilters(recipes.map(mapApiRecipe), filters);
+  return fetchPublishedRecipesPageFromApi(filters, offset, limit);
+}
+
+export async function fetchPublishedRecipes(filters?: RecipeFetchFilters): Promise<Recipe[]> {
+  const all: Recipe[] = [];
+  let offset = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    const page = await fetchPublishedRecipesPage(filters, offset, RECIPE_PAGE_SIZE);
+    all.push(...page.items);
+    hasMore = page.pagination.hasMore;
+    offset = page.pagination.nextOffset ?? offset + RECIPE_PAGE_SIZE;
+  }
+
+  return all;
 }
 
 export async function fetchRecipeById(id: string): Promise<Recipe> {

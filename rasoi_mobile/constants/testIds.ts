@@ -45,6 +45,10 @@ export const testIds = {
   onboardingSkipNotify: 'onboarding-skip-notify',
   onboardingSkipLocation: 'onboarding-skip-location',
 
+  pantrySetupContinue: 'pantry-setup-continue',
+  pantrySetupSkip: 'pantry-setup-skip',
+  homeRecipeSave: 'home-recipe-save',
+
   trialContinue: 'trial-continue',
 
   settingsThemeLight: 'settings-theme-light',

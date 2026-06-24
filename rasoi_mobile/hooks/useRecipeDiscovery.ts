@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { useRecipes } from '@/context/RecipesContext';
-import { getMealContext } from '@/utils/mealTime';
+import { getScheduledMealContext } from '@/utils/mealTime';
 import {
   type FastFilter,
   type ToggleableFastFilter,
@@ -22,10 +22,10 @@ export function useRecipeDiscovery() {
     pantryFilterActive,
     setPantryFilterActive,
   } = useAppContext();
-  const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes } = useRecipes();
-  const { rankedRecipes: baseRankedRecipes, rankingReady } = useTonightRecipes();
+  const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes, hasMore: recipesHasMore, loadingMore: recipesLoadingMore, loadMoreRecipes, totalCount: recipesTotalCount } = useRecipes();
+  const { rankedRecipes: baseRankedRecipes, topPick: stableTopPick, alsoFor: stableAlsoFor, lateNightPick: stableLateNightPick, rankingReady } = useTonightRecipes();
   const [activeFilters, setActiveFilters] = useState<ToggleableFastFilter[]>([]);
-  const meal = getMealContext();
+  const meal = getScheduledMealContext();
 
   const hasDiscoveryFilters = activeFilters.length > 0 || pantryFilterActive;
 
@@ -80,8 +80,9 @@ export function useRecipeDiscovery() {
     meal.slot,
   ]);
 
-  const topPick = rankedRecipes[0];
-  const tonightCards = rankedRecipes.slice(1, 4);
+  const topPick = hasDiscoveryFilters ? rankedRecipes[0] : stableTopPick;
+  const tonightCards = hasDiscoveryFilters ? rankedRecipes.slice(1, 4) : stableAlsoFor;
+  const lateNightPick = hasDiscoveryFilters ? undefined : stableLateNightPick;
   const moreRecipes = rankedRecipes.slice(4);
   const hasQuickFilters = activeFilters.length > 0 || pantryFilterActive;
 
@@ -102,6 +103,10 @@ export function useRecipeDiscovery() {
     meal,
     recipes,
     recipesLoading,
+    recipesLoadingMore,
+    recipesHasMore,
+    recipesTotalCount,
+    loadMoreRecipes,
     recipesError,
     rankingReady,
     refreshRecipes,
@@ -110,6 +115,7 @@ export function useRecipeDiscovery() {
     rankedRecipes,
     topPick,
     tonightCards,
+    lateNightPick,
     moreRecipes,
     hasQuickFilters,
     pantryFilterActive,

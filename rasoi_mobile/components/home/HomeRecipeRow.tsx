@@ -1,61 +1,64 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronRight, Leaf } from 'lucide-react-native';
+import { ChevronRight, Info, Leaf, Bookmark } from 'lucide-react-native';
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { appFonts } from '@/constants/fonts';
-import { colors, layout, radius, shadows, spacing } from '@/constants/theme';
+import { colors, radius, shadows, spacing } from '@/constants/theme';
 import type { Recipe } from '@/data/mockRecipes';
 import { useTheme } from '@/context/ThemeContext';
+import { useAppContext } from '@/context/AppContext';
+import { useAppDialog } from '@/context/AppDialogContext';
 import type { AffiliatePartner } from '@/utils/affiliate';
 import { getHomeDisplayTags, type HomeRecipeSection } from '@/utils/homeRecipeTags';
 import { getRecipeVisualIdentity } from '@/utils/recipeVisualIdentity';
+import { partitionIngredients } from '@/utils/recipes';
 
 type HomeRecipeRowProps = {
   recipe: Recipe;
   section?: HomeRecipeSection;
-  pickLabel?: string;
-  fullWidth?: boolean;
   pantryMatchPercent: number;
   cookCtaLabel: string;
-  missing: string[];
   onPress: () => void;
   onCookTonight: () => void;
-  onShopMissing: (partner?: AffiliatePartner) => void;
+  onShopMissing: (missing: string[], partner?: AffiliatePartner) => void;
+  /** Hide Blinkit/Zepto strip + Order missing button only (still shows missing list when set). */
+  hideMissingOrder?: boolean;
 };
 
 const PRIMARY_SOFT = '#FFF0EA';
 const PREP_PILL_BG = '#F3EDE6';
 const DIET_PILL_BG = '#E8F5EE';
 const MATCH_PILL_BG = '#FFF4ED';
-const ORDER_PARTNERS_LINE = 'Ordering missing items from Blinkit · Zepto · Instamart';
+const ORDER_PARTNERS_LINE_COMPACT = 'Missing items · Blinkit · Zepto · Instamart';
 const ACTION_RADIUS = 10;
 
 function ThemeAccentBand({
   children,
-  fullWidth,
+  compact = false,
 }: {
   children: ReactNode;
-  fullWidth?: boolean;
+  compact?: boolean;
 }) {
   return (
     <LinearGradient
       colors={['#FFE8DC', PRIMARY_SOFT]}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      style={[styles.themeBand, fullWidth && styles.themeBandFullWidth]}
+      style={[styles.themeBand, compact && styles.themeBandCompact]}
     >
-      <View style={styles.pickAccent} />
+      {!compact ? <View style={styles.pickAccent} /> : null}
       {children}
     </LinearGradient>
   );
 }
 
-function missingPreview(missing: string[]): string {
+function missingPreview(missing: string[], maxItems = 2): string {
   if (missing.length === 0) return '';
-  const head = missing.slice(0, 2).join(', ');
-  const tail = missing.length > 2 ? ` +${missing.length - 2}` : '';
+  const head = missing.slice(0, maxItems).join(', ');
+  const tail = missing.length > maxItems ? ` +${missing.length - maxItems}` : '';
   return `${head}${tail}`;
 }
 
@@ -125,18 +128,26 @@ function MetaTagsRow({
 export default function HomeRecipeRow({
   recipe,
   section = 'also',
-  pickLabel,
-  fullWidth = false,
   pantryMatchPercent,
   cookCtaLabel,
-  missing,
   onPress,
   onCookTonight,
   onShopMissing,
+  hideMissingOrder = false,
 }: HomeRecipeRowProps) {
   const { colors: themeColors } = useTheme();
+  const { isRecipeSaved, toggleSavedRecipe, pantryIngredients } = useAppContext();
+  const { showDialog } = useAppDialog();
+  const hasDescription = Boolean(recipe.description?.trim());
+  const missing = useMemo(
+    () => partitionIngredients(recipe, pantryIngredients).missing,
+    [recipe.id, recipe.ingredients, pantryIngredients],
+  );
   const hasMissing = missing.length > 0;
-  const isFeatured = Boolean(pickLabel);
+  const showOrderUi = hasMissing && !hideMissingOrder;
+  const isFeatured = section === 'pick';
+  const isAlso = section === 'also';
+  const saved = isRecipeSaved(recipe.id);
   const matchColor =
     pantryMatchPercent >= 70
       ? colors.green
@@ -148,7 +159,6 @@ export default function HomeRecipeRow({
     <View
       style={[
         styles.card,
-        fullWidth && styles.cardFullWidth,
         isFeatured && styles.cardFeatured,
         {
           backgroundColor: isFeatured ? '#FFFBF8' : themeColors.white,
@@ -156,29 +166,61 @@ export default function HomeRecipeRow({
         },
       ]}
     >
-      {pickLabel ? (
-        <ThemeAccentBand fullWidth={fullWidth}>
-          <Text style={styles.pickLabel}>{pickLabel.toUpperCase()}</Text>
-        </ThemeAccentBand>
-      ) : null}
-
-      <View style={[styles.cardBody, fullWidth && styles.cardBodyFullWidth]}>
+      <View style={[styles.cardBody, isAlso && styles.cardBodyAlso, isFeatured && styles.cardBodyFeatured]}>
         <Pressable
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onPress();
           }}
-          style={styles.content}
+          style={({ pressed }) => [styles.content, pressed && styles.contentPressed]}
         >
-          <Text style={[styles.title, { color: themeColors.charcoal }]} numberOfLines={2}>
-            {recipe.title}
-          </Text>
-
-          {recipe.description ? (
-            <Text style={[styles.description, { color: themeColors.muted }]} numberOfLines={2}>
-              {recipe.description}
+          <View style={styles.titleRow}>
+            <Text
+              style={[
+                isAlso ? styles.titleAlso : styles.title,
+                styles.titleFlex,
+                { color: themeColors.charcoal },
+              ]}
+              numberOfLines={2}
+            >
+              {recipe.title}
             </Text>
-          ) : null}
+            {hasDescription ? (
+              <Pressable
+                onPress={(event) => {
+                  event.stopPropagation?.();
+                  void Haptics.selectionAsync();
+                  showDialog({
+                    title: recipe.title,
+                    message: recipe.description,
+                  });
+                }}
+                hitSlop={10}
+                style={styles.infoBtn}
+                accessibilityLabel="Recipe description"
+                accessibilityRole="button"
+              >
+                <Info size={18} color={themeColors.muted} strokeWidth={2.25} />
+              </Pressable>
+            ) : null}
+            <Pressable
+              onPress={(event) => {
+                event.stopPropagation?.();
+                void Haptics.selectionAsync();
+                toggleSavedRecipe(recipe.id);
+              }}
+              hitSlop={10}
+              style={styles.bookmarkBtn}
+              accessibilityLabel={saved ? 'Remove from saved' : 'Save recipe'}
+              accessibilityRole="button"
+            >
+              <Bookmark
+                size={20}
+                color={saved ? colors.primary : themeColors.muted}
+                fill={saved ? colors.primary : 'transparent'}
+              />
+            </Pressable>
+          </View>
 
           <MetaTagsRow
             recipe={recipe}
@@ -189,29 +231,56 @@ export default function HomeRecipeRow({
           />
         </Pressable>
 
-        {hasMissing ? (
-          <View style={styles.orderBlock}>
-            <ThemeAccentBand fullWidth={false}>
-              <Text style={styles.pickLabel} numberOfLines={2}>
-                {ORDER_PARTNERS_LINE}
-              </Text>
+        {showOrderUi ? (
+          <View style={[styles.orderBlock, isFeatured && styles.orderBlockFeatured]}>
+            <ThemeAccentBand compact={isFeatured}>
+              {isFeatured ? (
+                <View style={styles.orderBandStack}>
+                  <Text style={styles.bandLabelCompact} numberOfLines={1}>
+                    {ORDER_PARTNERS_LINE_COMPACT}
+                  </Text>
+                  <Text
+                    style={[styles.missingInline, { color: themeColors.muted }]}
+                    numberOfLines={1}
+                  >
+                    Missing: {missingPreview(missing, 4)}
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.bandLabel} numberOfLines={1}>
+                  {ORDER_PARTNERS_LINE_COMPACT}
+                </Text>
+              )}
             </ThemeAccentBand>
-            <Text style={[styles.missingPreview, { color: themeColors.muted }]} numberOfLines={1}>
-              {missingPreview(missing)}
-            </Text>
+            {!isFeatured ? (
+              <Text
+                style={[styles.missingPreview, { color: themeColors.muted }]}
+                numberOfLines={1}
+              >
+                {missingPreview(missing)}
+              </Text>
+            ) : null}
           </View>
         ) : null}
 
-        <View style={styles.actionsSection}>
+        <View
+          style={[
+            styles.actionsSection,
+            isAlso && styles.actionsSectionAlso,
+            isFeatured && styles.actionsSectionFeatured,
+          ]}
+        >
           <View style={styles.actionRow}>
-            {hasMissing ? (
+            {showOrderUi ? (
               <Pressable
                 onPress={() => {
                   void Haptics.selectionAsync();
-                  onShopMissing();
+                  onShopMissing(missing);
                 }}
                 style={({ pressed }) => [
                   styles.actionBtn,
+                  isAlso && styles.actionBtnAlso,
+                  isFeatured && styles.actionBtnFeatured,
                   styles.orderBtn,
                   pressed && styles.actionBtnPressed,
                 ]}
@@ -230,12 +299,17 @@ export default function HomeRecipeRow({
               }}
               style={({ pressed }) => [
                 styles.actionBtn,
+                isAlso && styles.actionBtnAlso,
+                isFeatured && styles.actionBtnFeatured,
                 styles.cookBtn,
-                hasMissing ? styles.cookBtnSplit : styles.cookBtnFull,
+                showOrderUi ? styles.cookBtnSplit : styles.cookBtnFull,
                 pressed && styles.actionBtnPressed,
               ]}
             >
-              <Text style={styles.cookBtnText} numberOfLines={1}>
+              <Text
+                style={[styles.cookBtnText, isAlso && styles.cookBtnTextAlso]}
+                numberOfLines={1}
+              >
                 {cookCtaLabel}
               </Text>
               <ChevronRight size={14} color={colors.white} strokeWidth={2.5} />
@@ -258,13 +332,6 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.primary,
   },
-  cardFullWidth: {
-    marginHorizontal: -layout.screenPadding,
-    borderRadius: 0,
-    borderLeftWidth: 4,
-    borderRightWidth: 0,
-    ...shadows.cardLifted,
-  },
   themeBand: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -274,8 +341,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255,107,53,0.16)',
   },
-  themeBandFullWidth: {
-    paddingHorizontal: layout.screenPadding,
+  themeBandCompact: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    gap: 0,
+    borderBottomWidth: 0,
+  },
+  orderBandStack: {
+    flex: 1,
+    gap: 2,
   },
   pickAccent: {
     width: 3,
@@ -283,7 +357,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: colors.primary,
   },
-  pickLabel: {
+  bandLabel: {
     flex: 1,
     fontFamily: appFonts.bodyBold,
     fontSize: 11,
@@ -291,30 +365,71 @@ const styles = StyleSheet.create({
     lineHeight: 15,
     color: '#C44A00',
   },
+  bandLabelCompact: {
+    fontFamily: appFonts.bodyBold,
+    fontSize: 10,
+    letterSpacing: 0.4,
+    lineHeight: 13,
+    color: '#C44A00',
+  },
+  missingInline: {
+    fontFamily: appFonts.bodyMedium,
+    fontSize: 11,
+    lineHeight: 14,
+  },
   orderBlock: {
     gap: spacing.xs,
     marginTop: spacing.xs,
+  },
+  orderBlockFeatured: {
+    gap: 0,
+    marginTop: 4,
   },
   cardBody: {
     padding: spacing.lg,
     gap: spacing.md,
   },
-  cardBodyFullWidth: {
-    paddingHorizontal: layout.screenPadding,
+  cardBodyFeatured: {
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  cardBodyAlso: {
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   content: {
-    gap: spacing.sm,
+    gap: spacing.xs,
+  },
+  contentPressed: {
+    opacity: 0.92,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.xs,
+  },
+  titleFlex: {
+    flex: 1,
+  },
+  infoBtn: {
+    marginTop: 3,
+    padding: 2,
+  },
+  bookmarkBtn: {
+    marginTop: 2,
+    padding: 2,
   },
   title: {
     fontFamily: appFonts.display,
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 28,
     letterSpacing: -0.2,
   },
-  description: {
-    fontFamily: appFonts.body,
-    fontSize: 14,
-    lineHeight: 20,
+  titleAlso: {
+    fontFamily: appFonts.display,
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: -0.15,
   },
   metaRow: {
     flexDirection: 'row',
@@ -342,6 +457,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
+    flexShrink: 1,
   },
   metaPillText: {
     fontFamily: appFonts.bodyBold,
@@ -351,7 +467,7 @@ const styles = StyleSheet.create({
   missingPreview: {
     fontFamily: appFonts.bodyMedium,
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 17,
     paddingHorizontal: spacing.xs,
   },
   actionsSection: {
@@ -359,6 +475,14 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,107,53,0.14)',
+  },
+  actionsSectionFeatured: {
+    marginTop: spacing.xs,
+    paddingTop: spacing.xs,
+  },
+  actionsSectionAlso: {
+    marginTop: spacing.xs,
+    paddingTop: spacing.xs,
   },
   actionRow: {
     flexDirection: 'row',
@@ -374,6 +498,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: ACTION_RADIUS,
+  },
+  actionBtnAlso: {
+    minHeight: 38,
+    paddingVertical: spacing.xs + 2,
+  },
+  actionBtnFeatured: {
+    minHeight: 36,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
   actionBtnPressed: {
     opacity: 0.88,
@@ -403,5 +536,8 @@ const styles = StyleSheet.create({
     fontFamily: appFonts.bodyBold,
     fontSize: 12,
     color: colors.white,
+  },
+  cookBtnTextAlso: {
+    fontSize: 11,
   },
 });

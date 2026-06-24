@@ -41,6 +41,7 @@ import { setFirebaseUserId, setFirebaseUserProperties, logFirebaseEvent } from '
 import { resolvePlanState, type ResolvedPlan } from '@/utils/planLogic';
 import {
   syncDailyReminder,
+  ensureNotificationPermissions,
   sendDailyReminderThankYouNotification,
   sendRecipeSavedNotification,
   scheduleTrialDayTwoReminder,
@@ -61,8 +62,10 @@ import {
   loadLocalOnboardingState,
   localStateToOnboardingPayload,
   loadPendingTrialWelcome,
+  loadPendingPantrySetup,
   saveOnboardingComplete,
   savePendingTrialWelcome,
+  savePendingPantrySetup,
 } from '@/utils/storage';
 import { cuisinesToRegion } from '@/utils/kitchenStyles';
 import type { StoredPlanState } from '@/utils/planStorage';
@@ -156,6 +159,8 @@ interface AppContextValue extends ResolvedPlan {
   redeemPromoCode: (code: string) => Promise<{ message: string }>;
   pendingTrialWelcome: boolean;
   dismissTrialWelcome: () => void;
+  pendingPantrySetup: boolean;
+  clearPendingPantrySetup: () => void;
   pendingEmailVerification: PendingEmailVerification | null;
   emailVerificationModalVisible: boolean;
   openEmailVerificationModal: () => void;
@@ -209,6 +214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [savedRecipeIds, setSavedRecipeIds] = useState<string[]>([]);
   const [pantryFilterActive, setPantryFilterActive] = useState(false);
   const [pendingTrialWelcome, setPendingTrialWelcomeState] = useState(false);
+  const [pendingPantrySetup, setPendingPantrySetupState] = useState(false);
   const [pendingEmailVerification, setPendingEmailVerificationState] =
     useState<PendingEmailVerification | null>(null);
   const [emailVerificationModalVisible, setEmailVerificationModalVisible] = useState(false);
@@ -217,9 +223,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPendingTrialWelcomeState(pending);
     void savePendingTrialWelcome(pending);
   }, []);
+
+  const setPendingPantrySetup = useCallback((pending: boolean) => {
+    setPendingPantrySetupState(pending);
+    void savePendingPantrySetup(pending);
+  }, []);
+
+  const clearPendingPantrySetup = useCallback(() => {
+    setPendingPantrySetup(false);
+  }, [setPendingPantrySetup]);
   const [planState, setPlanState] = useState<StoredPlanState>(DEFAULT_PLAN);
   const pendingOnboardingRef = useRef<OnboardingPayload | null>(null);
+  const pendingPantrySetupRef = useRef(false);
   const profileRefreshInFlightRef = useRef(false);
+
+  useEffect(() => {
+    pendingPantrySetupRef.current = pendingPantrySetup;
+  }, [pendingPantrySetup]);
 
   const syncPushTokenToServer = useCallback(async (enabled: boolean) => {
     if (!isRemotePushAvailable()) {
@@ -303,7 +323,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
       }
       setPantryIngredients(
-        user.pantryIngredients,
+        pendingPantrySetupRef.current ? [] : user.pantryIngredients,
       );
       setSavedRecipeIds(user.savedRecipeIds);
       applyPlanState(planFromUser(user));
@@ -391,7 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         authError('finishAuthAfterSync:onboarding_failed', error);
       }
 
-      void syncPushTokenToServer(notificationsOn);
+      void syncPushTokenToServer(onboardingDone ? notificationsOn : false);
 
       return {
         showTrialWelcome: false,
@@ -421,10 +441,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         await ensureValidSupabaseSession();
 
-        const [local, pendingWelcome, pendingEmail, appToken, session, userLoggedOut, cachedProfile] =
+        const [local, pendingWelcome, pendingPantry, pendingEmail, appToken, session, userLoggedOut, cachedProfile] =
           await Promise.all([
             loadLocalOnboardingState(),
             loadPendingTrialWelcome(),
+            loadPendingPantrySetup(),
             loadPendingEmailVerification(),
             getAuthToken(),
             getSupabaseSession(),
@@ -433,6 +454,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ]);
         applyLocalOnboarding(local);
         setPendingTrialWelcomeState(pendingWelcome);
+        pendingPantrySetupRef.current = pendingPantry;
+        setPendingPantrySetupState(pendingPantry);
         setPendingEmailVerificationState(pendingEmail);
         const pendingPayload = localStateToOnboardingPayload(local);
         if (pendingPayload) {
@@ -459,6 +482,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
           const user = await fetchCurrentUser();
           applyUserProfile(user);
+          if (pendingPantry) {
+            setPantryIngredients([]);
+            void updatePantryIngredients([]).catch(() => undefined);
+          }
           await syncOnboardingIfNeeded(user);
           return;
         } catch (error) {
@@ -520,10 +547,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!isHydrated) return;
     void syncDailyReminder(notificationsEnabled);
-    if (isLoggedIn) {
+    if (isLoggedIn && hasCompletedOnboarding) {
       void syncPushTokenToServer(notificationsEnabled);
     }
-  }, [isHydrated, isLoggedIn, notificationsEnabled, syncPushTokenToServer]);
+  }, [isHydrated, isLoggedIn, hasCompletedOnboarding, notificationsEnabled, syncPushTokenToServer]);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;
@@ -534,7 +561,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           await ensureValidSupabaseSession();
           await refreshUserProfileFromServer();
         })();
-        if (notificationsEnabled) {
+        if (notificationsEnabled && hasCompletedOnboarding) {
           void syncPushTokenToServer(true);
         }
       }
@@ -544,6 +571,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [
     isHydrated,
     isLoggedIn,
+    hasCompletedOnboarding,
     notificationsEnabled,
     refreshUserProfileFromServer,
     syncPushTokenToServer,
@@ -719,7 +747,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (pendingOnboarding && user.hasCompletedOnboarding) {
           pendingOnboardingRef.current = null;
         }
+        const isNewSignup = otpFlow === 'signup';
+        if (isNewSignup) {
+          pendingPantrySetupRef.current = true;
+          setPendingPantrySetup(true);
+        }
         const nav = await finishAuthAfterSync(user);
+        if (isNewSignup) {
+          setPantryIngredients([]);
+          void updatePantryIngredients([]).then(applyUserProfile).catch((error) => {
+            authError('signup:clear_default_pantry_failed', error);
+          });
+        }
         authLog('verifyEmailOtpAndLogin:success', {
           onboardingDone: nav.hasCompletedOnboarding,
           upgradedGuest: isGuestUser,
@@ -734,7 +773,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    [finishAuthAfterSync, isGuestUser, userId],
+    [finishAuthAfterSync, isGuestUser, userId, setPendingPantrySetup, updatePantryIngredients, applyUserProfile],
   );
 
   const verifyLoginEmailOtp = useCallback(
@@ -959,13 +998,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setNotificationsEnabledState(false);
     setPantryFilterActive(false);
     void setPendingTrialWelcome(false);
+    setPendingPantrySetup(false);
     setPantryIngredients([...DEFAULT_PANTRY]);
     setSavedRecipeIds([]);
     setPlanState(DEFAULT_PLAN);
     await syncDailyReminder(false);
     clearSentryUser();
     void setFirebaseUserId(null);
-  }, [syncPushTokenToServer]);
+  }, [syncPushTokenToServer, setPendingPantrySetup]);
 
   const setDietChoice = useCallback(
     async (choice: DietChoice) => {
@@ -1008,7 +1048,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setNotificationsEnabled = useCallback(
     async (enabled: boolean) => {
       const wasEnabled = notificationsEnabled;
-      const scheduled = enabled ? await syncDailyReminder(true) : await syncDailyReminder(false);
+      let scheduled = false;
+
+      if (enabled) {
+        const granted = await ensureNotificationPermissions();
+        if (!granted) {
+          setNotificationsEnabledState(false);
+          if (isLoggedIn) {
+            const user = await updateUserProfile({ notificationsEnabled: false });
+            applyUserProfile(user);
+          }
+          return;
+        }
+        scheduled = await syncDailyReminder(true);
+      } else {
+        scheduled = await syncDailyReminder(false);
+      }
+
       setNotificationsEnabledState(scheduled);
       if (isLoggedIn) {
         const user = await updateUserProfile({ notificationsEnabled: scheduled });
@@ -1034,9 +1090,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       let scheduledNotifications = payload.notificationsEnabled;
       if (notificationsChanged) {
-        scheduledNotifications = payload.notificationsEnabled
-          ? await syncDailyReminder(true)
-          : await syncDailyReminder(false);
+        if (payload.notificationsEnabled) {
+          const granted = await ensureNotificationPermissions();
+          scheduledNotifications = granted ? await syncDailyReminder(true) : false;
+        } else {
+          scheduledNotifications = await syncDailyReminder(false);
+        }
         setNotificationsEnabledState(scheduledNotifications);
       }
 
@@ -1162,6 +1221,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       redeemPromoCode,
       pendingTrialWelcome,
       dismissTrialWelcome,
+      pendingPantrySetup,
+      clearPendingPantrySetup,
       pendingEmailVerification,
       emailVerificationModalVisible,
       openEmailVerificationModal,
@@ -1220,6 +1281,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       redeemPromoCode,
       pendingTrialWelcome,
       dismissTrialWelcome,
+      pendingPantrySetup,
+      clearPendingPantrySetup,
       pendingEmailVerification,
       emailVerificationModalVisible,
       openEmailVerificationModal,

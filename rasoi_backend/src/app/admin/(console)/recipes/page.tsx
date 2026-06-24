@@ -5,15 +5,19 @@ import DownloadMarkdownSampleButton from '@/app/admin/(console)/recipes/Download
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import RecipeFilterPanel from '@/app/admin/_components/RecipeFilterPanel';
+import { buildAdminPageHref, TablePagination } from '@/app/admin/_components/TablePagination';
 import { Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteRecipeAction } from '@/app/admin/recipe-actions';
 import { buildRecipeWhere } from '@/lib/recipe-filters';
 import { db } from '@/lib/db';
+import { parsePageParams } from '@/lib/pagination';
 import { serializeRecipe } from '@/lib/serializers';
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+const ADMIN_RECIPE_PAGE_SIZE = 50;
 
 function param(value: string | string[] | undefined): string | undefined {
   if (Array.isArray(value)) return value[0];
@@ -31,8 +35,27 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
   };
 
   const where = buildRecipeWhere(filterParams, { adminIncludeDrafts: true });
-  const recipes = await db.recipe.findMany({ where, orderBy: { createdAt: 'desc' } });
-  const totalCount = await db.recipe.count();
+  const pageParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    const resolved = param(value);
+    if (resolved) pageParams.set(key, resolved);
+  }
+  pageParams.set('limit', String(ADMIN_RECIPE_PAGE_SIZE));
+  const { page, pageSize, offset } = parsePageParams(pageParams, {
+    defaultLimit: ADMIN_RECIPE_PAGE_SIZE,
+    maxLimit: ADMIN_RECIPE_PAGE_SIZE,
+  });
+
+  const [recipes, filteredCount, totalCount] = await Promise.all([
+    db.recipe.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: pageSize,
+      skip: offset,
+    }),
+    db.recipe.count({ where }),
+    db.recipe.count(),
+  ]);
 
   const hasFilters =
     filterParams.dietChoice ||
@@ -47,8 +70,8 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
         title="Recipes"
         description={
           hasFilters
-            ? `Showing ${recipes.length} of ${totalCount} recipes with current filters.`
-            : `${totalCount} dishes in the library. Filter by diet and region like the mobile app.`
+            ? `Showing ${recipes.length === 0 ? 0 : offset + 1}–${offset + recipes.length} of ${filteredCount} matching recipes (${totalCount} total in library).`
+            : `Showing ${recipes.length === 0 ? 0 : offset + 1}–${offset + recipes.length} of ${totalCount} dishes. Filter by diet and region like the mobile app.`
         }
         action={
           <div className="flex flex-wrap items-center gap-2">
@@ -140,6 +163,13 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
           );
         })}
       </DataTable>
+
+      <TablePagination
+        page={page}
+        pageSize={pageSize}
+        total={filteredCount}
+        buildHref={(nextPage) => buildAdminPageHref('/admin/recipes', params, nextPage)}
+      />
     </div>
   );
 }

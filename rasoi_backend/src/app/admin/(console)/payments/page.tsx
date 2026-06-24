@@ -40,6 +40,22 @@ export default async function AdminPaymentsPage() {
 
       <AdminCard className="p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
+          Pantry defaults
+        </p>
+        <p className="mt-4 text-sm leading-relaxed text-admin-muted">
+          Mark ingredients new users already have at home — atta, chawal, oil, masala, and more from the
+          full recipe catalog.
+        </p>
+        <a
+          href="/admin/pantry-defaults"
+          className="mt-4 inline-flex text-sm font-semibold text-admin-gold-soft hover:text-admin-gold"
+        >
+          Manage default pantry →
+        </a>
+      </AdminCard>
+
+      <AdminCard className="p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
           When payments are off
         </p>
         <ul className="mt-4 space-y-2 text-sm leading-relaxed text-admin-muted">

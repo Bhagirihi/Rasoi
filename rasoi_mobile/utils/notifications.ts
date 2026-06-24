@@ -41,15 +41,39 @@ async function getNotifications(): Promise<ExpoNotifications | null> {
 
 export const DAILY_REMINDER_SLOTS = [
   {
-    id: 'rasoi-daily-dinner-5pm',
-    hour: 17,
+    id: 'rasoi-daily-breakfast',
+    hour: 8,
     minute: 0,
-    label: '5 PM',
+    label: '8 AM',
+    title: "What's for breakfast?",
+    body: 'Open Rasoi for your morning pick based on your pantry.',
+  },
+  {
+    id: 'rasoi-daily-lunch',
+    hour: 12,
+    minute: 30,
+    label: '12:30 PM',
+    title: 'Planning lunch?',
+    body: 'See your top lunch pick on Rasoi.',
+  },
+  {
+    id: 'rasoi-daily-snack',
+    hour: 16,
+    minute: 0,
+    label: '4 PM',
+    title: 'Time for a snack?',
+    body: 'Quick snack ideas matched to your kitchen.',
+  },
+  {
+    id: 'rasoi-daily-dinner',
+    hour: 19,
+    minute: 0,
+    label: '7 PM',
     title: "What's for dinner?",
     body: "Open Rasoi for tonight's top pick based on your pantry.",
   },
   {
-    id: 'rasoi-daily-dinner-10pm',
+    id: 'rasoi-daily-late-night',
     hour: 22,
     minute: 0,
     label: '10 PM',
@@ -58,7 +82,16 @@ export const DAILY_REMINDER_SLOTS = [
   },
 ] as const;
 
-export const DAILY_REMINDER_TIME_LABEL = DAILY_REMINDER_SLOTS.map((slot) => slot.label).join(' & ');
+const LEGACY_DAILY_REMINDER_IDS = [
+  'rasoi-daily-dinner',
+  'rasoi-daily-dinner-5pm',
+  'rasoi-daily-dinner-10pm',
+] as const;
+
+export const DAILY_REMINDER_TIME_LABEL = DAILY_REMINDER_SLOTS.map((slot) => slot.label).join(' · ');
+
+export const DAILY_REMINDER_MEAL_SUMMARY =
+  'breakfast, lunch, snack, dinner & late-night';
 
 export async function ensureMealPushChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
@@ -185,8 +218,8 @@ export async function cancelDailyReminder(): Promise<void> {
 
   await Notifications.cancelScheduledNotificationAsync('rasoi-daily-dinner');
   await Promise.all(
-    DAILY_REMINDER_SLOTS.map((slot) =>
-      Notifications.cancelScheduledNotificationAsync(slot.id),
+    [...LEGACY_DAILY_REMINDER_IDS, ...DAILY_REMINDER_SLOTS.map((slot) => slot.id)].map((id) =>
+      Notifications.cancelScheduledNotificationAsync(id),
     ),
   );
 }
@@ -197,8 +230,7 @@ export async function scheduleDailyReminder(): Promise<boolean> {
   const Notifications = await getNotifications();
   if (!Notifications) return false;
 
-  const granted = await ensureNotificationPermissions();
-  if (!granted) return false;
+  if (!(await isNotificationPermissionGranted())) return false;
 
   await cancelDailyReminder();
 
@@ -231,14 +263,13 @@ export async function sendDailyReminderThankYouNotification(): Promise<void> {
   const Notifications = await getNotifications();
   if (!Notifications) return;
 
-  const granted = await ensureNotificationPermissions();
-  if (!granted) return;
+  if (!(await isNotificationPermissionGranted())) return;
 
   await Notifications.scheduleNotificationAsync({
     identifier: REMINDER_THANK_YOU_ID,
     content: {
       title: 'Thank you!',
-      body: `Daily reminders are on. We'll nudge you at ${DAILY_REMINDER_TIME_LABEL} with dinner ideas from Rasoi.`,
+      body: `Daily reminders are on. We'll send personalized recipe picks at ${DAILY_REMINDER_TIME_LABEL}.`,
       sound: true,
     },
     trigger: null,
@@ -252,8 +283,7 @@ export async function sendRecipeSavedNotification(recipeTitle: string): Promise<
   const Notifications = await getNotifications();
   if (!Notifications) return;
 
-  const granted = await ensureNotificationPermissions();
-  if (!granted) return;
+  if (!(await isNotificationPermissionGranted())) return;
 
   await Notifications.scheduleNotificationAsync({
     identifier: `rasoi-recipe-saved-${Date.now()}`,
@@ -299,8 +329,7 @@ export async function getExpoPushTokenDetailed(): Promise<ExpoPushTokenResult> {
     return { ok: false, reason: 'Notifications module failed to load' };
   }
 
-  const granted = await ensureNotificationPermissions();
-  if (!granted) {
+  if (!(await isNotificationPermissionGranted())) {
     return { ok: false, reason: 'Notification permission not granted' };
   }
 
@@ -359,8 +388,7 @@ export async function scheduleTrialDayTwoReminder(trialStartedAt: string): Promi
   const Notifications = await getNotifications();
   if (!Notifications) return;
 
-  const granted = await ensureNotificationPermissions();
-  if (!granted) return;
+  if (!(await isNotificationPermissionGranted())) return;
 
   await cancelTrialReminder();
 

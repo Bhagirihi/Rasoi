@@ -2,7 +2,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { Search, Timer } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { Pressable, StyleSheet, Text, View, Keyboard } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, Keyboard } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
@@ -53,6 +53,10 @@ export default function RecipesTabScreen() {
     meal,
     recipes,
     recipesLoading,
+    recipesLoadingMore,
+    recipesHasMore,
+    loadMoreRecipes,
+    recipesTotalCount,
     recipesError,
     refreshRecipes,
     activeFilters,
@@ -224,6 +228,22 @@ export default function RecipesTabScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         onScrollBeginDrag={Keyboard.dismiss}
+        onEndReached={() => {
+          if (recipesHasMore && !recipesLoadingMore) {
+            void loadMoreRecipes();
+          }
+        }}
+        onEndReachedThreshold={0.4}
+        ListFooterComponent={
+          recipesLoadingMore ? (
+            <View style={styles.listFooter}>
+              <ActivityIndicator color={themeColors.saffron} />
+              <Text style={[styles.listFooterText, { color: themeColors.muted }]}>
+                Loading more recipes…
+              </Text>
+            </View>
+          ) : null
+        }
         contentContainerStyle={[
           styles.listContent,
           { paddingBottom: listBottomPadding },
@@ -250,7 +270,7 @@ export default function RecipesTabScreen() {
               onSearchChange={setSearchQuery}
               searchTestId={testIds.recipesSearchInput}
               resultCount={searchedMoreRecipes.length}
-              totalCount={listRecipes.length}
+              totalCount={recipesTotalCount ?? listRecipes.length}
               onClearAll={clearDiscovery}
             />
 
@@ -418,5 +438,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     color: colors.white,
+  },
+  listFooter: {
+    alignItems: "center",
+    gap: spacing.sm,
+    paddingVertical: spacing.lg,
+  },
+  listFooterText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

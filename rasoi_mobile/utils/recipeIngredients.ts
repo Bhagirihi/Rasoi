@@ -1,4 +1,5 @@
 import type { RecipeIngredient } from '@/data/mockRecipes';
+import { canonicalizeIngredientName } from '@/constants/ingredientCanonical';
 
 /** API/catalog may return string[] or partial objects — normalize before UI use. */
 export function normalizeRecipeIngredients(raw: unknown): RecipeIngredient[] {
@@ -8,7 +9,7 @@ export function normalizeRecipeIngredients(raw: unknown): RecipeIngredient[] {
 
   for (const item of raw) {
     if (typeof item === 'string') {
-      const name = item.trim();
+      const name = canonicalizeIngredientName(item.trim());
       if (name) normalized.push({ name, isStaple: false });
       continue;
     }
@@ -19,7 +20,7 @@ export function normalizeRecipeIngredients(raw: unknown): RecipeIngredient[] {
         isStaple?: unknown;
         recommendedBrand?: { name?: unknown; logo?: unknown };
       };
-      const name = String(record.name ?? '').trim();
+      const name = canonicalizeIngredientName(String(record.name ?? '').trim());
       if (!name) continue;
 
       const ingredient: RecipeIngredient = {

@@ -134,18 +134,23 @@ export function KitchenPrefsCard({
         </View>
       </Pressable>
 
-      <View
-        style={[
+      <Pressable
+        onPress={() => onNotificationsChange(!notificationsEnabled)}
+        style={({ pressed }) => [
           styles.kitchenNotify,
           { backgroundColor: themeColors.cream },
           notificationsEnabled && styles.kitchenNotifyOn,
+          pressed && styles.rowPressed,
         ]}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: notificationsEnabled }}
+        accessibilityLabel="Daily reminders"
       >
         <View style={styles.kitchenNotifyLeft}>
           <Text style={[styles.kitchenNotifyLabel, { color: themeColors.charcoal }]}>Daily reminders</Text>
           <Text style={[styles.kitchenNotifySub, { color: themeColors.muted }]}>
             {notificationsEnabled
-              ? `${DAILY_REMINDER_TIME_LABEL} dinner nudges are on`
+              ? `Recipe picks at ${DAILY_REMINDER_TIME_LABEL}`
               : 'Off — tap to enable'}
           </Text>
         </View>
@@ -155,7 +160,7 @@ export function KitchenPrefsCard({
           trackColor={{ false: themeColors.border, true: 'rgba(0,168,107,0.35)' }}
           thumbColor={notificationsEnabled ? colors.green : themeColors.white}
         />
-      </View>
+      </Pressable>
     </View>
   );
 }

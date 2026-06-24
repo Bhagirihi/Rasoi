@@ -97,12 +97,13 @@ function authOnlyRow(auth: Awaited<ReturnType<typeof listSupabaseAuthUsers>>[num
 
 export async function loadRasoiUsersWithPushCounts(
   where: Record<string, unknown>,
-  take = 500,
+  options?: { take?: number; skip?: number },
 ): Promise<UserWithRelations[]> {
   const users = await db.user.findMany({
     where,
     orderBy: { createdAt: 'desc' },
-    take,
+    take: options?.take,
+    skip: options?.skip,
   });
 
   if (users.length === 0) return [];
@@ -127,8 +128,8 @@ export async function loadRasoiUsersWithPushCounts(
 /** Merge rasoi.User rows with Supabase Auth users (service role API). */
 export async function loadAdminMemberRows(
   where: Record<string, unknown>,
-  options?: { includeAuthOnly?: boolean },
-): Promise<AdminUserRow[]> {
+  options?: { includeAuthOnly?: boolean; take?: number; skip?: number },
+): Promise<{ rows: AdminUserRow[]; total: number }> {
   const includeAuthOnly = options?.includeAuthOnly ?? true;
 
   const [rasoiUsers, authUsers] = await Promise.all([
@@ -149,7 +150,14 @@ export async function loadAdminMemberRows(
     .filter((auth) => !auth.email || !linkedEmails.has(auth.email.toLowerCase()))
     .map(authOnlyRow);
 
-  return [...syncedRows, ...authOnlyRows].sort(
+  const allRows = [...authOnlyRows, ...syncedRows].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
+
+  const skip = options?.skip ?? 0;
+  const take = options?.take;
+  const rows =
+    take != null ? allRows.slice(skip, skip + take) : allRows.slice(skip);
+
+  return { rows, total: allRows.length };
 }

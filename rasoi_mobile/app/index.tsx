@@ -14,7 +14,7 @@ const BOOTSTRAP_STEPS = [
 ];
 
 export default function Index() {
-  const { isHydrated, hasCompletedOnboarding, isLoggedIn, pendingTrialWelcome } = useAppContext();
+  const { isHydrated, hasCompletedOnboarding, isLoggedIn, pendingTrialWelcome, pendingPantrySetup } = useAppContext();
   const [legalReady, setLegalReady] = useState(false);
   const [legalConsented, setLegalConsented] = useState(false);
 
@@ -51,6 +51,10 @@ export default function Index() {
 
   if (!hasCompletedOnboarding) {
     return <Redirect href="/(auth)/onboarding" />;
+  }
+
+  if (pendingPantrySetup) {
+    return <Redirect href="/(tabs)/pantry" />;
   }
 
   if (pendingTrialWelcome) {

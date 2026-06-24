@@ -29,6 +29,7 @@ const indianPhone = z
 const allowedEmail = z
   .string()
   .trim()
+  .max(120)
   .email()
   .transform((value) => value.toLowerCase())
   .refine((value) => !isDisposableEmail(value), getDisposableEmailError());
@@ -127,6 +128,10 @@ export const sponsorUpdateSchema = sponsorCreateSchema.partial();
 
 export const pantryUpdateSchema = z.object({
   ingredients: z.array(z.string().min(1).max(120)).max(200),
+});
+
+export const defaultPantryUpdateSchema = z.object({
+  ingredients: z.array(z.string().min(1).max(120)).max(500),
 });
 
 export const affiliateEventSchema = z.object({
@@ -277,10 +282,9 @@ export const feedbackSchema = z.object({
     .optional()
     .transform((value) => (value?.trim() ? value.trim() : undefined)),
   email: allowedEmail
-    .max(120)
     .optional()
     .or(z.literal(''))
-    .transform((value) => (value ? value : undefined)),
+    .transform((value: string | undefined) => (value ? value : undefined)),
   appVersion: z.string().trim().max(32).optional(),
   platform: z.enum(['ios', 'android', 'web']).optional(),
 });
@@ -288,7 +292,7 @@ export const feedbackSchema = z.object({
 export const sponsorApplicationSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
   contactName: z.string().trim().min(2).max(80),
-  email: allowedEmail.max(120),
+  email: allowedEmail,
   phone: z
     .string()
     .optional()

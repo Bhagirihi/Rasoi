@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { db } from '@/lib/db';
 import { getAutoTrialWriteForNewUser, getAutoTrialWriteIfEligible } from '@/lib/auto-trial';
+import { getDefaultPantryIngredients } from '@/lib/app-settings';
 import { signToken } from '@/lib/auth';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { CURRENT_TERMS_VERSION } from '@/lib/legal-version';
@@ -97,12 +98,14 @@ export async function POST(request: NextRequest) {
     }
 
     const autoTrial = await getAutoTrialWriteForNewUser();
+    const defaultPantry = await getDefaultPantryIngredients();
 
     const user = await db.user.create({
       data: {
         name: input.name?.trim() || 'Guest',
         isGuest: true,
         supabaseUserId,
+        pantryIngredients: JSON.stringify(defaultPantry),
         termsAcceptedAt: new Date(),
         termsAcceptedVersion: input.termsVersion ?? CURRENT_TERMS_VERSION,
         ...autoTrial,

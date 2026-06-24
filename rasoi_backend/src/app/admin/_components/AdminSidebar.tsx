@@ -14,6 +14,7 @@ export const adminNavItems = [
   { href: '/admin/sponsor-applications', label: 'Applications' },
   { href: '/admin/partners', label: 'Partner links' },
   { href: '/admin/payments', label: 'Payment' },
+  { href: '/admin/pantry-defaults', label: 'Pantry defaults' },
   { href: '/admin/promo-codes', label: 'Promo codes' },
   { href: '/admin/integrations', label: 'Integrations' },
   { href: '/admin/users', label: 'Users' },

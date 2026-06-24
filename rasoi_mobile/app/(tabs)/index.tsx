@@ -2,7 +2,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { Moon, Timer } from "lucide-react-native";
 import { useMemo, useState, useCallback } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
@@ -22,6 +22,7 @@ import { useDismissOnBlur } from "@/hooks/useDismissOnBlur";
 import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
 import { useRecipeListAdIndices } from "@/hooks/useRecipeListAdIndices";
 import { colors, layout, radius, scrollIndicator, spacing } from "@/constants/theme";
+import { appFonts } from "@/constants/fonts";
 import { testIds } from "@/constants/testIds";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
@@ -37,7 +38,8 @@ import {
 } from "@/utils/recipes";
 import { PAYWALL_HREF } from "@/utils/routes";
 
-const HOME_SECTION_GAP = spacing.xl + spacing.xs;
+const HOME_SECTION_GAP = spacing.xl;
+const RECIPES_CLUSTER_GAP = spacing.md;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -53,8 +55,10 @@ export default function HomeScreen() {
     recipesError,
     rankingReady,
     rankedRecipes,
+    refreshRecipes,
     topPick,
     tonightCards,
+    lateNightPick,
     pantryFilterActive,
     setPantryFilterActive,
     pantryIngredients,
@@ -75,25 +79,44 @@ export default function HomeScreen() {
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
   const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
   const [heroIntroFinished, setHeroIntroFinished] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { greeting, subtitle } = getLocalizedGreeting();
-  const isLateNight = meal.slot === "lateNight";
+  const isLateNight = meal.isOvernightDual === true;
+  const hideFeaturedOvernightExtras =
+    meal.isOvernightDual === true || meal.isTomorrowBreakfast === true;
   const discoveryReady = !recipesLoading && rankingReady;
   const heroDataReady = discoveryReady;
   const showHeroIntro = !heroIntroFinished;
+  const showLateNightPick = heroIntroFinished && meal.isOvernightDual && !!lateNightPick;
   const showPickCard = heroIntroFinished && !!topPick;
-  const showTonightSkeleton = !discoveryReady && tonightCards.length === 0;
+  const showTonightSkeleton =
+    heroIntroFinished && !discoveryReady && tonightCards.length === 0 && !showLateNightPick;
   const moreRecipeCount = Math.max(rankedRecipes.length - 4, 0);
+  const showRecipesCluster =
+    showLateNightPick ||
+    showPickCard ||
+    showTonightSkeleton ||
+    tonightCards.length > 0;
 
-  const topPickMissing = useMemo(() => {
-    if (!topPick) return [];
-    return partitionIngredients(topPick, pantryIngredients).missing;
-  }, [topPick, pantryIngredients]);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refreshRecipes();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshRecipes]);
 
   const topPickPantryMatch = useMemo(() => {
     if (!topPick) return 0;
     return getPantryMatchPercent(topPick, pantryIngredients);
   }, [topPick, pantryIngredients]);
+
+  const lateNightPantryMatch = useMemo(() => {
+    if (!lateNightPick) return 0;
+    return getPantryMatchPercent(lateNightPick, pantryIngredients);
+  }, [lateNightPick, pantryIngredients]);
 
   const sheetRecipe = cookTonightTarget ?? topPick ?? null;
   const sheetMissing = useMemo(() => {
@@ -159,6 +182,14 @@ export default function HomeScreen() {
     >
       <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: tabBarHeight + spacing.xxxl },
@@ -200,21 +231,110 @@ export default function HomeScreen() {
             />
           ) : null}
 
-          {showPickCard && topPick ? (
-            <HomeRecipeRow
-              section="pick"
-              fullWidth
-              recipe={topPick}
-              pickLabel={meal.topPickEyebrow}
-              pantryMatchPercent={topPickPantryMatch}
-              cookCtaLabel={meal.cookCta}
-              missing={topPickMissing}
-              onPress={() => router.push(`/recipe/${topPick.id}`)}
-              onCookTonight={() => openCookTonight(topPick)}
-              onShopMissing={(partner) =>
-                openShopModal(topPick, topPickMissing, partner)
-              }
-            />
+          {showRecipesCluster ? (
+            <View style={styles.recipesCluster}>
+              {showLateNightPick && lateNightPick ? (
+                <View style={styles.tonightBlock}>
+                  <HomeSectionHeader
+                    title={meal.lateNightPickEyebrow ?? '🌙 Late night pick'}
+                    variant="featured"
+                    icon={Moon}
+                    iconColor={themeColors.muted}
+                  />
+                  <HomeRecipeRow
+                    key={lateNightPick.id}
+                    section="pick"
+                    recipe={lateNightPick}
+                    pantryMatchPercent={lateNightPantryMatch}
+                    cookCtaLabel="Cook now"
+                    onPress={() => router.push(`/recipe/${lateNightPick.id}`)}
+                    onCookTonight={() => openCookTonight(lateNightPick)}
+                    onShopMissing={(missing, partner) =>
+                      openShopModal(lateNightPick, missing, partner)
+                    }
+                  />
+                </View>
+              ) : null}
+
+              {showPickCard && topPick ? (
+                <View style={styles.tonightBlock}>
+                  <HomeSectionHeader
+                    title={
+                      meal.isOvernightDual
+                        ? (meal.tomorrowTopPickEyebrow ?? meal.topPickEyebrow)
+                        : meal.topPickEyebrow
+                    }
+                    subtitle={
+                      hideFeaturedOvernightExtras
+                        ? undefined
+                        : 'Best match for you right now'
+                    }
+                    variant="featured"
+                  />
+                  <HomeRecipeRow
+                    key={topPick.id}
+                    section="pick"
+                    recipe={topPick}
+                    pantryMatchPercent={topPickPantryMatch}
+                    cookCtaLabel={meal.isOvernightDual ? 'Plan breakfast' : meal.cookCta}
+                    onPress={() => router.push(`/recipe/${topPick.id}`)}
+                    onCookTonight={() => openCookTonight(topPick)}
+                    onShopMissing={(missing, partner) =>
+                      openShopModal(topPick, missing, partner)
+                    }
+                  />
+                </View>
+              ) : null}
+
+              {showTonightSkeleton ? (
+                <View style={styles.tonightBlock}>
+                  <HomeSectionHeader title={meal.alsoLabel} />
+                  <TonightCardsSkeleton label="" isLateNight={isLateNight} count={3} />
+                </View>
+              ) : null}
+
+              {tonightCards.length > 0 ? (
+                <View style={styles.tonightBlock}>
+                  <HomeSectionHeader
+                    title={meal.alsoLabel}
+                    subtitle="Tap a dish for ingredients and steps"
+                    icon={isLateNight ? Moon : undefined}
+                    iconColor={themeColors.muted}
+                  />
+                  <View style={styles.tonightList}>
+                    {tonightCards.map((recipe, index) => {
+                      return (
+                        <View key={recipe.id}>
+                          {tonightAdIndices.has(index) ? (
+                            <SponsorOrAd
+                              sponsor={homeSponsor}
+                              loading={homeSponsorLoading}
+                              placement="home"
+                              compact
+                              style={styles.adInset}
+                            />
+                          ) : null}
+                          <HomeRecipeRow
+                            section="also"
+                            recipe={recipe}
+                            pantryMatchPercent={getPantryMatchPercent(
+                              recipe,
+                              pantryIngredients,
+                            )}
+                            cookCtaLabel={meal.cookCta}
+                            onPress={() => router.push(`/recipe/${recipe.id}`)}
+                            onCookTonight={() => openCookTonight(recipe)}
+                            onShopMissing={(missing, partner) =>
+                              openShopModal(recipe, missing, partner)
+                            }
+                          />
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
+            </View>
           ) : null}
 
           {heroIntroFinished &&
@@ -256,57 +376,6 @@ export default function HomeScreen() {
                   <Text style={styles.messageBtnText}>Show all recipes</Text>
                 </Pressable>
               ) : null}
-            </View>
-          ) : null}
-
-          {showTonightSkeleton ? (
-            <View>
-              <HomeSectionHeader title={meal.alsoLabel} />
-              <TonightCardsSkeleton label="" isLateNight={isLateNight} count={3} />
-            </View>
-          ) : null}
-
-          {tonightCards.length > 0 ? (
-            <View style={styles.tonightBlock}>
-              <HomeSectionHeader
-                title={meal.alsoLabel}
-                subtitle="Tap a dish for ingredients and steps"
-                icon={isLateNight ? Moon : undefined}
-                iconColor={themeColors.muted}
-              />
-              <View style={styles.tonightList}>
-                {tonightCards.map((recipe, index) => {
-                  const missing = partitionIngredients(recipe, pantryIngredients).missing;
-                  return (
-                    <View key={recipe.id}>
-                      {tonightAdIndices.has(index) ? (
-                        <SponsorOrAd
-                          sponsor={homeSponsor}
-                          loading={homeSponsorLoading}
-                          placement="home"
-                          compact
-                          style={styles.adInset}
-                        />
-                      ) : null}
-                      <HomeRecipeRow
-                        section="also"
-                        recipe={recipe}
-                        pantryMatchPercent={getPantryMatchPercent(
-                          recipe,
-                          pantryIngredients,
-                        )}
-                        cookCtaLabel={meal.cookCta}
-                        missing={missing}
-                        onPress={() => router.push(`/recipe/${recipe.id}`)}
-                        onCookTonight={() => openCookTonight(recipe)}
-                        onShopMissing={(partner) =>
-                          openShopModal(recipe, missing, partner)
-                        }
-                      />
-                    </View>
-                  );
-                })}
-              </View>
             </View>
           ) : null}
 
@@ -359,6 +428,9 @@ const styles = StyleSheet.create({
     gap: HOME_SECTION_GAP,
     marginTop: spacing.sm,
   },
+  recipesCluster: {
+    gap: RECIPES_CLUSTER_GAP,
+  },
   tonightBlock: {
     gap: spacing.sm,
   },
@@ -374,11 +446,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   messageTitle: {
+    fontFamily: appFonts.bodyBold,
     fontSize: 16,
-    fontWeight: "700",
   },
   messageBody: {
     marginTop: spacing.sm,
+    fontFamily: appFonts.body,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -391,8 +464,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   messageBtnText: {
+    fontFamily: appFonts.bodyBold,
     color: colors.white,
-    fontWeight: "700",
     fontSize: 14,
   },
 });

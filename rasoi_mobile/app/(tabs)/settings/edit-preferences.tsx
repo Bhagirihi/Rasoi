@@ -27,7 +27,7 @@ import { CuisineId, DietChoice, colors, layout, radius, scrollIndicator, spacing
 import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useReferenceData } from '@/context/ReferenceContext';
-import { DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions } from '@/utils/notifications';
+import { DAILY_REMINDER_MEAL_SUMMARY, DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions } from '@/utils/notifications';
 
 export default function EditPreferencesScreen() {
   const router = useRouter();
@@ -161,7 +161,13 @@ export default function EditPreferencesScreen() {
 
         <SettingsGroupLabel label="Notifications" />
         <SettingsCard>
-          <View style={styles.notifyRow}>
+          <Pressable
+            onPress={() => void handleNotificationsToggle(!draftNotifications)}
+            style={({ pressed }) => [styles.notifyRow, pressed && styles.notifyRowPressed]}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: draftNotifications }}
+            accessibilityLabel="Daily reminders"
+          >
             <View
               style={[
                 styles.notifyIconWrap,
@@ -174,7 +180,7 @@ export default function EditPreferencesScreen() {
             <View style={styles.notifyText}>
               <Text style={[styles.notifyTitle, { color: themeColors.charcoal }]}>Daily reminders</Text>
               <Text style={[styles.notifySub, { color: themeColors.muted }]}>
-                {DAILY_REMINDER_TIME_LABEL} nudges — &quot;What&apos;s for dinner?&quot;
+                {DAILY_REMINDER_TIME_LABEL} — {DAILY_REMINDER_MEAL_SUMMARY} picks
               </Text>
             </View>
             <Switch
@@ -183,7 +189,7 @@ export default function EditPreferencesScreen() {
               trackColor={{ false: themeColors.border, true: 'rgba(0,168,107,0.35)' }}
               thumbColor={draftNotifications ? colors.green : themeColors.white}
             />
-          </View>
+          </Pressable>
         </SettingsCard>
 
         <PrimaryButton
@@ -245,6 +251,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.lg,
+  },
+  notifyRowPressed: {
+    backgroundColor: 'rgba(0,0,0,0.025)',
   },
   notifyIconWrap: {
     width: 44,

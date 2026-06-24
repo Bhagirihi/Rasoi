@@ -12,18 +12,23 @@ import { AppState } from "react-native";
 
 import { Recipe } from "@/data/mockRecipes";
 import {
-  fetchPublishedRecipes,
+  fetchPublishedRecipesPage,
   fetchRecipeById,
   type RecipeFetchFilters,
 } from "@/services/recipes";
+import { RECIPE_PAGE_SIZE } from "@/types/pagination";
 import { formatUserFacingApiError } from "@/utils/api";
 import { useRasoiRealtimeTables } from "@/utils/realtime";
 
 type RecipesContextValue = {
   recipes: Recipe[];
   loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
+  totalCount: number | null;
   error: string | null;
   refreshRecipes: () => Promise<void>;
+  loadMoreRecipes: () => Promise<void>;
   syncRecipeFilters: (dietChoice: string, regionalCuisine: string) => void;
   getRecipeById: (id: string) => Recipe | undefined;
   loadRecipeById: (id: string) => Promise<Recipe | null>;
@@ -47,9 +52,21 @@ function filtersFromProfile(
   };
 }
 
+function mergeRecipeList(current: Recipe[], incoming: Recipe[]): Recipe[] {
+  if (incoming.length === 0) return current;
+  const byId = new Map(current.map((recipe) => [recipe.id, recipe]));
+  for (const recipe of incoming) {
+    byId.set(recipe.id, recipe);
+  }
+  return [...byId.values()];
+}
+
 export function RecipesProvider({ children }: { children: ReactNode }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const listFiltersRef = useRef<RecipeFetchFilters>({
@@ -59,9 +76,65 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   const lastFetchedKeyRef = useRef<string>("");
   const recipesRef = useRef(recipes);
   recipesRef.current = recipes;
+  const nextOffsetRef = useRef(0);
+  const hasMoreRef = useRef(false);
+  const loadingMoreRef = useRef(false);
   const lastForegroundRefreshRef = useRef(0);
+  /** Bumped on refresh/filter change so in-flight pagination cannot apply stale pages. */
+  const fetchGenerationRef = useRef(0);
+  const realtimeRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const applyPage = useCallback((
+    pageItems: Recipe[],
+    pagination: { hasMore: boolean; nextOffset: number | null; total: number },
+    replace: boolean,
+    generation: number,
+  ) => {
+    if (generation !== fetchGenerationRef.current) return;
+    setRecipes((current) => (replace ? pageItems : mergeRecipeList(current, pageItems)));
+    setHasMore(pagination.hasMore);
+    setTotalCount(pagination.total);
+    hasMoreRef.current = pagination.hasMore;
+    nextOffsetRef.current = pagination.nextOffset ?? nextOffsetRef.current + pageItems.length;
+  }, []);
+
+  const loadMoreRecipes = useCallback(async () => {
+    if (!hasMoreRef.current || loadingMoreRef.current) return;
+
+    const generation = fetchGenerationRef.current;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    setError(null);
+
+    try {
+      const page = await fetchPublishedRecipesPage(
+        listFiltersRef.current,
+        nextOffsetRef.current,
+        RECIPE_PAGE_SIZE,
+      );
+      if (generation !== fetchGenerationRef.current) return;
+      applyPage(page.items, page.pagination, false, generation);
+    } catch (caught) {
+      if (generation !== fetchGenerationRef.current) return;
+      setError(
+        formatUserFacingApiError(
+          caught,
+          "Could not load more recipes. Pull to refresh when you are back online.",
+        ),
+      );
+    } finally {
+      if (generation === fetchGenerationRef.current) {
+        loadingMoreRef.current = false;
+        setLoadingMore(false);
+      }
+    }
+  }, [applyPage]);
 
   const refreshRecipes = useCallback(async () => {
+    const generation = ++fetchGenerationRef.current;
+    loadingMoreRef.current = false;
+    setLoadingMore(false);
+
     const filters = listFiltersRef.current;
     const hasRecipes = recipesRef.current.length > 0;
     if (!hasRecipes) {
@@ -70,10 +143,12 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const next = await fetchPublishedRecipes(filters);
-      setRecipes(next);
+      const firstPage = await fetchPublishedRecipesPage(filters, 0, RECIPE_PAGE_SIZE);
+      if (generation !== fetchGenerationRef.current) return;
+      applyPage(firstPage.items, firstPage.pagination, true, generation);
       lastFetchedKeyRef.current = recipeFiltersKey(filters);
     } catch (caught) {
+      if (generation !== fetchGenerationRef.current) return;
       setError(
         formatUserFacingApiError(
           caught,
@@ -82,11 +157,17 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       );
       if (!hasRecipes) {
         setRecipes([]);
+        setHasMore(false);
+        setTotalCount(null);
+        hasMoreRef.current = false;
+        nextOffsetRef.current = 0;
       }
     } finally {
-      setLoading(false);
+      if (generation === fetchGenerationRef.current) {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [applyPage]);
 
   const syncRecipeFilters = useCallback(
     (dietChoice: string, regionalCuisine: string) => {
@@ -98,6 +179,8 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      nextOffsetRef.current = 0;
+      hasMoreRef.current = false;
       void refreshRecipes();
     },
     [refreshRecipes],
@@ -120,9 +203,24 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   useRasoiRealtimeTables(
     ["Recipe"],
     () => {
-      void refreshRecipes();
+      if (realtimeRefreshTimerRef.current) {
+        clearTimeout(realtimeRefreshTimerRef.current);
+      }
+      realtimeRefreshTimerRef.current = setTimeout(() => {
+        realtimeRefreshTimerRef.current = null;
+        void refreshRecipes();
+      }, 2500);
     },
     "recipes",
+  );
+
+  useEffect(
+    () => () => {
+      if (realtimeRefreshTimerRef.current) {
+        clearTimeout(realtimeRefreshTimerRef.current);
+      }
+    },
+    [],
   );
 
   const getRecipeById = useCallback(
@@ -157,8 +255,12 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     () => ({
       recipes,
       loading,
+      loadingMore,
+      hasMore,
+      totalCount,
       error,
       refreshRecipes,
+      loadMoreRecipes,
       syncRecipeFilters,
       getRecipeById,
       loadRecipeById,
@@ -166,8 +268,12 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     [
       recipes,
       loading,
+      loadingMore,
+      hasMore,
+      totalCount,
       error,
       refreshRecipes,
+      loadMoreRecipes,
       syncRecipeFilters,
       getRecipeById,
       loadRecipeById,

@@ -17,6 +17,7 @@ import {
   buildMealNotificationBody,
   pickTopRecipeForMeal,
 } from '@/lib/recipe-ranking';
+import { fetchAllRecipesBatched } from '@/lib/recipes-paginated';
 import { parseJson, serializeRecipe } from '@/lib/serializers';
 import type { CuisineId, RecipeResponse } from '@/lib/types';
 
@@ -58,7 +59,7 @@ export interface MealNotificationRunResult {
 type UserWithTokensLocal = UserWithTokens;
 
 async function loadPublishedRecipes(): Promise<RecipeResponse[]> {
-  const rows = await db.recipe.findMany({ where: { published: true } });
+  const rows = await fetchAllRecipesBatched({ where: { published: true } });
   return rows.map(serializeRecipe);
 }
 

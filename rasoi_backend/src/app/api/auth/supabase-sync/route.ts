@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { getAutoTrialWriteForNewUser, getAutoTrialWriteIfEligible } from '@/lib/auto-trial';
+import { getDefaultPantryIngredients } from '@/lib/app-settings';
 import { signToken } from '@/lib/auth';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { assertAllowedEmail } from '@/lib/identity-validation';
@@ -186,6 +187,8 @@ export async function POST(request: NextRequest) {
       ? await getAutoTrialWriteIfEligible(existing)
       : await getAutoTrialWriteForNewUser();
 
+    const defaultPantry = existing ? null : await getDefaultPantryIngredients();
+
     const user = existing
       ? await db.user.update({
           where: { id: existing.id },
@@ -207,6 +210,7 @@ export async function POST(request: NextRequest) {
             email: authUser.email,
             isGuest: false,
             supabaseUserId: authUser.id,
+            pantryIngredients: JSON.stringify(defaultPantry ?? []),
             termsAcceptedAt: new Date(),
             termsAcceptedVersion: CURRENT_TERMS_VERSION,
             ...onboardingData,

@@ -10,7 +10,281 @@ export type MealContext = {
   alsoLabel: string;
   cookCta: string;
   sheetTitle: string;
+  /** Local meal anchor time label, e.g. "12:30". */
+  anchorTimeLabel: string;
+  isTomorrowBreakfast?: boolean;
+  /** 21:30–03:00 shows late-night pick + tomorrow breakfast pick. */
+  isOvernightDual?: boolean;
+  lateNightPickEyebrow?: string;
+  tomorrowTopPickEyebrow?: string;
 };
+
+export type ScheduledMealWindow = {
+  slot: MealSlot;
+  /** Stable key for caching home picks within this meal window. */
+  windowKey: string;
+  anchorHour: number;
+  anchorMinute: number;
+  anchorTimeLabel: string;
+  isTomorrowBreakfast: boolean;
+  isOvernightDual: boolean;
+  tomorrowBreakfastWindowKey?: string;
+};
+
+function pad2(value: number): string {
+  return value.toString().padStart(2, '0');
+}
+
+function formatAnchorLabel(hour: number, minute: number): string {
+  return `${hour}:${pad2(minute)}`;
+}
+
+function formatDateKey(date: Date): string {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+}
+
+function minutesSinceMidnight(date: Date): number {
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+const MEAL_ANCHORS: Array<{ hour: number; minute: number; slot: MealSlot }> = [
+  { hour: 8, minute: 0, slot: 'breakfast' },
+  { hour: 12, minute: 30, slot: 'lunch' },
+  { hour: 16, minute: 0, slot: 'snack' },
+  { hour: 19, minute: 30, slot: 'dinner' },
+  { hour: 8, minute: 0, slot: 'breakfast' },
+];
+
+export type ScheduledMealSection = {
+  slot: MealSlot;
+  isTomorrowBreakfast: boolean;
+  isOvernightDual: boolean;
+};
+
+/**
+ * Primary Home recipe sections (local timezone):
+ * - 05:00–09:30 → Breakfast
+ * - 09:30–14:00 → Lunch
+ * - 14:00–17:30 → Evening Snacks
+ * - 17:30–21:30 → Dinner
+ * - 21:30–03:00 → Late Night + Tomorrow's Breakfast (dual picks)
+ * - 03:00–05:00 → Tomorrow's Breakfast only
+ */
+export function getScheduledMealSection(date: Date = new Date()): ScheduledMealSection {
+  const nowMinutes = minutesSinceMidnight(date);
+  const m300 = 3 * 60;
+  const m500 = 5 * 60;
+  const m930 = 9 * 60 + 30;
+  const m1400 = 14 * 60;
+  const m1730 = 17 * 60 + 30;
+  const m2130 = 21 * 60 + 30;
+
+  if (nowMinutes >= m2130 || nowMinutes < m300) {
+    return { slot: 'lateNight', isTomorrowBreakfast: true, isOvernightDual: true };
+  }
+  if (nowMinutes < m500) {
+    return { slot: 'breakfast', isTomorrowBreakfast: true, isOvernightDual: false };
+  }
+  if (nowMinutes < m930) {
+    return { slot: 'breakfast', isTomorrowBreakfast: false, isOvernightDual: false };
+  }
+  if (nowMinutes < m1400) {
+    return { slot: 'lunch', isTomorrowBreakfast: false, isOvernightDual: false };
+  }
+  if (nowMinutes < m1730) {
+    return { slot: 'snack', isTomorrowBreakfast: false, isOvernightDual: false };
+  }
+  return { slot: 'dinner', isTomorrowBreakfast: false, isOvernightDual: false };
+}
+
+/** Cache keys for the 21:30–03:00 dual-pick window. */
+export function getOvernightPickWindowKeys(date: Date = new Date()) {
+  const nowMinutes = minutesSinceMidnight(date);
+  const breakfastDate = new Date(date);
+  if (nowMinutes >= 21 * 60 + 30) {
+    breakfastDate.setDate(breakfastDate.getDate() + 1);
+  }
+
+  return {
+    lateNightKey: `${formatDateKey(date)}-21-30-late-night`,
+    tomorrowBreakfastKey: `${formatDateKey(breakfastDate)}-08-00-tomorrow-breakfast`,
+  };
+}
+
+/**
+ * Stable meal window for caching home picks (local timezone).
+ * Anchor times: 8:00 breakfast, 12:30 lunch, 16:00 snacks, 19:30 dinner.
+ */
+export function getScheduledMealWindow(date: Date = new Date()): ScheduledMealWindow {
+  const section = getScheduledMealSection(date);
+  const nowMinutes = minutesSinceMidnight(date);
+  const m2130 = 21 * 60 + 30;
+
+  let anchor = MEAL_ANCHORS[0];
+  let anchorDate = new Date(date);
+
+  if (section.isOvernightDual) {
+    const { lateNightKey, tomorrowBreakfastKey } = getOvernightPickWindowKeys(date);
+    return {
+      slot: section.slot,
+      windowKey: lateNightKey,
+      anchorHour: 21,
+      anchorMinute: 30,
+      anchorTimeLabel: '21:30',
+      isTomorrowBreakfast: true,
+      isOvernightDual: true,
+      tomorrowBreakfastWindowKey: tomorrowBreakfastKey,
+    };
+  }
+
+  switch (section.slot) {
+    case 'breakfast':
+      anchor = MEAL_ANCHORS[0];
+      if (section.isTomorrowBreakfast && nowMinutes >= m2130) {
+        anchorDate.setDate(anchorDate.getDate() + 1);
+      }
+      break;
+    case 'lunch':
+      anchor = MEAL_ANCHORS[1];
+      break;
+    case 'snack':
+      anchor = MEAL_ANCHORS[2];
+      break;
+    case 'dinner':
+      anchor = MEAL_ANCHORS[3];
+      break;
+    default:
+      anchor = MEAL_ANCHORS[0];
+  }
+
+  const windowSuffix = section.isTomorrowBreakfast ? 'tomorrow-breakfast' : section.slot;
+  const windowKey = `${formatDateKey(anchorDate)}-${pad2(anchor.hour)}-${pad2(anchor.minute)}-${windowSuffix}`;
+
+  return {
+    slot: section.slot,
+    windowKey,
+    anchorHour: anchor.hour,
+    anchorMinute: anchor.minute,
+    anchorTimeLabel: formatAnchorLabel(anchor.hour, anchor.minute),
+    isTomorrowBreakfast: section.isTomorrowBreakfast,
+    isOvernightDual: false,
+  };
+}
+
+function mealLabelsForSlot(
+  slot: MealSlot,
+  isTomorrowBreakfast: boolean,
+  isOvernightDual: boolean,
+): Omit<
+  MealContext,
+  'slot' | 'greeting' | 'subtitle' | 'anchorTimeLabel' | 'isTomorrowBreakfast' | 'isOvernightDual'
+> & {
+  planningSubtitle: string;
+} {
+  if (isOvernightDual) {
+    return {
+      topPickEyebrow: "🌅 Tomorrow's breakfast pick",
+      lateNightPickEyebrow: '🌙 Late night pick',
+      tomorrowTopPickEyebrow: "🌅 Tomorrow's breakfast pick",
+      alsoLabel: 'More breakfast ideas for tomorrow',
+      cookCta: 'Cook now',
+      sheetTitle: "Tomorrow's breakfast",
+      planningSubtitle: "Tomorrow's breakfast",
+    };
+  }
+
+  if (isTomorrowBreakfast) {
+    return {
+      topPickEyebrow: "🌅 Tomorrow's breakfast pick",
+      alsoLabel: 'More breakfast ideas for tomorrow',
+      cookCta: 'Plan breakfast',
+      sheetTitle: "Tomorrow's breakfast",
+      planningSubtitle: "Tomorrow's breakfast",
+    };
+  }
+
+  const labels: Record<
+    MealSlot,
+    Omit<
+      MealContext,
+      'slot' | 'greeting' | 'subtitle' | 'anchorTimeLabel' | 'isTomorrowBreakfast' | 'isOvernightDual'
+    > & { planningSubtitle: string }
+  > = {
+    breakfast: {
+      topPickEyebrow: '🌅 Breakfast pick',
+      alsoLabel: 'More breakfast ideas',
+      cookCta: 'Cook breakfast',
+      sheetTitle: 'Cook breakfast',
+      planningSubtitle: 'Breakfast',
+    },
+    lunch: {
+      topPickEyebrow: '🍛 Lunch pick',
+      alsoLabel: 'More lunch ideas',
+      cookCta: 'Cook lunch',
+      sheetTitle: 'Cook lunch',
+      planningSubtitle: 'Lunch',
+    },
+    snack: {
+      topPickEyebrow: '☕ Evening snack pick',
+      alsoLabel: 'More evening snack ideas',
+      cookCta: 'Make snack',
+      sheetTitle: 'Evening snacks',
+      planningSubtitle: 'Evening snacks',
+    },
+    dinner: {
+      topPickEyebrow: '🍽️ Dinner pick',
+      alsoLabel: 'More dinner ideas',
+      cookCta: 'Cook dinner',
+      sheetTitle: 'Cook dinner',
+      planningSubtitle: 'Dinner',
+    },
+    lateNight: {
+      topPickEyebrow: '🌙 Late night pick',
+      alsoLabel: '',
+      cookCta: 'Cook now',
+      sheetTitle: 'Cook now',
+      planningSubtitle: 'Late night cravings',
+    },
+  };
+
+  return labels[slot];
+}
+
+export function getScheduledMealContext(date: Date = new Date()): MealContext {
+  const window = getScheduledMealWindow(date);
+  const hour = date.getHours();
+  const { greeting } = getGreetingForHour(
+    hour,
+    window.slot,
+    window.isTomorrowBreakfast,
+    window.isOvernightDual,
+  );
+  const labels = mealLabelsForSlot(window.slot, window.isTomorrowBreakfast, window.isOvernightDual);
+
+  let subtitle: string;
+  if (window.isOvernightDual) {
+    subtitle = 'Late-night bite now · plan breakfast for 8:00';
+  } else if (window.isTomorrowBreakfast) {
+    subtitle = `Plan for ${window.anchorTimeLabel} tomorrow · ${labels.planningSubtitle.toLowerCase()}`;
+  } else {
+    subtitle = `What to make around ${window.anchorTimeLabel} · ${labels.planningSubtitle.toLowerCase()}`;
+  }
+
+  return {
+    slot: window.slot,
+    greeting,
+    subtitle,
+    topPickEyebrow: labels.topPickEyebrow,
+    alsoLabel: labels.alsoLabel,
+    cookCta: labels.cookCta,
+    sheetTitle: labels.sheetTitle,
+    anchorTimeLabel: window.isOvernightDual ? '8:00' : window.anchorTimeLabel,
+    isTomorrowBreakfast: window.isTomorrowBreakfast,
+    isOvernightDual: window.isOvernightDual,
+    lateNightPickEyebrow: labels.lateNightPickEyebrow,
+    tomorrowTopPickEyebrow: labels.tomorrowTopPickEyebrow,
+  };
+}
 
 /**
  * Meal windows (local time):
@@ -87,14 +361,30 @@ const MEAL_KEYWORDS: Record<MealSlot, string[]> = {
   lateNight: ['snack', 'maggi', 'sandwich', 'quick', 'light', 'midnight', 'late', 'pav', 'bhurji'],
 };
 
-function getGreetingForHour(hour: number, slot: MealSlot): { greeting: string; subtitle: string } {
+function getGreetingForHour(
+  hour: number,
+  slot: MealSlot,
+  isTomorrowBreakfast = false,
+  isOvernightDual = false,
+): { greeting: string; subtitle: string } {
+  if (isOvernightDual) {
+    return { greeting: 'Good Night!', subtitle: 'Late-night cravings or tomorrow\'s breakfast?' };
+  }
+
+  if (isTomorrowBreakfast) {
+    return {
+      greeting: hour >= 22 || hour < 5 ? 'Good Night!' : 'Good Morning!',
+      subtitle: "Planning tomorrow's breakfast?",
+    };
+  }
+
   switch (slot) {
     case 'breakfast':
       return { greeting: 'Good Morning!', subtitle: "What's for breakfast?" };
     case 'lunch':
       return { greeting: hour < 12 ? 'Good Morning!' : 'Good Afternoon!', subtitle: 'Planning lunch?' };
     case 'snack':
-      return { greeting: 'Good Afternoon!', subtitle: 'Time for a snack?' };
+      return { greeting: 'Good Afternoon!', subtitle: 'Time for evening snacks?' };
     case 'dinner':
       return { greeting: 'Good Evening!', subtitle: 'Planning dinner?' };
     case 'lateNight':
@@ -106,16 +396,16 @@ export function getMealContext(hour: number = new Date().getHours()): MealContex
   const slot = getMealSlot(hour);
   const { greeting, subtitle } = getGreetingForHour(hour, slot);
 
-  const contexts: Record<MealSlot, Omit<MealContext, 'slot' | 'greeting' | 'subtitle'>> = {
+  const contexts: Record<MealSlot, Omit<MealContext, 'slot' | 'greeting' | 'subtitle' | 'anchorTimeLabel'>> = {
     breakfast: {
       topPickEyebrow: 'Breakfast pick',
-      alsoLabel: 'Also for breakfast',
+      alsoLabel: 'More breakfast ideas',
       cookCta: 'Cook breakfast',
       sheetTitle: 'Cook breakfast',
     },
     lunch: {
       topPickEyebrow: 'Lunch pick',
-      alsoLabel: 'Also for lunch',
+      alsoLabel: 'More lunch ideas',
       cookCta: 'Cook lunch',
       sheetTitle: 'Cook lunch',
     },
@@ -127,7 +417,7 @@ export function getMealContext(hour: number = new Date().getHours()): MealContex
     },
     dinner: {
       topPickEyebrow: 'Dinner pick',
-      alsoLabel: 'Also for dinner',
+      alsoLabel: 'More dinner ideas',
       cookCta: 'Cook dinner',
       sheetTitle: 'Cook dinner',
     },
@@ -139,7 +429,13 @@ export function getMealContext(hour: number = new Date().getHours()): MealContex
     },
   };
 
-  return { slot, greeting, subtitle, ...contexts[slot] };
+  return {
+    slot,
+    greeting,
+    subtitle,
+    anchorTimeLabel: '',
+    ...contexts[slot],
+  };
 }
 
 function recipeSearchText(recipe: Recipe): string {

@@ -1,10 +1,10 @@
-import { LinearGradient } from 'expo-linear-gradient';
-import { ChefHat, ShoppingCart, X } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { LinearGradient } from "expo-linear-gradient";
+import { ChefHat, ShoppingCart, X } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import SmoothModal from '@/components/ui/SmoothModal';
-import type { Recipe } from '@/data/mockRecipes';
-import { colors, radius, spacing } from '@/constants/theme';
+import SmoothModal from "@/components/ui/SmoothModal";
+import type { Recipe } from "@/data/mockRecipes";
+import { colors, radius, spacing } from "@/constants/theme";
 
 const LOW_PANTRY_MATCH_THRESHOLD = 60;
 
@@ -28,7 +28,7 @@ export default function CookTonightSheet({
   pickReason,
   pantryMatchPercent,
   showShop,
-  title = 'Cook tonight',
+  title = "Cook tonight",
   onClose,
   onStartCooking,
   onShopMissing,
@@ -36,7 +36,8 @@ export default function CookTonightSheet({
   if (!recipe) return null;
 
   const canShop = missing.length > 0 && showShop && Boolean(onShopMissing);
-  const prioritizeShop = pantryMatchPercent < LOW_PANTRY_MATCH_THRESHOLD && canShop;
+  const prioritizeShop =
+    pantryMatchPercent < LOW_PANTRY_MATCH_THRESHOLD && canShop;
 
   const startCookingButton = (
     <Pressable
@@ -105,19 +106,24 @@ export default function CookTonightSheet({
         <Text style={styles.recipeName}>{recipe.title}</Text>
         <Text style={styles.reason}>{pickReason}</Text>
         <Text style={styles.meta}>
-          {recipe.prepTime} min · {pantryMatchPercent}% pantry match · {recipe.dietType}
+          {recipe.prepTime} min · {pantryMatchPercent}% pantry match ·{" "}
+          {recipe.dietType}
         </Text>
 
         {missing.length > 0 ? (
           <View style={styles.missingBox}>
             <Text style={styles.missingTitle}>
-              Missing {missing.length} item{missing.length === 1 ? '' : 's'}
+              Missing {missing.length} item{missing.length === 1 ? "" : "s"}
             </Text>
-            <Text style={styles.missingList}>{missing.slice(0, 6).join(' · ')}</Text>
+            <Text style={styles.missingList}>
+              {missing.slice(0, 6).join(" · ")}
+            </Text>
           </View>
         ) : (
           <View style={styles.readyBox}>
-            <Text style={styles.readyText}>You have everything — ready to cook.</Text>
+            <Text style={styles.readyText}>
+              You have everything — ready to cook.
+            </Text>
           </View>
         )}
 
@@ -136,19 +142,19 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   title: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.charcoal,
   },
   recipeName: {
     marginTop: spacing.md,
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.charcoal,
   },
   reason: {
@@ -156,7 +162,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   meta: {
     marginTop: 4,
@@ -166,12 +172,12 @@ const styles = StyleSheet.create({
   missingBox: {
     marginTop: spacing.lg,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(255,107,53,0.08)',
+    backgroundColor: "rgba(255,107,53,0.08)",
     padding: spacing.md,
   },
   missingTitle: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.charcoal,
   },
   missingList: {
@@ -183,12 +189,12 @@ const styles = StyleSheet.create({
   readyBox: {
     marginTop: spacing.lg,
     borderRadius: radius.md,
-    backgroundColor: 'rgba(0,168,107,0.1)',
+    backgroundColor: "rgba(0,168,107,0.1)",
     padding: spacing.md,
   },
   readyText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.green,
   },
   actions: {
@@ -197,24 +203,24 @@ const styles = StyleSheet.create({
   },
   primaryWrap: {
     borderRadius: radius.md,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   primaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     paddingVertical: spacing.lg,
   },
   primaryText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.white,
   },
   secondaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     borderRadius: radius.md,
     borderWidth: 1,
@@ -224,7 +230,7 @@ const styles = StyleSheet.create({
   },
   secondaryText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.primary,
   },
 });

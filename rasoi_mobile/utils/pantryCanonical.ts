@@ -1,12 +1,18 @@
+import { getAllPantryCatalogItems } from '@/constants/pantryCuisineCatalog';
+import {
+  canonicalizeIngredientName,
+  expandIngredientAliasKeys,
+} from '@/constants/ingredientCanonical';
 import { PANTRY_ESSENTIAL_SECTIONS, type PantryEssentialItem } from '@/constants/pantryEssentials';
 
 function ingredientKey(name: string | undefined | null): string {
   return (name ?? '').trim().toLowerCase();
 }
 
-const ALL_CANONICAL_ITEMS: PantryEssentialItem[] = PANTRY_ESSENTIAL_SECTIONS.flatMap(
-  (section) => section.items,
-);
+const ALL_CANONICAL_ITEMS: PantryEssentialItem[] = [
+  ...PANTRY_ESSENTIAL_SECTIONS.flatMap((section) => section.items),
+  ...getAllPantryCatalogItems(),
+];
 
 const KEY_TO_CANONICAL_ID = new Map<string, string>();
 
@@ -17,39 +23,68 @@ for (const item of ALL_CANONICAL_ITEMS) {
   }
 }
 
+function pantryItemForId(id: string): PantryEssentialItem | undefined {
+  return ALL_CANONICAL_ITEMS.find((item) => item.id === id);
+}
+
 export function resolveCanonicalId(name: string): string | null {
   const key = ingredientKey(name);
   if (!key) return null;
-  return KEY_TO_CANONICAL_ID.get(key) ?? null;
+
+  const pantryId = KEY_TO_CANONICAL_ID.get(key);
+  if (pantryId) return pantryId;
+
+  const canonicalName = canonicalizeIngredientName(name);
+  const canonicalKey = ingredientKey(canonicalName);
+  if (canonicalKey !== key) {
+    return KEY_TO_CANONICAL_ID.get(canonicalKey) ?? null;
+  }
+
+  return null;
 }
 
 export function resolveCanonicalLabel(name: string): string | null {
   const id = resolveCanonicalId(name);
-  if (!id) return null;
-  return ALL_CANONICAL_ITEMS.find((item) => item.id === id)?.label ?? null;
+  if (id) {
+    return pantryItemForId(id)?.label ?? null;
+  }
+
+  const canonicalName = canonicalizeIngredientName(name);
+  if (canonicalName !== name.trim()) {
+    return canonicalName;
+  }
+
+  return null;
 }
 
 export function isEssentialIngredient(name: string): boolean {
-  return resolveCanonicalId(name) !== null;
+  return resolveCanonicalId(name) !== null || resolveCanonicalLabel(name) !== null;
 }
 
 export function expandCanonicalKeys(name: string): Set<string> {
   const id = resolveCanonicalId(name);
-  if (!id) {
-    return new Set([ingredientKey(name)]);
+  if (id) {
+    const item = pantryItemForId(id);
+    if (item) {
+      const keys = new Set<string>();
+      for (const alias of [item.id, item.label, ...item.aliases]) {
+        const key = ingredientKey(alias);
+        if (key) keys.add(key);
+      }
+      for (const aliasKey of expandIngredientAliasKeys(item.label)) {
+        keys.add(aliasKey);
+      }
+      return keys;
+    }
   }
 
-  const item = ALL_CANONICAL_ITEMS.find((entry) => entry.id === id);
-  if (!item) {
-    return new Set([ingredientKey(name)]);
+  const canonicalName = canonicalizeIngredientName(name);
+  const aliasKeys = expandIngredientAliasKeys(canonicalName);
+  if (aliasKeys.size > 1 || canonicalName !== name.trim()) {
+    return aliasKeys;
   }
 
-  const keys = new Set<string>();
-  for (const alias of [item.id, item.label, ...item.aliases]) {
-    const key = ingredientKey(alias);
-    if (key) keys.add(key);
-  }
-  return keys;
+  return new Set([ingredientKey(name)]);
 }
 
 export function pantryHasIngredient(pantryIngredients: string[], ingredientName: string): boolean {
@@ -69,7 +104,7 @@ export function removePantryIngredient(pantryIngredients: string[], ingredientNa
 }
 
 export function addPantryIngredient(pantryIngredients: string[], ingredientName: string): string[] {
-  const canonicalLabel = resolveCanonicalLabel(ingredientName) ?? ingredientName.trim();
+  const canonicalLabel = resolveCanonicalLabel(ingredientName) ?? canonicalizeIngredientName(ingredientName);
   if (!canonicalLabel || pantryHasIngredient(pantryIngredients, canonicalLabel)) {
     return pantryIngredients;
   }

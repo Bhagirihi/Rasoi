@@ -1,7 +1,6 @@
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ShoppingBag, Sparkles, X } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { ChevronRight, ShoppingBag, X } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -18,7 +17,10 @@ import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import SmoothModal from '@/components/ui/SmoothModal';
 import { useAppContext } from '@/context/AppContext';
 import { usePartners } from '@/context/PartnersContext';
+import { useTheme } from '@/context/ThemeContext';
 import type { AffiliatePartner } from '@/utils/affiliate';
+
+type CheckoutVariant = 'recipe' | 'pantry';
 
 interface AffiliateCheckoutModalProps {
   visible: boolean;
@@ -27,7 +29,10 @@ interface AffiliateCheckoutModalProps {
   recipeId?: string;
   missingIngredients: string[];
   initialPartner?: AffiliatePartner;
+  variant?: CheckoutVariant;
 }
+
+const VISIBLE_CHIP_LIMIT = 8;
 
 export default function AffiliateCheckoutModal({
   visible,
@@ -36,26 +41,41 @@ export default function AffiliateCheckoutModal({
   recipeId,
   missingIngredients,
   initialPartner = 'blinkit',
+  variant = 'recipe',
 }: AffiliateCheckoutModalProps) {
   const [loading, setLoading] = useState<AffiliatePartner | null>(null);
-  const scrollRef = useRef<ScrollView>(null);
   const { partnersInTrialMode } = useAppContext();
   const { groceryPartners, openGroceryCheckout } = usePartners();
+  const { colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  const maxBodyScrollHeight = windowHeight * 0.52;
+  const maxBodyScrollHeight = Math.min(windowHeight * 0.55, 420);
+
+  const isPantry = variant === 'pantry';
+  const visibleItems = missingIngredients.slice(0, VISIBLE_CHIP_LIMIT);
+  const hiddenCount = Math.max(0, missingIngredients.length - VISIBLE_CHIP_LIMIT);
+
+  const headerCopy = useMemo(() => {
+    if (isPantry) {
+      return {
+        title: 'Restock your pantry',
+        subtitle:
+          missingIngredients.length > 0
+            ? `${missingIngredients.length} staple${missingIngredients.length === 1 ? '' : 's'} to order`
+            : 'Order missing staples in minutes',
+      };
+    }
+    return {
+      title: 'Get ingredients delivered',
+      subtitle: recipeTitle
+        ? `For ${recipeTitle}`
+        : `${missingIngredients.length} item${missingIngredients.length === 1 ? '' : 's'} to add`,
+    };
+  }, [isPantry, missingIngredients.length, recipeTitle]);
 
   useEffect(() => {
     if (!visible) setLoading(null);
   }, [visible]);
-
-  useEffect(() => {
-    if (!visible || missingIngredients.length === 0) return;
-    const timer = setTimeout(() => {
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
-    }, 120);
-    return () => clearTimeout(timer);
-  }, [visible, initialPartner, missingIngredients.length]);
 
   const handleCheckout = async (partner: AffiliatePartner) => {
     if (missingIngredients.length === 0) return;
@@ -63,7 +83,7 @@ export default function AffiliateCheckoutModal({
     try {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await openGroceryCheckout(partner, missingIngredients, {
-        context: 'recipe_checkout',
+        context: isPantry ? 'pantry_restock' : 'recipe_checkout',
         recipeId,
       });
       onClose();
@@ -74,113 +94,114 @@ export default function AffiliateCheckoutModal({
 
   return (
     <SmoothModal visible={visible} onClose={onClose} variant="sheet">
-      <View style={[styles.sheet, { paddingBottom: insets.bottom }]}>
-          <LinearGradient
-            colors={['#1A1A2E', '#1A3D2E', '#2D1B4E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.sheetHero}
-          >
-            <View style={styles.handle} />
-            <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
-              <X size={22} color={colors.white} />
-            </Pressable>
-            <View style={styles.heroBadge}>
-              <Sparkles size={12} color="#F8CB46" />
-              <Text style={styles.heroBadgeText}>Quick grocery run</Text>
+      <View
+        style={[
+          styles.sheet,
+          { paddingBottom: Math.max(insets.bottom, spacing.md), backgroundColor: themeColors.cream },
+        ]}
+      >
+        <View style={styles.handle} />
+
+        <View style={styles.header}>
+          <View style={styles.headerCopy}>
+            <View style={styles.headerIcon}>
+              <ShoppingBag size={18} color={colors.primary} />
             </View>
-            <Text style={styles.heroTitle}>Get ingredients delivered</Text>
-            <Text style={styles.heroSub}>
-              {recipeTitle
-                ? `Everything for ${recipeTitle} — at your door in minutes.`
-                : 'Fill your cart in one tap from India\'s fastest apps.'}
-            </Text>
-            {missingIngredients.length > 0 && (
-              <View style={styles.countRow}>
-                <ShoppingBag size={14} color="rgba(255,255,255,0.85)" />
-                <Text style={styles.countText}>
-                  {missingIngredients.length} item{missingIngredients.length !== 1 ? 's' : ''} to add
-                </Text>
-              </View>
-            )}
-          </LinearGradient>
-
-          <ScrollView
-            ref={scrollRef}
-            style={[styles.bodyScroll, { maxHeight: maxBodyScrollHeight }]}
-            contentContainerStyle={styles.body}
-            showsVerticalScrollIndicator={false}
-            bounces
-            nestedScrollEnabled
-            keyboardShouldPersistTaps="handled"
-          >
-            {partnersInTrialMode && <TrialPartnerBanner />}
-
-            {missingIngredients.length > 0 && (
-              <>
-                <Text style={styles.pickLabel}>Your shopping list</Text>
-                <View style={styles.chipGrid}>
-                  {missingIngredients.map((item) => (
-                    <View key={item} style={styles.missingChip}>
-                      <View style={styles.missingChipDot} />
-                      <Text style={styles.missingChipText}>{item}</Text>
-                    </View>
-                  ))}
-                </View>
-              </>
-            )}
-
-            {missingIngredients.length > 1 && (
-              <Text style={styles.searchHint}>
-                Checkout opens search for {missingIngredients[0]} — add other items from the list above.
+            <View style={styles.headerText}>
+              <Text style={[styles.title, { color: themeColors.charcoal }]}>{headerCopy.title}</Text>
+              <Text style={[styles.subtitle, { color: themeColors.muted }]} numberOfLines={2}>
+                {headerCopy.subtitle}
               </Text>
-            )}
-
-            <Text style={styles.pickLabel}>Pick a delivery partner</Text>
-
-            {groceryPartners.map((partner) => {
-              const isSelected = partner.id === initialPartner;
-              return (
-              <Pressable
-                key={partner.id}
-                onPress={() => void handleCheckout(partner.id)}
-                disabled={loading !== null || missingIngredients.length === 0}
-                style={({ pressed }) => [
-                  styles.partnerBtn,
-                  { backgroundColor: partner.accent },
-                  isSelected && styles.partnerBtnSelected,
-                  pressed && styles.partnerBtnPressed,
-                  loading === partner.id && styles.partnerBtnLoading,
-                  missingIngredients.length === 0 && styles.partnerBtnDisabled,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.partnerBtnLabel,
-                    { color: partner.textOnAccent },
-                  ]}
-                >
-                  {loading === partner.id
-                    ? 'Opening cart…'
-                    : isSelected
-                      ? `Checkout on ${partner.label} →`
-                      : `Checkout on ${partner.label}`}
-                </Text>
-                <Text
-                  style={[
-                    styles.partnerBtnSub,
-                    { color: partner.textOnAccent, opacity: 0.85 },
-                  ]}
-                >
-                  {partner.delivery} delivery
-                </Text>
-              </Pressable>
-            );
-            })}
-
-            <Text style={styles.disclosure}>{AFFILIATE_CHECKOUT_DISCLOSURE}</Text>
-          </ScrollView>
+            </View>
+          </View>
+          <Pressable onPress={onClose} hitSlop={12} style={styles.closeBtn}>
+            <X size={20} color={themeColors.muted} />
+          </Pressable>
         </View>
+
+        <ScrollView
+          style={{ maxHeight: maxBodyScrollHeight }}
+          contentContainerStyle={styles.body}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {partnersInTrialMode && <TrialPartnerBanner />}
+
+          {missingIngredients.length > 0 ? (
+            <View
+              style={[
+                styles.listCard,
+                { backgroundColor: themeColors.white, borderColor: themeColors.border },
+              ]}
+            >
+              <Text style={[styles.listLabel, { color: themeColors.muted }]}>Shopping list</Text>
+              <View style={styles.chipGrid}>
+                {visibleItems.map((item) => (
+                  <View
+                    key={item}
+                    style={[
+                      styles.chip,
+                      { borderColor: 'rgba(255,107,53,0.35)', backgroundColor: 'rgba(255,107,53,0.07)' },
+                    ]}
+                  >
+                    <Text style={[styles.chipText, { color: themeColors.charcoal }]}>{item}</Text>
+                  </View>
+                ))}
+                {hiddenCount > 0 ? (
+                  <View style={[styles.chip, styles.chipMore, { borderColor: themeColors.border }]}>
+                    <Text style={[styles.chipText, { color: themeColors.muted }]}>+{hiddenCount} more</Text>
+                  </View>
+                ) : null}
+              </View>
+              {missingIngredients.length > 1 ? (
+                <Text style={[styles.hint, { color: themeColors.muted }]}>
+                  Opens search for {missingIngredients[0]} — add the rest in the partner app.
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          <Text style={[styles.partnerLabel, { color: themeColors.muted }]}>Order via</Text>
+
+          <View style={styles.partnerList}>
+            {groceryPartners.map((partner) => {
+              const isPreferred = partner.id === initialPartner;
+              const isLoading = loading === partner.id;
+              return (
+                <Pressable
+                  key={partner.id}
+                  onPress={() => void handleCheckout(partner.id)}
+                  disabled={loading !== null || missingIngredients.length === 0}
+                  style={({ pressed }) => [
+                    styles.partnerRow,
+                    {
+                      backgroundColor: themeColors.white,
+                      borderColor: isPreferred ? partner.accent : themeColors.border,
+                    },
+                    pressed && styles.partnerRowPressed,
+                    isLoading && styles.partnerRowLoading,
+                    missingIngredients.length === 0 && styles.partnerRowDisabled,
+                  ]}
+                >
+                  <View style={[styles.partnerSwatch, { backgroundColor: partner.accent }]} />
+                  <View style={styles.partnerCopy}>
+                    <Text style={[styles.partnerName, { color: themeColors.charcoal }]}>
+                      {isLoading ? 'Opening…' : partner.label}
+                    </Text>
+                    <Text style={[styles.partnerEta, { color: themeColors.muted }]}>10–20 min</Text>
+                  </View>
+                  <ChevronRight size={18} color={themeColors.muted} />
+                </Pressable>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.disclosure, { color: themeColors.muted }]}>
+            {AFFILIATE_CHECKOUT_DISCLOSURE}
+          </Text>
+        </ScrollView>
+      </View>
     </SmoothModal>
   );
 }
@@ -188,174 +209,151 @@ export default function AffiliateCheckoutModal({
 const styles = StyleSheet.create({
   sheet: {
     width: '100%',
-    borderTopLeftRadius: radius.xl + 4,
-    borderTopRightRadius: radius.xl + 4,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     overflow: 'hidden',
-    backgroundColor: colors.cream,
-  },
-  sheetHero: {
-    paddingHorizontal: spacing.xxl,
-    paddingBottom: spacing.lg,
-    paddingTop: spacing.sm,
   },
   handle: {
     alignSelf: 'center',
-    width: 40,
+    width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    marginBottom: spacing.lg,
+    backgroundColor: 'rgba(0,0,0,0.12)',
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  headerCopy: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    minWidth: 0,
+  },
+  headerIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(255,107,53,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerText: {
+    flex: 1,
+    gap: 2,
+    minWidth: 0,
+  },
+  title: {
+    fontSize: 17,
+    fontWeight: '800',
+    lineHeight: 22,
+  },
+  subtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
   },
   closeBtn: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.lg,
     padding: spacing.xs,
   },
-  heroBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(248,203,70,0.25)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-  },
-  heroBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: '#F8CB46',
-  },
-  heroTitle: {
-    marginTop: spacing.md,
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.white,
-  },
-  heroSub: {
-    marginTop: spacing.sm,
-    fontSize: 15,
-    lineHeight: 22,
-    color: 'rgba(255,255,255,0.85)',
-  },
-  countRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginTop: spacing.md,
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  countText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.9)',
-  },
-  bodyScroll: {
-    flexGrow: 0,
-  },
   body: {
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
   },
-  pickLabel: {
-    fontSize: 13,
+  listCard: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
+  listLabel: {
+    fontSize: 11,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
     textTransform: 'uppercase',
-    color: colors.muted,
-    marginBottom: spacing.md,
   },
   chipGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
+    gap: spacing.xs,
   },
-  missingChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  chip: {
     borderRadius: radius.pill,
     borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: 'rgba(255,107,53,0.4)',
-    backgroundColor: 'rgba(255,107,53,0.08)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
-  missingChipDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.primary,
+  chipMore: {
+    backgroundColor: 'transparent',
   },
-  missingChipText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.charcoal,
-  },
-  searchHint: {
-    marginTop: -spacing.sm,
-    marginBottom: spacing.lg,
+  chipText: {
     fontSize: 12,
-    lineHeight: 17,
-    color: colors.muted,
+    fontWeight: '700',
   },
-  partnerBtn: {
-    borderRadius: radius.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
+  hint: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  partnerLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginTop: spacing.xs,
+  },
+  partnerList: {
+    gap: spacing.xs,
+  },
+  partnerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    ...shadows.cardLifted,
+    gap: spacing.sm,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    minHeight: 52,
+    ...shadows.card,
   },
-  partnerBtnSelected: {
-    borderWidth: 3,
-    borderColor: colors.white,
-  },
-  partnerBtnPressed: {
+  partnerRowPressed: {
     opacity: 0.92,
   },
-  partnerBtnLoading: {
-    opacity: 0.75,
+  partnerRowLoading: {
+    opacity: 0.7,
   },
-  partnerBtnDisabled: {
+  partnerRowDisabled: {
     opacity: 0.45,
   },
-  partnerBtnLabel: {
+  partnerSwatch: {
+    width: 4,
+    alignSelf: 'stretch',
+    borderRadius: 2,
+    minHeight: 28,
+  },
+  partnerCopy: {
+    flex: 1,
+    gap: 1,
+  },
+  partnerName: {
     fontSize: 15,
     fontWeight: '800',
   },
-  partnerBtnSub: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  freeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: spacing.sm,
-  },
-  freeText: {
+  partnerEta: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.green,
   },
   disclosure: {
-    marginTop: spacing.sm,
     fontSize: 10,
     lineHeight: 14,
     textAlign: 'center',
-    color: colors.muted,
+    marginTop: spacing.xs,
   },
 });

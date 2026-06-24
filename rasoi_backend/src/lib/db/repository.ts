@@ -25,6 +25,7 @@ type FindArgs = {
   include?: IncludeShape;
   orderBy?: OrderBy<Record<string, unknown>>;
   take?: number;
+  skip?: number;
 };
 
 type CreateArgs = { data: Record<string, unknown> };
@@ -98,7 +99,11 @@ export function createRepository<T extends Record<string, unknown>>(tableName: s
       let query = rasoiDb().from(meta.table).select('*');
       query = applyWhere(query, args.where, meta);
       query = applyOrderBy(query, args.orderBy);
-      if (args.take) query = query.limit(args.take);
+      if (args.skip != null && args.take != null) {
+        query = query.range(args.skip, args.skip + args.take - 1);
+      } else if (args.take != null) {
+        query = query.limit(args.take);
+      }
 
       const { data, error } = await query;
       throwIfError(error, `${meta.table}.findMany`);

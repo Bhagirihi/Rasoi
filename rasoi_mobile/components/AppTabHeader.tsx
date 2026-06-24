@@ -13,12 +13,15 @@ export function AppTabHeader({
   eyebrow,
   trailing,
   testID,
+  compact = false,
 }: {
   title: string;
   subtitle?: string;
   eyebrow?: string;
   trailing?: ReactNode;
   testID?: string;
+  /** Tighter title block for dense screens (e.g. Pantry). */
+  compact?: boolean;
 }) {
   const { colorScheme } = useTheme();
   return (
@@ -48,7 +51,7 @@ export function AppTabHeader({
       <Text
         variant="display"
         scheme={colorScheme}
-        style={styles.title}
+        style={[styles.title, compact && styles.titleCompact]}
         {...a11yHeader(title)}
       >
         {title}
@@ -58,7 +61,7 @@ export function AppTabHeader({
           variant="body"
           color="secondary"
           scheme={colorScheme}
-          style={styles.subtitle}
+          style={[styles.subtitle, compact && styles.subtitleCompact]}
         >
           {subtitle}
         </Text>
@@ -88,8 +91,19 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 34,
   },
+  titleCompact: {
+    fontSize: 24,
+    lineHeight: 28,
+    marginTop: spacing.xs,
+  },
   subtitle: {
     marginTop: spacing.sm,
     marginBottom: spacing.xs,
+  },
+  subtitleCompact: {
+    marginTop: spacing.xs,
+    marginBottom: 0,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

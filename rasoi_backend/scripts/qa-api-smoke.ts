@@ -41,8 +41,17 @@ async function main(): Promise<void> {
   };
 
   try {
-    const recipes = await request<Array<{ id: string }>>('/api/recipes');
-    record('TC-API-01', recipes.body.ok && Array.isArray(recipes.body.data), 'GET /api/recipes');
+    const recipes = await request<{
+      items: Array<{ id: string }>;
+      pagination: { total: number; hasMore: boolean };
+    }>('/api/recipes?limit=1');
+    record(
+      'TC-API-01',
+      recipes.body.ok &&
+        Array.isArray(recipes.body.data?.items) &&
+        typeof recipes.body.data?.pagination?.total === 'number',
+      'GET /api/recipes (paginated)',
+    );
 
     const reference = await request<{ regionalCuisines: string[] }>('/api/reference');
     record(

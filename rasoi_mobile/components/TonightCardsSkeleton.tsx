@@ -1,7 +1,7 @@
 import { Moon } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 
-import { RecipeCardSkeleton } from "@/components/RecipeCardSkeleton";
+import HomeRecipeRowSkeleton from "@/components/home/HomeRecipeRowSkeleton";
 import { spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -27,7 +27,7 @@ export default function TonightCardsSkeleton({
         </Text>
       </View>
       {Array.from({ length: count }, (_, index) => (
-        <RecipeCardSkeleton key={index} />
+        <HomeRecipeRowSkeleton key={index} />
       ))}
     </View>
   );

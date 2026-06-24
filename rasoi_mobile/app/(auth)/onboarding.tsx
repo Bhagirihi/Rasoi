@@ -34,7 +34,7 @@ import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { cuisinesToRegion, getKitchenStyleLabel } from '@/utils/kitchenStyles';
 import { dietChoiceToFilter } from '@/utils/storage';
-import { DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions, isNotificationPermissionGranted } from '@/utils/notifications';
+import { DAILY_REMINDER_MEAL_SUMMARY, DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions, isNotificationPermissionGranted } from '@/utils/notifications';
 import {
   ensureLocationPermissions,
   isLocationPermissionGranted,
@@ -46,7 +46,7 @@ type OnboardingStep = 'diet' | 'cuisine' | 'notifications' | 'location';
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, isHydrated, isLoggedIn, hasCompletedOnboarding, syncUserLocation } = useAppContext();
+  const { completeOnboarding, isHydrated, isLoggedIn, hasCompletedOnboarding, syncUserLocation, pendingPantrySetup } = useAppContext();
   const { kitchenStyles, refreshReference } = useReferenceData();
 
   useFocusEffect(
@@ -181,6 +181,10 @@ export default function OnboardingScreen() {
         router.replace('/(auth)/login');
         return;
       }
+      if (pendingPantrySetup) {
+        router.replace('/(tabs)/pantry');
+        return;
+      }
       router.replace(showTrialWelcome ? '/(auth)/trial-welcome' : '/(tabs)');
     } catch {
       finishingRef.current = false;
@@ -193,7 +197,7 @@ export default function OnboardingScreen() {
   }
 
   if (isHydrated && hasCompletedOnboarding) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href={pendingPantrySetup ? '/(tabs)/pantry' : '/(tabs)'} />;
   }
 
   if (step === 'notifications') {
@@ -211,9 +215,9 @@ export default function OnboardingScreen() {
         }
         subtitle={
           <>
-            Rasoi works best with daily nudges at{' '}
-            <Text style={styles.notifyBold}>{DAILY_REMINDER_TIME_LABEL}</Text>. Enable notifications
-            to unlock dinner inspiration.
+            Rasoi sends 5 personalized recipe picks daily at{' '}
+            <Text style={styles.notifyBold}>{DAILY_REMINDER_TIME_LABEL}</Text> — for{' '}
+            {DAILY_REMINDER_MEAL_SUMMARY}. Enable notifications to get them.
           </>
         }
         icon={

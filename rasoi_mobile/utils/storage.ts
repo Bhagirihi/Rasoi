@@ -18,6 +18,7 @@ const KEYS = {
   favoriteCuisines: '@rasoi/favorite_cuisines',
   notificationsEnabled: '@rasoi/notifications_enabled',
   pendingTrialWelcome: '@rasoi/pending_trial_welcome',
+  pendingPantrySetup: '@rasoi/pending_pantry_setup',
 } as const;
 
 export const DEFAULT_PANTRY: string[] = [];
@@ -116,6 +117,19 @@ export async function savePendingTrialWelcome(pending: boolean): Promise<void> {
     await AsyncStorage.setItem(KEYS.pendingTrialWelcome, 'true');
   } else {
     await AsyncStorage.removeItem(KEYS.pendingTrialWelcome);
+  }
+}
+
+export async function loadPendingPantrySetup(): Promise<boolean> {
+  const value = await AsyncStorage.getItem(KEYS.pendingPantrySetup);
+  return value === 'true';
+}
+
+export async function savePendingPantrySetup(pending: boolean): Promise<void> {
+  if (pending) {
+    await AsyncStorage.setItem(KEYS.pendingPantrySetup, 'true');
+  } else {
+    await AsyncStorage.removeItem(KEYS.pendingPantrySetup);
   }
 }
 

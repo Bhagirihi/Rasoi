@@ -1,12 +1,17 @@
-import { PANTRY_ESSENTIAL_SECTIONS } from '@/constants/pantryEssentials';
 import type { Recipe } from '@/data/mockRecipes';
 import type { PantrySection } from '@/services/reference';
+import type { DietChoice } from '@/constants/theme';
 import type { MealContext } from '@/utils/mealTime';
 import {
   isEssentialIngredient,
   pantryHasIngredient,
   resolveCanonicalLabel,
 } from '@/utils/pantryCanonical';
+import {
+  getPersonalizedPantrySections,
+  type PantryPreferenceSummary,
+} from '@/utils/pantryPersonalization';
+import type { KitchenStyle } from '@/utils/kitchenStyles';
 import { ingredientKey } from '@/utils/recipeIngredients';
 
 export type PantryPersonalSection = {
@@ -16,11 +21,14 @@ export type PantryPersonalSection = {
   recipeCount: number;
 };
 
-export function getPantryEssentialSections(): PantrySection[] {
-  return PANTRY_ESSENTIAL_SECTIONS.map((section) => ({
-    title: section.title,
-    items: section.items.map((item) => item.label),
-  }));
+export type { PantryPreferenceSummary };
+
+export function getPantryEssentialSections(input: {
+  dietChoice: DietChoice;
+  favoriteCuisines: string[];
+  kitchenStyles: KitchenStyle[];
+}): { sections: PantrySection[]; preferenceSummary: PantryPreferenceSummary } {
+  return getPersonalizedPantrySections(input);
 }
 
 function uniqueRecipes(recipes: Array<Recipe | null | undefined>): Recipe[] {

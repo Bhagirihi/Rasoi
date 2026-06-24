@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { appFonts } from '@/constants/fonts';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -52,11 +53,12 @@ const styles = StyleSheet.create({
     paddingRight: spacing.md,
   },
   title: {
+    fontFamily: appFonts.bodyBold,
     fontSize: 15,
-    fontWeight: '700',
   },
   sub: {
     marginTop: 2,
+    fontFamily: appFonts.body,
     fontSize: 13,
     lineHeight: 18,
   },

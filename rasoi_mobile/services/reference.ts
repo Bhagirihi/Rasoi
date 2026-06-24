@@ -16,11 +16,13 @@ export type ReferenceData = {
   kitchenStyles: KitchenStyle[];
   appConfig: {
     paymentsEnabled: boolean;
+    defaultPantryIngredients: string[];
   };
 };
 
 const DEFAULT_APP_CONFIG = {
   paymentsEnabled: false,
+  defaultPantryIngredients: [] as string[],
 };
 
 const EMPTY_REFERENCE: ReferenceData = {
@@ -54,7 +56,7 @@ async function loadReferenceFromSupabase(): Promise<ReferenceData> {
       .eq('active', true)
       .order('sortOrder', { ascending: true })
       .order('title', { ascending: true }),
-    db.from('AppSettings').select('paymentsEnabled').eq('id', 'default').maybeSingle(),
+    db.from('AppSettings').select('paymentsEnabled, defaultPantryIngredients').eq('id', 'default').maybeSingle(),
   ]);
 
   const firstError =
@@ -75,6 +77,10 @@ async function loadReferenceFromSupabase(): Promise<ReferenceData> {
     kitchenStyles: (kitchenResult.data ?? []) as KitchenStyle[],
     appConfig: {
       paymentsEnabled: settingsResult.data?.paymentsEnabled ?? DEFAULT_APP_CONFIG.paymentsEnabled,
+      defaultPantryIngredients: parseJson<string[]>(
+        settingsResult.data?.defaultPantryIngredients,
+        DEFAULT_APP_CONFIG.defaultPantryIngredients,
+      ),
     },
   };
 }

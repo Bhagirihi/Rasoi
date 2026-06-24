@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 
 import type { Recipe } from '@/lib/db/types';
 import type { RecipeIngredient } from '@/lib/types';
+import { canonicalizeIngredientName } from '@/lib/ingredient-canonical';
 import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
 import { PANTRY_SECTIONS } from '@/lib/pantry-sections';
 import { getPooledDatabaseUrl } from '@/lib/database-url';
@@ -83,7 +84,8 @@ async function ensurePublicIngredient(
   client: Pool,
   ingredient: RecipeIngredient,
 ): Promise<string> {
-  const section = resolveIngredientSection(ingredient.name, ingredient.isStaple);
+  const canonicalName = canonicalizeIngredientName(ingredient.name);
+  const section = resolveIngredientSection(canonicalName, ingredient.isStaple);
   const result = await client.query<{ id: string }>(
     `
       INSERT INTO public.ingredients (name, section, is_staple)
@@ -92,7 +94,7 @@ async function ensurePublicIngredient(
         is_staple = public.ingredients.is_staple OR EXCLUDED.is_staple
       RETURNING id
     `,
-    [ingredient.name, section, ingredient.isStaple],
+    [canonicalName, section, ingredient.isStaple],
   );
 
   return result.rows[0].id;

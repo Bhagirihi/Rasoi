@@ -445,14 +445,14 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,107,53,0.45)",
   },
   box: {
-    minHeight: 200,
+    minHeight: 152,
     backgroundColor: "#000000",
     justifyContent: "center",
   },
   content: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
-    minHeight: 200,
+    paddingVertical: spacing.md,
+    minHeight: 152,
     flex: 1,
     position: "relative",
   },
