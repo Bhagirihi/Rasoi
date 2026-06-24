@@ -7,13 +7,17 @@ import React, {
   useRef,
   useState,
   type ReactNode,
-} from 'react';
-import { AppState } from 'react-native';
+} from "react";
+import { AppState } from "react-native";
 
-import { Recipe } from '@/data/mockRecipes';
-import { fetchPublishedRecipes, fetchRecipeById, type RecipeFetchFilters } from '@/services/recipes';
-import { formatUserFacingApiError } from '@/utils/api';
-import { useRasoiRealtimeTables } from '@/utils/realtime';
+import { Recipe } from "@/data/mockRecipes";
+import {
+  fetchPublishedRecipes,
+  fetchRecipeById,
+  type RecipeFetchFilters,
+} from "@/services/recipes";
+import { formatUserFacingApiError } from "@/utils/api";
+import { useRasoiRealtimeTables } from "@/utils/realtime";
 
 type RecipesContextValue = {
   recipes: Recipe[];
@@ -25,13 +29,18 @@ type RecipesContextValue = {
   loadRecipeById: (id: string) => Promise<Recipe | null>;
 };
 
-const RecipesContext = createContext<RecipesContextValue | undefined>(undefined);
+const RecipesContext = createContext<RecipesContextValue | undefined>(
+  undefined,
+);
 
 function recipeFiltersKey(filters: RecipeFetchFilters): string {
-  return `${filters.dietChoice ?? ''}|${filters.region ?? ''}`;
+  return `${filters.dietChoice ?? ""}|${filters.region ?? ""}`;
 }
 
-function filtersFromProfile(dietChoice: string, regionalCuisine: string): RecipeFetchFilters {
+function filtersFromProfile(
+  dietChoice: string,
+  regionalCuisine: string,
+): RecipeFetchFilters {
   return {
     dietChoice,
     region: regionalCuisine,
@@ -43,8 +52,11 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const listFiltersRef = useRef<RecipeFetchFilters>({ dietChoice: 'Veg', region: 'All India' });
-  const lastFetchedKeyRef = useRef<string>('');
+  const listFiltersRef = useRef<RecipeFetchFilters>({
+    dietChoice: "Veg",
+    region: "All India",
+  });
+  const lastFetchedKeyRef = useRef<string>("");
   const recipesRef = useRef(recipes);
   recipesRef.current = recipes;
   const lastForegroundRefreshRef = useRef(0);
@@ -62,7 +74,12 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       setRecipes(next);
       lastFetchedKeyRef.current = recipeFiltersKey(filters);
     } catch (caught) {
-      setError(formatUserFacingApiError(caught, 'Could not load recipes. Pull to refresh when you are back online.'));
+      setError(
+        formatUserFacingApiError(
+          caught,
+          "Could not load recipes. Pull to refresh when you are back online.",
+        ),
+      );
       if (!hasRecipes) {
         setRecipes([]);
       }
@@ -87,8 +104,8 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state !== 'active') return;
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state !== "active") return;
 
       const now = Date.now();
       if (now - lastForegroundRefreshRef.current < 60_000) return;
@@ -100,9 +117,13 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     return () => subscription.remove();
   }, [refreshRecipes]);
 
-  useRasoiRealtimeTables(['Recipe'], () => {
-    void refreshRecipes();
-  }, 'recipes');
+  useRasoiRealtimeTables(
+    ["Recipe"],
+    () => {
+      void refreshRecipes();
+    },
+    "recipes",
+  );
 
   const getRecipeById = useCallback(
     (id: string) => recipes.find((recipe) => recipe.id === id),
@@ -142,16 +163,26 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       getRecipeById,
       loadRecipeById,
     }),
-    [recipes, loading, error, refreshRecipes, syncRecipeFilters, getRecipeById, loadRecipeById],
+    [
+      recipes,
+      loading,
+      error,
+      refreshRecipes,
+      syncRecipeFilters,
+      getRecipeById,
+      loadRecipeById,
+    ],
   );
 
-  return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;
+  return (
+    <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>
+  );
 }
 
 export function useRecipes(): RecipesContextValue {
   const context = useContext(RecipesContext);
   if (!context) {
-    throw new Error('useRecipes must be used within RecipesProvider');
+    throw new Error("useRecipes must be used within RecipesProvider");
   }
   return context;
 }

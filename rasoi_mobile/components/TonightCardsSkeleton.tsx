@@ -1,9 +1,9 @@
-import { Moon } from 'lucide-react-native';
-import { StyleSheet, Text, View } from 'react-native';
+import { Moon } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import { RecipeCardSkeleton } from '@/components/RecipeCardSkeleton';
-import { spacing } from '@/constants/theme';
-import { useTheme } from '@/context/ThemeContext';
+import { RecipeCardSkeleton } from "@/components/RecipeCardSkeleton";
+import { spacing } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 type TonightCardsSkeletonProps = {
   label: string;
@@ -22,7 +22,9 @@ export default function TonightCardsSkeleton({
     <View style={styles.wrap}>
       <View style={styles.header}>
         {isLateNight && <Moon size={14} color={themeColors.muted} />}
-        <Text style={[styles.label, { color: themeColors.muted }]}>{label}</Text>
+        <Text style={[styles.label, { color: themeColors.muted }]}>
+          {label}
+        </Text>
       </View>
       {Array.from({ length: count }, (_, index) => (
         <RecipeCardSkeleton key={index} />
@@ -36,15 +38,15 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
   label: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
 });

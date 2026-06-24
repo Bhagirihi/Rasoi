@@ -1,8 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from "react-native";
 
-import { Shimmer } from '@/components/ui/Shimmer';
-import { colors, radius, shadows, spacing } from '@/constants/theme';
-import { useTheme } from '@/context/ThemeContext';
+import { Shimmer } from "@/components/ui/Shimmer";
+import { colors, radius, shadows, spacing } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 
 export function RecipeCardSkeleton() {
   const { colors: themeColors } = useTheme();
@@ -27,18 +27,18 @@ export function RecipeCardSkeleton() {
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderRadius: radius.lg,
     borderWidth: 1,
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...shadows.card,
   },
   image: {
     width: 92,
     minHeight: 108,
-    alignSelf: 'stretch',
+    alignSelf: "stretch",
   },
   body: {
     flex: 1,
@@ -46,19 +46,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingLeft: spacing.sm,
     gap: spacing.sm,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   titleLine: {
     height: 14,
-    width: '92%',
+    width: "92%",
   },
   titleLineShort: {
     height: 14,
-    width: '68%',
+    width: "68%",
   },
   metaLine: {
     height: 11,
-    width: '55%',
+    width: "55%",
     marginTop: 2,
   },
   ctaLine: {

@@ -54,14 +54,14 @@ function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean })
     ingredients: normalizedIngredients,
     steps: options?.includeSteps
       ? resolveStepsForRecipe({
-          title: recipe.title,
-          kitchenStyleId: recipe.kitchenStyleId,
-          dietType: recipe.dietType,
-          ingredients: recipe.ingredients,
-          prepTime: recipe.prepTime,
-          difficulty: recipe.difficulty,
-          description: recipe.description,
-        })
+        title: recipe.title,
+        kitchenStyleId: recipe.kitchenStyleId,
+        dietType: recipe.dietType,
+        ingredients: recipe.ingredients,
+        prepTime: recipe.prepTime,
+        difficulty: recipe.difficulty,
+        description: recipe.description,
+      })
       : [],
   };
 }

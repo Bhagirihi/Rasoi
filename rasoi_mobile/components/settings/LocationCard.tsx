@@ -13,7 +13,7 @@ import { formatUserLocation } from '@/utils/location';
 
 export default function LocationCard() {
   const { colors: themeColors } = useTheme();
-  const { userCity, userState, isGuest, isLoggedIn } = useAppContext();
+  const { userCity, userState, isLoggedIn } = useAppContext();
   const refreshLocation = useRefreshUserLocation();
   const { showDialog } = useAppDialog();
   const [loading, setLoading] = useState(false);
@@ -21,10 +21,10 @@ export default function LocationCard() {
   const label = formatUserLocation(userCity, userState);
 
   const handleRefresh = async () => {
-    if (!isLoggedIn || isGuest) {
+    if (!isLoggedIn) {
       showDialog({
-        title: 'Sign in required',
-        message: 'Save your city by signing in first.',
+        title: 'Session required',
+        message: 'Continue as guest or sign in to save your city.',
         buttons: [{ text: 'OK' }],
       });
       return;

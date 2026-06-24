@@ -1,11 +1,11 @@
-import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import type { ReactNode } from "react";
+import { StyleSheet, View } from "react-native";
 
-import Text from '@/components/ui/Text';
-import { FreeBadge } from '@/components/ui/Primitives';
-import { useTheme } from '@/context/ThemeContext';
-import { spacing } from '@/constants/theme';
-import { a11yHeader } from '@/utils/a11y';
+import Text from "@/components/ui/Text";
+import { FreeBadge } from "@/components/ui/Primitives";
+import { useTheme } from "@/context/ThemeContext";
+import { spacing } from "@/constants/theme";
+import { a11yHeader } from "@/utils/a11y";
 
 export function AppTabHeader({
   title,
@@ -24,21 +24,42 @@ export function AppTabHeader({
   return (
     <View style={styles.wrap} testID={testID}>
       <View style={styles.topRow}>
-        <Text variant="label" color="accent" scheme={colorScheme} style={styles.brand} accessibilityRole="text">
+        <Text
+          variant="label"
+          color="accent"
+          scheme={colorScheme}
+          style={styles.brand}
+          accessibilityRole="text"
+        >
           RASOI
         </Text>
         {trailing ?? <FreeBadge />}
       </View>
       {eyebrow ? (
-        <Text variant="eyebrow" color="accent" scheme={colorScheme} style={styles.eyebrow}>
+        <Text
+          variant="eyebrow"
+          color="accent"
+          scheme={colorScheme}
+          style={styles.eyebrow}
+        >
           {eyebrow}
         </Text>
       ) : null}
-      <Text variant="display" scheme={colorScheme} style={styles.title} {...a11yHeader(title)}>
+      <Text
+        variant="display"
+        scheme={colorScheme}
+        style={styles.title}
+        {...a11yHeader(title)}
+      >
         {title}
       </Text>
       {subtitle ? (
-        <Text variant="body" color="secondary" scheme={colorScheme} style={styles.subtitle}>
+        <Text
+          variant="body"
+          color="secondary"
+          scheme={colorScheme}
+          style={styles.subtitle}
+        >
           {subtitle}
         </Text>
       ) : null}
@@ -52,9 +73,9 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xs,
   },
   topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   brand: {
     letterSpacing: 2,

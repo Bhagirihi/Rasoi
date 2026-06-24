@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Animated, Easing, StyleSheet, View } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
-import { colors, radius, shadows, spacing } from '@/constants/theme';
+import { colors, radius, shadows, spacing } from "@/constants/theme";
 
-type Phase = 'intro' | 'checking' | 'rasoi';
-type TextAlignSide = 'left' | 'right' | 'center';
+type Phase = "intro" | "checking" | "rasoi";
+type TextAlignSide = "left" | "right" | "center";
 
 type HomeHeroLoadingBoxProps = {
   dataReady: boolean;
@@ -19,26 +19,26 @@ const CHECKING_MS = __DEV__ ? 1000 : 450;
 const RASOI_HOLD_MS = __DEV__ ? 2000 : 280;
 
 const INTRO_LINES = [
-  'Are aap aa gaye....',
-  'Aaj khane me kya banau??',
-  'Kuch bhi banalo',
-  'Ruko dekhte he!!',
+  "Are aap aa gaye....",
+  "Aaj khane me kya banau??",
+  "Kuch bhi banalo",
+  "Ruko dekhte he!!",
 ];
 
 const MAX_INTRO_LINES = __DEV__ ? INTRO_LINES.length : 2;
 
 const CHECKING_LINES = [
-  'Pantry check kar rahe hain...',
-  'Aapki desire check kar rahe hain...',
-  'Saved items check kar rahe hain...',
-  'Best picks dhoondh rahe hain...',
+  "Pantry check kar rahe hain...",
+  "Aapki desire check kar rahe hain...",
+  "Saved items check kar rahe hain...",
+  "Best picks dhoondh rahe hain...",
 ];
 
-const RASOI_LINE = 'Rasoi hai na.';
-const RASOI_SUB = 'Chalo, aapke picks ready hain.';
+const RASOI_LINE = "Rasoi hai na.";
+const RASOI_SUB = "Chalo, aapke picks ready hain.";
 
 function introSide(index: number): TextAlignSide {
-  return index % 2 === 0 ? 'left' : 'right';
+  return index % 2 === 0 ? "left" : "right";
 }
 
 function CheckingDots() {
@@ -95,7 +95,9 @@ export default function HomeHeroLoadingBox({
   isLateNight = false,
   onFinished,
 }: HomeHeroLoadingBoxProps) {
-  const [phase, setPhase] = useState<Phase>(() => (dataReady ? 'rasoi' : 'intro'));
+  const [phase, setPhase] = useState<Phase>(() =>
+    dataReady ? "rasoi" : "intro",
+  );
   const [introIndex, setIntroIndex] = useState(0);
   const [checkingIndex, setCheckingIndex] = useState(0);
 
@@ -117,7 +119,8 @@ export default function HomeHeroLoadingBox({
   onFinishedRef.current = onFinished;
 
   const introLine = INTRO_LINES[introIndex] ?? INTRO_LINES[0];
-  const checkingLine = CHECKING_LINES[checkingIndex % CHECKING_LINES.length] ?? CHECKING_LINES[0];
+  const checkingLine =
+    CHECKING_LINES[checkingIndex % CHECKING_LINES.length] ?? CHECKING_LINES[0];
 
   const finish = useCallback(() => {
     if (finishedRef.current) return;
@@ -127,14 +130,14 @@ export default function HomeHeroLoadingBox({
   }, []);
 
   const goToRasoi = useCallback(() => {
-    setPhase((current) => (current === 'rasoi' ? current : 'rasoi'));
+    setPhase((current) => (current === "rasoi" ? current : "rasoi"));
   }, []);
 
   const animateIntroOrChecking = useCallback(
     (side: TextAlignSide) => {
       textOpacity.setValue(0);
 
-      if (side === 'center') {
+      if (side === "center") {
         textTranslateX.setValue(0);
         textTranslateY.setValue(18);
         Animated.parallel([
@@ -154,8 +157,8 @@ export default function HomeHeroLoadingBox({
         return;
       }
 
-      const slideX = side === 'left' ? -40 : 40;
-      const slideY = side === 'left' ? -20 : 20;
+      const slideX = side === "left" ? -40 : 40;
+      const slideY = side === "left" ? -20 : 20;
       textTranslateX.setValue(slideX);
       textTranslateY.setValue(slideY);
       Animated.parallel([
@@ -240,15 +243,21 @@ export default function HomeHeroLoadingBox({
       ]),
     );
     pulseLoopRef.current.start();
-  }, [rasoiOpacity, rasoiPulse, rasoiScale, rasoiSubOpacity, rasoiSubTranslateY]);
+  }, [
+    rasoiOpacity,
+    rasoiPulse,
+    rasoiScale,
+    rasoiSubOpacity,
+    rasoiSubTranslateY,
+  ]);
 
   useEffect(() => {
-    if (phase === 'intro') {
+    if (phase === "intro") {
       animateIntroOrChecking(introSide(introIndex));
       return;
     }
-    if (phase === 'checking') {
-      animateIntroOrChecking('center');
+    if (phase === "checking") {
+      animateIntroOrChecking("center");
     }
   }, [phase, introIndex, checkingIndex, animateIntroOrChecking]);
 
@@ -259,18 +268,18 @@ export default function HomeHeroLoadingBox({
   }, [hasError, dataReady, finish]);
 
   useEffect(() => {
-    if (dataReady && phase !== 'rasoi') {
+    if (dataReady && phase !== "rasoi") {
       goToRasoi();
     }
   }, [dataReady, phase, goToRasoi]);
 
   useEffect(() => {
-    if (phase !== 'intro') return;
+    if (phase !== "intro") return;
 
     const timer = setTimeout(() => {
       if (dataReadyRef.current) return;
       if (introIndex >= MAX_INTRO_LINES - 1) {
-        setPhase('checking');
+        setPhase("checking");
         return;
       }
       setIntroIndex((prev) => prev + 1);
@@ -280,7 +289,7 @@ export default function HomeHeroLoadingBox({
   }, [phase, introIndex]);
 
   useEffect(() => {
-    if (phase !== 'checking') return;
+    if (phase !== "checking") return;
 
     const timer = setInterval(() => {
       if (dataReadyRef.current) return;
@@ -291,7 +300,7 @@ export default function HomeHeroLoadingBox({
   }, [phase]);
 
   useEffect(() => {
-    if (phase !== 'rasoi' || finishedRef.current) return;
+    if (phase !== "rasoi" || finishedRef.current) return;
 
     if (rasoiEnteredAtRef.current === null) {
       rasoiEnteredAtRef.current = Date.now();
@@ -319,7 +328,11 @@ export default function HomeHeroLoadingBox({
   );
 
   const displayLine =
-    phase === 'intro' ? introLine : phase === 'checking' ? checkingLine : RASOI_LINE;
+    phase === "intro"
+      ? introLine
+      : phase === "checking"
+        ? checkingLine
+        : RASOI_LINE;
   const introAlign = introSide(introIndex);
 
   return (
@@ -331,14 +344,18 @@ export default function HomeHeroLoadingBox({
       ]}
     >
       <LinearGradient
-        colors={isLateNight ? ['#1A1410', '#0A0908', '#050505'] : ['#161616', '#0A0A0A', '#000000']}
+        colors={
+          isLateNight
+            ? ["#1A1410", "#0A0908", "#050505"]
+            : ["#161616", "#0A0A0A", "#000000"]
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
 
       <View style={styles.content}>
-        {phase === 'rasoi' ? (
+        {phase === "rasoi" ? (
           <View style={styles.rasoiWrap}>
             <Animated.Text
               style={[
@@ -346,7 +363,9 @@ export default function HomeHeroLoadingBox({
                 styles.textPadding,
                 {
                   opacity: rasoiOpacity,
-                  transform: [{ scale: Animated.multiply(rasoiScale, rasoiPulse) }],
+                  transform: [
+                    { scale: Animated.multiply(rasoiScale, rasoiPulse) },
+                  ],
                 },
               ]}
             >
@@ -365,13 +384,15 @@ export default function HomeHeroLoadingBox({
               {RASOI_SUB}
             </Animated.Text>
           </View>
-        ) : phase === 'intro' ? (
+        ) : phase === "intro" ? (
           <Animated.Text
             style={[
               styles.introLine,
               styles.textBlock,
-              introAlign === 'left' ? styles.introSlotTop : styles.introSlotBottom,
-              introAlign === 'left' ? styles.introLeft : styles.introRight,
+              introAlign === "left"
+                ? styles.introSlotTop
+                : styles.introSlotBottom,
+              introAlign === "left" ? styles.introLeft : styles.introRight,
               {
                 opacity: textOpacity,
                 transform: [
@@ -412,7 +433,7 @@ export default function HomeHeroLoadingBox({
 const styles = StyleSheet.create({
   heroCard: {
     borderRadius: radius.lg,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderLeftWidth: 3,
     borderLeftColor: colors.primary,
     ...shadows.card,
@@ -421,75 +442,75 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.primary,
     borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.45)',
+    borderColor: "rgba(255,107,53,0.45)",
   },
   box: {
     minHeight: 200,
-    backgroundColor: '#000000',
-    justifyContent: 'center',
+    backgroundColor: "#000000",
+    justifyContent: "center",
   },
   content: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.lg,
     minHeight: 200,
     flex: 1,
-    position: 'relative',
+    position: "relative",
   },
   textBlock: {
-    width: '80%',
+    width: "80%",
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
   textPadding: {
-    width: '100%',
+    width: "100%",
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
   introSlotTop: {
-    position: 'absolute',
+    position: "absolute",
     top: spacing.lg,
     left: spacing.lg,
   },
   introSlotBottom: {
-    position: 'absolute',
+    position: "absolute",
     bottom: spacing.lg,
     right: spacing.lg,
   },
   introLine: {
     fontSize: 24,
-    fontWeight: '800',
+    fontWeight: "800",
     lineHeight: 32,
     letterSpacing: 0.15,
     color: colors.white,
   },
   introLeft: {
-    textAlign: 'left',
+    textAlign: "left",
   },
   introRight: {
-    textAlign: 'right',
+    textAlign: "right",
   },
   checkingSlot: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '80%',
-    alignSelf: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    width: "80%",
+    alignSelf: "center",
     gap: spacing.sm,
   },
   checkingLine: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     lineHeight: 22,
     letterSpacing: 0.1,
-    color: 'rgba(255,255,255,0.78)',
+    color: "rgba(255,255,255,0.78)",
   },
   checkingCenter: {
-    textAlign: 'center',
+    textAlign: "center",
   },
   checkingDots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
     marginTop: spacing.xs,
   },
@@ -501,25 +522,25 @@ const styles = StyleSheet.create({
   },
   rasoiWrap: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.md,
-    width: '80%',
-    alignSelf: 'center',
+    width: "80%",
+    alignSelf: "center",
   },
   rasoiMain: {
     fontSize: 34,
-    fontWeight: '900',
+    fontWeight: "900",
     color: colors.green,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 40,
     letterSpacing: 0.2,
   },
   rasoiSub: {
     fontSize: 15,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     lineHeight: 21,
-    color: 'rgba(255,255,255,0.68)',
+    color: "rgba(255,255,255,0.68)",
   },
 });

@@ -1,39 +1,46 @@
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useRouter } from 'expo-router';
-import { Search, Timer } from 'lucide-react-native';
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { Pressable, StyleSheet, Text, View, Keyboard } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useRouter } from "expo-router";
+import { Search, Timer } from "lucide-react-native";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { Pressable, StyleSheet, Text, View, Keyboard } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
-import CookTonightSheet from '@/components/CookTonightSheet';
-import { AppTabHeader } from '@/components/AppTabHeader';
-import QuickFiltersSection, { getQuickFilterLabels } from '@/components/QuickFiltersSection';
-import RecipeCard from '@/components/RecipeCard';
-import RecipeListSkeleton from '@/components/RecipeListSkeleton';
-import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
-import SponsorOrAd from '@/components/SponsorOrAd';
-import { EmptyState } from '@/components/ui/Primitives';
-import { useKeyboardInset } from '@/hooks/useKeyboardInset';
-import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
-import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
-import { useRecipeDiscovery } from '@/hooks/useRecipeDiscovery';
-import { useRecipeListAdIndices } from '@/hooks/useRecipeListAdIndices';
-import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
-import { testIds } from '@/constants/testIds';
-import { useTheme } from '@/context/ThemeContext';
-import { useAppContext } from '@/context/AppContext';
-import { useAppDialog } from '@/context/AppDialogContext';
-import { Recipe } from '@/data/mockRecipes';
-import { logRecipeSearch } from '@/services/recipeSearch';
-import type { AffiliatePartner } from '@/utils/affiliate';
+import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
+import CookTonightSheet from "@/components/CookTonightSheet";
+import { AppTabHeader } from "@/components/AppTabHeader";
+import QuickFiltersSection, {
+  getQuickFilterLabels,
+} from "@/components/QuickFiltersSection";
+import RecipeCard from "@/components/RecipeCard";
+import RecipeListSkeleton from "@/components/RecipeListSkeleton";
+import { FlatListWithFloatingIndicator } from "@/components/ScrollableScreen";
+import SponsorOrAd from "@/components/SponsorOrAd";
+import { EmptyState } from "@/components/ui/Primitives";
+import { useKeyboardInset } from "@/hooks/useKeyboardInset";
+import { useDismissOnBlur } from "@/hooks/useDismissOnBlur";
+import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
+import { useRecipeDiscovery } from "@/hooks/useRecipeDiscovery";
+import { useRecipeListAdIndices } from "@/hooks/useRecipeListAdIndices";
+import {
+  colors,
+  layout,
+  radius,
+  scrollIndicator,
+  spacing,
+} from "@/constants/theme";
+import { testIds } from "@/constants/testIds";
+import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
+import { useAppDialog } from "@/context/AppDialogContext";
+import { Recipe } from "@/data/mockRecipes";
+import { logRecipeSearch } from "@/services/recipeSearch";
+import type { AffiliatePartner } from "@/utils/affiliate";
 import {
   getPantryMatchPercent,
   getRecipePickReason,
   partitionIngredients,
   recipeMatchesSearch,
-} from '@/utils/recipes';
-import { hasValidProfilePhone, PHONE_REQUIRED_FOR_PARTNERS_MESSAGE } from '@/utils/phoneGate';
+} from "@/utils/recipes";
 
 export default function RecipesTabScreen() {
   const router = useRouter();
@@ -41,7 +48,7 @@ export default function RecipesTabScreen() {
   const { keyboardHeight, keyboardVisible } = useKeyboardInset();
   const { colors: themeColors } = useTheme();
   const { showDialog } = useAppDialog();
-  const { showPartners, userPhone } = useAppContext();
+  const { showPartners } = useAppContext();
   const {
     meal,
     recipes,
@@ -60,21 +67,29 @@ export default function RecipesTabScreen() {
     handleFilterToggle,
     rankingReady,
   } = useRecipeDiscovery();
-  const { sponsor: recipesSponsor, loading: recipesSponsorLoading } = usePlacementSponsor('recipes');
+  const { sponsor: recipesSponsor, loading: recipesSponsorLoading } =
+    usePlacementSponsor("recipes");
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
-  const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
+  const [modalPartner, setModalPartner] = useState<AffiliatePartner>("blinkit");
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
-  const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const lastLoggedSearch = useRef('');
+  const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(
+    null,
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const lastLoggedSearch = useRef("");
+
+  const listRecipes = useMemo(
+    () => (moreRecipes.length > 0 ? moreRecipes : rankedRecipes),
+    [moreRecipes, rankedRecipes],
+  );
 
   const searchedMoreRecipes = useMemo(() => {
     const query = searchQuery.trim();
-    if (!query) return moreRecipes;
-    return moreRecipes.filter((recipe) => recipeMatchesSearch(recipe, query));
-  }, [moreRecipes, searchQuery]);
+    if (!query) return listRecipes;
+    return listRecipes.filter((recipe) => recipeMatchesSearch(recipe, query));
+  }, [listRecipes, searchQuery]);
 
   const recipeAdIndices = useRecipeListAdIndices(searchedMoreRecipes);
 
@@ -92,7 +107,7 @@ export default function RecipesTabScreen() {
       lastLoggedSearch.current = query.toLowerCase();
       void logRecipeSearch({
         query,
-        sourceScreen: 'recipes',
+        sourceScreen: "recipes",
         resultCount: searchedMoreRecipes.length,
       });
     }, 600);
@@ -106,7 +121,7 @@ export default function RecipesTabScreen() {
     return partitionIngredients(sheetRecipe, pantryIngredients).missing;
   }, [sheetRecipe, pantryIngredients]);
   const sheetPickReason = useMemo(() => {
-    if (!sheetRecipe) return '';
+    if (!sheetRecipe) return "";
     return getRecipePickReason(sheetRecipe, {
       regionalCuisine,
       pantryIngredients,
@@ -138,9 +153,9 @@ export default function RecipesTabScreen() {
   );
 
   const clearDiscovery = () => {
-    setSearchQuery('');
+    setSearchQuery("");
     if (activeFilters.length > 0) {
-      handleFilterToggle('all');
+      handleFilterToggle("all");
     }
     if (pantryFilterActive) {
       setPantryFilterActive(false);
@@ -150,23 +165,9 @@ export default function RecipesTabScreen() {
   const openShopModal = (
     recipe: Recipe,
     missing: string[],
-    partner: AffiliatePartner = 'blinkit',
+    partner: AffiliatePartner = "blinkit",
   ) => {
     if (missing.length === 0 || !showPartners) return;
-    if (!hasValidProfilePhone(userPhone)) {
-      showDialog({
-        title: 'Mobile number needed',
-        message: PHONE_REQUIRED_FOR_PARTNERS_MESSAGE,
-        buttons: [
-          { text: 'Not now', style: 'cancel' },
-          {
-            text: 'Add in Settings',
-            onPress: () => router.push('/(tabs)/settings/edit-profile'),
-          },
-        ],
-      });
-      return;
-    }
     setModalPartner(partner);
     setModalRecipe(recipe);
     setModalMissing(missing);
@@ -178,7 +179,8 @@ export default function RecipesTabScreen() {
     : tabBarHeight + spacing.xxxl + spacing.lg;
 
   const discoveryReady = !recipesLoading && rankingReady;
-  const showListSkeleton = !discoveryReady && searchedMoreRecipes.length === 0 && !recipesError;
+  const showListSkeleton =
+    !discoveryReady && searchedMoreRecipes.length === 0 && !recipesError;
 
   const renderItem = ({ item, index }: { item: Recipe; index: number }) => (
     <View>
@@ -212,7 +214,7 @@ export default function RecipesTabScreen() {
   return (
     <SafeAreaView
       style={[styles.safe, { backgroundColor: themeColors.cream }]}
-      edges={['top']}
+      edges={["top"]}
       testID={testIds.screenRecipesTab}
     >
       <FlatListWithFloatingIndicator
@@ -230,7 +232,10 @@ export default function RecipesTabScreen() {
         ItemSeparatorComponent={() => <View style={styles.itemGap} />}
         ListHeaderComponent={
           <View style={styles.screenSections}>
-            <AppTabHeader title="Recipes" subtitle="Search and filter dishes for your kitchen" />
+            <AppTabHeader
+              title="Recipes"
+              subtitle="Search and filter dishes for your kitchen"
+            />
 
             <QuickFiltersSection
               variant="recipes"
@@ -245,31 +250,49 @@ export default function RecipesTabScreen() {
               onSearchChange={setSearchQuery}
               searchTestId={testIds.recipesSearchInput}
               resultCount={searchedMoreRecipes.length}
-              totalCount={moreRecipes.length}
+              totalCount={listRecipes.length}
               onClearAll={clearDiscovery}
             />
 
-            {discoveryReady && !recipesError && recipes.length > 0 && rankedRecipes.length === 0 && (
-              <View
-                style={[
-                  styles.noMatchCard,
-                  { backgroundColor: themeColors.white, borderColor: themeColors.border },
-                ]}
-              >
-                <Text style={[styles.noMatchTitle, { color: themeColors.charcoal }]}>No recipes match</Text>
-                <Text style={[styles.noMatchSub, { color: themeColors.muted }]}>
-                  Try changing quick filters, turning off pantry mode, or updating diet and region in Settings.
-                </Text>
-                {pantryFilterActive && (
-                  <Pressable
-                    onPress={() => setPantryFilterActive(false)}
-                    style={styles.noMatchBtn}
+            {discoveryReady &&
+              !recipesError &&
+              recipes.length > 0 &&
+              rankedRecipes.length === 0 && (
+                <View
+                  style={[
+                    styles.noMatchCard,
+                    {
+                      backgroundColor: themeColors.white,
+                      borderColor: themeColors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.noMatchTitle,
+                      { color: themeColors.charcoal },
+                    ]}
                   >
-                    <Text style={styles.noMatchBtnText}>Show all recipes</Text>
-                  </Pressable>
-                )}
-              </View>
-            )}
+                    No recipes match
+                  </Text>
+                  <Text
+                    style={[styles.noMatchSub, { color: themeColors.muted }]}
+                  >
+                    Try changing quick filters, turning off pantry mode, or
+                    updating diet and region in Settings.
+                  </Text>
+                  {pantryFilterActive && (
+                    <Pressable
+                      onPress={() => setPantryFilterActive(false)}
+                      style={styles.noMatchBtn}
+                    >
+                      <Text style={styles.noMatchBtnText}>
+                        Show all recipes
+                      </Text>
+                    </Pressable>
+                  )}
+                </View>
+              )}
           </View>
         }
         renderItem={renderItem}
@@ -278,12 +301,19 @@ export default function RecipesTabScreen() {
             <RecipeListSkeleton count={6} />
           ) : recipesError ? (
             <View style={styles.errorBox}>
-              <EmptyState icon={Timer} title="Could not load recipes" subtitle={recipesError} />
-              <Pressable onPress={() => void refreshRecipes()} style={styles.retryBtn}>
+              <EmptyState
+                icon={Timer}
+                title="Could not load recipes"
+                subtitle={recipesError}
+              />
+              <Pressable
+                onPress={() => void refreshRecipes()}
+                style={styles.retryBtn}
+              >
                 <Text style={styles.retryBtnText}>Retry</Text>
               </Pressable>
             </View>
-          ) : searchQuery.trim() && moreRecipes.length > 0 ? (
+          ) : searchQuery.trim() && listRecipes.length > 0 ? (
             <EmptyState
               icon={Search}
               title="No matches"
@@ -352,7 +382,7 @@ const styles = StyleSheet.create({
   },
   noMatchTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.charcoal,
   },
   noMatchSub: {
@@ -363,7 +393,7 @@ const styles = StyleSheet.create({
   },
   noMatchBtn: {
     marginTop: spacing.md,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: radius.pill,
@@ -371,14 +401,14 @@ const styles = StyleSheet.create({
   },
   noMatchBtnText: {
     color: colors.white,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 14,
   },
   errorBox: {
     gap: spacing.md,
   },
   retryBtn: {
-    alignSelf: 'center',
+    alignSelf: "center",
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
@@ -386,7 +416,7 @@ const styles = StyleSheet.create({
   },
   retryBtnText: {
     fontSize: 14,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.white,
   },
 });

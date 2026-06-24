@@ -22,7 +22,7 @@ type TonightRecipesContextValue = {
   alsoFor: Recipe[];
   readyToCookCount: number;
   readyToCookReady: boolean;
-  /** False while tonight picks are still being ranked after the recipe list loads. */
+  /** False while the recipe list is still loading from the network. */
   rankingReady: boolean;
 };
 
@@ -33,43 +33,25 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   const { recipes, loading: recipesLoading } = useRecipes();
   const meal = getMealContext();
   const deferredPantryIngredients = useDeferredValue(pantryIngredients);
-  const [rankedRecipes, setRankedRecipes] = useState<Recipe[]>([]);
-  const [rankingReady, setRankingReady] = useState(false);
 
-  useEffect(() => {
-    if (recipesLoading) {
-      setRankingReady(false);
-      return;
+  const rankedRecipes = useMemo(() => {
+    if (recipesLoading || recipes.length === 0) {
+      return [];
     }
 
-    if (recipes.length === 0) {
-      setRankedRecipes([]);
-      setRankingReady(true);
-      return;
-    }
-
-    setRankingReady(false);
-
-    const task = InteractionManager.runAfterInteractions(() => {
-      const filtered = filterRecipes(recipes, {
-        dietPreference: dietChoiceToFilter(dietChoice),
-        regionalCuisine,
-        favoriteCuisines,
-        pantryIngredients: deferredPantryIngredients,
-        fastFilters: [],
-      });
-
-      setRankedRecipes(
-        sortRecipesForTonight(filtered, {
-          regionalCuisine,
-          pantryIngredients: deferredPantryIngredients,
-          mealSlot: meal.slot,
-        }),
-      );
-      setRankingReady(true);
+    const filtered = filterRecipes(recipes, {
+      dietPreference: dietChoiceToFilter(dietChoice),
+      regionalCuisine,
+      favoriteCuisines,
+      pantryIngredients: deferredPantryIngredients,
+      fastFilters: [],
     });
 
-    return () => task.cancel();
+    return sortRecipesForTonight(filtered, {
+      regionalCuisine,
+      pantryIngredients: deferredPantryIngredients,
+      mealSlot: meal.slot,
+    });
   }, [
     recipes,
     recipesLoading,
@@ -79,6 +61,19 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     deferredPantryIngredients,
     meal.slot,
   ]);
+
+  const rankingReady = !recipesLoading;
+
+  useEffect(() => {
+    if (!__DEV__ || recipesLoading) return;
+    console.log('[recipes] ranked', {
+      loaded: recipes.length,
+      ranked: rankedRecipes.length,
+      dietChoice,
+      regionalCuisine,
+      favoriteCuisines,
+    });
+  }, [recipes.length, rankedRecipes.length, recipesLoading, dietChoice, regionalCuisine, favoriteCuisines]);
 
   const topPick = rankedRecipes[0];
   const alsoFor = rankedRecipes.slice(1, 4);

@@ -3,6 +3,12 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState } from 'react';
 import { LogBox, View } from 'react-native';
+import { useFonts, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
+import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_700Bold,
+} from '@expo-google-fonts/dm-sans';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { enableScreens } from 'react-native-screens';
@@ -63,6 +69,12 @@ function RootLayoutInner({
   setLaunchDone: (value: boolean) => void;
 }) {
   const { colors, isDark } = useTheme();
+  const [fontsLoaded] = useFonts({
+    Fraunces_700Bold,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_700Bold,
+  });
 
   useEffect(() => {
     void ensureTelemetryStarted().catch(() => undefined);
@@ -81,6 +93,10 @@ function RootLayoutInner({
 
     return () => clearTimeout(timer);
   }, [finishLaunchSplash]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>

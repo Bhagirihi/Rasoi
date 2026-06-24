@@ -1,6 +1,6 @@
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Bookmark,
@@ -10,54 +10,59 @@ import {
   MapPin,
   Share2,
   ShoppingCart,
-} from 'lucide-react-native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+} from "lucide-react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import RecipeVisualBadge from "@/components/RecipeVisualBadge";
+import RecipeDetailSkeleton from "@/components/RecipeDetailSkeleton";
+
+import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
+import SponsorOrAd from "@/components/SponsorOrAd";
+import FoodDeliveryModal from "@/components/FoodDeliveryModal";
+import FoodDeliveryStrip from "@/components/FoodDeliveryStrip";
+import IngredientList from "@/components/IngredientList";
+import PartnerUpsellCard from "@/components/PartnerUpsellCard";
+import RecipeSafetyDisclaimer from "@/components/RecipeSafetyDisclaimer";
+import TrialPartnerBanner from "@/components/TrialPartnerBanner";
+import { PlanBadge } from "@/components/ui/Primitives";
+import { SCREENSHOT_MODE } from "@/constants/screenshotMode";
 import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import RecipeImage from '@/components/RecipeImage';
-import RecipeDetailSkeleton from '@/components/RecipeDetailSkeleton';
-
-import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
-import SponsorOrAd from '@/components/SponsorOrAd';
-import FoodDeliveryModal from '@/components/FoodDeliveryModal';
-import FoodDeliveryStrip from '@/components/FoodDeliveryStrip';
-import IngredientList from '@/components/IngredientList';
-import PartnerUpsellCard from '@/components/PartnerUpsellCard';
-import RecipeSafetyDisclaimer from '@/components/RecipeSafetyDisclaimer';
-import TrialPartnerBanner from '@/components/TrialPartnerBanner';
-import { PlanBadge } from '@/components/ui/Primitives';
-import { SCREENSHOT_MODE } from '@/constants/screenshotMode';
-import { colors, layout, radius, scrollIndicator, shadows, spacing } from '@/constants/theme';
-import { testIds } from '@/constants/testIds';
-import { useTheme } from '@/context/ThemeContext';
-import { useAppContext } from '@/context/AppContext';
-import { useRecipes } from '@/context/RecipesContext';
-import { fetchRecipeSponsor, type SponsorCardData } from '@/services/sponsors';
-import type { Recipe } from '@/data/mockRecipes';
-import { useRasoiRealtimeTables } from '@/utils/realtime';
-import { getRegionalMatchPercent, partitionIngredients } from '@/utils/recipes';
-import { getRecipeSteps } from '@/utils/recipeSteps';
-import { getRecipeStepsHi } from '@/utils/recipeStepsHi';
-import { shareRecipeOnWhatsApp } from '@/utils/shareRecipe';
-import { PAYWALL_HREF } from '@/utils/routes';
-import type { AffiliatePartner } from '@/utils/affiliate';
+  colors,
+  layout,
+  radius,
+  scrollIndicator,
+  shadows,
+  spacing,
+} from "@/constants/theme";
+import { testIds } from "@/constants/testIds";
+import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
+import { useRecipes } from "@/context/RecipesContext";
+import { fetchRecipeSponsor, type SponsorCardData } from "@/services/sponsors";
+import type { Recipe } from "@/data/mockRecipes";
+import { useRasoiRealtimeTables } from "@/utils/realtime";
+import { getRegionalMatchPercent, partitionIngredients } from "@/utils/recipes";
+import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
+import { getRecipeSteps } from "@/utils/recipeSteps";
+import { getRecipeStepsHi } from "@/utils/recipeStepsHi";
+import { shareRecipeOnWhatsApp } from "@/utils/shareRecipe";
+import { PAYWALL_HREF } from "@/utils/routes";
+import type { AffiliatePartner } from "@/utils/affiliate";
 
 function normalizeRecipeId(id: string | string[] | undefined): string {
-  if (Array.isArray(id)) return id[0] ?? '';
-  return id ?? '';
+  if (Array.isArray(id)) return id[0] ?? "";
+  return id ?? "";
 }
 
 export default function RecipeDetailScreen() {
-  const params = useLocalSearchParams<{ id: string | string[]; cook?: string }>();
+  const params = useLocalSearchParams<{
+    id: string | string[];
+    cook?: string;
+  }>();
   const recipeId = normalizeRecipeId(params.id);
-  const startInCookMode = params.cook === '1';
+  const startInCookMode = params.cook === "1";
   const router = useRouter();
   const {
     pantryIngredients,
@@ -71,22 +76,26 @@ export default function RecipeDetailScreen() {
   const loadRecipeByIdRef = useRef(loadRecipeById);
   loadRecipeByIdRef.current = loadRecipeById;
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
+  const [modalPartner, setModalPartner] = useState<AffiliatePartner>("blinkit");
   const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
   const [stickyBarHeight, setStickyBarHeight] = useState(160);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [recipeLoading, setRecipeLoading] = useState(true);
-  const [recipeSponsor, setRecipeSponsor] = useState<SponsorCardData | null>(null);
+  const [recipeSponsor, setRecipeSponsor] = useState<SponsorCardData | null>(
+    null,
+  );
   const [recipeSponsorLoading, setRecipeSponsorLoading] = useState(true);
   const [cookMode, setCookMode] = useState(startInCookMode);
-  const [stepsLang, setStepsLang] = useState<'en' | 'hi'>('en');
-  const [completedSteps, setCompletedSteps] = useState<Set<number>>(() => new Set());
+  const [stepsLang, setStepsLang] = useState<"en" | "hi">("en");
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(
+    () => new Set(),
+  );
   const { colors: themeColors } = useTheme();
 
   useEffect(() => {
     setCookMode(startInCookMode);
     setCompletedSteps(new Set());
-    setStepsLang('en');
+    setStepsLang("en");
   }, [recipeId, startInCookMode]);
 
   useEffect(() => {
@@ -150,9 +159,13 @@ export default function RecipeDetailScreen() {
     void refreshRecipeSponsor();
   }, [refreshRecipeSponsor]);
 
-  useRasoiRealtimeTables(['Sponsor'], () => {
-    void refreshRecipeSponsor();
-  }, `recipe-sponsor-${recipeId ?? 'none'}`);
+  useRasoiRealtimeTables(
+    ["Sponsor"],
+    () => {
+      void refreshRecipeSponsor();
+    },
+    `recipe-sponsor-${recipeId ?? "none"}`,
+  );
 
   const { available, missing } = useMemo(() => {
     if (!recipe) return { available: [], missing: [] };
@@ -161,7 +174,7 @@ export default function RecipeDetailScreen() {
 
   const displaySteps = useMemo(() => {
     if (!recipe) return [];
-    if (stepsLang === 'hi') {
+    if (stepsLang === "hi") {
       return getRecipeStepsHi(recipe.id, recipe.title);
     }
     return recipe.steps ?? getRecipeSteps(recipe.id, recipe.title);
@@ -191,6 +204,7 @@ export default function RecipeDetailScreen() {
   }
 
   const matchPercent = getRegionalMatchPercent(recipe.region, regionalCuisine);
+  const recipeVisual = getRecipeVisualIdentity(recipe);
   const saved = isRecipeSaved(recipe.id);
 
   const handleSavePress = () => {
@@ -198,7 +212,7 @@ export default function RecipeDetailScreen() {
     toggleSavedRecipe(recipe.id);
   };
 
-  const openCheckout = (partner: AffiliatePartner = 'blinkit') => {
+  const openCheckout = (partner: AffiliatePartner = "blinkit") => {
     if (!showPartners || missing.length === 0) return;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setModalPartner(partner);
@@ -235,7 +249,10 @@ export default function RecipeDetailScreen() {
   };
 
   return (
-    <View style={[styles.root, { backgroundColor: themeColors.cream }]} testID={testIds.screenRecipe}>
+    <View
+      style={[styles.root, { backgroundColor: themeColors.cream }]}
+      testID={testIds.screenRecipe}
+    >
       <ScrollView
         style={styles.scroll}
         {...scrollIndicator}
@@ -245,13 +262,13 @@ export default function RecipeDetailScreen() {
         ]}
       >
         <View style={styles.hero}>
-          <RecipeImage uri={recipe.imageUrl} style={styles.heroImage} />
+          <RecipeVisualBadge recipe={recipe} variant="backdrop" style={StyleSheet.absoluteFillObject} />
           <LinearGradient
-            colors={['transparent', 'rgba(26,26,46,0.85)']}
+            colors={['transparent', 'rgba(26,26,46,0.88)']}
             style={StyleSheet.absoluteFillObject}
           />
 
-          <SafeAreaView edges={['top']} style={styles.heroTopBar}>
+          <SafeAreaView edges={["top"]} style={styles.heroTopBar}>
             <Pressable onPress={() => router.back()} style={styles.iconBtn}>
               <ArrowLeft size={22} color={colors.white} />
             </Pressable>
@@ -265,12 +282,17 @@ export default function RecipeDetailScreen() {
                 testID={testIds.recipeSaveButton}
               >
                 <Bookmark size={16} color={colors.white} />
-                <Text style={styles.saveBtnText}>{saved ? 'Saved' : 'Save'}</Text>
+                <Text style={styles.saveBtnText}>
+                  {saved ? "Saved" : "Save"}
+                </Text>
               </Pressable>
             </View>
           </SafeAreaView>
 
           <View style={styles.heroBottom}>
+            <Text style={styles.heroEyebrow}>
+              {recipeVisual.emoji} {recipeVisual.kitchenLabel} · {recipeVisual.mood}
+            </Text>
             <Text style={styles.heroTitle}>{recipe.title}</Text>
             <View style={styles.heroMetaRow}>
               <View style={styles.heroPill}>
@@ -283,7 +305,9 @@ export default function RecipeDetailScreen() {
               </View>
               <View style={[styles.heroPill, styles.heroPillGreen]}>
                 <MapPin size={14} color={colors.white} />
-                <Text style={styles.heroPillText}>{matchPercent}% regional match</Text>
+                <Text style={styles.heroPillText}>
+                  {matchPercent}% regional match
+                </Text>
               </View>
             </View>
           </View>
@@ -321,11 +345,15 @@ export default function RecipeDetailScreen() {
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>Region</Text>
-              <Text style={[styles.statValue, { color: colors.primary }]}>{recipe.region}</Text>
+              <Text style={[styles.statValue, { color: colors.primary }]}>
+                {recipe.region}
+              </Text>
             </View>
             <View style={styles.statCard}>
               <Text style={styles.statLabel}>Diet</Text>
-              <Text style={[styles.statValue, { color: colors.green }]}>{recipe.dietType}</Text>
+              <Text style={[styles.statValue, { color: colors.green }]}>
+                {recipe.dietType}
+              </Text>
             </View>
           </View>
 
@@ -335,21 +363,32 @@ export default function RecipeDetailScreen() {
               onPress={toggleCookMode}
               style={[styles.toolChip, cookMode && styles.toolChipActive]}
             >
-              <Text style={[styles.toolChipText, cookMode && styles.toolChipTextActive]}>
-                {cookMode ? 'Cook mode on' : 'Cook mode'}
+              <Text
+                style={[
+                  styles.toolChipText,
+                  cookMode && styles.toolChipTextActive,
+                ]}
+              >
+                {cookMode ? "Cook mode on" : "Cook mode"}
               </Text>
             </Pressable>
             <Pressable
               onPress={() => {
                 void Haptics.selectionAsync();
-                setStepsLang((lang) => (lang === 'en' ? 'hi' : 'en'));
+                setStepsLang((lang) => (lang === "en" ? "hi" : "en"));
               }}
-              style={[styles.toolChip, stepsLang === 'hi' && styles.toolChipActive]}
+              style={[
+                styles.toolChip,
+                stepsLang === "hi" && styles.toolChipActive,
+              ]}
             >
               <Text
-                style={[styles.toolChipText, stepsLang === 'hi' && styles.toolChipTextActive]}
+                style={[
+                  styles.toolChipText,
+                  stepsLang === "hi" && styles.toolChipTextActive,
+                ]}
               >
-                {stepsLang === 'hi' ? 'हिंदी' : 'English'}
+                {stepsLang === "hi" ? "हिंदी" : "English"}
               </Text>
             </Pressable>
           </View>
@@ -365,14 +404,20 @@ export default function RecipeDetailScreen() {
                   done && styles.stepRowDone,
                 ]}
               >
-                <View style={[styles.stepNumber, done && styles.stepNumberDone]}>
+                <View
+                  style={[styles.stepNumber, done && styles.stepNumberDone]}
+                >
                   {done ? (
                     <Check size={14} color={colors.white} strokeWidth={3} />
                   ) : (
                     <Text style={styles.stepNumberText}>{index + 1}</Text>
                   )}
                 </View>
-                <Text style={[styles.stepText, cookMode && styles.stepTextCook]}>{step}</Text>
+                <Text
+                  style={[styles.stepText, cookMode && styles.stepTextCook]}
+                >
+                  {step}
+                </Text>
               </Pressable>
             );
           })}
@@ -389,51 +434,71 @@ export default function RecipeDetailScreen() {
             recipe={recipe}
             available={available}
             missing={missing}
-            onShopMissing={missing.length > 0 && showPartners ? () => openCheckout() : undefined}
-            onPartnerPress={missing.length > 0 && showPartners ? openCheckout : undefined}
+            onShopMissing={
+              missing.length > 0 && showPartners
+                ? () => openCheckout()
+                : undefined
+            }
+            onPartnerPress={
+              missing.length > 0 && showPartners ? openCheckout : undefined
+            }
           />
-
         </View>
       </ScrollView>
 
       {!(deliveryModalVisible || modalVisible) && (
-      <SafeAreaView
-        edges={['bottom']}
-        style={styles.stickyBar}
-        onLayout={(event) => {
-          const height = event.nativeEvent.layout.height;
-          if (height > 0 && Math.abs(height - stickyBarHeight) > 2) {
-            setStickyBarHeight(height);
-          }
-        }}
-      >
-        {showPartners ? (
-          <>
-            <Pressable onPress={openDelivery} style={styles.stickyBtnDelivery}>
-              <Text style={styles.stickyDeliveryEyebrow}>Recommended</Text>
-              <Text style={styles.stickyTitle}>Skip cooking — order ready-made</Text>
-              <Text style={styles.stickySub}>Zomato · Swiggy · ~30 min delivery</Text>
-            </Pressable>
-            {missing.length > 0 && (
-              <Pressable onPress={() => openCheckout()} style={styles.stickyBtnGroceries}>
-                <ShoppingCart size={16} color={colors.primary} />
-                <Text style={styles.stickyGroceriesText}>
-                  Or shop {missing.length} grocery item{missing.length !== 1 ? 's' : ''}
+        <SafeAreaView
+          edges={["bottom"]}
+          style={styles.stickyBar}
+          onLayout={(event) => {
+            const height = event.nativeEvent.layout.height;
+            if (height > 0 && Math.abs(height - stickyBarHeight) > 2) {
+              setStickyBarHeight(height);
+            }
+          }}
+        >
+          {showPartners ? (
+            <>
+              <Pressable
+                onPress={openDelivery}
+                style={styles.stickyBtnDelivery}
+              >
+                <Text style={styles.stickyDeliveryEyebrow}>Recommended</Text>
+                <Text style={styles.stickyTitle}>
+                  Skip cooking — order ready-made
+                </Text>
+                <Text style={styles.stickySub}>
+                  Zomato · Swiggy · ~30 min delivery
                 </Text>
               </Pressable>
-            )}
-          </>
-        ) : (
-          <Pressable
-            onPress={() => router.push(PAYWALL_HREF)}
-            style={styles.stickyBtnDelivery}
-          >
-            <Text style={styles.stickyDeliveryEyebrow}>Rasoi Plus</Text>
-            <Text style={styles.stickyTitle}>Unlock shop & delivery partners</Text>
-            <Text style={styles.stickySub}>Start 3-day trial or subscribe in Settings</Text>
-          </Pressable>
-        )}
-      </SafeAreaView>
+              {missing.length > 0 && (
+                <Pressable
+                  onPress={() => openCheckout()}
+                  style={styles.stickyBtnGroceries}
+                >
+                  <ShoppingCart size={16} color={colors.primary} />
+                  <Text style={styles.stickyGroceriesText}>
+                    Or shop {missing.length} grocery item
+                    {missing.length !== 1 ? "s" : ""}
+                  </Text>
+                </Pressable>
+              )}
+            </>
+          ) : (
+            <Pressable
+              onPress={() => router.push(PAYWALL_HREF)}
+              style={styles.stickyBtnDelivery}
+            >
+              <Text style={styles.stickyDeliveryEyebrow}>Rasoi Plus</Text>
+              <Text style={styles.stickyTitle}>
+                Unlock shop & delivery partners
+              </Text>
+              <Text style={styles.stickySub}>
+                Start 3-day trial or subscribe in Settings
+              </Text>
+            </Pressable>
+          )}
+        </SafeAreaView>
       )}
 
       {showPartners && (
@@ -468,14 +533,14 @@ const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 24 },
   notFound: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.cream,
     paddingHorizontal: 24,
   },
   notFoundTitle: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.charcoal,
   },
   notFoundBtn: {
@@ -487,44 +552,44 @@ const styles = StyleSheet.create({
   },
   notFoundBtnText: {
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.white,
   },
   hero: {
     height: 288,
-    position: 'relative',
+    position: "relative",
   },
   heroImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   heroTopBar: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     top: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingTop: 8,
   },
   heroActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   iconBtn: {
     borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: "rgba(0,0,0,0.3)",
     padding: 8,
   },
   saveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderRadius: 999,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: "rgba(0,0,0,0.3)",
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
@@ -533,42 +598,48 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.white,
   },
   heroBottom: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     padding: 20,
   },
+  heroEyebrow: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "rgba(255,255,255,0.88)",
+    marginBottom: 6,
+  },
   heroTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.white,
   },
   heroMetaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
     marginTop: 12,
   },
   heroPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: "rgba(255,255,255,0.2)",
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   heroPillGreen: {
-    backgroundColor: 'rgba(0,168,107,0.8)',
+    backgroundColor: "rgba(0,168,107,0.8)",
   },
   heroPillText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.white,
   },
   body: {
@@ -576,7 +647,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   freeWrap: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     marginTop: spacing.lg,
     marginBottom: spacing.md,
   },
@@ -586,7 +657,7 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   statsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
     marginTop: 16,
   },
@@ -601,27 +672,27 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
+    fontWeight: "700",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
     color: colors.muted,
   },
   statValue: {
     marginTop: 4,
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.charcoal,
   },
   sectionTitle: {
     marginTop: spacing.xxxl,
     marginBottom: spacing.sm,
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.charcoal,
   },
   stepsToolbar: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.md,
   },
@@ -635,19 +706,19 @@ const styles = StyleSheet.create({
   },
   toolChipActive: {
     borderColor: colors.primary,
-    backgroundColor: 'rgba(255,107,53,0.12)',
+    backgroundColor: "rgba(255,107,53,0.12)",
   },
   toolChipText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.muted,
   },
   toolChipTextActive: {
     color: colors.primary,
   },
   stepRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.md,
     marginBottom: spacing.md,
     borderRadius: radius.md,
@@ -662,23 +733,23 @@ const styles = StyleSheet.create({
   },
   stepRowDone: {
     opacity: 0.72,
-    backgroundColor: 'rgba(0,168,107,0.06)',
-    borderColor: 'rgba(0,168,107,0.25)',
+    backgroundColor: "rgba(0,168,107,0.06)",
+    borderColor: "rgba(0,168,107,0.25)",
   },
   stepNumber: {
     width: 28,
     height: 28,
     borderRadius: 14,
     backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   stepNumberDone: {
     backgroundColor: colors.green,
   },
   stepNumberText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.white,
   },
   stepText: {
@@ -690,10 +761,10 @@ const styles = StyleSheet.create({
   stepTextCook: {
     fontSize: 17,
     lineHeight: 26,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   stickyBar: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
@@ -705,7 +776,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.sm,
     gap: spacing.sm,
     elevation: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -715,41 +786,41 @@ const styles = StyleSheet.create({
     backgroundColor: colors.charcoal,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#E23744',
+    borderColor: "#E23744",
     ...shadows.cta,
   },
   stickyDeliveryEyebrow: {
     fontSize: 10,
-    fontWeight: '800',
+    fontWeight: "800",
     letterSpacing: 1,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     color: colors.saffron,
   },
   stickyTitle: {
     marginTop: 2,
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: "800",
     color: colors.white,
-    textAlign: 'center',
+    textAlign: "center",
   },
   stickySub: {
     marginTop: 2,
     fontSize: 11,
-    color: 'rgba(255,255,255,0.75)',
-    textAlign: 'center',
+    color: "rgba(255,255,255,0.75)",
+    textAlign: "center",
   },
   stickyBtnGroceries: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: spacing.sm,
     paddingVertical: spacing.sm,
   },
   stickyGroceriesText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     color: colors.primary,
   },
 });

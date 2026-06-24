@@ -47,6 +47,7 @@ import {
   getExpoPushTokenDetailed,
   getPushPlatform,
 } from '@/utils/notifications';
+import { isRemotePushAvailable } from '@/utils/notificationCapability';
 import {
   addPantryIngredient,
   pantryHasIngredient,
@@ -90,6 +91,14 @@ export type FoodPreferencesPayload = {
 export type AuthNavigationResult = {
   showTrialWelcome: boolean;
   hasCompletedOnboarding: boolean;
+};
+
+const GUEST_DEFAULT_ONBOARDING: OnboardingPayload = {
+  dietPreference: 'Veg',
+  dietChoice: 'Veg',
+  regionalCuisine: 'All India',
+  favoriteCuisines: [],
+  notificationsEnabled: false,
 };
 
 interface AppContextValue extends ResolvedPlan {
@@ -213,6 +222,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const profileRefreshInFlightRef = useRef(false);
 
   const syncPushTokenToServer = useCallback(async (enabled: boolean) => {
+    if (!isRemotePushAvailable()) {
+      return;
+    }
+
     const hasLegacyToken = Boolean(await getAuthToken());
     const session = await getSupabaseSession();
     if (!hasLegacyToken && !session?.access_token) return;
@@ -351,6 +364,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       let notificationsOn = user.notificationsEnabled;
       let onboardingDone = user.hasCompletedOnboarding;
+
+      if (user.isGuest && !onboardingDone && !pendingOnboardingRef.current) {
+        pendingOnboardingRef.current = GUEST_DEFAULT_ONBOARDING;
+        await saveOnboardingComplete(GUEST_DEFAULT_ONBOARDING);
+        setHasCompletedOnboarding(true);
+        setDietChoiceState(GUEST_DEFAULT_ONBOARDING.dietChoice);
+        setRegionalCuisine(GUEST_DEFAULT_ONBOARDING.regionalCuisine);
+        setFavoriteCuisines(GUEST_DEFAULT_ONBOARDING.favoriteCuisines);
+        setNotificationsEnabledState(GUEST_DEFAULT_ONBOARDING.notificationsEnabled);
+        notificationsOn = GUEST_DEFAULT_ONBOARDING.notificationsEnabled;
+        onboardingDone = true;
+      }
 
       try {
         if (pendingOnboardingRef.current && !user.hasCompletedOnboarding) {
@@ -840,6 +865,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (snapshot: UserLocationSnapshot): Promise<boolean> => {
       if (!isLoggedIn) return false;
       try {
+        await ensureValidSupabaseSession();
         const user = await updateUserLocation({
           city: snapshot.city,
           state: snapshot.state,

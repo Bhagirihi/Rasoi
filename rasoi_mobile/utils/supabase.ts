@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 
+import { createSupabaseDebugFetch } from '@/utils/supabaseDebugFetch';
+
 let client: SupabaseClient | null = null;
 /** undefined = not loaded yet; null = no session */
 let sessionCache: Session | null | undefined;
@@ -24,6 +26,9 @@ export function getSupabaseClient(): SupabaseClient | null {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,
+      },
+      global: {
+        fetch: createSupabaseDebugFetch(),
       },
     });
 
