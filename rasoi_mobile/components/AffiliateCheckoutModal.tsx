@@ -156,8 +156,23 @@ export default function AffiliateCheckoutModal({
               </View>
               {missingIngredients.length > 1 ? (
                 <Text style={[styles.hint, { color: themeColors.muted }]}>
-                  Opens search for {missingIngredients[0]} — add the rest in the partner app.
+                  Partner search opens with top items — tap Share list below for the full shopping list.
                 </Text>
+              ) : null}
+              {missingIngredients.length > 1 ? (
+                <Pressable
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    void import('react-native').then(({ Share }) =>
+                      Share.share({
+                        message: `Rasoi shopping list:\n${missingIngredients.map((item) => `• ${item}`).join('\n')}`,
+                      }),
+                    );
+                  }}
+                  style={styles.shareListBtn}
+                >
+                  <Text style={styles.shareListText}>Share full shopping list</Text>
+                </Pressable>
               ) : null}
             </View>
           ) : null}
@@ -301,6 +316,16 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 11,
     lineHeight: 15,
+    marginTop: spacing.sm,
+  },
+  shareListBtn: {
+    marginTop: spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  shareListText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.primary,
   },
   partnerLabel: {
     fontSize: 11,

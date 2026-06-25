@@ -35,7 +35,8 @@ export default function GuestContinueModal({
 
           <Text style={localStyles.title}>Continue as guest</Text>
           <Text style={localStyles.body}>
-            Browse recipes without an account. Add your name if you like — totally optional.
+            Browse recipes without an account. Sign in later to sync pantry, saved recipes, and push
+            meal picks across devices.
           </Text>
 
           <View style={localStyles.field}>

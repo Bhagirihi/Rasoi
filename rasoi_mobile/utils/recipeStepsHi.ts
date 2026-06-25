@@ -1,3 +1,7 @@
+import { resolveRecipeSteps } from '@/utils/generateRecipeSteps';
+import { localizeStepsToHindi } from '@/utils/localizeStepsToHindi';
+import { getRecipeSteps } from '@/utils/recipeSteps';
+
 /** Hindi cooking steps keyed by recipe id — extend as content grows. */
 export const RECIPE_STEPS_HI: Record<string, string[]> = {
   '1': [
@@ -20,13 +24,38 @@ export const RECIPE_STEPS_HI: Record<string, string[]> = {
   ],
 };
 
-export function getRecipeStepsHi(recipeId: string, title: string): string[] {
-  return (
-    RECIPE_STEPS_HI[recipeId] ?? [
-      `${title} के सभी सामग्री तैयार करें।`,
-      'सब्ज़ियाँ काटें और मसाले नापकर रखें।',
-      'धीमी आँच पर पकाएँ; नमक स्वाद अनुसार।',
-      'गarnish करके गर्म परोसें।',
-    ]
-  );
+export function getRecipeStepsHi(
+  recipeId: string,
+  title: string,
+  recipe?: {
+    ingredients: { name: string; isStaple: boolean }[];
+    steps?: string[];
+    prepTime?: number;
+    dietType?: string;
+    difficulty?: string;
+    kitchenStyleId?: string;
+    description?: string;
+  },
+): string[] {
+  if (RECIPE_STEPS_HI[recipeId]) {
+    return RECIPE_STEPS_HI[recipeId];
+  }
+
+  const englishSteps =
+    recipe?.steps && recipe.steps.length > 0
+      ? recipe.steps
+      : recipe
+        ? resolveRecipeSteps({
+            title,
+            kitchenStyleId: recipe.kitchenStyleId ?? 'north-indian',
+            dietType: recipe.dietType ?? 'Veg',
+            ingredients: recipe.ingredients,
+            description: recipe.description,
+            difficulty: recipe.difficulty,
+            prepTime: recipe.prepTime ?? 30,
+            steps: recipe.steps,
+          })
+        : getRecipeSteps(recipeId, title);
+
+  return localizeStepsToHindi(englishSteps, title);
 }

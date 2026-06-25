@@ -2,6 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useAppContext } from '@/context/AppContext';
+import { useAppDialog } from '@/context/AppDialogContext';
 import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { useRecipes } from '@/context/RecipesContext';
 import { getScheduledMealContext } from '@/utils/mealTime';
@@ -21,9 +22,11 @@ export function useRecipeDiscovery() {
     pantryIngredients,
     pantryFilterActive,
     setPantryFilterActive,
+    allergyExclusions,
   } = useAppContext();
+  const { showDialog } = useAppDialog();
   const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes, hasMore: recipesHasMore, loadingMore: recipesLoadingMore, loadMoreRecipes, totalCount: recipesTotalCount } = useRecipes();
-  const { rankedRecipes: baseRankedRecipes, topPick: stableTopPick, alsoFor: stableAlsoFor, lateNightPick: stableLateNightPick, rankingReady } = useTonightRecipes();
+  const { rankedRecipes: baseRankedRecipes, topPick: stableTopPick, alsoFor: stableAlsoFor, lateNightPick: stableLateNightPick, seasonalRail, rankingReady, refreshHomePicks } = useTonightRecipes();
   const [activeFilters, setActiveFilters] = useState<ToggleableFastFilter[]>([]);
   const meal = getScheduledMealContext();
 
@@ -36,12 +39,14 @@ export function useRecipeDiscovery() {
 
     return filterRecipes(recipes, {
       dietPreference: dietChoiceToFilter(dietChoice),
+      dietChoice,
       regionalCuisine,
       favoriteCuisines,
       pantryIngredients,
       fastFilters: activeFilters,
       requirePantryMatch: pantryFilterActive,
       pantryMatchMode: pantryFilterActive ? 'any' : 'full',
+      allergyExclusions,
     });
   }, [
     hasDiscoveryFilters,
@@ -53,13 +58,18 @@ export function useRecipeDiscovery() {
     pantryIngredients,
     activeFilters,
     pantryFilterActive,
+    allergyExclusions,
   ]);
 
   useEffect(() => {
     if (!pantryFilterActive || recipesLoading || recipes.length === 0) return;
     if (filteredRecipes.length > 0) return;
     setPantryFilterActive(false);
-  }, [filteredRecipes.length, pantryFilterActive, recipes.length, recipesLoading, setPantryFilterActive]);
+    showDialog({
+      title: 'No pantry matches',
+      message: 'Nothing in your pantry matches right now. Showing all recipes instead.',
+    });
+  }, [filteredRecipes.length, pantryFilterActive, recipes.length, recipesLoading, setPantryFilterActive, showDialog]);
 
   const rankedRecipes = useMemo(() => {
     if (!hasDiscoveryFilters) {
@@ -83,7 +93,7 @@ export function useRecipeDiscovery() {
   const topPick = hasDiscoveryFilters ? rankedRecipes[0] : stableTopPick;
   const tonightCards = hasDiscoveryFilters ? rankedRecipes.slice(1, 4) : stableAlsoFor;
   const lateNightPick = hasDiscoveryFilters ? undefined : stableLateNightPick;
-  const moreRecipes = rankedRecipes.slice(4);
+  const moreRecipes = rankedRecipes;
   const hasQuickFilters = activeFilters.length > 0 || pantryFilterActive;
 
   const handleFilterToggle = (filter: FastFilter) => {
@@ -110,12 +120,14 @@ export function useRecipeDiscovery() {
     recipesError,
     rankingReady,
     refreshRecipes,
+    refreshHomePicks,
     activeFilters,
     filteredRecipes,
     rankedRecipes,
     topPick,
     tonightCards,
     lateNightPick,
+    seasonalRail,
     moreRecipes,
     hasQuickFilters,
     pantryFilterActive,

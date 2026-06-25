@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { AppState } from "react-native";
 
+import { mergeOfflineStarterRecipes } from "@/data/offlineStarterRecipes";
 import { Recipe } from "@/data/mockRecipes";
 import {
   fetchPublishedRecipesPage,
@@ -156,11 +157,10 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
         ),
       );
       if (!hasRecipes) {
-        setRecipes([]);
+        setRecipes(mergeOfflineStarterRecipes([]));
         setHasMore(false);
-        setTotalCount(null);
+        setTotalCount(mergeOfflineStarterRecipes([]).length);
         hasMoreRef.current = false;
-        nextOffsetRef.current = 0;
       }
     } finally {
       if (generation === fetchGenerationRef.current) {

@@ -3,6 +3,7 @@ import type { CuisineId, DietChoice } from '@/constants/theme';
 import type { DietType } from '@/data/mockRecipes';
 import type { UserProfileResponse } from '@/types/api';
 import { parseJson } from '@/utils/parseJson';
+import { parseKitchenPreferences } from '@/utils/kitchenPreferences';
 
 export type DbUserRow = {
   id: string;
@@ -33,6 +34,7 @@ export type DbUserRow = {
   hasUsedTrial: boolean;
   trialBonusDays?: number;
   yearlyPromoOfferTag?: string | null;
+  kitchenPreferences?: string;
 };
 
 export function serializeUserProfile(row: DbUserRow): UserProfileResponse {
@@ -56,6 +58,9 @@ export function serializeUserProfile(row: DbUserRow): UserProfileResponse {
     locationUpdatedAt: row.locationUpdatedAt,
     pantryIngredients: parseJson<string[]>(row.pantryIngredients, []),
     savedRecipeIds: parseJson<string[]>(row.savedRecipeIds, []),
+    kitchenPreferences: parseKitchenPreferences(
+      parseJson(row.kitchenPreferences ?? '{}', {}),
+    ),
     plan: {
       planTier: row.planTier as PlanTier,
       trialStartedAt: row.trialStartedAt,

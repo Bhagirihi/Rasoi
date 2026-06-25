@@ -227,7 +227,7 @@ export default function OnboardingScreen() {
         }
         enableLabel="Enable & Continue"
         enableIcon={<Bell size={18} color={colors.charcoal} />}
-        infoText="Required for Rasoi's smart curation"
+        infoText="Recommended — get personalized picks at breakfast, lunch, and dinner"
       />
     );
   }

@@ -82,6 +82,13 @@ export const supabaseSyncSchema = z.object({
   onboarding: onboardingSchema.optional(),
 });
 
+export const kitchenPreferencesSchema = z.object({
+  allergyExclusions: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
+  householdSize: z.number().int().min(1).max(12).optional(),
+  freePartnerShopsUsed: z.number().int().min(0).max(100).optional(),
+  freePartnerShopsMonthKey: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+});
+
 export const profileUpdateSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
   phone: indianPhone.optional(),
@@ -90,6 +97,7 @@ export const profileUpdateSchema = z.object({
   regionalCuisine: z.string().min(1).optional(),
   favoriteCuisines: favoriteCuisines.optional(),
   notificationsEnabled: z.boolean().optional(),
+  kitchenPreferences: kitchenPreferencesSchema.optional(),
 });
 
 export const recipeCreateSchema = z.object({

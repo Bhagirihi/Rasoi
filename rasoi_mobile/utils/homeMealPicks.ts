@@ -246,13 +246,24 @@ export async function resolveHomeMealPicks(input: {
   mealSlot: MealSlot;
   count?: number;
   excludeRecipeIds?: string[];
+  forceRegenerate?: boolean;
 }): Promise<Recipe[]> {
-  const { recipes, windowKey, profileKey, mealSlot, count = HOME_PICK_COUNT, excludeRecipeIds } = input;
+  const {
+    recipes,
+    windowKey,
+    profileKey,
+    mealSlot,
+    count = HOME_PICK_COUNT,
+    excludeRecipeIds,
+    forceRegenerate = false,
+  } = input;
   const recipeById = new Map(recipes.map((recipe) => [recipe.id, recipe]));
   const excludeIds = excludeRecipeIds?.length ? new Set(excludeRecipeIds) : undefined;
   const pickOptions: PickOptions = { windowKey, profileKey, mealSlot, count, excludeRecipeIds: excludeIds };
 
-  const cachedRecipeIds = await loadCachedRecipeIds(windowKey, profileKey);
+  const cachedRecipeIds = forceRegenerate
+    ? null
+    : await loadCachedRecipeIds(windowKey, profileKey);
   if (cachedRecipeIds) {
     const restored = restoreCachedRecipes(cachedRecipeIds, recipeById, excludeIds);
 

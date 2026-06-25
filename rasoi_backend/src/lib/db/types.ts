@@ -32,6 +32,7 @@ export type User = {
   yearlyPromoOfferTag: string | null;
   termsAcceptedAt: Date | null;
   termsAcceptedVersion: string | null;
+  kitchenPreferences: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -110,9 +111,47 @@ export type Recipe = {
   tags: string;
   ingredients: string;
   steps: string | null;
+  primaryIngredient: string | null;
+  popularityScore: number;
+  qualityScore: number;
   published: boolean;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type UserRecommendationCache = {
+  id: string;
+  userId: string;
+  dayKey: string;
+  mealSlot: string;
+  windowKey: string;
+  algorithmVersion: string;
+  recipeIds: string;
+  reasons: string;
+  preferenceSnapshot: string;
+  generatedAt: Date;
+};
+
+export type UserRecommendationHistory = {
+  id: string;
+  userId: string;
+  recipeId: string;
+  mealSlot: string;
+  shownAt: Date;
+};
+
+export type UserRecipeView = {
+  id: string;
+  userId: string;
+  recipeId: string;
+  viewedAt: Date;
+};
+
+export type UserRecipeCooked = {
+  id: string;
+  userId: string;
+  recipeId: string;
+  cookedAt: Date;
 };
 
 export type Sponsor = {

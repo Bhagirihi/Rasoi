@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { validateFavoriteCuisines } from '@/lib/kitchen-styles';
 import { db } from '@/lib/db';
+import { parseKitchenPreferences } from '@/lib/kitchen-preferences';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { profileUpdateSchema } from '@/lib/validators';
 import { deleteUserAccount } from '@/lib/user-account';
@@ -50,6 +51,12 @@ export async function PATCH(request: NextRequest) {
           ? JSON.stringify(input.favoriteCuisines)
           : undefined,
         notificationsEnabled: input.notificationsEnabled,
+        kitchenPreferences: input.kitchenPreferences
+          ? JSON.stringify({
+              ...parseKitchenPreferences(user.kitchenPreferences),
+              ...input.kitchenPreferences,
+            })
+          : undefined,
       },
     });
 

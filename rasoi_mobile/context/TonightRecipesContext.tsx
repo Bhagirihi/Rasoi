@@ -1,9 +1,11 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useDeferredValue,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -12,8 +14,15 @@ import { InteractionManager } from 'react-native';
 import { useAppContext } from '@/context/AppContext';
 import { useRecipes } from '@/context/RecipesContext';
 import type { Recipe } from '@/data/mockRecipes';
+import {
+  fetchRecommendations,
+  loadOfflineRecommendations,
+  mapRecommendationPicks,
+  saveOfflineRecommendations,
+} from '@/services/recommendations';
 import { buildHomePicksProfileKey, resolveHomeMealPicks } from '@/utils/homeMealPicks';
-import { getScheduledMealWindow } from '@/utils/mealTime';
+import { getScheduledMealWindow, type ScheduledMealWindow } from '@/utils/mealTime';
+import { MEAL_SECTION_MINUTES, minutesSinceMidnight } from '@/constants/mealTimeWindows';
 import { countFullyStockedRecipes, filterRecipes, sortRecipesForTonight } from '@/utils/recipes';
 import { dietChoiceToFilter } from '@/utils/storage';
 
@@ -22,25 +31,35 @@ type TonightRecipesContextValue = {
   topPick: Recipe | undefined;
   alsoFor: Recipe[];
   lateNightPick: Recipe | undefined;
+  pickReasons: string[];
+  seasonalRail: { id: string; title: string; subtitle: string; picks: Recipe[] } | null;
   readyToCookCount: number;
   readyToCookReady: boolean;
-  /** False while the recipe list is still loading from the network. */
   rankingReady: boolean;
+  refreshHomePicks: (force?: boolean) => Promise<void>;
 };
 
 const TonightRecipesContext = createContext<TonightRecipesContextValue | undefined>(undefined);
 
-/** Max recipes scanned for pantry match counts — avoids O(n) work on huge catalogs. */
 const READY_TO_COOK_SCAN_LIMIT = 300;
 const HOME_PICK_COUNT = 4;
+const MEAL_WINDOW_POLL_MS = 60_000;
 
 export function TonightRecipesProvider({ children }: { children: ReactNode }) {
-  const { dietChoice, regionalCuisine, favoriteCuisines, pantryIngredients, userId } =
+  const { dietChoice, regionalCuisine, favoriteCuisines, pantryIngredients, userId, allergyExclusions } =
     useAppContext();
   const { recipes, loading: recipesLoading } = useRecipes();
-  const mealWindow = getScheduledMealWindow();
+  const [mealWindow, setMealWindow] = useState<ScheduledMealWindow>(() => getScheduledMealWindow());
   const deferredPantryIngredients = useDeferredValue(pantryIngredients);
   const deferredRecipes = useDeferredValue(recipes);
+  const [refreshNonce, setRefreshNonce] = useState(0);
+  const forceNextRefreshRef = useRef(false);
+
+  useEffect(() => {
+    const syncWindow = () => setMealWindow(getScheduledMealWindow());
+    const intervalId = setInterval(syncWindow, MEAL_WINDOW_POLL_MS);
+    return () => clearInterval(intervalId);
+  }, []);
 
   const profileKey = useMemo(
     () =>
@@ -60,12 +79,14 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
 
     return filterRecipes(deferredRecipes, {
       dietPreference: dietChoiceToFilter(dietChoice),
+      dietChoice,
       regionalCuisine,
       favoriteCuisines,
       pantryIngredients: [],
       fastFilters: [],
+      allergyExclusions,
     });
-  }, [deferredRecipes, recipesLoading, dietChoice, regionalCuisine, favoriteCuisines]);
+  }, [deferredRecipes, recipesLoading, dietChoice, regionalCuisine, favoriteCuisines, allergyExclusions]);
 
   const rankedRecipes = useMemo(() => {
     if (pickPool.length === 0) {
@@ -75,6 +96,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     return sortRecipesForTonight(
       filterRecipes(pickPool, {
         dietPreference: dietChoiceToFilter(dietChoice),
+        dietChoice,
         regionalCuisine,
         favoriteCuisines,
         pantryIngredients: deferredPantryIngredients,
@@ -96,22 +118,93 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   ]);
 
   const [homePicks, setHomePicks] = useState<Recipe[]>([]);
+  const [pickReasons, setPickReasons] = useState<string[]>([]);
   const [lateNightPick, setLateNightPick] = useState<Recipe | undefined>();
+  const [seasonalRail, setSeasonalRail] = useState<TonightRecipesContextValue['seasonalRail']>(null);
   const [homePicksReady, setHomePicksReady] = useState(false);
+
+  const refreshHomePicks = useCallback(async (force = false) => {
+    forceNextRefreshRef.current = force;
+    setRefreshNonce((nonce) => nonce + 1);
+  }, []);
+
+  useEffect(() => {
+    const now = new Date();
+    const nowMinutes = minutesSinceMidnight(now.getHours(), now.getMinutes());
+    const boundaries = Object.values(MEAL_SECTION_MINUTES).sort((a, b) => a - b);
+    let windowStart = boundaries[0];
+    let windowEnd = boundaries[boundaries.length - 1];
+
+    for (let index = 0; index < boundaries.length - 1; index += 1) {
+      if (nowMinutes >= boundaries[index] && nowMinutes < boundaries[index + 1]) {
+        windowStart = boundaries[index];
+        windowEnd = boundaries[index + 1];
+        break;
+      }
+    }
+
+    const elapsed = nowMinutes - windowStart;
+    const duration = Math.max(30, windowEnd - windowStart);
+    const midpointMs = Math.max(60_000, (duration / 2 - elapsed) * 60_000);
+
+    const timerId = setTimeout(() => {
+      void refreshHomePicks(false);
+    }, midpointMs);
+
+    return () => clearTimeout(timerId);
+  }, [mealWindow.windowKey, refreshHomePicks]);
 
   useEffect(() => {
     let cancelled = false;
     setHomePicksReady(false);
-
-    if (recipesLoading || pickPool.length === 0) {
-      setHomePicks([]);
-      setLateNightPick(undefined);
-      return () => {
-        cancelled = true;
-      };
-    }
+    const shouldForce = forceNextRefreshRef.current;
+    forceNextRefreshRef.current = false;
 
     const loadPicks = async () => {
+      if (userId) {
+        try {
+          const response = await fetchRecommendations({ force: shouldForce });
+          if (cancelled) return;
+
+          const mapped = mapRecommendationPicks(response);
+          await saveOfflineRecommendations(mealWindow.windowKey, response);
+          setSeasonalRail(mapped.seasonalRail ?? null);
+
+          if (mealWindow.isOvernightDual) {
+            setLateNightPick(mapped.lateNightPick);
+            setHomePicks(mapped.picks.slice(0, HOME_PICK_COUNT));
+            setPickReasons(mapped.reasons);
+            setHomePicksReady(mapped.picks.length > 0);
+            return;
+          }
+
+          setLateNightPick(undefined);
+          setHomePicks(mapped.picks.slice(0, HOME_PICK_COUNT));
+          setPickReasons(mapped.reasons);
+          setHomePicksReady(mapped.picks.length > 0);
+          return;
+        } catch {
+          const offline = await loadOfflineRecommendations(mealWindow.windowKey);
+          if (offline && !cancelled) {
+            const mapped = mapRecommendationPicks(offline);
+            setSeasonalRail(mapped.seasonalRail ?? null);
+            setHomePicks(mapped.picks.slice(0, HOME_PICK_COUNT));
+            setPickReasons(mapped.reasons);
+            setLateNightPick(mapped.lateNightPick);
+            setHomePicksReady(mapped.picks.length > 0);
+            return;
+          }
+        }
+      }
+
+      if (recipesLoading || pickPool.length === 0) {
+      setHomePicks([]);
+      setPickReasons([]);
+      setLateNightPick(undefined);
+      setSeasonalRail(null);
+      return;
+      }
+
       if (mealWindow.isOvernightDual && mealWindow.tomorrowBreakfastWindowKey) {
         const latePicks = await resolveHomeMealPicks({
           recipes: pickPool,
@@ -119,6 +212,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           profileKey,
           mealSlot: 'lateNight',
           count: 1,
+          forceRegenerate: shouldForce,
         });
         const late = latePicks[0];
         const tomorrowPicks = await resolveHomeMealPicks({
@@ -128,6 +222,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           mealSlot: 'breakfast',
           count: HOME_PICK_COUNT,
           excludeRecipeIds: late ? [late.id] : undefined,
+          forceRegenerate: shouldForce,
         });
         const tomorrowFinal = late
           ? tomorrowPicks.filter((recipe) => recipe.id !== late.id)
@@ -135,6 +230,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
         if (cancelled) return;
         setLateNightPick(late);
         setHomePicks(tomorrowFinal);
+        setPickReasons([]);
         setHomePicksReady(Boolean(late) && tomorrowFinal.length > 0);
         return;
       }
@@ -145,10 +241,12 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
         profileKey,
         mealSlot: mealWindow.slot,
         count: HOME_PICK_COUNT,
+        forceRegenerate: shouldForce,
       });
       if (cancelled) return;
       setLateNightPick(undefined);
       setHomePicks(picks);
+      setPickReasons([]);
       setHomePicksReady(picks.length > 0);
     };
 
@@ -158,13 +256,15 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       cancelled = true;
     };
   }, [
-    pickPool.length,
+    userId,
     mealWindow.windowKey,
     mealWindow.tomorrowBreakfastWindowKey,
     mealWindow.slot,
     mealWindow.isOvernightDual,
     profileKey,
     recipesLoading,
+    pickPool,
+    refreshNonce,
   ]);
 
   const topPick = homePicks[0];
@@ -203,11 +303,25 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       topPick,
       alsoFor,
       lateNightPick,
+      pickReasons,
+      seasonalRail,
       readyToCookCount,
       readyToCookReady,
       rankingReady,
+      refreshHomePicks,
     }),
-    [rankedRecipes, topPick, alsoFor, lateNightPick, readyToCookCount, readyToCookReady, rankingReady],
+    [
+      rankedRecipes,
+      topPick,
+      alsoFor,
+      lateNightPick,
+      pickReasons,
+      seasonalRail,
+      readyToCookCount,
+      readyToCookReady,
+      rankingReady,
+      refreshHomePicks,
+    ],
   );
 
   return <TonightRecipesContext.Provider value={value}>{children}</TonightRecipesContext.Provider>;

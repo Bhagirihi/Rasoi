@@ -114,6 +114,50 @@ const TABLE_META: Record<string, TableMeta> = {
     hasUpdatedAt: true,
     relations: {},
   },
+  UserRecommendationCache: {
+    table: 'UserRecommendationCache',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: { userId_windowKey_algorithmVersion: ['userId', 'windowKey', 'algorithmVersion'] },
+    dateFields: new Set(['generatedAt']),
+    hasUpdatedAt: false,
+    relations: {
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+    },
+  },
+  UserRecommendationHistory: {
+    table: 'UserRecommendationHistory',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: {},
+    dateFields: new Set(['shownAt']),
+    hasUpdatedAt: false,
+    relations: {
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+    },
+  },
+  UserRecipeView: {
+    table: 'UserRecipeView',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: { userId_recipeId: ['userId', 'recipeId'] },
+    dateFields: new Set(['viewedAt']),
+    hasUpdatedAt: false,
+    relations: {
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+    },
+  },
+  UserRecipeCooked: {
+    table: 'UserRecipeCooked',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: { userId_recipeId: ['userId', 'recipeId'] },
+    dateFields: new Set(['cookedAt']),
+    hasUpdatedAt: false,
+    relations: {
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+    },
+  },
   Sponsor: {
     table: 'Sponsor',
     pk: 'id',

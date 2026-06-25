@@ -32,6 +32,7 @@ model User {
   locationUpdatedAt      DateTime?
   pantryIngredients      String    @default("[]")
   savedRecipeIds         String    @default("[]")
+  kitchenPreferences     String    @default("{}")
   planTier               String    @default("free")
   trialStartedAt         DateTime?
   hasUsedTrial           Boolean   @default(false)
@@ -167,25 +168,78 @@ model Admin {
 }
 
 model Recipe {
-  id             String   @id @default(cuid())
-  title          String
-  prepTime       Int
-  calories       Int
-  region         String
-  kitchenStyleId  String   @default("north")
-  kitchenStyleIds String   @default("[]")
-  dietType        String
-  difficulty     String
-  description    String
-  imageUrl       String
-  tags           String
-  ingredients    String
-  steps          String?
-  published      Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                String   @id @default(cuid())
+  title             String
+  prepTime          Int
+  calories          Int
+  region            String
+  kitchenStyleId    String   @default("north")
+  kitchenStyleIds   String   @default("[]")
+  dietType          String
+  difficulty        String
+  description       String
+  imageUrl          String
+  tags              String
+  ingredients       String
+  steps             String?
+  primaryIngredient String?
+  popularityScore   Int      @default(50)
+  qualityScore      Int      @default(50)
+  published         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([kitchenStyleId])
+  @@schema("rasoi")
+}
+
+model UserRecommendationCache {
+  id                 String   @id @default(cuid())
+  userId             String
+  dayKey             String
+  mealSlot           String
+  windowKey          String
+  algorithmVersion   String   @default("v1")
+  recipeIds          String   @default("[]")
+  reasons            String   @default("[]")
+  preferenceSnapshot String   @default("{}")
+  generatedAt        DateTime @default(now())
+
+  @@unique([userId, windowKey, algorithmVersion])
+  @@index([userId, windowKey])
+  @@schema("rasoi")
+}
+
+model UserRecommendationHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  recipeId  String
+  mealSlot  String
+  shownAt   DateTime @default(now())
+
+  @@index([userId, shownAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model UserRecipeView {
+  id       String   @id @default(cuid())
+  userId   String
+  recipeId String
+  viewedAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([userId, viewedAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model UserRecipeCooked {
+  id       String   @id @default(cuid())
+  userId   String
+  recipeId String
+  cookedAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([userId, cookedAt(sort: Desc)])
   @@schema("rasoi")
 }
 

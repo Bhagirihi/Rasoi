@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const [recipes, total] = await Promise.all([
       db.recipe.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ popularityScore: 'desc' }, { title: 'asc' }],
         take: limit,
         skip: offset,
       }),

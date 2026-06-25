@@ -1,5 +1,6 @@
 import type { Recipe, Sponsor, User } from '@/lib/db/types';
 import { serializeUserPlan } from '@/lib/plan-serializer';
+import { parseKitchenPreferences } from '@/lib/kitchen-preferences';
 import type {
   CuisineId,
   DietChoice,
@@ -93,8 +94,9 @@ export function serializeUser(user: User): UserProfileResponse {
     termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
     termsAcceptedVersion: user.termsAcceptedVersion ?? null,
     createdAt: user.createdAt.toISOString(),
-    pantryIngredients: parseJson<string[]>(user.pantryIngredients, []),
-    savedRecipeIds: parseJson<string[]>(user.savedRecipeIds, []),
-    plan: serializeUserPlan(user),
+  pantryIngredients: parseJson<string[]>(user.pantryIngredients, []),
+  savedRecipeIds: parseJson<string[]>(user.savedRecipeIds, []),
+  kitchenPreferences: parseKitchenPreferences(user.kitchenPreferences),
+  plan: serializeUserPlan(user),
   };
 }

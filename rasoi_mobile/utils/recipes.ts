@@ -1,8 +1,16 @@
 import { DietType, Recipe } from '@/data/mockRecipes';
+import { isJainSafeRecipe } from '@/utils/jainSafe';
 import { ingredientKey, pantryHasIngredient } from '@/utils/recipeIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
-export type FastFilter = 'all' | 'under20' | 'leftover' | 'kids';
+import { recipeContainsAllergen } from '@/utils/allergyFilter';
+import {
+  isBudgetFriendlyRecipe,
+  isKidsFriendlyRecipe,
+  isSmallPortionRecipe,
+} from '@/utils/recipeKids';
+
+export type FastFilter = 'all' | 'under20' | 'leftover' | 'kids' | 'budget' | 'smallPortions';
 export type ToggleableFastFilter = Exclude<FastFilter, 'all'>;
 export type PantryMatchMode = 'any' | 'full';
 
@@ -68,20 +76,51 @@ export function recipeMatchesSearch(recipe: Recipe, query: string): boolean {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return true;
 
-  if (recipe.title.toLowerCase().includes(normalized)) return true;
-  if (recipe.description.toLowerCase().includes(normalized)) return true;
-  if (recipe.region.toLowerCase().includes(normalized)) return true;
-  if (recipe.dietType.toLowerCase().includes(normalized)) return true;
+  const terms = expandLocalSearchTerms(normalized);
 
-  return recipe.ingredients.some((ingredient) =>
-    ingredient.name.toLowerCase().includes(normalized),
-  );
+  const haystack = [
+    recipe.title,
+    recipe.description,
+    recipe.region,
+    recipe.dietType,
+    ...recipe.tags,
+    ...recipe.ingredients.map((ingredient) => ingredient.name),
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  return terms.some((term) => haystack.includes(term));
+}
+
+const LOCAL_SEARCH_SYNONYMS: Record<string, string[]> = {
+  curd: ['dahi', 'yogurt'],
+  dahi: ['curd', 'yogurt'],
+  brinjal: ['baingan', 'eggplant'],
+  baingan: ['brinjal', 'eggplant'],
+  bhindi: ['okra'],
+  okra: ['bhindi'],
+  dal: ['daal', 'lentil'],
+  daal: ['dal', 'lentil'],
+  chana: ['chole', 'chickpea'],
+  chole: ['chana', 'chickpea'],
+};
+
+function expandLocalSearchTerms(query: string): string[] {
+  const terms = new Set<string>([query]);
+  for (const [key, synonyms] of Object.entries(LOCAL_SEARCH_SYNONYMS)) {
+    if (query.includes(key) || synonyms.some((synonym) => query.includes(synonym))) {
+      terms.add(key);
+      for (const synonym of synonyms) terms.add(synonym);
+    }
+  }
+  return [...terms];
 }
 
 export function filterRecipes(
   recipes: Recipe[],
   options: {
     dietPreference: DietType;
+    dietChoice?: string;
     regionalCuisine: string;
     favoriteCuisines?: string[];
     pantryIngredients: string[];
@@ -90,10 +129,12 @@ export function filterRecipes(
     fastFilter?: FastFilter;
     requirePantryMatch?: boolean;
     pantryMatchMode?: PantryMatchMode;
+    allergyExclusions?: string[];
   },
 ): Recipe[] {
   const {
     dietPreference,
+    dietChoice,
     regionalCuisine,
     favoriteCuisines = [],
     pantryIngredients,
@@ -101,6 +142,7 @@ export function filterRecipes(
     fastFilter,
     requirePantryMatch = false,
     pantryMatchMode = 'full',
+    allergyExclusions = [],
   } = options;
 
   const activeFastFilters: ToggleableFastFilter[] = fastFilters?.length
@@ -111,6 +153,12 @@ export function filterRecipes(
 
   return recipes.filter((recipe) => {
     if (recipe.dietType !== dietPreference) return false;
+
+    if (dietChoice === 'Jain' && !isJainSafeRecipe(recipe)) return false;
+
+    if (allergyExclusions.length > 0 && recipeContainsAllergen(recipe, allergyExclusions)) {
+      return false;
+    }
 
     if (!recipeMatchesFavoriteCuisines(recipe, favoriteCuisines)) return false;
 
@@ -126,7 +174,9 @@ export function filterRecipes(
     const tags = Array.isArray(recipe.tags) ? recipe.tags : [];
     if (activeFastFilters.includes('under20') && recipe.prepTime > 20) return false;
     if (activeFastFilters.includes('leftover') && !tags.includes('leftover')) return false;
-    if (activeFastFilters.includes('kids') && !tags.includes('kids')) return false;
+    if (activeFastFilters.includes('kids') && !isKidsFriendlyRecipe(recipe)) return false;
+    if (activeFastFilters.includes('budget') && !isBudgetFriendlyRecipe(recipe)) return false;
+    if (activeFastFilters.includes('smallPortions') && !isSmallPortionRecipe(recipe)) return false;
 
     if (requirePantryMatch && pantryIngredients.length > 0) {
       if (pantryMatchMode === 'full') {

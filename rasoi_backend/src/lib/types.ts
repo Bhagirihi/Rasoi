@@ -100,5 +100,11 @@ export interface UserProfileResponse {
   createdAt: string;
   pantryIngredients: string[];
   savedRecipeIds: string[];
+  kitchenPreferences: {
+    allergyExclusions?: string[];
+    householdSize?: number;
+    freePartnerShopsUsed?: number;
+    freePartnerShopsMonthKey?: string;
+  };
   plan: UserPlanResponse;
 }

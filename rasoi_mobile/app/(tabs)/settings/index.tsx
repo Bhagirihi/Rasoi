@@ -24,6 +24,7 @@ import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import RateRasoiCard from '@/components/settings/RateRasoiCard';
 import FeedbackLinkCard from '@/components/settings/FeedbackLinkCard';
 import LocationCard from '@/components/settings/LocationCard';
+import SyncStatusCard from '@/components/settings/SyncStatusCard';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   AccountActionsCard,
@@ -71,7 +72,7 @@ function formatCuisineLabels(ids: string[], kitchenStyles: KitchenStyle[]): stri
 export default function SettingsScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors, colorScheme, setColorScheme } = useTheme();
+  const { colors, colorScheme, setColorScheme, fontScale, setFontScale } = useTheme();
   const { kitchenStyles } = useReferenceData();
   const {
     userName,
@@ -96,6 +97,9 @@ export default function SettingsScreen() {
     paymentsEnabled,
     pendingEmailVerification,
     openEmailVerificationModal,
+    isLoggedIn,
+    lastProfileSyncedAt,
+    refreshSyncedProfile,
   } = useAppContext();
   const { trialTimeLabel, trialEndsAtLabel } = useTrialClock(trialStartedAt, effectiveTier);
   const { showDialog } = useAppDialog();
@@ -390,6 +394,16 @@ export default function SettingsScreen() {
           />
         </View>
 
+        <SettingsGroupLabel label="Sync" />
+        {isLoggedIn ? (
+          <SyncStatusCard
+            lastSyncedAt={lastProfileSyncedAt}
+            onRefresh={() => {
+              void refreshSyncedProfile();
+            }}
+          />
+        ) : null}
+
         <SettingsGroupLabel label="Location" />
         <LocationCard />
 
@@ -422,6 +436,37 @@ export default function SettingsScreen() {
                     ]}
                   >
                     {mode === 'light' ? 'Light' : 'Dark'}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={[styles.appearanceTitle, { color: colors.charcoal, marginTop: spacing.md }]}>
+            Text size
+          </Text>
+          <View style={styles.appearanceRow}>
+            {(['normal', 'large'] as const).map((scale) => {
+              const active = fontScale === scale;
+              return (
+                <Pressable
+                  key={scale}
+                  onPress={() => void setFontScale(scale)}
+                  style={[
+                    styles.appearanceOption,
+                    { borderColor: colors.border, backgroundColor: colors.white },
+                    active && styles.appearanceOptionActive,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${scale} text size`}
+                >
+                  <Text
+                    style={[
+                      styles.appearanceOptionText,
+                      { color: active ? colors.primary : colors.charcoal },
+                      scale === 'large' && { fontSize: 17 },
+                    ]}
+                  >
+                    {scale === 'normal' ? 'Normal' : 'Large'}
                   </Text>
                 </Pressable>
               );

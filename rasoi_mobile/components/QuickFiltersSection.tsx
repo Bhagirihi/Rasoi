@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { Baby, Recycle, Search, SlidersHorizontal, Sparkles, Timer, X } from 'lucide-react-native';
+import { Baby, Coins, Recycle, Search, SlidersHorizontal, Sparkles, Timer, Users, X } from 'lucide-react-native';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, radius, shadows, spacing } from '@/constants/theme';
@@ -14,6 +14,8 @@ const QUICK_FILTERS: Array<{
 }> = [
   { value: 'all', label: 'All picks', shortLabel: 'All', icon: Sparkles },
   { value: 'under20', label: 'Under 20 mins', shortLabel: 'Under 20m', icon: Timer },
+  { value: 'budget', label: 'Budget friendly', shortLabel: 'Budget', icon: Coins },
+  { value: 'smallPortions', label: '1–2 servings', shortLabel: '1–2 serve', icon: Users },
   { value: 'leftover', label: 'Leftover', shortLabel: 'Leftover', icon: Recycle },
   { value: 'kids', label: 'Kids', shortLabel: 'Kids', icon: Baby },
 ];

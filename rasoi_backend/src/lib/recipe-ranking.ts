@@ -1,3 +1,4 @@
+import { isJainSafeRecipe } from '@/lib/jain-safe';
 import { dietChoiceToDietType } from '@/lib/recipe-filters';
 import { canonicalizeIngredientName, expandIngredientAliasKeys } from '@/lib/ingredient-canonical';
 import { scoreRecipeForMealSlot, type MealSlot } from '@/lib/meal-time';
@@ -69,6 +70,8 @@ export function filterRecipesForUser(
 
   return recipes.filter((recipe) => {
     if (recipe.dietType !== dietType) return false;
+
+    if (options.dietChoice === 'Jain' && !isJainSafeRecipe(recipe)) return false;
 
     if (
       options.regionalCuisine &&

@@ -67,8 +67,8 @@ export const DAILY_REMINDER_SLOTS = [
   {
     id: 'rasoi-daily-dinner',
     hour: 19,
-    minute: 0,
-    label: '7 PM',
+    minute: 30,
+    label: '7:30 PM',
     title: "What's for dinner?",
     body: "Open Rasoi for tonight's top pick based on your pantry.",
   },
@@ -123,7 +123,8 @@ export type MealPushData = {
 
 export type NotificationNavigationTarget =
   | { type: 'recipe'; recipeId: string; cook?: boolean; save?: boolean }
-  | { type: 'recipes_tab' };
+  | { type: 'recipes_tab' }
+  | { type: 'home_tab' };
 
 function responseFingerprint(response: NotificationResponse): string {
   const { notification, actionIdentifier } = response;
@@ -150,7 +151,7 @@ export function getNavigationFromNotificationResponse(
   const actionId = response.actionIdentifier;
 
   if (data?.type === 'daily_reminder') {
-    return { type: 'recipes_tab' };
+    return { type: 'home_tab' };
   }
 
   if (data?.type === 'admin_message') {
@@ -235,7 +236,9 @@ export async function scheduleDailyReminder(): Promise<boolean> {
   await cancelDailyReminder();
 
   await Promise.all(
-    DAILY_REMINDER_SLOTS.map((slot) =>
+    DAILY_REMINDER_SLOTS.filter(
+      (slot) => slot.id === 'rasoi-daily-breakfast' || slot.id === 'rasoi-daily-dinner',
+    ).map((slot) =>
       Notifications.scheduleNotificationAsync({
         identifier: slot.id,
         content: {

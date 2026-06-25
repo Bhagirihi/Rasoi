@@ -47,7 +47,9 @@ import { getRegionalMatchPercent, partitionIngredients } from "@/utils/recipes";
 import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
 import { getRecipeSteps } from "@/utils/recipeSteps";
 import { getRecipeStepsHi } from "@/utils/recipeStepsHi";
+import { scaleIngredientLabel, servingMultiplierLabel } from "@/utils/servingScale";
 import { shareRecipeOnWhatsApp } from "@/utils/shareRecipe";
+import { logRecipeView, logRecipeCooked } from "@/services/recommendations";
 import { PAYWALL_HREF } from "@/utils/routes";
 import type { AffiliatePartner } from "@/utils/affiliate";
 
@@ -71,6 +73,7 @@ export default function RecipeDetailScreen() {
     toggleSavedRecipe,
     showPartners,
     partnersInTrialMode,
+    householdSize,
   } = useAppContext();
   const { getRecipeById, loadRecipeById } = useRecipes();
   const loadRecipeByIdRef = useRef(loadRecipeById);
@@ -87,6 +90,7 @@ export default function RecipeDetailScreen() {
   const [recipeSponsorLoading, setRecipeSponsorLoading] = useState(true);
   const [cookMode, setCookMode] = useState(startInCookMode);
   const [stepsLang, setStepsLang] = useState<"en" | "hi">("en");
+  const [servingMultiplier, setServingMultiplier] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(
     () => new Set(),
   );
@@ -96,6 +100,7 @@ export default function RecipeDetailScreen() {
     setCookMode(startInCookMode);
     setCompletedSteps(new Set());
     setStepsLang("en");
+    setServingMultiplier(1);
   }, [recipeId, startInCookMode]);
 
   useEffect(() => {
@@ -123,6 +128,9 @@ export default function RecipeDetailScreen() {
         if (cancelled) return;
         setRecipe(loaded);
         setRecipeLoading(false);
+        if (loaded) {
+          void logRecipeView(loaded.id);
+        }
       })
       .catch(() => {
         if (cancelled) return;
@@ -175,10 +183,35 @@ export default function RecipeDetailScreen() {
   const displaySteps = useMemo(() => {
     if (!recipe) return [];
     if (stepsLang === "hi") {
-      return getRecipeStepsHi(recipe.id, recipe.title);
+      return getRecipeStepsHi(recipe.id, recipe.title, recipe);
     }
     return recipe.steps ?? getRecipeSteps(recipe.id, recipe.title);
   }, [recipe, stepsLang]);
+
+  const scaledRecipe = useMemo(() => {
+    if (!recipe || servingMultiplier === 1) return recipe;
+    return {
+      ...recipe,
+      ingredients: recipe.ingredients.map((ingredient) => ({
+        ...ingredient,
+        name: scaleIngredientLabel(ingredient.name, servingMultiplier),
+      })),
+    };
+  }, [recipe, servingMultiplier]);
+
+  const cookedLoggedRef = useRef(false);
+
+  useEffect(() => {
+    cookedLoggedRef.current = false;
+  }, [recipeId]);
+
+  useEffect(() => {
+    if (!recipe || !cookMode || displaySteps.length === 0) return;
+    if (completedSteps.size < displaySteps.length) return;
+    if (cookedLoggedRef.current) return;
+    cookedLoggedRef.current = true;
+    void logRecipeCooked(recipe.id);
+  }, [recipe, cookMode, completedSteps, displaySteps.length]);
 
   useEffect(() => {
     if (!recipeId || !SCREENSHOT_MODE || !showPartners) return;
@@ -430,8 +463,29 @@ export default function RecipeDetailScreen() {
           />
 
           <Text style={styles.sectionTitle}>Ingredients</Text>
+          <View style={styles.stepsToolbar}>
+            {[0.5, 1, 2].map((multiplier) => {
+              const active = servingMultiplier === multiplier;
+              return (
+                <Pressable
+                  key={multiplier}
+                  onPress={() => {
+                    void Haptics.selectionAsync();
+                    setServingMultiplier(multiplier);
+                  }}
+                  style={[styles.toolChip, active && styles.toolChipActive]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Scale servings ${multiplier}x`}
+                >
+                  <Text style={[styles.toolChipText, active && styles.toolChipTextActive]}>
+                    {multiplier === 1 ? servingMultiplierLabel(1, householdSize) : `${multiplier}×`}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
           <IngredientList
-            recipe={recipe}
+            recipe={scaledRecipe ?? recipe}
             available={available}
             missing={missing}
             onShopMissing={

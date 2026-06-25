@@ -24,6 +24,7 @@ type HomeRecipeRowProps = {
   onPress: () => void;
   onCookTonight: () => void;
   onShopMissing: (missing: string[], partner?: AffiliatePartner) => void;
+  onNotInterested?: () => void;
   /** Hide Blinkit/Zepto strip + Order missing button only (still shows missing list when set). */
   hideMissingOrder?: boolean;
 };
@@ -133,6 +134,7 @@ export default function HomeRecipeRow({
   onPress,
   onCookTonight,
   onShopMissing,
+  onNotInterested,
   hideMissingOrder = false,
 }: HomeRecipeRowProps) {
   const { colors: themeColors } = useTheme();
@@ -315,6 +317,17 @@ export default function HomeRecipeRow({
               <ChevronRight size={14} color={colors.white} strokeWidth={2.5} />
             </Pressable>
           </View>
+          {isFeatured && onNotInterested ? (
+            <Pressable
+              onPress={() => {
+                void Haptics.selectionAsync();
+                onNotInterested();
+              }}
+              style={styles.notInterestedBtn}
+            >
+              <Text style={styles.notInterestedText}>Not for me</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </View>
@@ -488,6 +501,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'stretch',
     gap: spacing.sm,
+  },
+  notInterestedBtn: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.xs,
+    paddingVertical: spacing.xs,
+  },
+  notInterestedText: {
+    fontFamily: appFonts.body,
+    fontSize: 12,
+    color: colors.muted,
+    textDecorationLine: 'underline',
   },
   actionBtn: {
     minHeight: 42,

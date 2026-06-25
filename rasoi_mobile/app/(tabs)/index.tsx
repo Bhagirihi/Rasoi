@@ -1,12 +1,18 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
-import { Moon, Timer } from "lucide-react-native";
-import { useMemo, useState, useCallback } from "react";
+import { Moon, RefreshCw, Timer } from "lucide-react-native";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
 import CookTonightSheet from "@/components/CookTonightSheet";
+import OfflineBanner from "@/components/OfflineBanner";
+import HomeRecentCooks from "@/components/home/HomeRecentCooks";
+import HomePlanTomorrow from "@/components/home/HomePlanTomorrow";
+import GuestRegisterBanner from "@/components/home/GuestRegisterBanner";
+import HomeSeasonalRail from "@/components/home/HomeSeasonalRail";
 import { AppTabHeader } from "@/components/AppTabHeader";
 import HomeBrowseLink from "@/components/home/HomeBrowseLink";
 import HomeRecipeRow from "@/components/home/HomeRecipeRow";
@@ -37,6 +43,9 @@ import {
   partitionIngredients,
 } from "@/utils/recipes";
 import { PAYWALL_HREF } from "@/utils/routes";
+import { dismissRecommendation } from "@/services/recommendations";
+
+const HOME_HERO_SEEN_KEY = "@rasoi/home_hero_intro_seen";
 
 const HOME_SECTION_GAP = spacing.xl;
 const RECIPES_CLUSTER_GAP = spacing.md;
@@ -47,7 +56,7 @@ export default function HomeScreen() {
   const { colors: themeColors } = useTheme();
   const { showDialog } = useAppDialog();
   const { openBrandSearch } = usePartners();
-  const { userName, showPartners } = useAppContext();
+  const { userName, showPartners, userCity, isGuest } = useAppContext();
   const {
     meal,
     recipes,
@@ -56,9 +65,11 @@ export default function HomeScreen() {
     rankingReady,
     rankedRecipes,
     refreshRecipes,
+    refreshHomePicks,
     topPick,
     tonightCards,
     lateNightPick,
+    seasonalRail,
     pantryFilterActive,
     setPantryFilterActive,
     pantryIngredients,
@@ -81,6 +92,25 @@ export default function HomeScreen() {
   const [heroIntroFinished, setHeroIntroFinished] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  useEffect(() => {
+    void AsyncStorage.getItem(HOME_HERO_SEEN_KEY).then((value) => {
+      if (value === "1") setHeroIntroFinished(true);
+    });
+  }, []);
+
+  const handleHeroIntroFinished = useCallback(() => {
+    void AsyncStorage.setItem(HOME_HERO_SEEN_KEY, "1");
+    setHeroIntroFinished(true);
+  }, []);
+
+  const handleNotInterested = useCallback(
+    (recipe: Recipe) => {
+      void dismissRecommendation(recipe.id).catch(() => undefined);
+      void refreshHomePicks(true);
+    },
+    [refreshHomePicks],
+  );
+
   const { greeting, subtitle } = getLocalizedGreeting();
   const isLateNight = meal.isOvernightDual === true;
   const hideFeaturedOvernightExtras =
@@ -102,11 +132,11 @@ export default function HomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refreshRecipes();
+      await Promise.all([refreshRecipes(), refreshHomePicks(true)]);
     } finally {
       setRefreshing(false);
     }
-  }, [refreshRecipes]);
+  }, [refreshRecipes, refreshHomePicks]);
 
   const topPickPantryMatch = useMemo(() => {
     if (!topPick) return 0;
@@ -180,6 +210,7 @@ export default function HomeScreen() {
       edges={["top"]}
       testID={testIds.screenHome}
     >
+      <OfflineBanner />
       <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
         refreshControl={
@@ -201,11 +232,16 @@ export default function HomeScreen() {
               ? `${greeting.replace("!", "")}, ${userName.split(" ")[0]}!`
               : greeting
           }
-          subtitle={subtitle}
+          subtitle={
+            userCity
+              ? `${subtitle} · Picks near ${userCity}`
+              : subtitle
+          }
         />
 
         <View style={styles.sections}>
           <TrialCountdownBanner />
+          {isGuest ? <GuestRegisterBanner /> : null}
 
           <SponsorOrAd
             sponsor={homeSponsor}
@@ -227,7 +263,25 @@ export default function HomeScreen() {
               dataReady={heroDataReady}
               hasError={!!recipesError && !recipesLoading}
               isLateNight={isLateNight}
-              onFinished={() => setHeroIntroFinished(true)}
+              onFinished={handleHeroIntroFinished}
+            />
+          ) : null}
+
+          {heroIntroFinished && seasonalRail ? (
+            <HomeSeasonalRail
+              title={seasonalRail.title}
+              subtitle={seasonalRail.subtitle}
+              picks={seasonalRail.picks}
+            />
+          ) : null}
+
+          {heroIntroFinished ? <HomeRecentCooks /> : null}
+
+          {heroIntroFinished && meal.isOvernightDual ? (
+            <HomePlanTomorrow
+              lateNightPick={lateNightPick}
+              tomorrowPick={topPick}
+              onRecipePress={(recipe) => router.push(`/recipe/${recipe.id}`)}
             />
           ) : null}
 
@@ -271,6 +325,15 @@ export default function HomeScreen() {
                     }
                     variant="featured"
                   />
+                  <Pressable
+                    onPress={() => void refreshHomePicks(true)}
+                    style={styles.shuffleButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Show different recipe ideas"
+                  >
+                    <RefreshCw size={14} color={colors.primary} />
+                    <Text style={styles.shuffleButtonText}>Different ideas</Text>
+                  </Pressable>
                   <HomeRecipeRow
                     key={topPick.id}
                     section="pick"
@@ -282,6 +345,7 @@ export default function HomeScreen() {
                     onShopMissing={(missing, partner) =>
                       openShopModal(topPick, missing, partner)
                     }
+                    onNotInterested={() => handleNotInterested(topPick)}
                   />
                 </View>
               ) : null}
@@ -433,6 +497,21 @@ const styles = StyleSheet.create({
   },
   tonightBlock: {
     gap: spacing.sm,
+  },
+  shuffleButton: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: 'rgba(232, 93, 44, 0.1)',
+  },
+  shuffleButtonText: {
+    fontFamily: appFonts.bodyBold,
+    fontSize: 13,
+    color: colors.primary,
   },
   tonightList: {
     gap: spacing.md,

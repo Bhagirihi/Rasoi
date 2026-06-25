@@ -18,6 +18,10 @@ import type {
   SponsorEvent,
   User,
   UserFeedback,
+  UserRecommendationCache,
+  UserRecommendationHistory,
+  UserRecipeCooked,
+  UserRecipeView,
 } from '@/lib/db/types';
 
 export { RASOI_SCHEMA, createRowId, rasoiDb } from '@/lib/db/client';
@@ -46,6 +50,10 @@ type DbClient = {
   mealNotificationLog: Repository<MealNotificationLog>;
   promoCode: Repository<PromoCode>;
   promoRedemption: Repository<PromoRedemption>;
+  userRecommendationCache: Repository<UserRecommendationCache>;
+  userRecommendationHistory: Repository<UserRecommendationHistory>;
+  userRecipeView: Repository<UserRecipeView>;
+  userRecipeCooked: Repository<UserRecipeCooked>;
   $transaction: {
     <T>(fn: (tx: DbClient) => Promise<T>): Promise<T>;
     (operations: readonly Promise<unknown>[]): Promise<unknown[]>;
@@ -72,6 +80,10 @@ function createDbClient(): DbClient {
     mealNotificationLog: createRepository<MealNotificationLog>('MealNotificationLog'),
     promoCode: createRepository<PromoCode>('PromoCode'),
     promoRedemption: createRepository<PromoRedemption>('PromoRedemption'),
+    userRecommendationCache: createRepository<UserRecommendationCache>('UserRecommendationCache'),
+    userRecommendationHistory: createRepository<UserRecommendationHistory>('UserRecommendationHistory'),
+    userRecipeView: createRepository<UserRecipeView>('UserRecipeView'),
+    userRecipeCooked: createRepository<UserRecipeCooked>('UserRecipeCooked'),
 
     $transaction: async <T>(
       arg: ((tx: DbClient) => Promise<T>) | readonly Promise<unknown>[],

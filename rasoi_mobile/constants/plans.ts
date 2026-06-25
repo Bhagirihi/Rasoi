@@ -80,8 +80,13 @@ export const PARTNER_TRIAL_NOTE =
 
 export const PARTNER_PAID_NOTE = 'Included with Rasoi Plus';
 
+export const FREE_PARTNER_SHOPS_PER_MONTH = 2;
+
+export const FREE_PARTNER_FREEMIUM_NOTE =
+  'Free plan includes 2 partner shops per month after your trial ends.';
+
 export const FREE_PARTNER_UPSELL =
-  'Upgrade to Rasoi Plus for Blinkit, Zepto, Instamart, Zomato & Swiggy checkout.';
+  'Upgrade to Rasoi Plus for unlimited Blinkit, Zepto, Instamart, Zomato & Swiggy checkout.';
 
 export function getPlanPriceLabel(interval: BillingInterval): string {
   return interval === 'yearly' ? PAID_PLAN_YEARLY_PRICE : PAID_PLAN_MONTHLY_PRICE;

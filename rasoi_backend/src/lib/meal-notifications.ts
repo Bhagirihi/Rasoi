@@ -15,8 +15,8 @@ import { db, loadEligibleUsers, type UserWithTokens } from '@/lib/db';
 import type { UserWithRelations } from '@/lib/db/types';
 import {
   buildMealNotificationBody,
-  pickTopRecipeForMeal,
 } from '@/lib/recipe-ranking';
+import { pickPushRecipeForUser } from '@/lib/recommendations';
 import { fetchAllRecipesBatched } from '@/lib/recipes-paginated';
 import { parseJson, serializeRecipe } from '@/lib/serializers';
 import type { CuisineId, RecipeResponse } from '@/lib/types';
@@ -220,19 +220,28 @@ export async function runMealNotifications(
 
       const sentTodayIds = await getSentRecipeIdsToday(user.id, mealSlot, dayKey);
 
-      const recipe = pickTopRecipeForMeal(recipes, {
-        dietChoice: user.dietChoice,
-        regionalCuisine: user.regionalCuisine,
-        favoriteCuisines,
-        pantryIngredients,
+      const pick = await pickPushRecipeForUser(
+        {
+          id: user.id,
+          dietChoice: user.dietChoice,
+          regionalCuisine: user.regionalCuisine,
+          favoriteCuisines: user.favoriteCuisines,
+          pantryIngredients: user.pantryIngredients,
+          kitchenPreferences: '{}',
+          timezone: user.timezone,
+          savedRecipeIds: '[]',
+        },
         mealSlot,
-        excludeRecipeIds: sentTodayIds,
-      });
+        dayKey,
+        sentTodayIds,
+      );
 
-      if (!recipe) {
+      if (!pick) {
         result.skippedNoRecipe += 1;
         continue;
       }
+
+      const recipe = pick.recipe;
 
       const payload = buildPayload(recipe, mealSlot, user, now);
       const body = buildMealNotificationBody(recipe);

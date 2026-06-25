@@ -33,7 +33,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
 import { useAppDialog } from "@/context/AppDialogContext";
 import { Recipe } from "@/data/mockRecipes";
-import { logRecipeSearch } from "@/services/recipeSearch";
+import { logRecipeSearch, searchRecipes } from "@/services/recipeSearch";
 import type { AffiliatePartner } from "@/utils/affiliate";
 import {
   getPantryMatchPercent,
@@ -82,6 +82,8 @@ export default function RecipesTabScreen() {
     null,
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [remoteSearchResults, setRemoteSearchResults] = useState<Recipe[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
   const lastLoggedSearch = useRef("");
 
   const listRecipes = useMemo(
@@ -89,11 +91,46 @@ export default function RecipesTabScreen() {
     [moreRecipes, rankedRecipes],
   );
 
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (query.length < 2) {
+      setRemoteSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setSearchLoading(true);
+      void searchRecipes({
+        query,
+        dietChoice,
+        region: regionalCuisine,
+        limit: 60,
+      })
+        .then((response) => {
+          if (!cancelled) setRemoteSearchResults(response.items);
+        })
+        .catch(() => {
+          if (!cancelled) setRemoteSearchResults([]);
+        })
+        .finally(() => {
+          if (!cancelled) setSearchLoading(false);
+        });
+    }, 400);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, dietChoice, regionalCuisine]);
+
   const searchedMoreRecipes = useMemo(() => {
     const query = searchQuery.trim();
     if (!query) return listRecipes;
+    if (remoteSearchResults.length > 0) return remoteSearchResults;
     return listRecipes.filter((recipe) => recipeMatchesSearch(recipe, query));
-  }, [listRecipes, searchQuery]);
+  }, [listRecipes, searchQuery, remoteSearchResults]);
 
   const recipeAdIndices = useRecipeListAdIndices(searchedMoreRecipes);
 
@@ -339,6 +376,24 @@ export default function RecipesTabScreen() {
               title="No matches"
               subtitle={`Nothing matched "${searchQuery.trim()}". Try another dish or ingredient.`}
             />
+          ) : hasQuickFilters && searchedMoreRecipes.length === 0 ? (
+            <View style={styles.errorBox}>
+              <EmptyState
+                icon={Search}
+                title="No recipes match these filters"
+                subtitle="Try clearing filters or turning off pantry mode."
+              />
+              <Pressable
+                onPress={() => {
+                  handleFilterToggle("all");
+                  setPantryFilterActive(false);
+                  setSearchQuery("");
+                }}
+                style={styles.retryBtn}
+              >
+                <Text style={styles.retryBtnText}>Clear filters</Text>
+              </Pressable>
+            </View>
           ) : null
         }
       />

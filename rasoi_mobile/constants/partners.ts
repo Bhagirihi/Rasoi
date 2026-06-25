@@ -61,6 +61,6 @@ export function buildPartnerUrl(template: string, query: string): string {
 export function buildGroceryCheckoutQuery(items: string[]): string {
   const trimmed = items.map((item) => item.trim()).filter(Boolean);
   if (trimmed.length === 0) return '';
-  // Grocery apps open a single search screen — use the first missing item.
-  return trimmed[0];
+  // Partner apps accept one search box — join top items; user gets full list via clipboard.
+  return trimmed.slice(0, 3).join(' ');
 }

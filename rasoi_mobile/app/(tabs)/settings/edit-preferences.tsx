@@ -27,6 +27,7 @@ import { CuisineId, DietChoice, colors, layout, radius, scrollIndicator, spacing
 import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useReferenceData } from '@/context/ReferenceContext';
+import { COMMON_ALLERGY_OPTIONS } from '@/utils/kitchenPreferences';
 import { DAILY_REMINDER_MEAL_SUMMARY, DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions } from '@/utils/notifications';
 
 export default function EditPreferencesScreen() {
@@ -39,6 +40,8 @@ export default function EditPreferencesScreen() {
     regionalCuisine,
     favoriteCuisines,
     notificationsEnabled,
+    allergyExclusions,
+    householdSize,
     saveFoodPreferences,
   } = useAppContext();
   const { regionalCuisines, kitchenStyles, refreshReference } = useReferenceData();
@@ -53,6 +56,8 @@ export default function EditPreferencesScreen() {
   const [draftRegion, setDraftRegion] = useState(regionalCuisine);
   const [draftCuisines, setDraftCuisines] = useState<CuisineId[]>(favoriteCuisines);
   const [draftNotifications, setDraftNotifications] = useState(notificationsEnabled);
+  const [draftAllergies, setDraftAllergies] = useState<string[]>(allergyExclusions);
+  const [draftHouseholdSize, setDraftHouseholdSize] = useState(householdSize);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -60,7 +65,9 @@ export default function EditPreferencesScreen() {
     setDraftRegion(regionalCuisine);
     setDraftCuisines(favoriteCuisines);
     setDraftNotifications(notificationsEnabled);
-  }, [dietChoice, regionalCuisine, favoriteCuisines, notificationsEnabled]);
+    setDraftAllergies(allergyExclusions);
+    setDraftHouseholdSize(householdSize);
+  }, [dietChoice, regionalCuisine, favoriteCuisines, notificationsEnabled, allergyExclusions, householdSize]);
 
   useEffect(() => {
     const activeIds = new Set(kitchenStyles.map((style) => style.id));
@@ -92,6 +99,8 @@ export default function EditPreferencesScreen() {
         regionalCuisine: draftRegion,
         favoriteCuisines: draftCuisines,
         notificationsEnabled: draftNotifications,
+        allergyExclusions: draftAllergies,
+        householdSize: draftHouseholdSize,
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
@@ -158,6 +167,64 @@ export default function EditPreferencesScreen() {
           onToggle={toggleCuisine}
           variant={prefVariant}
         />
+
+        <SettingsGroupLabel label="Household" />
+        <Text style={[styles.sectionHint, { color: themeColors.muted }]}>
+          Default serving size on recipe pages
+        </Text>
+        <ScrollView horizontal {...scrollIndicator} contentContainerStyle={styles.chipRow}>
+          {[1, 2, 4, 6].map((size) => {
+            const active = draftHouseholdSize === size;
+            return (
+              <Pressable
+                key={size}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setDraftHouseholdSize(size);
+                }}
+                style={[
+                  styles.chip,
+                  { backgroundColor: themeColors.white, borderColor: themeColors.border },
+                  active && styles.chipActive,
+                ]}
+              >
+                <Text style={[styles.chipText, { color: themeColors.charcoal }, active && styles.chipTextActive]}>
+                  Cook for {size}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        <SettingsGroupLabel label="Allergies & intolerances" />
+        <Text style={[styles.sectionHint, { color: themeColors.muted }]}>
+          Recipes with these ingredients will be hidden
+        </Text>
+        <ScrollView horizontal {...scrollIndicator} contentContainerStyle={styles.chipRow}>
+          {COMMON_ALLERGY_OPTIONS.map((item) => {
+            const active = draftAllergies.includes(item);
+            return (
+              <Pressable
+                key={item}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  setDraftAllergies((current) =>
+                    active ? current.filter((entry) => entry !== item) : [...current, item],
+                  );
+                }}
+                style={[
+                  styles.chip,
+                  { backgroundColor: themeColors.white, borderColor: themeColors.border },
+                  active && styles.chipActive,
+                ]}
+              >
+                <Text style={[styles.chipText, { color: themeColors.charcoal }, active && styles.chipTextActive]}>
+                  {item}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
         <SettingsGroupLabel label="Notifications" />
         <SettingsCard>

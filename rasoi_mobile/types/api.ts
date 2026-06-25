@@ -24,6 +24,12 @@ export interface UserProfileResponse {
   locationUpdatedAt: string | null;
   pantryIngredients: string[];
   savedRecipeIds: string[];
+  kitchenPreferences: {
+    allergyExclusions?: string[];
+    householdSize?: number;
+    freePartnerShopsUsed?: number;
+    freePartnerShopsMonthKey?: string;
+  };
   plan: {
     planTier: PlanTier;
     trialStartedAt: string | null;

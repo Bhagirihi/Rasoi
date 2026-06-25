@@ -24,8 +24,12 @@ import {
   type PartnerLinkResponse,
 } from '@/services/partners';
 import { logAffiliateEvent } from '@/services/affiliateEvents';
-import { hasValidProfilePhone, PHONE_REQUIRED_FOR_PARTNERS_MESSAGE } from '@/utils/phoneGate';
+import {
+  hasValidProfilePhone,
+  PHONE_REQUIRED_FOR_DELIVERY_MESSAGE,
+} from '@/utils/phoneGate';
 import { openPartnerUrls } from '@/utils/openPartnerUrl';
+import { PAYWALL_HREF } from '@/utils/routes';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
 export type GroceryPartnerCard = {
@@ -112,7 +116,7 @@ function buildCards(links: PartnerLinkResponse[]) {
 }
 
 export function PartnersProvider({ children }: { children: ReactNode }) {
-  const { userPhone } = useAppContext();
+  const { userPhone, partnerAccess, recordPartnerShop } = useAppContext();
   const { showDialog } = useAppDialog();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,11 +164,25 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
     void refreshPartners();
   }, 'partners');
 
-  const ensurePartnerPhone = useCallback(() => {
+  const ensurePartnerAccess = useCallback(() => {
+    if (partnerAccess.canCheckout) return true;
+    showDialog({
+      title: 'Partner checkout limit reached',
+      message:
+        'You have used your free partner shops for this month. Upgrade to Rasoi Plus for unlimited grocery and delivery checkout.',
+      buttons: [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'View plans', onPress: () => router.push(PAYWALL_HREF) },
+      ],
+    });
+    return false;
+  }, [partnerAccess.canCheckout, showDialog]);
+
+  const ensureDeliveryPhone = useCallback(() => {
     if (hasValidProfilePhone(userPhone)) return true;
     showDialog({
       title: 'Mobile number needed',
-      message: PHONE_REQUIRED_FOR_PARTNERS_MESSAGE,
+      message: PHONE_REQUIRED_FOR_DELIVERY_MESSAGE,
       buttons: [
         { text: 'Not now', style: 'cancel' },
         {
@@ -182,7 +200,7 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
       items: string[],
       options?: { context?: string; recipeId?: string },
     ) => {
-      if (items.length === 0 || !ensurePartnerPhone()) return;
+      if (items.length === 0 || !ensurePartnerAccess()) return;
       const searchQuery = buildGroceryCheckoutQuery(items);
       const urls = buildPartnerUrls(partnerId, searchQuery, partnerLinks);
       if (!urls) return;
@@ -192,9 +210,34 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
         recipeId: options?.recipeId,
         query: items.map((item) => item.trim()).filter(Boolean).join(', '),
       });
-      await openPartnerUrls(urls.deepLink, urls.webUrl);
+      const result = await openPartnerUrls(urls.deepLink, urls.webUrl);
+      if (result === 'failed') {
+        showDialog({
+          title: 'Could not open partner',
+          message: 'Try opening the web checkout in your browser.',
+          buttons: [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open browser',
+              onPress: () => {
+                void openPartnerUrls('', urls.webUrl);
+              },
+            },
+          ],
+        });
+        return;
+      }
+      if (partnerAccess.freemiumMode) {
+        await recordPartnerShop();
+      }
     },
-    [partnerLinks, ensurePartnerPhone],
+    [
+      partnerLinks,
+      ensurePartnerAccess,
+      partnerAccess.freemiumMode,
+      recordPartnerShop,
+      showDialog,
+    ],
   );
 
   const openFoodDelivery = useCallback(
@@ -204,7 +247,7 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
       options?: { context?: string; recipeId?: string },
     ) => {
       const trimmed = query.trim();
-      if (!trimmed || !ensurePartnerPhone()) return;
+      if (!trimmed || !ensurePartnerAccess() || !ensureDeliveryPhone()) return;
       const urls = buildPartnerUrls(partnerId, trimmed, partnerLinks);
       if (!urls) return;
       void logAffiliateEvent({
@@ -213,9 +256,35 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
         recipeId: options?.recipeId,
         query: trimmed,
       });
-      await openPartnerUrls(urls.deepLink, urls.webUrl);
+      const result = await openPartnerUrls(urls.deepLink, urls.webUrl);
+      if (result === 'failed') {
+        showDialog({
+          title: 'Could not open partner',
+          message: 'Try opening the web checkout in your browser.',
+          buttons: [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open browser',
+              onPress: () => {
+                void openPartnerUrls('', urls.webUrl);
+              },
+            },
+          ],
+        });
+        return;
+      }
+      if (partnerAccess.freemiumMode) {
+        await recordPartnerShop();
+      }
     },
-    [partnerLinks, ensurePartnerPhone],
+    [
+      partnerLinks,
+      ensurePartnerAccess,
+      ensureDeliveryPhone,
+      partnerAccess.freemiumMode,
+      recordPartnerShop,
+      showDialog,
+    ],
   );
 
   const openBrandSearch = useCallback(

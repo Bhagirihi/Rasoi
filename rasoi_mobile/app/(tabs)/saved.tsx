@@ -12,6 +12,7 @@ import RecipeCard from '@/components/RecipeCard';
 import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import { EmptyState, InsightBanner } from '@/components/ui/Primitives';
+import { useSavedRecipes } from '@/hooks/useSavedRecipes';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { useRecipeListAdIndices } from '@/hooks/useRecipeListAdIndices';
 import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
@@ -34,9 +35,9 @@ export default function SavedScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const meal = getMealContext();
   const { colors: themeColors } = useTheme();
-  const { getSavedRecipes, pantryIngredients, dietChoice, regionalCuisine, showPartners } =
+  const { pantryIngredients, dietChoice, regionalCuisine, showPartners } =
     useAppContext();
-  const savedRecipes = getSavedRecipes();
+  const { savedRecipes } = useSavedRecipes();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
@@ -160,7 +161,7 @@ export default function SavedScreen() {
                 mealSlot: meal.slot,
               })}
               pantryMatchPercent={getPantryMatchPercent(item, pantryIngredients)}
-              onShopMissing={openShopModal}
+              onShopMissing={showPartners ? openShopModal : undefined}
               onCookTonight={openCookTonight}
               cookCtaLabel={meal.cookCta}
             />

@@ -141,6 +141,12 @@ export async function updateUserProfile(input: {
   regionalCuisine?: string;
   favoriteCuisines?: CuisineId[];
   notificationsEnabled?: boolean;
+  kitchenPreferences?: {
+    allergyExclusions?: string[];
+    householdSize?: number;
+    freePartnerShopsUsed?: number;
+    freePartnerShopsMonthKey?: string;
+  };
 }): Promise<UserProfileResponse> {
   const fromSupabase = await trySupabaseDirect('profile update', () => {
     const patch: Record<string, unknown> = {};
@@ -154,6 +160,9 @@ export async function updateUserProfile(input: {
     }
     if (input.notificationsEnabled !== undefined) {
       patch.notificationsEnabled = input.notificationsEnabled;
+    }
+    if (input.kitchenPreferences !== undefined) {
+      patch.kitchenPreferences = JSON.stringify(input.kitchenPreferences);
     }
     return updateOwnUserRow(patch);
   });

@@ -56,6 +56,7 @@ export default function SponsorOrAd({
   if (sponsor) {
     return (
       <View style={style}>
+        <Text style={styles.sponsoredLabel}>Sponsored</Text>
         <SponsorRail
           brandName={sponsor.brandName}
           productLabel={sponsor.productLabel}
@@ -95,6 +96,14 @@ export default function SponsorOrAd({
 }
 
 const styles = StyleSheet.create({
+  sponsoredLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    color: '#9A8F84',
+    marginBottom: spacing.xs,
+  },
   pitchWrap: {
     marginTop: spacing.xs,
   },

@@ -40,6 +40,13 @@ import { clearSentryUser, captureException, captureMessage, setSentryUser } from
 import { setFirebaseUserId, setFirebaseUserProperties, logFirebaseEvent } from '@/utils/firebase';
 import { resolvePlanState, type ResolvedPlan } from '@/utils/planLogic';
 import {
+  DEFAULT_HOUSEHOLD_SIZE,
+  parseKitchenPreferences,
+  recordPartnerCheckout,
+  type KitchenPreferences,
+} from '@/utils/kitchenPreferences';
+import { resolvePartnerAccess, type PartnerAccess } from '@/utils/partnerQuota';
+import {
   syncDailyReminder,
   ensureNotificationPermissions,
   sendDailyReminderThankYouNotification,
@@ -89,6 +96,8 @@ export type FoodPreferencesPayload = {
   regionalCuisine: string;
   favoriteCuisines: CuisineId[];
   notificationsEnabled: boolean;
+  allergyExclusions?: string[];
+  householdSize?: number;
 };
 
 export type AuthNavigationResult = {
@@ -116,6 +125,11 @@ interface AppContextValue extends ResolvedPlan {
   userEmail: string;
   userCity: string | null;
   userState: string | null;
+  allergyExclusions: string[];
+  householdSize: number;
+  kitchenPreferences: KitchenPreferences;
+  partnerAccess: PartnerAccess;
+  lastProfileSyncedAt: string | null;
   pantryIngredients: string[];
   dietPreference: DietType;
   dietChoice: DietChoice;
@@ -148,6 +162,8 @@ interface AppContextValue extends ResolvedPlan {
   setFavoriteCuisines: (cuisines: CuisineId[]) => Promise<void>;
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   saveFoodPreferences: (payload: FoodPreferencesPayload) => Promise<void>;
+  recordPartnerShop: () => Promise<void>;
+  refreshSyncedProfile: () => Promise<void>;
   toggleSavedRecipe: (recipeId: string) => void;
   isRecipeSaved: (recipeId: string) => boolean;
   setPantryFilterActive: (active: boolean) => void;
@@ -211,6 +227,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [regionalCuisine, setRegionalCuisine] = useState<string>('All India');
   const [favoriteCuisines, setFavoriteCuisines] = useState<CuisineId[]>([]);
   const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
+  const [allergyExclusions, setAllergyExclusions] = useState<string[]>([]);
+  const [householdSize, setHouseholdSize] = useState(DEFAULT_HOUSEHOLD_SIZE);
+  const [kitchenPreferences, setKitchenPreferences] = useState<KitchenPreferences>({});
+  const [lastProfileSyncedAt, setLastProfileSyncedAt] = useState<string | null>(null);
   const [savedRecipeIds, setSavedRecipeIds] = useState<string[]>([]);
   const [pantryFilterActive, setPantryFilterActive] = useState(false);
   const [pendingTrialWelcome, setPendingTrialWelcomeState] = useState(false);
@@ -278,6 +298,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [planState, paymentsEnabled],
   );
 
+  const partnerAccess = useMemo(
+    () => resolvePartnerAccess(resolvedPlan.effectiveTier, kitchenPreferences),
+    [resolvedPlan.effectiveTier, kitchenPreferences],
+  );
+
+  const planWithPartnerAccess = useMemo(
+    () => ({
+      ...resolvedPlan,
+      showPartners: resolvedPlan.showPartners || partnerAccess.canCheckout,
+      partnersInTrialMode:
+        resolvedPlan.partnersInTrialMode ||
+        (partnerAccess.freemiumMode && resolvedPlan.effectiveTier === 'free'),
+    }),
+    [resolvedPlan, partnerAccess],
+  );
+
   const applyPlanState = useCallback(
     (next: StoredPlanState) => {
       setPlanState(next);
@@ -313,6 +349,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setRegionalCuisine(user.regionalCuisine);
       setFavoriteCuisines(user.favoriteCuisines);
       setNotificationsEnabledState(user.notificationsEnabled);
+      const prefs = parseKitchenPreferences(user.kitchenPreferences);
+      setKitchenPreferences(prefs);
+      setAllergyExclusions(prefs.allergyExclusions ?? []);
+      setHouseholdSize(prefs.householdSize ?? DEFAULT_HOUSEHOLD_SIZE);
       if (user.hasCompletedOnboarding) {
         void saveOnboardingComplete({
           dietPreference: user.dietPreference,
@@ -354,6 +394,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const user = await fetchCurrentUser();
       applyUserProfile(user);
+      setLastProfileSyncedAt(new Date().toISOString());
     } catch (error) {
       authError('refreshUserProfile:failed', error);
     } finally {
@@ -1087,6 +1128,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setDietChoiceState(payload.dietChoice);
       setRegionalCuisine(payload.regionalCuisine);
       setFavoriteCuisines(payload.favoriteCuisines);
+      if (payload.allergyExclusions !== undefined) {
+        setAllergyExclusions(payload.allergyExclusions);
+      }
+      if (payload.householdSize !== undefined) {
+        setHouseholdSize(payload.householdSize);
+      }
 
       let scheduledNotifications = payload.notificationsEnabled;
       if (notificationsChanged) {
@@ -1100,12 +1147,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       if (isLoggedIn) {
+        const nextKitchenPreferences: KitchenPreferences = {
+          ...kitchenPreferences,
+          ...(payload.allergyExclusions !== undefined
+            ? { allergyExclusions: payload.allergyExclusions }
+            : {}),
+          ...(payload.householdSize !== undefined ? { householdSize: payload.householdSize } : {}),
+        };
+
         const user = await updateUserProfile({
           dietChoice: payload.dietChoice,
           dietPreference: preference,
           regionalCuisine: payload.regionalCuisine,
           favoriteCuisines: payload.favoriteCuisines,
           notificationsEnabled: scheduledNotifications,
+          kitchenPreferences: nextKitchenPreferences,
         });
         applyUserProfile(user);
 
@@ -1118,8 +1174,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
         void sendDailyReminderThankYouNotification();
       }
     },
-    [applyUserProfile, isLoggedIn, notificationsEnabled, syncPushTokenToServer],
+    [applyUserProfile, isLoggedIn, kitchenPreferences, notificationsEnabled, syncPushTokenToServer],
   );
+
+  const recordPartnerShop = useCallback(async () => {
+    const nextPrefs = recordPartnerCheckout(kitchenPreferences);
+    setKitchenPreferences(nextPrefs);
+    if (!isLoggedIn) return;
+    try {
+      const user = await updateUserProfile({ kitchenPreferences: nextPrefs });
+      applyUserProfile(user);
+    } catch (error) {
+      captureException(error, { scope: 'recordPartnerShop' });
+    }
+  }, [applyUserProfile, isLoggedIn, kitchenPreferences]);
 
   const isGuest = isGuestUser || ((userName === 'Guest' || userName.length === 0) && userPhone.length === 0);
 
@@ -1172,7 +1240,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppContextValue>(
     () => ({
-      ...resolvedPlan,
+      ...planWithPartnerAccess,
       paymentsEnabled,
       isHydrated,
       hasCompletedOnboarding,
@@ -1184,6 +1252,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userEmail,
       userCity,
       userState,
+      allergyExclusions,
+      householdSize,
+      kitchenPreferences,
+      partnerAccess,
+      lastProfileSyncedAt,
       pantryIngredients,
       dietPreference,
       dietChoice,
@@ -1210,6 +1283,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFavoriteCuisines: setFavoriteCuisinesState,
       setNotificationsEnabled,
       saveFoodPreferences,
+      recordPartnerShop,
+      refreshSyncedProfile: refreshUserProfileFromServer,
       toggleSavedRecipe,
       isRecipeSaved,
       setPantryFilterActive,
@@ -1233,7 +1308,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearPendingEmailVerification,
     }),
     [
-      resolvedPlan,
+      planWithPartnerAccess,
       paymentsEnabled,
       isHydrated,
       hasCompletedOnboarding,
@@ -1245,6 +1320,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userEmail,
       userCity,
       userState,
+      allergyExclusions,
+      householdSize,
+      kitchenPreferences,
+      partnerAccess,
+      lastProfileSyncedAt,
       pantryIngredients,
       dietPreference,
       dietChoice,
@@ -1271,6 +1351,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFavoriteCuisinesState,
       setNotificationsEnabled,
       saveFoodPreferences,
+      recordPartnerShop,
+      refreshUserProfileFromServer,
       toggleSavedRecipe,
       isRecipeSaved,
       getSavedRecipes,

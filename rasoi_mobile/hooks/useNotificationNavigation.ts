@@ -34,6 +34,11 @@ export function useNotificationNavigation(): void {
         return;
       }
 
+      if (target.type === 'home_tab') {
+        router.push('/(tabs)');
+        return;
+      }
+
       if (target.save && !isRecipeSaved(target.recipeId)) {
         toggleSavedRecipe(target.recipeId);
       }
