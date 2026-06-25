@@ -34,7 +34,7 @@ fi
 
 expo prebuild --platform android
 cd android
-./gradlew assembleRelease
+./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a
 mkdir -p ../dist
 cp app/build/outputs/apk/release/app-release.apk ../dist/rasoi-release.apk
 echo ""
