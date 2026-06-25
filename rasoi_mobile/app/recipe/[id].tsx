@@ -19,6 +19,7 @@ import RecipeVisualBadge from "@/components/RecipeVisualBadge";
 import RecipeDetailSkeleton from "@/components/RecipeDetailSkeleton";
 
 import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
+import ViewportLazyAdSlot from "@/components/ViewportLazyAdSlot";
 import SponsorOrAd from "@/components/SponsorOrAd";
 import FoodDeliveryModal from "@/components/FoodDeliveryModal";
 import FoodDeliveryStrip from "@/components/FoodDeliveryStrip";
@@ -88,6 +89,7 @@ export default function RecipeDetailScreen() {
     null,
   );
   const [recipeSponsorLoading, setRecipeSponsorLoading] = useState(true);
+  const [adScrollGeneration, setAdScrollGeneration] = useState(0);
   const [cookMode, setCookMode] = useState(startInCookMode);
   const [stepsLang, setStepsLang] = useState<"en" | "hi">("en");
   const [servingMultiplier, setServingMultiplier] = useState(1);
@@ -289,6 +291,8 @@ export default function RecipeDetailScreen() {
       <ScrollView
         style={styles.scroll}
         {...scrollIndicator}
+        scrollEventThrottle={100}
+        onScroll={() => setAdScrollGeneration((value) => value + 1)}
         contentContainerStyle={[
           styles.scrollContent,
           { paddingBottom: stickyBarHeight + spacing.xl },
@@ -455,12 +459,14 @@ export default function RecipeDetailScreen() {
             );
           })}
 
-          <SponsorOrAd
-            sponsor={recipeSponsor}
-            loading={recipeSponsorLoading}
-            placement="recipe"
-            compact
-          />
+          <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
+            <SponsorOrAd
+              sponsor={recipeSponsor}
+              loading={recipeSponsorLoading}
+              placement="recipe"
+              compact
+            />
+          </ViewportLazyAdSlot>
 
           <Text style={styles.sectionTitle}>Ingredients</Text>
           <View style={styles.stepsToolbar}>

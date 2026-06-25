@@ -3,7 +3,7 @@ import SponsorPitchLink from '@/components/SponsorPitchLink';
 import SponsorRail from '@/components/SponsorRail';
 import type { SponsorCardData } from '@/services/sponsors';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
@@ -17,6 +17,10 @@ type SponsorOrAdProps = {
   /** Wait for sponsor fetch before showing the AdMob fallback. */
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
+  /** Defer the ad request until the slot is on-screen (e.g. in-feed / below fold). */
+  lazyLoad?: boolean;
+  /** Required when lazyLoad is true — parent reports row visibility. */
+  isViewable?: boolean;
 };
 
 export default function SponsorOrAd({
@@ -25,6 +29,8 @@ export default function SponsorOrAd({
   compact = false,
   loading = false,
   style,
+  lazyLoad = false,
+  isViewable = true,
 }: SponsorOrAdProps) {
   const { showAds, userCity } = useAppContext();
   const [adVisible, setAdVisible] = useState(false);
@@ -35,6 +41,11 @@ export default function SponsorOrAd({
     setAdVisible(visible);
     setAdResolved(true);
   }, []);
+
+  useEffect(() => {
+    setAdVisible(false);
+    setAdResolved(false);
+  }, [placement, sponsor?.id]);
 
   useEffect(() => {
     if (!sponsor) return;
@@ -76,21 +87,19 @@ export default function SponsorOrAd({
     showAds && Platform.OS !== 'web' && isAdMobNativeAvailable();
 
   if (!canShowAd) return null;
-
   if (adResolved && !adVisible) return null;
 
-  if (!adResolved) {
-    return (
-      <AdMobBanner placement={placement} onVisibilityChange={handleAdVisibility} />
-    );
-  }
+  const shouldMountAd = !lazyLoad || isViewable;
+  if (!shouldMountAd) return null;
 
   return (
     <View style={style}>
       <AdMobBanner placement={placement} onVisibilityChange={handleAdVisibility} />
-      <View style={styles.pitchWrap}>
-        <SponsorPitchLink />
-      </View>
+      {adVisible ? (
+        <View style={styles.pitchWrap}>
+          <SponsorPitchLink />
+        </View>
+      ) : null}
     </View>
   );
 }

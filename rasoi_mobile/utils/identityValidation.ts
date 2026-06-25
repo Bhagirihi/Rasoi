@@ -113,9 +113,40 @@ export function getDummyPhoneError(): string {
   return 'Enter your real mobile number — test or placeholder numbers are not allowed.';
 }
 
+export function isPlusAliasEmail(email: string): boolean {
+  const normalized = email.trim().toLowerCase();
+  const at = normalized.indexOf('@');
+  if (at <= 0) return false;
+  return normalized.slice(0, at).includes('+');
+}
+
+export function getLoginEmailValidationError(email: string): string | null {
+  const normalized = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized)) {
+    return 'Enter a valid email address.';
+  }
+  if (isDisposableEmail(normalized)) {
+    return getDisposableEmailError();
+  }
+  if (isPlusAliasEmail(normalized)) {
+    return 'Sign in with your main email only (e.g. you@gmail.com, not you+alias@gmail.com).';
+  }
+  return null;
+}
+
+export const ACCOUNT_DEACTIVATED_MESSAGE =
+  'This account has been deactivated. Contact support if you need help.';
+
 export function assertAllowedEmail(email: string): void {
   if (isDisposableEmail(email)) {
     throw new Error(getDisposableEmailError());
+  }
+}
+
+export function assertLoginAllowedEmail(email: string): void {
+  const error = getLoginEmailValidationError(email);
+  if (error) {
+    throw new Error(error);
   }
 }
 

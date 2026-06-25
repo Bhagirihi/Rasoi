@@ -19,6 +19,8 @@ import { partitionIngredients } from '@/utils/recipes';
 type HomeRecipeRowProps = {
   recipe: Recipe;
   section?: HomeRecipeSection;
+  sectionLabel?: string;
+  headerTrailing?: ReactNode;
   pantryMatchPercent: number;
   cookCtaLabel: string;
   onPress: () => void;
@@ -129,6 +131,8 @@ function MetaTagsRow({
 export default function HomeRecipeRow({
   recipe,
   section = 'also',
+  sectionLabel,
+  headerTrailing,
   pantryMatchPercent,
   cookCtaLabel,
   onPress,
@@ -176,6 +180,18 @@ export default function HomeRecipeRow({
           }}
           style={({ pressed }) => [styles.content, pressed && styles.contentPressed]}
         >
+          {sectionLabel || headerTrailing ? (
+            <View style={styles.sectionHeaderRow}>
+              {sectionLabel ? (
+                <Text style={styles.sectionLabel} numberOfLines={1}>
+                  {sectionLabel}
+                </Text>
+              ) : (
+                <View style={styles.sectionLabelSpacer} />
+              )}
+              {headerTrailing ?? null}
+            </View>
+          ) : null}
           <View style={styles.titleRow}>
             <Text
               style={[
@@ -415,6 +431,24 @@ const styles = StyleSheet.create({
   },
   contentPressed: {
     opacity: 0.92,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+    marginBottom: 2,
+  },
+  sectionLabel: {
+    flex: 1,
+    fontFamily: appFonts.display,
+    fontSize: 16,
+    lineHeight: 20,
+    letterSpacing: -0.1,
+    color: colors.primary,
+  },
+  sectionLabelSpacer: {
+    flex: 1,
   },
   titleRow: {
     flexDirection: 'row',

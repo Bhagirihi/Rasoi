@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 
 import type { NotificationResponse } from 'expo-notifications';
 
@@ -209,6 +209,39 @@ export async function ensureNotificationPermissions(): Promise<boolean> {
 
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
+}
+
+/** Ask for notification permission after sign-in / sign-up when not already granted. */
+export async function promptNotificationPermissionOnAuth(): Promise<void> {
+  if (Platform.OS === 'web') return;
+
+  const Notifications = await getNotifications();
+  if (!Notifications) return;
+
+  const { status: current } = await Notifications.getPermissionsAsync();
+  if (current === 'granted') return;
+
+  if (current === 'denied') {
+    await new Promise<void>((resolve) => {
+      Alert.alert(
+        'Enable notifications',
+        'Notifications are turned off. Allow them in Settings to get meal reminders and updates.',
+        [
+          { text: 'Not now', style: 'cancel', onPress: () => resolve() },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              void Linking.openSettings();
+              resolve();
+            },
+          },
+        ],
+      );
+    });
+    return;
+  }
+
+  await Notifications.requestPermissionsAsync();
 }
 
 export async function cancelDailyReminder(): Promise<void> {

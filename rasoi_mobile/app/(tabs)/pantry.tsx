@@ -15,6 +15,7 @@ import { PantrySectionCard } from '@/components/pantry/PantrySectionCard';
 import { PANTRY_BASE_SECTION_TITLES } from '@/components/pantry/pantrySectionMeta';
 import PartnerUpsellCard from '@/components/PartnerUpsellCard';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
+import ViewportLazyAdSlot from '@/components/ViewportLazyAdSlot';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import { InsightBanner, PrimaryButton } from '@/components/ui/Primitives';
@@ -79,7 +80,9 @@ export default function PantryScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
   const [stickyBarHeight, setStickyBarHeight] = useState(96);
-  const { sponsor: pantrySponsor, loading: pantrySponsorLoading } = usePlacementSponsor('pantry');
+  const [adScrollGeneration, setAdScrollGeneration] = useState(0);
+  const { sponsor: pantrySponsor, loading: pantrySponsorLoading } =
+    usePlacementSponsor('pantry');
 
   const { baseSections, cuisineSections } = useMemo(() => {
     const base = essentialSections.filter((section) => PANTRY_BASE_SECTION_TITLES.has(section.title));
@@ -167,6 +170,8 @@ export default function PantryScreen() {
       <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
         keyboardShouldPersistTaps="handled"
+        scrollEventThrottle={100}
+        onScroll={() => setAdScrollGeneration((value) => value + 1)}
         contentContainerStyle={[styles.content, { paddingBottom: scrollBottomPadding }]}
       >
         <View style={styles.screenSections}>
@@ -330,12 +335,14 @@ export default function PantryScreen() {
             />
           )}
 
-          <SponsorOrAd
-            sponsor={pantrySponsor}
-            loading={pantrySponsorLoading}
-            placement="pantry"
-            compact
-          />
+          <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
+            <SponsorOrAd
+              sponsor={pantrySponsor}
+              loading={pantrySponsorLoading}
+              placement="pantry"
+              compact
+            />
+          </ViewportLazyAdSlot>
         </View>
       </ScrollViewWithFloatingIndicator>
 

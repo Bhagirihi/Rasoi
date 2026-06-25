@@ -34,7 +34,7 @@ export function useRefreshUserLocation() {
     }
 
     const snapshot = await requestUserLocation();
-    if (snapshot.latitude == null || snapshot.longitude == null) {
+    if (!snapshot || snapshot.latitude == null || snapshot.longitude == null) {
       return { ok: false as const, reason: 'unavailable' as const };
     }
     try {

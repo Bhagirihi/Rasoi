@@ -26,7 +26,7 @@ export function useRecipeDiscovery() {
   } = useAppContext();
   const { showDialog } = useAppDialog();
   const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes, hasMore: recipesHasMore, loadingMore: recipesLoadingMore, loadMoreRecipes, totalCount: recipesTotalCount } = useRecipes();
-  const { rankedRecipes: baseRankedRecipes, topPick: stableTopPick, alsoFor: stableAlsoFor, lateNightPick: stableLateNightPick, seasonalRail, rankingReady, refreshHomePicks } = useTonightRecipes();
+  const { rankedRecipes: baseRankedRecipes, topPick: stableTopPick, alsoFor: stableAlsoFor, lateNightPick: stableLateNightPick, seasonalRail, rankingReady, picksRefreshing, refreshHomePicks } = useTonightRecipes();
   const [activeFilters, setActiveFilters] = useState<ToggleableFastFilter[]>([]);
   const meal = getScheduledMealContext();
 
@@ -119,6 +119,7 @@ export function useRecipeDiscovery() {
     loadMoreRecipes,
     recipesError,
     rankingReady,
+    picksRefreshing,
     refreshRecipes,
     refreshHomePicks,
     activeFilters,

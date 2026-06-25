@@ -4,10 +4,11 @@ export const stubPaymentProvider: PaymentProvider = {
   id: 'stub',
   supportsRestore: false,
 
-  async purchase(_request: PurchaseRequest): Promise<PurchaseResult> {
+  async purchase(request: PurchaseRequest): Promise<PurchaseResult> {
     return {
       success: true,
       provider: 'stub',
+      productId: request.productId,
       transactionId: `stub_${Date.now()}`,
     };
   },

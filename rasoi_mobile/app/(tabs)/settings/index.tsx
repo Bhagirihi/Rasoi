@@ -92,9 +92,9 @@ export default function SettingsScreen() {
     trialStartedAt,
     trialExpired,
     showAds,
-    showPartners,
     showPaywall,
     paymentsEnabled,
+    partnerAccess,
     pendingEmailVerification,
     openEmailVerificationModal,
     isLoggedIn,
@@ -106,6 +106,7 @@ export default function SettingsScreen() {
   const [isSessionEnding, setIsSessionEnding] = useState(false);
 
   const dietMeta = DIET_META[dietChoice];
+  const hasPlusPartners = effectiveTier === 'trial' || effectiveTier === 'paid';
   const displayName = userName || 'Guest';
   const profileSub = isGuest
     ? 'Sign in to sync recipes & preferences'
@@ -494,9 +495,9 @@ export default function SettingsScreen() {
                 {showAds ? 'Ads on' : 'No ads'}
               </Text>
             </View>
-            <View style={[styles.planBenefitChip, !showPartners && styles.planBenefitChipMuted]}>
-              <Text style={[styles.planBenefitText, { color: showPartners ? brandColors.green : colors.muted }]}>
-                {showPartners ? 'Partners unlocked' : 'Partners locked'}
+            <View style={[styles.planBenefitChip, !hasPlusPartners && styles.planBenefitChipMuted]}>
+              <Text style={[styles.planBenefitText, { color: hasPlusPartners ? brandColors.green : colors.muted }]}>
+                {hasPlusPartners ? 'Partners unlocked' : 'Partners locked'}
               </Text>
             </View>
           </View>
@@ -536,16 +537,22 @@ export default function SettingsScreen() {
         <SettingsGroupLabel label="Partner checkout" />
         <SettingsCard style={styles.revenueCard}>
           <Text style={[styles.revenueTitle, { color: colors.charcoal }]}>
-            {showPartners ? 'Shop & delivery partners active' : 'Partners require Rasoi Plus'}
+            {hasPlusPartners
+              ? 'Shop & delivery partners active'
+              : partnerAccess.remainingFreeShops > 0
+                ? 'Limited partner checkout'
+                : 'Partners require Rasoi Plus'}
           </Text>
           <Text style={[styles.revenueBody, { color: colors.muted }]}>
             {effectiveTier === 'trial'
               ? 'Trial access to Blinkit, Zepto, Instamart, Zomato & Swiggy. Subscribe before trial ends to keep checkout without ads.'
               : effectiveTier === 'paid'
                 ? 'Full access to all grocery and food delivery partners with no ads.'
-                : 'Free plan shows ads and hides partner checkout. Start a 3-day trial or subscribe from Manage plan.'}
+                : partnerAccess.remainingFreeShops > 0
+                  ? `${partnerAccess.remainingFreeShops} free partner shop${partnerAccess.remainingFreeShops === 1 ? '' : 's'} left this month. Start a trial or subscribe for unlimited checkout.`
+                  : 'Free plan shows ads and hides partner checkout. Start a 3-day trial or subscribe from Manage plan.'}
           </Text>
-          {showPartners && <PartnerStrip />}
+          {hasPlusPartners ? <PartnerStrip /> : null}
         </SettingsCard>
 
         <SettingsGroupLabel label="Support" />

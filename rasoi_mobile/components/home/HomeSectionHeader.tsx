@@ -1,5 +1,5 @@
-import { Sparkles, type LucideIcon } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { type LucideIcon } from "lucide-react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 
 import Text from "@/components/ui/Text";
 import { appFonts } from "@/constants/fonts";
@@ -12,6 +12,8 @@ type HomeSectionHeaderProps = {
   icon?: LucideIcon;
   iconColor?: string;
   variant?: "default" | "featured";
+  trailing?: React.ReactNode;
+  style?: StyleProp<ViewStyle>;
 };
 
 export default function HomeSectionHeader({
@@ -20,26 +22,26 @@ export default function HomeSectionHeader({
   icon: Icon,
   iconColor,
   variant = "default",
+  trailing,
+  style,
 }: HomeSectionHeaderProps) {
   const { colorScheme } = useTheme();
   const isFeatured = variant === "featured";
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, style]}>
       <View style={styles.titleRow}>
-        {isFeatured ? <View style={styles.featuredAccent} /> : null}
-        {isFeatured ? (
-          <Sparkles size={15} color={colors.primary} strokeWidth={2.25} />
-        ) : Icon ? (
-          <Icon size={16} color={iconColor} />
-        ) : null}
-        {isFeatured ? (
-          <Text style={styles.featuredTitle}>{title}</Text>
-        ) : (
-          <Text variant="h3" scheme={colorScheme} style={styles.title}>
-            {title}
-          </Text>
-        )}
+        <View style={styles.titleMain}>
+          {Icon ? <Icon size={16} color={iconColor} /> : null}
+          {isFeatured ? (
+            <Text style={styles.featuredTitle}>{title}</Text>
+          ) : (
+            <Text variant="h3" scheme={colorScheme} style={styles.title}>
+              {title}
+            </Text>
+          )}
+        </View>
+        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
       </View>
       {subtitle ? (
         <Text
@@ -56,28 +58,35 @@ export default function HomeSectionHeader({
 }
 
 const styles = StyleSheet.create({
-  wrap: {},
+  wrap: {
+    flex: 1,
+  },
   titleRow: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.sm,
+  },
+  titleMain: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    minWidth: 0,
+  },
+  trailing: {
+    flexShrink: 0,
   },
   title: {
     fontFamily: appFonts.bodyBold,
     fontSize: 17,
     lineHeight: 22,
   },
-  featuredAccent: {
-    width: 3,
-    height: 18,
-    borderRadius: 2,
-    backgroundColor: colors.primary,
-  },
   featuredTitle: {
     flex: 1,
     fontFamily: appFonts.display,
-    fontSize: 19,
-    lineHeight: 24,
+    fontSize: 18,
+    lineHeight: 23,
     letterSpacing: -0.15,
     color: colors.primary,
   },

@@ -13,6 +13,7 @@ import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import { EmptyState, InsightBanner } from '@/components/ui/Primitives';
 import { useSavedRecipes } from '@/hooks/useSavedRecipes';
+import { useFlatListAdViewability } from '@/hooks/useFlatListAdViewability';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
 import { useRecipeListAdIndices } from '@/hooks/useRecipeListAdIndices';
 import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
@@ -46,7 +47,11 @@ export default function SavedScreen() {
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
   const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
   const { sponsor: savedSponsor, loading: savedSponsorLoading } = usePlacementSponsor('saved');
-  const savedAdIndices = useRecipeListAdIndices(savedRecipes);
+  const savedAdIndices = useRecipeListAdIndices(savedRecipes, {
+    stableSeed: 'saved-tab',
+  });
+  const { viewableIndices, viewabilityConfig, onViewableItemsChanged } =
+    useFlatListAdViewability();
 
   const totalMissing = useMemo(() => {
     return savedRecipes.reduce((sum, recipe) => {
@@ -116,6 +121,8 @@ export default function SavedScreen() {
         data={savedRecipes}
         keyExtractor={(item) => item.id}
         {...scrollIndicator}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: tabBarHeight + spacing.xxxl + spacing.lg },
@@ -148,6 +155,8 @@ export default function SavedScreen() {
                 loading={savedSponsorLoading}
                 placement="saved"
                 compact
+                lazyLoad
+                isViewable={viewableIndices.has(index)}
                 style={styles.listSponsorInset}
               />
             )}

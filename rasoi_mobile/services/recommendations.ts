@@ -73,7 +73,9 @@ function mapApiRecipe(row: ApiRecipeRow): Recipe {
     description: row.description,
     imageUrl: row.imageUrl,
     tags: Array.isArray(row.tags) ? row.tags : [],
-    ingredients: normalizeRecipeIngredients(parseJson<unknown>(row.ingredients, [])),
+    ingredients: normalizeRecipeIngredients(
+      parseJson<unknown[]>(typeof row.ingredients === 'string' ? row.ingredients : null, []),
+    ),
     steps: [],
   };
 }
@@ -150,10 +152,14 @@ export async function loadOfflineRecommendations(
 export async function fetchRecommendations(options?: {
   force?: boolean;
   timezone?: string;
+  excludeRecipeIds?: string[];
 }): Promise<RecommendationsResponse> {
   const params = new URLSearchParams();
   if (options?.force) params.set('force', 'true');
   if (options?.timezone) params.set('timezone', options.timezone);
+  if (options?.excludeRecipeIds?.length) {
+    params.set('exclude', options.excludeRecipeIds.join(','));
+  }
   const query = params.toString();
 
   return apiFetch<RecommendationsResponse>(

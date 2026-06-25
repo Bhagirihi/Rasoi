@@ -36,7 +36,7 @@ export function getRecipeCategoryKey(recipe: Recipe): string {
 
 function getRecipeStyleKeys(recipe: Recipe): string[] {
   const ids =
-    recipe.kitchenStyleIds?.length > 0
+    (recipe.kitchenStyleIds?.length ?? 0) > 0
       ? [...new Set(recipe.kitchenStyleIds)]
       : recipe.kitchenStyleId
         ? [recipe.kitchenStyleId]

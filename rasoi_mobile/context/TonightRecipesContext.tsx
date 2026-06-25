@@ -36,6 +36,7 @@ type TonightRecipesContextValue = {
   readyToCookCount: number;
   readyToCookReady: boolean;
   rankingReady: boolean;
+  picksRefreshing: boolean;
   refreshHomePicks: (force?: boolean) => Promise<void>;
 };
 
@@ -54,6 +55,9 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   const deferredRecipes = useDeferredValue(recipes);
   const [refreshNonce, setRefreshNonce] = useState(0);
   const forceNextRefreshRef = useRef(false);
+  const excludeOnRefreshRef = useRef<string[]>([]);
+  const homePicksRef = useRef<Recipe[]>([]);
+  const lateNightPickRef = useRef<Recipe | undefined>(undefined);
 
   useEffect(() => {
     const syncWindow = () => setMealWindow(getScheduledMealWindow());
@@ -122,8 +126,25 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   const [lateNightPick, setLateNightPick] = useState<Recipe | undefined>();
   const [seasonalRail, setSeasonalRail] = useState<TonightRecipesContextValue['seasonalRail']>(null);
   const [homePicksReady, setHomePicksReady] = useState(false);
+  const [picksRefreshing, setPicksRefreshing] = useState(false);
+
+  useEffect(() => {
+    homePicksRef.current = homePicks;
+  }, [homePicks]);
+
+  useEffect(() => {
+    lateNightPickRef.current = lateNightPick;
+  }, [lateNightPick]);
 
   const refreshHomePicks = useCallback(async (force = false) => {
+    if (force) {
+      const excludeIds = [
+        ...homePicksRef.current.map((recipe) => recipe.id),
+        ...(lateNightPickRef.current ? [lateNightPickRef.current.id] : []),
+      ];
+      excludeOnRefreshRef.current = [...new Set(excludeIds)];
+      setPicksRefreshing(true);
+    }
     forceNextRefreshRef.current = force;
     setRefreshNonce((nonce) => nonce + 1);
   }, []);
@@ -159,11 +180,17 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     setHomePicksReady(false);
     const shouldForce = forceNextRefreshRef.current;
     forceNextRefreshRef.current = false;
+    const excludeRecipeIds = shouldForce ? excludeOnRefreshRef.current : [];
+    excludeOnRefreshRef.current = [];
 
     const loadPicks = async () => {
+      try {
       if (userId) {
         try {
-          const response = await fetchRecommendations({ force: shouldForce });
+          const response = await fetchRecommendations({
+            force: shouldForce,
+            excludeRecipeIds: excludeRecipeIds.length > 0 ? excludeRecipeIds : undefined,
+          });
           if (cancelled) return;
 
           const mapped = mapRecommendationPicks(response);
@@ -212,6 +239,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           profileKey,
           mealSlot: 'lateNight',
           count: 1,
+          excludeRecipeIds: excludeRecipeIds.length > 0 ? excludeRecipeIds : undefined,
           forceRegenerate: shouldForce,
         });
         const late = latePicks[0];
@@ -221,7 +249,10 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           profileKey,
           mealSlot: 'breakfast',
           count: HOME_PICK_COUNT,
-          excludeRecipeIds: late ? [late.id] : undefined,
+          excludeRecipeIds: [
+            ...excludeRecipeIds,
+            ...(late ? [late.id] : []),
+          ],
           forceRegenerate: shouldForce,
         });
         const tomorrowFinal = late
@@ -241,6 +272,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
         profileKey,
         mealSlot: mealWindow.slot,
         count: HOME_PICK_COUNT,
+        excludeRecipeIds: excludeRecipeIds.length > 0 ? excludeRecipeIds : undefined,
         forceRegenerate: shouldForce,
       });
       if (cancelled) return;
@@ -248,6 +280,11 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       setHomePicks(picks);
       setPickReasons([]);
       setHomePicksReady(picks.length > 0);
+      } finally {
+        if (!cancelled && shouldForce) {
+          setPicksRefreshing(false);
+        }
+      }
     };
 
     void loadPicks();
@@ -308,6 +345,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       readyToCookCount,
       readyToCookReady,
       rankingReady,
+      picksRefreshing,
       refreshHomePicks,
     }),
     [
@@ -320,6 +358,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       readyToCookCount,
       readyToCookReady,
       rankingReady,
+      picksRefreshing,
       refreshHomePicks,
     ],
   );

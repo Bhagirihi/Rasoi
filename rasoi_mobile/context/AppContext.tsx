@@ -256,6 +256,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const pendingOnboardingRef = useRef<OnboardingPayload | null>(null);
   const pendingPantrySetupRef = useRef(false);
   const profileRefreshInFlightRef = useRef(false);
+  const logoutRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     pendingPantrySetupRef.current = pendingPantrySetup;
@@ -336,6 +337,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const applyUserProfile = useCallback(
     (user: UserProfileResponse) => {
+      if (user.isActive === false) {
+        authLog('applyUserProfile:inactive_account');
+        void logoutRef.current?.();
+        return;
+      }
       setIsLoggedIn(true);
       setIsGuestUser(user.isGuest);
       setUserId(user.id);
@@ -987,6 +993,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPendingEmailVerificationState(null);
     setEmailVerificationModalVisible(false);
   }, [applyPlanState, syncPushTokenToServer]);
+
+  logoutRef.current = logout;
 
   const deleteAccount = useCallback(
     async (confirmEmail?: string) => {

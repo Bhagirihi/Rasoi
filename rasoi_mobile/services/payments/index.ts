@@ -15,7 +15,6 @@ import type {
   PurchaseProductId,
   PurchaseResult,
 } from '@/services/payments/types';
-import { updateUserPlan } from '@/services/user';
 import { Platform } from 'react-native';
 
 let cachedProvider: PaymentProvider | null = null;
@@ -98,13 +97,13 @@ async function applyPaidPlanOnServer(
   }
 
   if (
-    purchase?.provider === 'revenuecat' &&
-    purchase.transactionId &&
-    purchase.productId
+    purchase?.transactionId &&
+    purchase.productId &&
+    (purchase.provider === 'revenuecat' || purchase.provider === 'stub')
   ) {
     try {
       const plan = await confirmBillingSubscription({
-        provider: 'revenuecat',
+        provider: purchase.provider,
         productId: purchase.productId,
         transactionId: purchase.transactionId,
       });
@@ -129,28 +128,10 @@ async function applyPaidPlanOnServer(
     }
   }
 
-  try {
-    const plan = await updateUserPlan({
-      planTier: 'paid',
-      trialStartedAt: options.trialStartedAt,
-      hasUsedTrial: true,
-    });
-    return {
-      ok: true,
-      planState: {
-        planTier: plan.planTier,
-        trialStartedAt: plan.trialStartedAt,
-        hasUsedTrial: plan.hasUsedTrial,
-        trialBonusDays: plan.trialBonusDays ?? 0,
-        yearlyPromoOfferTag: plan.yearlyPromoOfferTag ?? null,
-      },
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : 'Could not update subscription on server.',
-    };
-  }
+  return {
+    ok: false,
+    error: 'Purchase could not be confirmed on the server.',
+  };
 }
 
 export async function purchaseRasoiPlus(

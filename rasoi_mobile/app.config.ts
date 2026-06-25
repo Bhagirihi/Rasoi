@@ -85,8 +85,20 @@ function withFirebasePlugins(plugins: ExpoConfig['plugins']): ExpoConfig['plugin
   ];
 }
 
+const EAS_PROJECT_ID =
+  easProjectId || '01de1672-85ce-4ad7-83d7-7fc958fc5659';
+
+const updatesUrl = `https://u.expo.dev/${EAS_PROJECT_ID}`;
+
 export default (): ExpoConfig => ({
   ...base,
+  runtimeVersion: base.version ?? '1.0.6',
+  updates: {
+    ...(typeof base.updates === 'object' ? base.updates : {}),
+    url: updatesUrl,
+    checkAutomatically: 'NEVER',
+    fallbackToCacheTimeout: 0,
+  },
   plugins: withFirebasePlugins(withAdMobPlugin(base.plugins)),
   extra: {
     ...base.extra,

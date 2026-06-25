@@ -38,7 +38,9 @@ function mapApiRecipe(row: ApiRecipeRow): Recipe {
     description: row.description,
     imageUrl: row.imageUrl,
     tags: Array.isArray(row.tags) ? row.tags : [],
-    ingredients: normalizeRecipeIngredients(parseJson<unknown>(row.ingredients, [])),
+    ingredients: normalizeRecipeIngredients(
+      parseJson<unknown[]>(typeof row.ingredients === 'string' ? row.ingredients : null, []),
+    ),
     steps: [],
   };
 }

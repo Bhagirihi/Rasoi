@@ -2,7 +2,11 @@ import type { Session } from '@supabase/supabase-js';
 
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
 import { mapSupabaseOtpSendError } from '@/utils/emailDeliveryErrors';
-import { assertAllowedEmail, assertAllowedIndianPhone } from '@/utils/identityValidation';
+import {
+  assertAllowedEmail,
+  assertAllowedIndianPhone,
+  assertLoginAllowedEmail,
+} from '@/utils/identityValidation';
 import {
   clearSupabaseSessionCache,
   getSupabaseClient,
@@ -158,7 +162,7 @@ export async function sendEmailOtp(name: string, phone: string, email: string): 
 
 export async function sendLoginEmailOtp(email: string): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
-  assertAllowedEmail(normalizedEmail);
+  assertLoginAllowedEmail(normalizedEmail);
   authLog('sendLoginEmailOtp:start', { email: maskEmail(normalizedEmail) });
 
   const supabase = requireSupabaseClient();

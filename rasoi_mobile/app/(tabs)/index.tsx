@@ -26,7 +26,6 @@ import { EmptyState } from "@/components/ui/Primitives";
 import { useRecipeDiscovery } from "@/hooks/useRecipeDiscovery";
 import { useDismissOnBlur } from "@/hooks/useDismissOnBlur";
 import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
-import { useRecipeListAdIndices } from "@/hooks/useRecipeListAdIndices";
 import { colors, layout, radius, scrollIndicator, spacing } from "@/constants/theme";
 import { appFonts } from "@/constants/fonts";
 import { testIds } from "@/constants/testIds";
@@ -78,11 +77,6 @@ export default function HomeScreen() {
   } = useRecipeDiscovery();
   const { sponsor: homeSponsor, loading: homeSponsorLoading } =
     usePlacementSponsor("home");
-  const tonightAdIndices = useRecipeListAdIndices(tonightCards, {
-    minRecipesBeforeFirstAd: 1,
-    minGap: 2,
-    maxAds: 1,
-  });
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
@@ -366,18 +360,9 @@ export default function HomeScreen() {
                     iconColor={themeColors.muted}
                   />
                   <View style={styles.tonightList}>
-                    {tonightCards.map((recipe, index) => {
+                    {tonightCards.map((recipe) => {
                       return (
                         <View key={recipe.id}>
-                          {tonightAdIndices.has(index) ? (
-                            <SponsorOrAd
-                              sponsor={homeSponsor}
-                              loading={homeSponsorLoading}
-                              placement="home"
-                              compact
-                              style={styles.adInset}
-                            />
-                          ) : null}
                           <HomeRecipeRow
                             section="also"
                             recipe={recipe}

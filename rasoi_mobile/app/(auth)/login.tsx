@@ -30,7 +30,9 @@ import { useAppContext, type AuthNavigationResult } from "@/context/AppContext";
 import { authError, authLog, maskEmail } from "@/utils/authLogger";
 import { isEmailDeliveryUnavailableError } from "@/utils/emailDeliveryErrors";
 import { warmApiConnection } from "@/utils/api";
-import { getEmailValidationError, normalizeEmail } from "@/utils/storage";
+import { getLoginEmailValidationError } from "@/utils/identityValidation";
+import { promptNotificationPermissionOnAuth } from "@/utils/notifications";
+import { normalizeEmail } from "@/utils/storage";
 
 type LoginStep = "email" | "otp";
 type FieldError = "email" | "otp" | "general" | null;
@@ -84,7 +86,7 @@ export default function LoginScreen() {
   };
 
   const validateEmail = (): string | null => {
-    const emailError = getEmailValidationError(email);
+    const emailError = getLoginEmailValidationError(email);
     if (emailError) {
       setFieldError("email");
       setErrorMessage(emailError);
@@ -204,6 +206,7 @@ export default function LoginScreen() {
       const nav = await verifyLoginEmailOtp(normalizedEmail, code);
       authLog("login:verifyOtp_success");
       verified = true;
+      await promptNotificationPermissionOnAuth();
       navigateAfterAuth(nav);
     } catch (error) {
       authError("login:verifyOtp_failed", error, {

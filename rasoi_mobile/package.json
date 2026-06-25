@@ -1,7 +1,7 @@
 {
   "name": "rasoi",
   "main": "expo-router/entry",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/fraunces": "^0.4.1",
@@ -24,6 +24,7 @@
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-store-review": "~9.0.9",
+    "expo-updates": "~29.0.18",
     "lottie-react-native": "~7.3.1",
     "lucide-react-native": "^0.511.0",
     "react": "19.1.0",
@@ -48,6 +49,10 @@
     "android": "expo run:android",
     "android:apk": "expo prebuild --platform android && cd android && ./gradlew assembleDebug && mkdir -p ../dist && cp app/build/outputs/apk/debug/app-debug.apk ../dist/rasoi-debug.apk",
     "android:release-apk": "bash scripts/build-release-apk.sh",
+    "ota": "eas update --channel production --environment production --platform android",
+    "ota:development": "eas update --channel development --environment development --platform android",
+    "ota:preview": "eas update --channel preview --environment preview --platform android",
+    "ota:production": "eas update --channel production --environment production --platform android",
     "setup:push": "bash scripts/setup-push.sh",
     "setup:firebase": "bash scripts/setup-firebase.sh",
     "setup:firebase-linking": "bash scripts/firebase-linking-checklist.sh",

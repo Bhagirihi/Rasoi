@@ -46,9 +46,9 @@ function mealLabelsForSlot(
 } {
   if (isOvernightDual) {
     return {
-      topPickEyebrow: "🌅 Tomorrow's breakfast pick",
-      lateNightPickEyebrow: '🌙 Late night pick',
-      tomorrowTopPickEyebrow: "🌅 Tomorrow's breakfast pick",
+      topPickEyebrow: "Tomorrow's breakfast pick",
+      lateNightPickEyebrow: 'Late night pick',
+      tomorrowTopPickEyebrow: "Tomorrow's breakfast pick",
       alsoLabel: 'More breakfast ideas for tomorrow',
       cookCta: 'Cook now',
       sheetTitle: "Tomorrow's breakfast",
@@ -58,7 +58,7 @@ function mealLabelsForSlot(
 
   if (isTomorrowBreakfast) {
     return {
-      topPickEyebrow: "🌅 Tomorrow's breakfast pick",
+      topPickEyebrow: "Tomorrow's breakfast pick",
       alsoLabel: 'More breakfast ideas for tomorrow',
       cookCta: 'Plan breakfast',
       sheetTitle: "Tomorrow's breakfast",
@@ -74,35 +74,35 @@ function mealLabelsForSlot(
     > & { planningSubtitle: string }
   > = {
     breakfast: {
-      topPickEyebrow: '🌅 Breakfast pick',
+      topPickEyebrow: 'Breakfast pick',
       alsoLabel: 'More breakfast ideas',
       cookCta: 'Cook breakfast',
       sheetTitle: 'Cook breakfast',
       planningSubtitle: 'Breakfast',
     },
     lunch: {
-      topPickEyebrow: '🍛 Lunch pick',
+      topPickEyebrow: 'Lunch pick',
       alsoLabel: 'More lunch ideas',
       cookCta: 'Cook lunch',
       sheetTitle: 'Cook lunch',
       planningSubtitle: 'Lunch',
     },
     snack: {
-      topPickEyebrow: '☕ Evening snack pick',
+      topPickEyebrow: 'Evening snack pick',
       alsoLabel: 'More evening snack ideas',
       cookCta: 'Make snack',
       sheetTitle: 'Evening snacks',
       planningSubtitle: 'Evening snacks',
     },
     dinner: {
-      topPickEyebrow: '🍽️ Dinner pick',
+      topPickEyebrow: 'Dinner pick',
       alsoLabel: 'More dinner ideas',
       cookCta: 'Cook dinner',
       sheetTitle: 'Cook dinner',
       planningSubtitle: 'Dinner',
     },
     lateNight: {
-      topPickEyebrow: '🌙 Late night pick',
+      topPickEyebrow: 'Late night pick',
       alsoLabel: '',
       cookCta: 'Cook now',
       sheetTitle: 'Cook now',
@@ -147,7 +147,7 @@ function getGreetingForHour(
 export function getScheduledMealContext(date: Date = new Date()): MealContext {
   const window = getScheduledMealWindow(date);
   const hour = date.getHours();
-  const { greeting } = getGreetingForHour(
+  const { greeting, subtitle: slotSubtitle } = getGreetingForHour(
     hour,
     window.slot,
     window.isTomorrowBreakfast,
@@ -159,9 +159,9 @@ export function getScheduledMealContext(date: Date = new Date()): MealContext {
   if (window.isOvernightDual) {
     subtitle = 'Late-night bite now · plan breakfast for 8:00';
   } else if (window.isTomorrowBreakfast) {
-    subtitle = `Plan for ${window.anchorTimeLabel} tomorrow · ${labels.planningSubtitle.toLowerCase()}`;
+    subtitle = `Plan for ${window.anchorTimeLabel} tomorrow`;
   } else {
-    subtitle = `What to make around ${window.anchorTimeLabel} · ${labels.planningSubtitle.toLowerCase()}`;
+    subtitle = slotSubtitle;
   }
 
   return {

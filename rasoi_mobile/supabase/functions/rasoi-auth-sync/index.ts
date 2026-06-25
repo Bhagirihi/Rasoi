@@ -131,10 +131,14 @@ Deno.serve(async (request) => {
       : Promise.resolve({ data: null, error: null }),
   ]);
 
-  const existing =
-    lookups[0].data ?? lookups[1].data ?? lookups[2].data ?? lookups[3].data ?? null;
+    const existing =
+      lookups[0].data ?? lookups[1].data ?? lookups[2].data ?? lookups[3].data ?? null;
 
-  const needsTerms =
+    if (existing && existing.isActive === false) {
+      return fail('This account has been deactivated.', 403);
+    }
+
+    const needsTerms =
     !existing || (!existing.termsAcceptedAt && (existing.isGuest || !lookups[0].data));
 
   if (needsTerms && !body.acceptedTerms) {

@@ -34,6 +34,7 @@ import {
   normalizeEmail,
   normalizeIndianPhone,
 } from '@/utils/storage';
+import { promptNotificationPermissionOnAuth } from '@/utils/notifications';
 import { scrollFieldIntoView } from '@/utils/scrollFieldIntoView';
 
 type RegisterStep = 'details' | 'otp';
@@ -275,6 +276,7 @@ export default function RegisterScreen() {
       );
       authLog('register:verifyOtp_success');
       verified = true;
+      await promptNotificationPermissionOnAuth();
       navigateAfterAuth(nav);
     } catch (error) {
       authError('register:verifyOtp_failed', error, { email: maskEmail(details.email) });

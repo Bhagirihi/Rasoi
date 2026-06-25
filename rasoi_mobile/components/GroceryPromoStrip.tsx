@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronRight, ShoppingBag, Sparkles, Zap } from 'lucide-react-native';
+import { ChevronRight, ShoppingBag, Zap } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, shadows, spacing } from '@/constants/theme';
@@ -17,6 +17,8 @@ interface GroceryPromoStripProps {
   /** Uses generic CTA copy instead of the combined partner name line. */
   hidePartnerBranding?: boolean;
   ctaText?: string;
+  /** Shorter card for Pantry and inline surfaces. */
+  compact?: boolean;
 }
 
 export default function GroceryPromoStrip({
@@ -28,6 +30,7 @@ export default function GroceryPromoStrip({
   recipeTitle,
   hidePartnerBranding = false,
   ctaText,
+  compact = false,
 }: GroceryPromoStripProps) {
   const { groceryPartners } = usePartners();
 
@@ -52,15 +55,13 @@ export default function GroceryPromoStrip({
   };
 
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, compact && styles.wrapCompact]}>
       <LinearGradient
         colors={['#F8CB46', '#7C3AED', '#FF5200']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.gradient}
+        style={[styles.gradient, compact && styles.gradientCompact]}
       >
-        <View style={styles.topAccent} />
-
         <Pressable
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -68,46 +69,56 @@ export default function GroceryPromoStrip({
           }}
           style={({ pressed }) => [pressed && styles.mainPressed]}
         >
-          <View style={styles.badgeRow}>
-            <View style={styles.badge}>
-              <Sparkles size={12} color={colors.white} />
-              <Text style={styles.badgeText}>10–20 min delivery</Text>
+          <View style={[styles.badgeRow, compact && styles.badgeRowCompact]}>
+            <View style={[styles.badge, compact && styles.badgeCompact]}>
+              <Text style={[styles.badgeText, compact && styles.badgeTextCompact]}>
+                10–20 min
+              </Text>
             </View>
-            {missingCount != null && missingCount > 0 && (
-              <View style={styles.countBadge}>
-                <Zap size={12} color={colors.white} />
-                <Text style={styles.countBadgeText}>{missingCount} to buy</Text>
+            {missingCount != null && missingCount > 0 ? (
+              <View style={[styles.countBadge, compact && styles.badgeCompact]}>
+                <Zap size={10} color={colors.white} />
+                <Text style={[styles.countBadgeText, compact && styles.badgeTextCompact]}>
+                  {missingCount} to buy
+                </Text>
               </View>
-            )}
+            ) : null}
           </View>
 
           <View style={styles.content}>
-            <View style={styles.iconWrap}>
-              <ShoppingBag size={22} color={colors.white} />
-            </View>
+            {!compact ? (
+              <View style={styles.iconWrap}>
+                <ShoppingBag size={22} color={colors.white} />
+              </View>
+            ) : null}
             <View style={styles.copy}>
-              <Text style={styles.title}>{title}</Text>
-              <Text style={styles.sub} numberOfLines={2}>
+              <Text style={[styles.title, compact && styles.titleCompact]}>{title}</Text>
+              <Text style={[styles.sub, compact && styles.subCompact]} numberOfLines={compact ? 1 : 2}>
                 {subtitle ?? defaultSub}
               </Text>
-              <Text style={styles.cta}>{ctaLabel}</Text>
+              {!compact ? <Text style={styles.cta}>{ctaLabel}</Text> : null}
             </View>
-            <View style={styles.arrowWrap}>
-              <ChevronRight size={22} color={colors.white} />
+            <View style={[styles.arrowWrap, compact && styles.arrowWrapCompact]}>
+              <ChevronRight size={compact ? 18 : 22} color={colors.white} />
             </View>
           </View>
         </Pressable>
 
-        <View style={styles.partnerRow}>
+        <View style={[styles.partnerRow, compact && styles.partnerRowCompact]}>
           {groceryPartners.map((partner) => (
             <Pressable
               key={partner.id}
               onPress={() => handlePartnerPress(partner.id)}
-              style={({ pressed }) => [styles.partnerPill, pressed && styles.partnerPillPressed]}
+              style={({ pressed }) => [
+                styles.partnerPill,
+                compact && styles.partnerPillCompact,
+                pressed && styles.partnerPillPressed,
+              ]}
             >
-              <View style={[styles.partnerDot, { backgroundColor: partner.accent }]} />
-              <Text style={styles.partnerPillText}>{partner.label}</Text>
-              <Text style={styles.partnerEta}>{partner.delivery}</Text>
+              <View style={[styles.partnerDot, compact && styles.partnerDotCompact, { backgroundColor: partner.accent }]} />
+              <Text style={[styles.partnerPillText, compact && styles.partnerPillTextCompact]}>
+                {partner.label}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -124,6 +135,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...shadows.cardLifted,
   },
+  wrapCompact: {
+    marginTop: 0,
+    marginBottom: 0,
+    borderRadius: radius.md,
+    ...shadows.card,
+  },
   mainPressed: {
     opacity: 0.92,
   },
@@ -133,13 +150,10 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.4)',
     borderRadius: radius.lg + 2,
   },
-  topAccent: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: 'rgba(255,255,255,0.55)',
+  gradientCompact: {
+    padding: spacing.sm + 2,
+    borderWidth: 1,
+    borderRadius: radius.md,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -147,6 +161,10 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.sm,
     marginBottom: spacing.md,
+  },
+  badgeRowCompact: {
+    marginBottom: spacing.xs,
+    gap: spacing.xs,
   },
   badge: {
     flexDirection: 'row',
@@ -157,12 +175,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
+  badgeCompact: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+  },
   badgeText: {
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     color: colors.white,
+  },
+  badgeTextCompact: {
+    fontSize: 9,
+    letterSpacing: 0.3,
   },
   countBadge: {
     flexDirection: 'row',
@@ -193,17 +219,27 @@ const styles = StyleSheet.create({
   },
   copy: {
     flex: 1,
+    minWidth: 0,
   },
   title: {
     fontSize: 20,
     fontWeight: '800',
     color: colors.white,
   },
+  titleCompact: {
+    fontSize: 15,
+    lineHeight: 19,
+  },
   sub: {
     marginTop: 4,
     fontSize: 13,
     lineHeight: 18,
     color: 'rgba(255,255,255,0.92)',
+  },
+  subCompact: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 15,
   },
   cta: {
     marginTop: spacing.sm,
@@ -220,10 +256,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  arrowWrapCompact: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
   partnerRow: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginTop: spacing.lg,
+  },
+  partnerRowCompact: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
   },
   partnerPill: {
     flex: 1,
@@ -235,6 +280,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.6)',
   },
+  partnerPillCompact: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 44,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+  },
   partnerPillPressed: {
     opacity: 0.88,
     transform: [{ scale: 0.97 }],
@@ -245,10 +299,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 4,
   },
+  partnerDotCompact: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginBottom: 0,
+  },
   partnerPillText: {
     fontSize: 11,
     fontWeight: '800',
     color: colors.charcoal,
+  },
+  partnerPillTextCompact: {
+    fontSize: 13,
+    fontWeight: '800',
+    marginBottom: 0,
   },
   partnerEta: {
     marginTop: 1,

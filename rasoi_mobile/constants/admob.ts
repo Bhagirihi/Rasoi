@@ -29,6 +29,11 @@ export type AdMobBannerPlacement = keyof typeof ADMOB_BANNER_UNITS;
 const PLACEMENT_ALIASES: Record<string, AdMobBannerPlacement> = {
   settings: 'home',
   paywall: 'home',
+  /** Low-traffic screens share the home unit for better fill on small DAU. */
+  recipe: 'home',
+  recipes: 'home',
+  pantry: 'home',
+  saved: 'home',
 };
 
 export function getAdMobBannerUnitId(

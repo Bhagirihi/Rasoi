@@ -19,6 +19,7 @@ import { useRasoiRealtimeTables } from '@/utils/realtime';
 
 const DEFAULT_APP_CONFIG = {
   paymentsEnabled: false,
+  defaultPantryIngredients: [] as string[],
 };
 
 const EMPTY_REFERENCE: ReferenceData = {

@@ -7,6 +7,7 @@ import { getRasoiDb, isSupabaseDirectMode } from '@/utils/rasoiDb';
 import { requireSupabaseClient } from '@/utils/supabase';
 import { serializeUserProfile, type DbUserRow } from '@/utils/serializeUserProfile';
 import type { OnboardingPayload } from '@/utils/storage';
+import { ACCOUNT_DEACTIVATED_MESSAGE } from '@/utils/identityValidation';
 import { ensureValidSupabaseSession } from '@/services/supabaseAuth';
 import { getAuthToken } from '@/utils/authToken';
 
@@ -74,6 +75,9 @@ async function fetchOwnUserRow(): Promise<DbUserRow> {
   }
   if (!data) {
     throw new Error('User profile not found');
+  }
+  if (data.isActive === false) {
+    throw new Error(ACCOUNT_DEACTIVATED_MESSAGE);
   }
 
   return data as DbUserRow;

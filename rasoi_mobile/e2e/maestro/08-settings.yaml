@@ -10,6 +10,11 @@ appId: com.bhagihiri.rasoiapp
     id: tab-settings
 - assertVisible:
     id: screen-settings
+- scrollUntilVisible:
+    element:
+      id: settings-theme-dark
+    direction: DOWN
+    timeout: 30000
 - tapOn:
     id: settings-theme-dark
 - tapOn:

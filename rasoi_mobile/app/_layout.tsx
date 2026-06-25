@@ -31,6 +31,7 @@ import { RecipesProvider } from '@/context/RecipesContext';
 import { TonightRecipesProvider } from '@/context/TonightRecipesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { initializeMobileAds } from '@/utils/admob';
+import { checkForEasUpdateOnLaunch } from '@/utils/easUpdates';
 import { ensureTelemetryStarted } from '@/utils/telemetry';
 import { Sentry } from '@/utils/sentry';
 import { warmRasoiRealtime } from '@/utils/realtime';
@@ -79,6 +80,7 @@ function RootLayoutInner({
   useEffect(() => {
     void ensureTelemetryStarted().catch(() => undefined);
     void initializeMobileAds().catch(() => undefined);
+    void checkForEasUpdateOnLaunch().catch(() => undefined);
   }, []);
 
   const finishLaunchSplash = useCallback(async () => {

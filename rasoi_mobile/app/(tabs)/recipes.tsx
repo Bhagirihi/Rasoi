@@ -18,6 +18,7 @@ import SponsorOrAd from "@/components/SponsorOrAd";
 import { EmptyState } from "@/components/ui/Primitives";
 import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 import { useDismissOnBlur } from "@/hooks/useDismissOnBlur";
+import { useFlatListAdViewability } from "@/hooks/useFlatListAdViewability";
 import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
 import { useRecipeDiscovery } from "@/hooks/useRecipeDiscovery";
 import { useRecipeListAdIndices } from "@/hooks/useRecipeListAdIndices";
@@ -132,7 +133,11 @@ export default function RecipesTabScreen() {
     return listRecipes.filter((recipe) => recipeMatchesSearch(recipe, query));
   }, [listRecipes, searchQuery, remoteSearchResults]);
 
-  const recipeAdIndices = useRecipeListAdIndices(searchedMoreRecipes);
+  const recipeAdIndices = useRecipeListAdIndices(searchedMoreRecipes, {
+    stableSeed: "recipes-tab",
+  });
+  const { viewableIndices, viewabilityConfig, onViewableItemsChanged } =
+    useFlatListAdViewability();
 
   const activeFilterLabels = useMemo(
     () => getQuickFilterLabels(activeFilters),
@@ -231,6 +236,8 @@ export default function RecipesTabScreen() {
           loading={recipesSponsorLoading}
           placement="recipes"
           compact
+          lazyLoad
+          isViewable={viewableIndices.has(index)}
           style={styles.listSponsorInset}
         />
       )}
@@ -262,6 +269,8 @@ export default function RecipesTabScreen() {
         data={searchedMoreRecipes}
         keyExtractor={(item) => item.id}
         {...scrollIndicator}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         onScrollBeginDrag={Keyboard.dismiss}

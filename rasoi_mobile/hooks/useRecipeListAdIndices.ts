@@ -8,9 +8,13 @@ import {
 
 export function useRecipeListAdIndices(
   recipes: readonly { id: string }[],
-  options?: RecipeListAdOptions,
+  options?: RecipeListAdOptions & { stableSeed?: string },
 ): Set<number> {
-  const seed = useMemo(() => recipeListAdSeed(recipes), [recipes]);
+  const stableSeed = options?.stableSeed;
+  const seed = useMemo(
+    () => stableSeed ?? recipeListAdSeed(recipes),
+    [recipes, stableSeed],
+  );
   const count = recipes.length;
   const minRecipesBeforeFirstAd = options?.minRecipesBeforeFirstAd;
   const minGap = options?.minGap;
