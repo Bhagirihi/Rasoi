@@ -10,7 +10,7 @@ import {
   syncSupabaseMembersAction,
   syncSupabaseRecipesAction,
 } from '@/app/admin/supabase-sync-actions';
-import { formatSyncMembersSummary } from '@/lib/sync-supabase-data';
+import { formatSyncMembersSummary } from '@/lib/sync-supabase-summary';
 
 type SyncKind = 'members' | 'recipes' | 'kitchenStyles' | 'all';
 

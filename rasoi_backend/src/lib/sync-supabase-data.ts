@@ -9,6 +9,23 @@ import {
 } from '@/lib/supabase-auth-users';
 import { syncPublicKitchenStyle } from '@/lib/sync-public-kitchen-style';
 import { pruneOrphanPublicRecipes, syncPublicRecipe } from '@/lib/sync-public-recipe';
+import {
+  formatSyncMembersSummary,
+  type SupabaseDataSyncSummary,
+  type SyncKitchenStylesSummary,
+  type SyncMemberResult,
+  type SyncMembersSummary,
+  type SyncRecipesSummary,
+} from '@/lib/sync-supabase-summary';
+
+export type {
+  SupabaseDataSyncSummary,
+  SyncKitchenStylesSummary,
+  SyncMemberResult,
+  SyncMembersSummary,
+  SyncRecipesSummary,
+} from '@/lib/sync-supabase-summary';
+export { formatSyncMembersSummary };
 
 type PublicProfileRow = {
   id: string;
@@ -18,37 +35,6 @@ type PublicProfileRow = {
   diet_choice: string | null;
   regional_cuisine: string | null;
   notifications_enabled: boolean | null;
-};
-
-export type SyncMemberResult =
-  | { status: 'created'; userId: string; email: string }
-  | { status: 'updated'; userId: string; email: string }
-  | { status: 'linked'; userId: string; email: string }
-  | { status: 'skipped'; reason: string; email?: string }
-  | { status: 'error'; message: string; email?: string };
-
-export type SyncMembersSummary = {
-  created: number;
-  updated: number;
-  linked: number;
-  skipped: number;
-  errors: number;
-  details: SyncMemberResult[];
-};
-
-export type SyncRecipesSummary = {
-  synced: number;
-  orphansRemoved: number;
-};
-
-export type SyncKitchenStylesSummary = {
-  synced: number;
-};
-
-export type SupabaseDataSyncSummary = {
-  members: SyncMembersSummary;
-  recipes: SyncRecipesSummary;
-  kitchenStyles: SyncKitchenStylesSummary;
 };
 
 async function fetchPublicProfile(authUserId: string): Promise<PublicProfileRow | null> {
@@ -285,13 +271,3 @@ export async function syncAllSupabaseData(): Promise<SupabaseDataSyncSummary> {
   return { members, recipes, kitchenStyles };
 }
 
-export function formatSyncMembersSummary(summary: SyncMembersSummary): string {
-  const parts = [
-    `${summary.created} created`,
-    `${summary.updated} updated`,
-    `${summary.linked} linked`,
-  ];
-  if (summary.skipped > 0) parts.push(`${summary.skipped} skipped`);
-  if (summary.errors > 0) parts.push(`${summary.errors} errors`);
-  return parts.join(', ');
-}
