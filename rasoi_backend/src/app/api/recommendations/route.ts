@@ -18,10 +18,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
     const timezone = searchParams.get('timezone')?.trim() || user.timezone || 'Asia/Kolkata';
+    const excludeRecipeIds =
+      searchParams
+        .get('exclude')
+        ?.split(',')
+        .map((id) => id.trim())
+        .filter(Boolean) ?? [];
 
     const result = await getUserRecommendations(user, {
       forceRegenerate: force,
       timezone,
+      excludeRecipeIds,
     });
 
     const { month, day } = getLocalTimeParts(timezone);

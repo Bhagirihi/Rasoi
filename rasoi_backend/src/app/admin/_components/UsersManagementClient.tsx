@@ -7,6 +7,7 @@ import BulkMealNotificationBar from '@/app/admin/_components/BulkMealNotificatio
 import { DataTable } from '@/app/admin/_components/DataTable';
 import SendCustomNotificationControl from '@/app/admin/_components/SendCustomNotificationControl';
 import SendMealNotificationControl from '@/app/admin/_components/SendMealNotificationControl';
+import SyncSupabaseUserButton from '@/app/admin/_components/SyncSupabaseUserButton';
 import UserAccountStatusControl from '@/app/admin/_components/UserAccountStatusControl';
 import UserPlanControl from '@/app/admin/_components/UserPlanControl';
 import type { AdminUserRow } from '@/app/admin/_components/admin-users-types';
@@ -137,6 +138,14 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
                 {selectedUser.supabaseUserId && (
                   <p className="mt-2 text-xs text-amber-900/80">Auth ID: {selectedUser.supabaseUserId}</p>
                 )}
+                {selectedUser.supabaseUserId ? (
+                  <div className="mt-4">
+                    <SyncSupabaseUserButton
+                      supabaseUserId={selectedUser.supabaseUserId}
+                      email={selectedUser.email}
+                    />
+                  </div>
+                ) : null}
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 
+import SupabaseSyncPanel from '@/app/admin/_components/SupabaseSyncPanel';
 import UserFilterPanel from '@/app/admin/_components/UserFilterPanel';
 import UsersManagementClient from '@/app/admin/_components/UsersManagementClient';
 import { buildAdminPageHref, TablePagination } from '@/app/admin/_components/TablePagination';
@@ -86,6 +87,15 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
       <Suspense fallback={null}>
         <UserFilterPanel />
       </Suspense>
+
+      <div className="admin-card rounded-2xl p-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
+          Supabase sync
+        </p>
+        <div className="mt-3">
+          <SupabaseSyncPanel compact />
+        </div>
+      </div>
 
       <UsersManagementClient users={rows} />
 

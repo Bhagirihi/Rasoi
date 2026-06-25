@@ -20,10 +20,29 @@ function authDisplayName(user: SupabaseAuthUser): string {
   return user.is_anonymous ? 'Anonymous guest' : 'Auth user';
 }
 
-function isAnonymousAuthUser(user: SupabaseAuthUser): boolean {
+export function isAnonymousAuthUser(user: SupabaseAuthUser): boolean {
   if (user.is_anonymous === true) return true;
   const provider = user.app_metadata?.provider;
   return provider === 'anonymous';
+}
+
+export async function getSupabaseAuthUserById(
+  supabaseUserId: string,
+): Promise<ListedAuthUser | null> {
+  const supabase = createSupabaseAdmin();
+  const { data, error } = await supabase.auth.admin.getUserById(supabaseUserId);
+  if (error || !data.user) return null;
+
+  const user = data.user;
+  return {
+    id: user.id,
+    email: user.email ?? null,
+    phone: user.phone ?? null,
+    createdAt: user.created_at,
+    lastSignInAt: user.last_sign_in_at ?? null,
+    isAnonymous: isAnonymousAuthUser(user),
+    name: authDisplayName(user),
+  };
 }
 
 export async function listSupabaseAuthUsers(maxPages = 20): Promise<ListedAuthUser[]> {

@@ -1,3 +1,4 @@
+import SupabaseSyncPanel from '@/app/admin/_components/SupabaseSyncPanel';
 import {
   AdminCard,
   Badge,
@@ -51,6 +52,18 @@ export default async function IntegrationsAdminPage() {
           </p>
         </AdminCard>
       </div>
+
+      <AdminCard className="p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
+          Supabase data sync
+        </p>
+        <h2 className="font-display mt-2 text-2xl font-semibold text-admin-ink">
+          Mirror auth and content
+        </h2>
+        <div className="mt-4">
+          <SupabaseSyncPanel />
+        </div>
+      </AdminCard>
 
       <AdminCard className="p-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">

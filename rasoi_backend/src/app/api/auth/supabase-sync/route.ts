@@ -146,6 +146,10 @@ export async function POST(request: NextRequest) {
     const existing =
       existingBySupabase ?? guestByLink ?? existingByEmail ?? existingByPhone ?? null;
 
+    if (existing && !existing.isActive) {
+      return jsonError('This account has been deactivated.', 403);
+    }
+
     const needsTerms =
       !existing ||
       (!existing.termsAcceptedAt && (existing.isGuest || !existingBySupabase));

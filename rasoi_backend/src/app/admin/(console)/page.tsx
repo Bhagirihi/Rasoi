@@ -1,6 +1,7 @@
 import PaymentsToggle from '@/app/admin/_components/PaymentsToggle';
 import FeedbackOverviewPanel from '@/app/admin/_components/FeedbackOverviewPanel';
 import StatCard from '@/app/admin/_components/StatCard';
+import SupabaseSyncPanel from '@/app/admin/_components/SupabaseSyncPanel';
 import { AdminCard, GhostButton, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
 import { getAppConfig } from '@/lib/app-settings';
 import { getFeedbackStats, getRecentPendingFeedback } from '@/lib/feedback-stats';
@@ -70,6 +71,15 @@ export default async function AdminDashboardPage() {
               Member profiles carry pantry, saved dishes, and plan state.
             </li>
           </ul>
+        </AdminCard>
+
+        <AdminCard className="p-6">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
+            Supabase sync
+          </p>
+          <div className="mt-4">
+            <SupabaseSyncPanel />
+          </div>
         </AdminCard>
 
         <AdminCard className="p-6">

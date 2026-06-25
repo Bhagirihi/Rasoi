@@ -545,7 +545,7 @@ export async function generateRecommendationsForWindow(
 
 export async function getUserRecommendations(
   user: RecommendationUser,
-  options?: { forceRegenerate?: boolean; timezone?: string },
+  options?: { forceRegenerate?: boolean; timezone?: string; excludeRecipeIds?: string[] },
 ): Promise<{
   primary: RecommendationBundle;
   lateNight?: RecommendationBundle;
@@ -553,6 +553,7 @@ export async function getUserRecommendations(
 }> {
   const timezone = options?.timezone ?? user.timezone ?? 'Asia/Kolkata';
   const mealWindow = getScheduledMealWindowForTimezone(timezone);
+  const manualExclude = options?.excludeRecipeIds ?? [];
 
   if (mealWindow.isOvernightDual && mealWindow.tomorrowBreakfastWindowKey) {
     const lateNight = await generateRecommendationsForWindow({
@@ -561,6 +562,7 @@ export async function getUserRecommendations(
       windowKey: mealWindow.windowKey,
       dayKey: mealWindow.dayKey,
       count: 1,
+      excludeRecipeIds: manualExclude,
       forceRegenerate: options?.forceRegenerate,
       timezone,
     });
@@ -571,7 +573,10 @@ export async function getUserRecommendations(
       windowKey: mealWindow.tomorrowBreakfastWindowKey,
       dayKey: mealWindow.dayKey,
       count: HOME_PICK_COUNT,
-      excludeRecipeIds: lateNight.picks[0] ? [lateNight.picks[0].recipe.id] : [],
+      excludeRecipeIds: [
+        ...manualExclude,
+        ...(lateNight.picks[0] ? [lateNight.picks[0].recipe.id] : []),
+      ],
       forceRegenerate: options?.forceRegenerate,
       timezone,
     });
@@ -588,6 +593,7 @@ export async function getUserRecommendations(
     mealSlot: mealWindow.slot,
     windowKey: mealWindow.windowKey,
     dayKey: mealWindow.dayKey,
+    excludeRecipeIds: manualExclude,
     forceRegenerate: options?.forceRegenerate,
     timezone,
   });
