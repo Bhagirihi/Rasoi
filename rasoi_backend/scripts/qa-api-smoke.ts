@@ -232,6 +232,16 @@ async function main(): Promise<void> {
     } else {
       record('TC-API-16', true, 'Skipped remote APK size check (relative redirect)');
     }
+
+    const playStoreRedirect = await fetch(`${BASE}/api/play-store`, { redirect: 'manual' });
+    const playStoreLocation = playStoreRedirect.headers.get('location') ?? '';
+    record(
+      'TC-API-17',
+      playStoreRedirect.status === 302 &&
+        playStoreLocation.includes('play.google.com/store/apps/details') &&
+        playStoreLocation.includes('com.bhagihiri.rasoiapp'),
+      'GET /api/play-store redirects to Google Play listing',
+    );
   } catch (error) {
     console.error('Smoke test aborted:', error instanceof Error ? error.message : error);
     process.exitCode = 1;

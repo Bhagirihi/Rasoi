@@ -28,6 +28,16 @@ export const ANDROID_APK_URL = `${SITE_URL}/api/download/apk`;
 
 export const APP_DOWNLOAD_PATH = '/download';
 
+/** Keyword-rich public URL for Google Play SEO (indexable landing page). */
+export const PLAY_STORE_SEO_PATH =
+  '/google-play/rasoi-aaj-kya-banaye-indian-recipe-app-android';
+
+/** Short redirect — 302 to Play Store listing (share in campaigns). */
+export const PLAY_STORE_REDIRECT_PATH = '/play-store';
+
+/** API redirect — same as PLAY_STORE_REDIRECT_PATH for smoke tests and deep links. */
+export const PLAY_STORE_REDIRECT_API_PATH = '/api/play-store';
+
 export const APP_FEATURES = [
   {
     title: 'Regional recipes',

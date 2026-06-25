@@ -10,6 +10,7 @@ import {
   APP_FEATURES,
   APP_NAME,
   PLAY_STORE_LISTING_URL,
+  PLAY_STORE_SEO_PATH,
 } from '@/lib/app-download';
 import { absoluteUrl, downloadMetadata, mobileAppJsonLd } from '@/lib/seo';
 
@@ -73,7 +74,11 @@ export default function DownloadPage() {
               Get it on Google Play
             </a>
             <p className="mt-4 text-sm leading-relaxed text-[#6b6560]">
-              Free to install. Open Google Play on your Android phone and tap Install.
+              Free to install.{' '}
+              <Link href={PLAY_STORE_SEO_PATH} className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+                Official Google Play page
+              </Link>{' '}
+              · Open Google Play on your Android phone and tap Install.
             </p>
           </div>
 
