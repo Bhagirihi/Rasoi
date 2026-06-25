@@ -14,18 +14,12 @@ export type SyncMembersSummary = {
   details: SyncMemberResult[];
 };
 
-export type SyncRecipesSummary = {
-  synced: number;
-  orphansRemoved: number;
-};
-
 export type SyncKitchenStylesSummary = {
   synced: number;
 };
 
 export type SupabaseDataSyncSummary = {
   members: SyncMembersSummary;
-  recipes: SyncRecipesSummary;
   kitchenStyles: SyncKitchenStylesSummary;
 };
 

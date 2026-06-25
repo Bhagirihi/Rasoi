@@ -1,21 +1,18 @@
 import { getAutoTrialWriteForNewUser } from '@/lib/auto-trial';
 import { getDefaultPantryIngredients } from '@/lib/app-settings';
 import { db, queryPg } from '@/lib/db';
-import type { Recipe } from '@/lib/db/types';
 import {
   getSupabaseAuthUserById,
   listSupabaseAuthUsers,
   type ListedAuthUser,
 } from '@/lib/supabase-auth-users';
 import { syncPublicKitchenStyle } from '@/lib/sync-public-kitchen-style';
-import { pruneOrphanPublicRecipes, syncPublicRecipe } from '@/lib/sync-public-recipe';
 import {
   formatSyncMembersSummary,
   type SupabaseDataSyncSummary,
   type SyncKitchenStylesSummary,
   type SyncMemberResult,
   type SyncMembersSummary,
-  type SyncRecipesSummary,
 } from '@/lib/sync-supabase-summary';
 
 export type {
@@ -23,7 +20,6 @@ export type {
   SyncKitchenStylesSummary,
   SyncMemberResult,
   SyncMembersSummary,
-  SyncRecipesSummary,
 } from '@/lib/sync-supabase-summary';
 export { formatSyncMembersSummary };
 
@@ -217,42 +213,6 @@ export async function syncSupabaseMembersToRasoi(): Promise<SyncMembersSummary> 
   };
 }
 
-async function fetchAllRecipesForSync(): Promise<Recipe[]> {
-  return queryPg<Recipe>(`
-    SELECT
-      id,
-      title,
-      "prepTime",
-      calories,
-      region,
-      "kitchenStyleId",
-      "kitchenStyleIds",
-      "dietType",
-      difficulty,
-      description,
-      "imageUrl",
-      tags,
-      ingredients,
-      steps,
-      published,
-      "createdAt",
-      "updatedAt"
-    FROM rasoi."Recipe"
-    ORDER BY id ASC
-  `);
-}
-
-export async function syncRecipesToPublic(): Promise<SyncRecipesSummary> {
-  const recipes = await fetchAllRecipesForSync();
-  const orphansRemoved = await pruneOrphanPublicRecipes(recipes.map((recipe) => recipe.id));
-
-  for (const recipe of recipes) {
-    await syncPublicRecipe(recipe);
-  }
-
-  return { synced: recipes.length, orphansRemoved };
-}
-
 export async function syncKitchenStylesToPublic(): Promise<SyncKitchenStylesSummary> {
   const styles = await db.kitchenStyle.findMany({ orderBy: { sortOrder: 'asc' } });
   for (const style of styles) {
@@ -262,12 +222,11 @@ export async function syncKitchenStylesToPublic(): Promise<SyncKitchenStylesSumm
 }
 
 export async function syncAllSupabaseData(): Promise<SupabaseDataSyncSummary> {
-  const [members, recipes, kitchenStyles] = await Promise.all([
+  const [members, kitchenStyles] = await Promise.all([
     syncSupabaseMembersToRasoi(),
-    syncRecipesToPublic(),
     syncKitchenStylesToPublic(),
   ]);
 
-  return { members, recipes, kitchenStyles };
+  return { members, kitchenStyles };
 }
 

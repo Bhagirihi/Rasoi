@@ -7,7 +7,6 @@ import { ensureReferenceData } from '../src/lib/reference-data';
 import { ensurePromoCodes } from '../src/lib/promo-seed';
 import { DEFAULT_PARTNER_LINKS } from '../src/lib/partners';
 import { syncPublicKitchenStyle } from '../src/lib/sync-public-kitchen-style';
-import { syncPublicRecipe } from '../src/lib/sync-public-recipe';
 import { KITCHEN_STYLE_RECIPES } from './kitchen-style-recipes';
 
 async function main() {
@@ -31,7 +30,7 @@ async function main() {
   });
 
   for (const recipe of KITCHEN_STYLE_RECIPES) {
-    const saved = await db.recipe.upsert({
+    await db.recipe.upsert({
       where: { id: recipe.id },
       update: {
         title: recipe.title,
@@ -65,11 +64,7 @@ async function main() {
         published: true,
       },
     });
-    try {
-      await syncPublicRecipe(saved);
-    } catch (error) {
-      console.error(`[syncPublicRecipe] seed failed for ${recipe.id}`, error);
-    }
+
   }
 
   console.log(`Seeded ${KITCHEN_STYLE_RECIPES.length} kitchen-style recipes.`);

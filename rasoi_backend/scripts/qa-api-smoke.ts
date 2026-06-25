@@ -155,7 +155,7 @@ async function main(): Promise<void> {
     });
     record('TC-API-08', pantry.body.ok, 'PUT /api/users/me/pantry empty list');
 
-    const recipeId = recipes.body.data?.[0]?.id;
+    const recipeId = recipes.body.data?.items?.[0]?.id;
     if (recipeId) {
       const detail = await request<{ id: string }>(`/api/recipes/${recipeId}`);
       record('TC-API-09', detail.body.ok && detail.body.data?.id === recipeId, 'GET /api/recipes/:id');

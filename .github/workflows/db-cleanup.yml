@@ -1,0 +1,31 @@
+# Weekly retention: stale guest users + old recommendation cache/history.
+# Vercel Hobby only allows daily crons — use this workflow for weekly cleanup.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   CRON_SECRET       — same value as Vercel env CRON_SECRET
+#   DB_CLEANUP_URL    — e.g. https://rasoiapplication.in/api/cron/db-cleanup
+
+name: Database cleanup
+
+on:
+  schedule:
+    - cron: '0 4 * * 0'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call db-cleanup cron
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DB_CLEANUP_URL: ${{ secrets.DB_CLEANUP_URL }}
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ -z "$DB_CLEANUP_URL" ]; then
+            echo "Missing CRON_SECRET or DB_CLEANUP_URL repository secret."
+            exit 1
+          fi
+          curl -fsS --retry 2 --retry-delay 5 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${DB_CLEANUP_URL}"

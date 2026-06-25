@@ -3,43 +3,20 @@ import { Pool } from 'pg';
 import type { Recipe } from '@/lib/db/types';
 import type { RecipeIngredient } from '@/lib/types';
 import { canonicalizeIngredientName } from '@/lib/ingredient-canonical';
+import {
+  resolveIngredientSection,
+  type PantrySectionName,
+} from '@/lib/pantry-ingredient-section';
 import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
-import { PANTRY_SECTIONS } from '@/lib/pantry-sections';
 import { getPooledDatabaseUrl } from '@/lib/database-url';
 
 let pool: Pool | null = null;
 
-type PantrySectionName = 'Staples' | 'Veggies' | 'Dairy' | 'Protein' | 'Other';
+type PublicPantrySectionName = Exclude<PantrySectionName, 'Pulses'>;
 
-const STAPLE_NAMES = new Set<string>(
-  PANTRY_SECTIONS.find((section) => section.title === 'Staples')?.items ?? [],
-);
-const VEGGIE_NAMES = new Set<string>(
-  PANTRY_SECTIONS.find((section) => section.title === 'Veggies')?.items ?? [],
-);
-const DAIRY_NAMES = new Set<string>(
-  PANTRY_SECTIONS.find((section) => section.title === 'Dairy')?.items ?? [],
-);
-const PROTEIN_NAMES = new Set<string>([
-  'Chicken',
-  'Fish',
-  'Mutton',
-  'Prawn',
-  'Eggs',
-  'Anda',
-  'Paneer',
-  'Beef',
-  'Pork',
-  'Duck',
-  'Lamb',
-  'Keema',
-  'Bhetki',
-  'Gosht',
-  'Maas',
-  'Machhli',
-  'Chingri',
-  'Ilish',
-]);
+function toPublicPantrySection(section: PantrySectionName): PublicPantrySectionName {
+  return section === 'Pulses' ? 'Other' : section;
+}
 
 function getPool(): Pool {
   if (!pool) {
@@ -72,20 +49,14 @@ function parseSteps(stepsJson: string | null): string[] {
   return Array.isArray(parsed) ? parsed.filter((step) => typeof step === 'string') : [];
 }
 
-function resolveIngredientSection(name: string, isStaple: boolean): PantrySectionName {
-  if (isStaple || STAPLE_NAMES.has(name)) return 'Staples';
-  if (DAIRY_NAMES.has(name)) return 'Dairy';
-  if (VEGGIE_NAMES.has(name)) return 'Veggies';
-  if (PROTEIN_NAMES.has(name)) return 'Protein';
-  return 'Other';
-}
-
 async function ensurePublicIngredient(
   client: Pool,
   ingredient: RecipeIngredient,
 ): Promise<string> {
   const canonicalName = canonicalizeIngredientName(ingredient.name);
-  const section = resolveIngredientSection(canonicalName, ingredient.isStaple);
+  const section = toPublicPantrySection(
+    resolveIngredientSection(canonicalName, ingredient.isStaple),
+  );
   const result = await client.query<{ id: string }>(
     `
       INSERT INTO public.ingredients (name, section, is_staple)

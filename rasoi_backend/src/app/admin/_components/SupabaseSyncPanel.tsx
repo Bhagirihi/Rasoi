@@ -8,11 +8,10 @@ import {
   syncAllSupabaseDataAction,
   syncSupabaseKitchenStylesAction,
   syncSupabaseMembersAction,
-  syncSupabaseRecipesAction,
 } from '@/app/admin/supabase-sync-actions';
 import { formatSyncMembersSummary } from '@/lib/sync-supabase-summary';
 
-type SyncKind = 'members' | 'recipes' | 'kitchenStyles' | 'all';
+type SyncKind = 'members' | 'kitchenStyles' | 'all';
 
 export default function SupabaseSyncPanel({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
@@ -25,18 +24,13 @@ export default function SupabaseSyncPanel({ compact = false }: { compact?: boole
       if (kind === 'members') {
         const summary = await syncSupabaseMembersAction();
         toast.success(`Members synced — ${formatSyncMembersSummary(summary)}`);
-      } else if (kind === 'recipes') {
-        const summary = await syncSupabaseRecipesAction();
-        toast.success(
-          `Recipes synced — ${summary.synced} to public.recipes${summary.orphansRemoved > 0 ? `, ${summary.orphansRemoved} orphans removed` : ''}`,
-        );
       } else if (kind === 'kitchenStyles') {
         const summary = await syncSupabaseKitchenStylesAction();
         toast.success(`Kitchen styles synced — ${summary.synced} to public.cuisines`);
       } else {
         const summary = await syncAllSupabaseDataAction();
         toast.success(
-          `Supabase sync complete — members: ${formatSyncMembersSummary(summary.members)}; recipes: ${summary.recipes.synced}; kitchen styles: ${summary.kitchenStyles.synced}`,
+          `Supabase sync complete — members: ${formatSyncMembersSummary(summary.members)}; kitchen styles: ${summary.kitchenStyles.synced}`,
         );
       }
       router.refresh();
@@ -55,8 +49,8 @@ export default function SupabaseSyncPanel({ compact = false }: { compact?: boole
       {!compact && (
         <p className="text-sm leading-relaxed text-admin-muted">
           Pull Supabase Auth users into <code className="rounded bg-admin-surface px-1">rasoi.User</code>,
-          and mirror admin content into the legacy <code className="rounded bg-admin-surface px-1">public</code>{' '}
-          tables used by some mobile reads.
+          and mirror kitchen styles into legacy <code className="rounded bg-admin-surface px-1">public.cuisines</code>.
+          Recipes live in <code className="rounded bg-admin-surface px-1">rasoi.Recipe</code> only.
         </p>
       )}
 
@@ -68,14 +62,6 @@ export default function SupabaseSyncPanel({ compact = false }: { compact?: boole
           onClick={() => void runSync('members')}
         >
           {loading === 'members' ? 'Syncing members…' : 'Sync members'}
-        </button>
-        <button
-          type="button"
-          className={buttonClass}
-          disabled={loading !== null}
-          onClick={() => void runSync('recipes')}
-        >
-          {loading === 'recipes' ? 'Syncing recipes…' : 'Sync recipes'}
         </button>
         <button
           type="button"

@@ -24,6 +24,7 @@
     "db:sync-recipe-images": "tsx scripts/sync-recipe-images.ts",
     "db:sync-recipe-images:dry": "tsx scripts/sync-recipe-images.ts --dry-run",
     "cron:keep-alive": "tsx scripts/cron-keep-alive.ts",
+    "cron:db-cleanup": "tsx scripts/cron-db-cleanup.ts",
     "cron:meal-notifications": "tsx scripts/cron-meal-notifications.ts",
     "sync:apk": "bash scripts/sync-apk.sh"
   },

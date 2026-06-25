@@ -1,5 +1,8 @@
+import { canonicalizeIngredientName } from '@/lib/ingredient-canonical';
 import { PANTRY_SECTIONS } from '@/lib/pantry-sections';
+import { resolveIngredientSection } from '@/lib/pantry-ingredient-section';
 import { queryPg } from '@/lib/db/pg';
+import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
 
 export type PantryIngredientCatalogRow = {
   name: string;
@@ -8,11 +11,9 @@ export type PantryIngredientCatalogRow = {
   recipeCount: number;
 };
 
-type IngredientRow = {
-  name: string;
-  section: string;
-  is_staple: boolean;
-  recipe_count: string;
+type RecipeIngredientRow = {
+  id: string;
+  ingredients: string;
 };
 
 const SECTION_ORDER = ['Staples', 'Pulses', 'Veggies', 'Dairy', 'Protein', 'Other'] as const;
@@ -22,27 +23,67 @@ function sectionSortIndex(section: string): number {
   return index === -1 ? SECTION_ORDER.length : index;
 }
 
-/** All unique ingredient names from recipes (`public.ingredients`) with usage counts. */
+function parseIngredientsJson(ingredientsJson: string): ReturnType<typeof normalizeRecipeIngredients> {
+  try {
+    return normalizeRecipeIngredients(JSON.parse(ingredientsJson));
+  } catch {
+    return [];
+  }
+}
+
+function buildCatalogFromRecipes(rows: RecipeIngredientRow[]): PantryIngredientCatalogRow[] {
+  const counts = new Map<
+    string,
+    { name: string; section: string; isStaple: boolean; recipeCount: number }
+  >();
+
+  for (const recipe of rows) {
+    const ingredients = parseIngredientsJson(recipe.ingredients);
+    const seenInRecipe = new Set<string>();
+
+    for (const ingredient of ingredients) {
+      const name = canonicalizeIngredientName(ingredient.name);
+      const key = name.toLowerCase();
+      if (!key || seenInRecipe.has(key)) continue;
+      seenInRecipe.add(key);
+
+      const section = resolveIngredientSection(name, ingredient.isStaple);
+      const existing = counts.get(key);
+      if (existing) {
+        existing.recipeCount += 1;
+        existing.isStaple = existing.isStaple || ingredient.isStaple;
+      } else {
+        counts.set(key, {
+          name,
+          section,
+          isStaple: ingredient.isStaple,
+          recipeCount: 1,
+        });
+      }
+    }
+  }
+
+  return [...counts.values()].sort(
+    (a, b) =>
+      sectionSortIndex(a.section) - sectionSortIndex(b.section) ||
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+  );
+}
+
+/** Unique ingredient names from published `rasoi.Recipe` rows with usage counts. */
 export async function listRecipeIngredientCatalog(): Promise<PantryIngredientCatalogRow[]> {
   try {
-    const rows = await queryPg<IngredientRow>(
-      `SELECT
-         i.name,
-         i.section::text AS section,
-         i.is_staple,
-         COUNT(ri.recipe_id)::text AS recipe_count
-       FROM public.ingredients i
-       LEFT JOIN public.recipe_ingredients ri ON ri.ingredient_id = i.id
-       GROUP BY i.id, i.name, i.section, i.is_staple
-       ORDER BY i.section, i.name`,
+    const rows = await queryPg<RecipeIngredientRow>(
+      `SELECT id, ingredients
+       FROM rasoi."Recipe"
+       WHERE published = true`,
     );
 
-    return rows.map((row) => ({
-      name: row.name,
-      section: row.section,
-      isStaple: row.is_staple,
-      recipeCount: Number.parseInt(row.recipe_count, 10) || 0,
-    }));
+    if (rows.length === 0) {
+      return fallbackPantryCatalog();
+    }
+
+    return buildCatalogFromRecipes(rows);
   } catch {
     return fallbackPantryCatalog();
   }

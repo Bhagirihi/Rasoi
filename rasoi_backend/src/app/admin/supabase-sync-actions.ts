@@ -8,13 +8,11 @@ import {
   syncAllSupabaseData,
   syncAuthUserToRasoi,
   syncKitchenStylesToPublic,
-  syncRecipesToPublic,
   syncSupabaseMembersToRasoi,
   type SupabaseDataSyncSummary,
   type SyncKitchenStylesSummary,
   type SyncMemberResult,
   type SyncMembersSummary,
-  type SyncRecipesSummary,
 } from '@/lib/sync-supabase-data';
 
 async function requireAdminSession() {
@@ -45,13 +43,6 @@ export async function syncSupabaseMembersAction(): Promise<SyncMembersSummary> {
   await requireAdminSession();
   const summary = await syncSupabaseMembersToRasoi();
   revalidateAdminSyncPaths();
-  return summary;
-}
-
-export async function syncSupabaseRecipesAction(): Promise<SyncRecipesSummary> {
-  await requireAdminSession();
-  const summary = await syncRecipesToPublic();
-  revalidatePath('/admin/recipes');
   return summary;
 }
 

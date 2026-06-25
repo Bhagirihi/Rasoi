@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { deletePublicRecipe, syncPublicRecipe } from '@/lib/sync-public-recipe';
 import { recipeCreateSchema, recipeUpdateSchema } from '@/lib/validators';
 
 async function requireAdminSession() {
@@ -17,7 +16,7 @@ export async function createRecipeAction(raw: unknown) {
   await requireAdminSession();
   const input = recipeCreateSchema.parse(raw);
 
-  const recipe = await db.recipe.create({
+  await db.recipe.create({
     data: {
       title: input.title,
       prepTime: input.prepTime,
@@ -38,12 +37,6 @@ export async function createRecipeAction(raw: unknown) {
     },
   });
 
-  try {
-    await syncPublicRecipe(recipe);
-  } catch (error) {
-    console.error('[syncPublicRecipe] create failed', error);
-  }
-
   revalidatePath('/admin/recipes');
   revalidatePath('/admin');
 }
@@ -52,7 +45,7 @@ export async function updateRecipeAction(id: string, raw: unknown) {
   await requireAdminSession();
   const input = recipeUpdateSchema.parse(raw);
 
-  const recipe = await db.recipe.update({
+  await db.recipe.update({
     where: { id },
     data: {
       title: input.title,
@@ -82,12 +75,6 @@ export async function updateRecipeAction(id: string, raw: unknown) {
     },
   });
 
-  try {
-    await syncPublicRecipe(recipe);
-  } catch (error) {
-    console.error('[syncPublicRecipe] update failed', error);
-  }
-
   revalidatePath('/admin/recipes');
   revalidatePath(`/admin/recipes/${id}`);
   revalidatePath('/admin');
@@ -96,10 +83,5 @@ export async function updateRecipeAction(id: string, raw: unknown) {
 export async function deleteRecipeAction(id: string) {
   await requireAdminSession();
   await db.recipe.delete({ where: { id } });
-  try {
-    await deletePublicRecipe(id);
-  } catch (error) {
-    console.error('[deletePublicRecipe] failed', error);
-  }
   revalidatePath('/admin/recipes');
 }
