@@ -6,7 +6,6 @@ import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import JsonLd from '@/app/_components/JsonLd';
 import {
-  ANDROID_APK_URL,
   APP_FEATURES,
   APP_NAME,
   PLAY_STORE_LISTING_URL,
@@ -80,21 +79,6 @@ export default function DownloadPage() {
               </Link>{' '}
               · Open Google Play on your Android phone and tap Install.
             </p>
-          </div>
-
-          <div className="mx-auto mt-8 max-w-xl rounded-[1.5rem] border border-dashed border-[#d9d0c4] bg-white p-6 text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b6560]">
-              Alternative · Direct APK
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-[#6b6560]">
-              Can&apos;t use Google Play? Download the latest Android APK from our site.
-            </p>
-            <a
-              href={ANDROID_APK_URL}
-              className="mt-4 inline-flex rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-[#c9a227]/50"
-            >
-              Download Android APK
-            </a>
           </div>
         </section>
 

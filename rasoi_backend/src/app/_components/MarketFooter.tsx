@@ -1,0 +1,78 @@
+import Link from 'next/link';
+
+import { PLAY_STORE_SEO_PATH } from '@/lib/app-download';
+import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
+import { getAllMarkets } from '@/lib/markets';
+
+type MarketFooterProps = {
+  showIndiaAppLinks?: boolean;
+};
+
+export default function MarketFooter({ showIndiaAppLinks = false }: MarketFooterProps) {
+  const markets = getAllMarkets();
+
+  return (
+    <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
+      <div className="mx-auto max-w-6xl px-5 py-8 lg:px-8">
+        <p className="text-sm font-semibold text-[#1a1a2e]">Rasoi by region</p>
+        <nav
+          aria-label="Rasoi regional pages"
+          className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm"
+        >
+          {markets.map((market, index) => (
+            <span key={market.id} className="inline-flex items-center gap-4">
+              {index > 0 ? (
+                <span className="hidden text-[#d9d0c4] sm:inline" aria-hidden>
+                  ·
+                </span>
+              ) : null}
+              <Link
+                href={market.path}
+                hrefLang={market.hreflang}
+                className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+              >
+                {market.label}
+              </Link>
+            </span>
+          ))}
+          <span className="hidden text-[#d9d0c4] sm:inline" aria-hidden>
+            ·
+          </span>
+          <Link href="/indian-recipe-app" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+            Indian recipe guides
+          </Link>
+        </nav>
+
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 text-sm text-[#6b6560]">
+          <p>
+            Rasoi — Indian home cooking ·{' '}
+            <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="font-semibold hover:text-[#c45c2a]">
+              {LEGAL_CONTACT_EMAIL}
+            </a>
+          </p>
+          <div className="flex flex-wrap items-center gap-6">
+            {showIndiaAppLinks ? (
+              <>
+                <Link
+                  href={PLAY_STORE_SEO_PATH}
+                  className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+                >
+                  Google Play
+                </Link>
+                <Link href="/download" className="font-semibold hover:text-[#c45c2a]">
+                  Download APK
+                </Link>
+              </>
+            ) : null}
+            <Link href="/privacy" className="font-semibold hover:text-[#c45c2a]">
+              Privacy
+            </Link>
+            <Link href="/terms" className="font-semibold hover:text-[#c45c2a]">
+              Terms
+            </Link>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
