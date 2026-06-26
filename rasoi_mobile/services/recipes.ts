@@ -3,7 +3,12 @@ import type { CuisineId } from '@/constants/theme';
 import { apiFetch } from '@/utils/api';
 import { parseJson } from '@/utils/parseJson';
 import { dietChoiceToDietType } from '@/utils/recipeFilters';
-import { getRasoiDb, isDirectSupabaseReadsEnabled } from '@/utils/rasoiDb';
+import { getRasoiDb, isDirectSupabaseCatalogEnabled } from '@/utils/rasoiDb';
+import {
+  loadCachedRecipePage,
+  recipeCatalogFilterKey,
+  saveCachedRecipePage,
+} from '@/utils/recipeCatalogCache';
 import { resolveStepsForRecipe } from '@/utils/generateRecipeSteps';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
 import {
@@ -28,6 +33,10 @@ type DbRecipeRow = {
   ingredients: string;
   published: boolean;
 };
+
+/** List/bootstrap columns — omit steps + admin scores to shrink Supabase egress per page. */
+const RECIPE_LIST_COLUMNS =
+  'id, title, prepTime, calories, region, kitchenStyleId, kitchenStyleIds, dietType, difficulty, description, imageUrl, tags, ingredients, published';
 
 export type RecipeFetchFilters = {
   region?: string;
@@ -84,7 +93,10 @@ function applyFetchFilters(recipes: Recipe[], filters?: RecipeFetchFilters): Rec
 }
 
 function buildPublishedRecipeQuery(filters?: RecipeFetchFilters) {
-  let query = getRasoiDb().from('Recipe').select('*', { count: 'exact' }).eq('published', true);
+  let query = getRasoiDb()
+    .from('Recipe')
+    .select(RECIPE_LIST_COLUMNS, { count: 'exact' })
+    .eq('published', true);
 
   const region = filters?.region?.trim();
   if (region && region !== 'All India') {
@@ -248,16 +260,31 @@ export async function fetchPublishedRecipesPage(
   filters: RecipeFetchFilters | undefined,
   offset = 0,
   limit = RECIPE_PAGE_SIZE,
+  bypassCache = false,
 ): Promise<PaginatedItems<Recipe>> {
-  if (isDirectSupabaseReadsEnabled()) {
-    try {
-      return await fetchPublishedRecipesPageFromSupabase(filters, offset, limit);
-    } catch (error) {
-      console.warn('[recipes] Supabase page read failed, falling back to API', error);
+  const filterKey = recipeCatalogFilterKey(filters ?? {});
+  if (!bypassCache) {
+    const cached = await loadCachedRecipePage(filterKey, offset);
+    if (cached) {
+      return { items: cached.items, pagination: cached.pagination };
     }
   }
 
-  return fetchPublishedRecipesPageFromApi(filters, offset, limit);
+  let page: PaginatedItems<Recipe>;
+
+  if (isDirectSupabaseCatalogEnabled()) {
+    try {
+      page = await fetchPublishedRecipesPageFromSupabase(filters, offset, limit);
+    } catch (error) {
+      console.warn('[recipes] Supabase page read failed, falling back to API', error);
+      page = await fetchPublishedRecipesPageFromApi(filters, offset, limit);
+    }
+  } else {
+    page = await fetchPublishedRecipesPageFromApi(filters, offset, limit);
+  }
+
+  void saveCachedRecipePage(filterKey, offset, page.items, page.pagination);
+  return page;
 }
 
 export async function fetchPublishedRecipes(filters?: RecipeFetchFilters): Promise<Recipe[]> {
@@ -276,7 +303,7 @@ export async function fetchPublishedRecipes(filters?: RecipeFetchFilters): Promi
 }
 
 export async function fetchRecipeById(id: string): Promise<Recipe> {
-  if (isDirectSupabaseReadsEnabled()) {
+  if (isDirectSupabaseCatalogEnabled()) {
     try {
       return await fetchRecipeByIdFromSupabase(id);
     } catch (error) {

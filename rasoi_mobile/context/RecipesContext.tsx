@@ -62,6 +62,8 @@ function mergeRecipeList(current: Recipe[], incoming: Recipe[]): Recipe[] {
   return [...byId.values()];
 }
 
+const FOREGROUND_RECIPE_REFRESH_MS = 15 * 60 * 1000;
+
 export function RecipesProvider({ children }: { children: ReactNode }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,7 +133,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     }
   }, [applyPage]);
 
-  const refreshRecipes = useCallback(async () => {
+  const refreshRecipes = useCallback(async (options?: { bypassCache?: boolean }) => {
     const generation = ++fetchGenerationRef.current;
     loadingMoreRef.current = false;
     setLoadingMore(false);
@@ -144,7 +146,12 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      const firstPage = await fetchPublishedRecipesPage(filters, 0, RECIPE_PAGE_SIZE);
+      const firstPage = await fetchPublishedRecipesPage(
+        filters,
+        0,
+        RECIPE_PAGE_SIZE,
+        options?.bypassCache ?? false,
+      );
       if (generation !== fetchGenerationRef.current) return;
       applyPage(firstPage.items, firstPage.pagination, true, generation);
       lastFetchedKeyRef.current = recipeFiltersKey(filters);
@@ -191,7 +198,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       if (state !== "active") return;
 
       const now = Date.now();
-      if (now - lastForegroundRefreshRef.current < 60_000) return;
+      if (now - lastForegroundRefreshRef.current < FOREGROUND_RECIPE_REFRESH_MS) return;
       lastForegroundRefreshRef.current = now;
 
       void refreshRecipes();
@@ -208,7 +215,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       }
       realtimeRefreshTimerRef.current = setTimeout(() => {
         realtimeRefreshTimerRef.current = null;
-        void refreshRecipes();
+        void refreshRecipes({ bypassCache: true });
       }, 2500);
     },
     "recipes",

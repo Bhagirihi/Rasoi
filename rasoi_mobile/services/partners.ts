@@ -1,5 +1,5 @@
 import { apiFetch } from '@/utils/api';
-import { getRasoiDb, isDirectSupabaseReadsEnabled } from '@/utils/rasoiDb';
+import { getRasoiDb, isDirectSupabaseCatalogEnabled } from '@/utils/rasoiDb';
 import { buildPartnerUrl, type PartnerId } from '@/constants/partners';
 
 export type PartnerLinkResponse = {
@@ -47,7 +47,7 @@ export async function loadPartnerLinks(force = false): Promise<PartnerLinkRespon
   }
 
   loadPromise = (async () => {
-    if (isDirectSupabaseReadsEnabled()) {
+    if (isDirectSupabaseCatalogEnabled()) {
       try {
         cachedLinks = await loadPartnerLinksFromSupabase();
         return cachedLinks;

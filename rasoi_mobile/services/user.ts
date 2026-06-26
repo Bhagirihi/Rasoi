@@ -272,6 +272,7 @@ export async function registerPushToken(input: {
     const row = await fetchOwnUserRow();
     const { error } = await getRasoiDb().from('PushToken').upsert(
       {
+        id: crypto.randomUUID(),
         userId: row.id,
         expoPushToken: input.expoPushToken,
         platform: input.platform ?? null,

@@ -13,6 +13,18 @@ export function isDirectSupabaseReadsEnabled(): boolean {
   return supabase !== null;
 }
 
+/**
+ * Public catalog reads (recipes, reference, sponsors).
+ * Set EXPO_PUBLIC_DIRECT_SUPABASE_CATALOG=0 to route through rasoiapplication.in API and cut Supabase egress.
+ * User profile / push-token writes still use direct Supabase when reads are enabled.
+ */
+export function isDirectSupabaseCatalogEnabled(): boolean {
+  if (process.env.EXPO_PUBLIC_DIRECT_SUPABASE_CATALOG === '0') {
+    return false;
+  }
+  return isDirectSupabaseReadsEnabled();
+}
+
 export function isSupabaseDirectMode(): boolean {
   return isDirectSupabaseReadsEnabled();
 }

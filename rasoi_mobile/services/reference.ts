@@ -1,6 +1,7 @@
 import { apiFetch } from '@/utils/api';
 import { parseJson } from '@/utils/parseJson';
-import { getRasoiDb, isDirectSupabaseReadsEnabled } from '@/utils/rasoiDb';
+import { getRasoiDb, isDirectSupabaseCatalogEnabled } from '@/utils/rasoiDb';
+import { loadCachedReferenceData, saveCachedReferenceData } from '@/utils/referenceCache';
 import type { KitchenStyle } from '@/utils/kitchenStyles';
 
 export type { KitchenStyle };
@@ -90,18 +91,30 @@ export async function loadReferenceData(force = false): Promise<ReferenceData> {
     return cachedReference;
   }
 
+  if (!force) {
+    const diskCached = await loadCachedReferenceData();
+    if (diskCached) {
+      cachedReference = {
+        ...diskCached,
+        appConfig: diskCached.appConfig ?? DEFAULT_APP_CONFIG,
+      };
+      return cachedReference;
+    }
+  }
+
   if (loadPromise && !force) {
     return loadPromise;
   }
 
   loadPromise = (async () => {
-    if (isDirectSupabaseReadsEnabled()) {
+    if (isDirectSupabaseCatalogEnabled()) {
       try {
         const data = await loadReferenceFromSupabase();
         cachedReference = {
           ...data,
           appConfig: data.appConfig ?? DEFAULT_APP_CONFIG,
         };
+        void saveCachedReferenceData(cachedReference);
         return cachedReference;
       } catch (error) {
         console.warn('[reference] Supabase read failed, falling back to API', error);
@@ -113,6 +126,7 @@ export async function loadReferenceData(force = false): Promise<ReferenceData> {
       ...data,
       appConfig: data.appConfig ?? DEFAULT_APP_CONFIG,
     };
+    void saveCachedReferenceData(cachedReference);
     return cachedReference;
   })()
     .catch((error) => {

@@ -4,6 +4,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -15,6 +16,7 @@ import {
   type PantrySection,
   type ReferenceData,
 } from '@/services/reference';
+import { REFERENCE_CACHE_TTL_MS } from '@/utils/referenceCache';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
 const DEFAULT_APP_CONFIG = {
@@ -46,12 +48,12 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshReference = useCallback(async () => {
+  const refreshReference = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
 
     try {
-      const data = await loadReferenceData(true);
+      const data = await loadReferenceData(force);
       setReference(data);
     } catch (caught) {
       const message =
@@ -67,11 +69,17 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
     void refreshReference();
   }, [refreshReference]);
 
+  const lastForegroundRefreshRef = useRef(0);
+
   useEffect(() => {
     const handleAppState = (nextState: AppStateStatus) => {
-      if (nextState === 'active') {
-        void refreshReference();
-      }
+      if (nextState !== 'active') return;
+
+      const now = Date.now();
+      if (now - lastForegroundRefreshRef.current < REFERENCE_CACHE_TTL_MS) return;
+      lastForegroundRefreshRef.current = now;
+
+      void refreshReference(false);
     };
 
     const appStateSub = AppState.addEventListener('change', handleAppState);
@@ -81,7 +89,7 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
   useRasoiRealtimeTables(
     ['KitchenStyle', 'RegionalCuisineOption', 'PantrySection'],
     () => {
-      void refreshReference();
+      void refreshReference(true);
     },
     'reference',
   );

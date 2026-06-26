@@ -1,6 +1,6 @@
 import type { SponsorResponse } from '@/types/api';
 import { apiFetch } from '@/utils/api';
-import { getRasoiDb, isDirectSupabaseReadsEnabled } from '@/utils/rasoiDb';
+import { getRasoiDb, isDirectSupabaseCatalogEnabled } from '@/utils/rasoiDb';
 
 export type SponsorCardData = {
   id: string;
@@ -64,7 +64,7 @@ export async function fetchSponsor(
 ): Promise<SponsorCardData | null> {
   let sponsors: SponsorResponse[];
 
-  if (isDirectSupabaseReadsEnabled()) {
+  if (isDirectSupabaseCatalogEnabled()) {
     try {
       sponsors = await fetchSponsorsFromSupabase(placement);
     } catch (error) {
