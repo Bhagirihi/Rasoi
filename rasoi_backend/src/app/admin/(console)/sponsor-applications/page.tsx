@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 
+import { formatAdminDate } from '@/app/admin/_components/admin-datetime';
 import ApplicationStatusButton from '@/app/admin/_components/ApplicationStatusButton';
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
 import { DataTable } from '@/app/admin/_components/DataTable';
@@ -75,11 +76,7 @@ export default async function SponsorApplicationsPage({ searchParams }: PageProp
               </Badge>
             </td>
             <td className="px-5 py-4 text-sm text-admin-muted">
-              {application.createdAt.toLocaleDateString('en-IN', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-              })}
+              {formatAdminDate(application.createdAt)}
             </td>
             <td className="px-5 py-4">
               <div className="flex flex-col gap-2">

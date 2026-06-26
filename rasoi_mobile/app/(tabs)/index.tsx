@@ -26,6 +26,7 @@ import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import SponsorOrAd from "@/components/SponsorOrAd";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
+import HomeAnnouncementBridge from "@/components/home/HomeAnnouncementBridge";
 import TonightCardsSkeleton from "@/components/TonightCardsSkeleton";
 import HomeHeroLoadingBox from "@/components/HomeHeroLoadingBox";
 import { EmptyState } from "@/components/ui/Primitives";
@@ -251,6 +252,7 @@ export default function HomeScreen() {
 
         <View style={styles.sections}>
           <TrialCountdownBanner />
+          <HomeAnnouncementBridge />
           {isGuest ? <GuestRegisterBanner /> : null}
 
           <SponsorOrAd

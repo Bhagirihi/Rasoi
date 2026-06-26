@@ -11,6 +11,7 @@ export const adminNavItems = [
   { href: '/admin/kitchen-styles', label: 'Kitchen styles' },
   { href: '/admin/recipes', label: 'Recipes' },
   { href: '/admin/sponsors', label: 'Sponsors' },
+  { href: '/admin/announcements', label: 'Announcements' },
   { href: '/admin/sponsor-applications', label: 'Applications' },
   { href: '/admin/partners', label: 'Partner links' },
   { href: '/admin/payments', label: 'Payment' },

@@ -10,6 +10,7 @@ import SendMealNotificationControl from '@/app/admin/_components/SendMealNotific
 import SyncSupabaseUserButton from '@/app/admin/_components/SyncSupabaseUserButton';
 import UserAccountStatusControl from '@/app/admin/_components/UserAccountStatusControl';
 import UserPlanControl from '@/app/admin/_components/UserPlanControl';
+import { formatAdminDateTime } from '@/app/admin/_components/admin-datetime';
 import type { AdminUserRow } from '@/app/admin/_components/admin-users-types';
 import { formatAdminJoinedAt, isAuthOnlyRowId } from '@/app/admin/_components/admin-users-types';
 import { Badge } from '@/app/admin/_components/ui';
@@ -219,7 +220,7 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
                   {selectedUser.locationUpdatedAt && (
                     <DetailRow
                       label="Location updated"
-                      value={new Date(selectedUser.locationUpdatedAt).toLocaleString('en-IN')}
+                      value={formatAdminDateTime(selectedUser.locationUpdatedAt)}
                     />
                   )}
                   <DetailRow label="Region" value={selectedUser.regionalCuisine} />

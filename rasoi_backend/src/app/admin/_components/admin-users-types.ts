@@ -1,3 +1,5 @@
+import { formatAdminDateTime } from '@/app/admin/_components/admin-datetime';
+
 export type AdminUserSyncStatus = 'synced' | 'auth_only';
 
 export type AdminUserRow = {
@@ -49,13 +51,7 @@ export function formatPlanTierLabel(planTier: string): string {
 }
 
 export function formatAdminJoinedAt(iso: string): string {
-  return new Date(iso).toLocaleString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatAdminDateTime(iso);
 }
 
 export function isAuthOnlyRowId(id: string): boolean {

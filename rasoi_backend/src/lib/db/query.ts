@@ -212,6 +212,15 @@ const TABLE_META: Record<string, TableMeta> = {
     hasUpdatedAt: true,
     relations: {},
   },
+  HomeAnnouncement: {
+    table: 'HomeAnnouncement',
+    pk: 'id',
+    uniqueFields: ['id', 'campaignKey'],
+    compoundUniques: {},
+    dateFields: new Set(['startsAt', 'endsAt', 'createdAt', 'updatedAt']),
+    hasUpdatedAt: true,
+    relations: {},
+  },
   SponsorApplication: {
     table: 'SponsorApplication',
     pk: 'id',

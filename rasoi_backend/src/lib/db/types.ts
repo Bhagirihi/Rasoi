@@ -214,6 +214,28 @@ export type AppSettings = {
   updatedAt: Date;
 };
 
+export type HomeAnnouncementAudience = 'all' | 'guest' | 'logged_in' | 'free' | 'paid';
+export type HomeAnnouncementPresentation = 'modal' | 'banner' | 'both';
+
+export type HomeAnnouncement = {
+  id: string;
+  campaignKey: string;
+  enabled: boolean;
+  title: string;
+  body: string;
+  imageUrl: string | null;
+  ctaLabel: string | null;
+  ctaLink: string | null;
+  presentation: HomeAnnouncementPresentation;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  minAppVersion: string | null;
+  audience: HomeAnnouncementAudience;
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type PromoCodeKind = 'trial_extend' | 'yearly_discount';
 
 export type PromoCode = {

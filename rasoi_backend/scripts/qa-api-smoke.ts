@@ -242,6 +242,15 @@ async function main(): Promise<void> {
         playStoreLocation.includes('com.bhagihiri.rasoiapp'),
       'GET /api/play-store redirects to Google Play listing',
     );
+
+    const announcements = await request<{ announcement: null | { campaignKey: string } }>(
+      '/api/announcements/active?appVersion=1.0.6',
+    );
+    record(
+      'TC-API-18',
+      announcements.body.ok && announcements.body.data?.announcement === null,
+      'GET /api/announcements/active returns envelope',
+    );
   } catch (error) {
     console.error('Smoke test aborted:', error instanceof Error ? error.message : error);
     process.exitCode = 1;

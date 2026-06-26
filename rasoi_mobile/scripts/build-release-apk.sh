@@ -11,6 +11,13 @@ if [[ -f "$ROOT/.env" ]]; then
   set +a
 fi
 
+if [[ -f "$ROOT/.env.production" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$ROOT/.env.production"
+  set +a
+fi
+
 MISSING=0
 if [[ -z "${EXPO_PUBLIC_EAS_PROJECT_ID:-}" ]]; then
   echo "[rasoi] Warning: EXPO_PUBLIC_EAS_PROJECT_ID is not set — push tokens will not register."

@@ -18,6 +18,10 @@ import { getEffectivePaymentProviderId } from '@/constants/payments';
 import { useTrialClock } from '@/hooks/useTrialClock';
 import { getTrialNudgeCopy, getTrialNudgeKind, type TrialNudgeKind } from '@/utils/trialNudge';
 import { markTrialNudgeShown, wasTrialNudgeShown } from '@/utils/trialNudgeStorage';
+import {
+  isAnnouncementModalActive,
+  subscribeAnnouncementModal,
+} from '@/utils/announcementModalGate';
 
 export default function TrialEndingSoonModal() {
   const insets = useSafeAreaInsets();
@@ -47,6 +51,11 @@ export default function TrialEndingSoonModal() {
 
   const [visible, setVisible] = useState(false);
   const [activeNudge, setActiveNudge] = useState<TrialNudgeKind | null>(null);
+  const [announcementBlocking, setAnnouncementBlocking] = useState(isAnnouncementModalActive());
+
+  useEffect(() => subscribeAnnouncementModal(() => {
+    setAnnouncementBlocking(isAnnouncementModalActive());
+  }), []);
 
   const nudgeKind = useMemo(
     () =>
@@ -67,7 +76,7 @@ export default function TrialEndingSoonModal() {
     nudgeKind !== null;
 
   useEffect(() => {
-    if (!shouldEvaluate || !trialStartedAt || !nudgeKind) {
+    if (!shouldEvaluate || !trialStartedAt || !nudgeKind || announcementBlocking) {
       setVisible(false);
       setActiveNudge(null);
       return;
@@ -80,7 +89,7 @@ export default function TrialEndingSoonModal() {
       if (cancelled || alreadyShown) return;
 
       timer = setTimeout(() => {
-        if (!cancelled) {
+        if (!cancelled && !isAnnouncementModalActive()) {
           setActiveNudge(nudgeKind);
           setVisible(true);
         }
@@ -91,7 +100,7 @@ export default function TrialEndingSoonModal() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [shouldEvaluate, trialStartedAt, nudgeKind]);
+  }, [shouldEvaluate, trialStartedAt, nudgeKind, announcementBlocking]);
 
   const copy = activeNudge ? getTrialNudgeCopy(activeNudge, trialTimeLabel) : null;
 

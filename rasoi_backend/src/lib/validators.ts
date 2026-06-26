@@ -320,3 +320,61 @@ export const sponsorApplicationSchema = z.object({
     .optional()
     .transform((value) => (value?.trim() ? value.trim() : undefined)),
 });
+
+const homeAnnouncementAudience = z.enum(['all', 'guest', 'logged_in', 'free', 'paid']);
+const homeAnnouncementPresentation = z.enum(['modal', 'banner', 'both']);
+
+const optionalIsoDate = z
+  .string()
+  .trim()
+  .optional()
+  .or(z.literal(''))
+  .transform((value) => (value ? value : undefined));
+
+export const homeAnnouncementCreateSchema = z.object({
+  campaignKey: z
+    .string()
+    .trim()
+    .min(2)
+    .max(80)
+    .regex(/^[a-z0-9_-]+$/i, 'Use letters, numbers, underscores, or hyphens'),
+  enabled: z.boolean().default(false),
+  title: z.string().trim().min(2).max(120),
+  body: z.string().trim().min(2).max(2000),
+  imageUrl: z
+    .string()
+    .url()
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => (value ? value : undefined)),
+  ctaLabel: z
+    .string()
+    .trim()
+    .max(40)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => (value ? value : undefined)),
+  ctaLink: z
+    .string()
+    .trim()
+    .max(500)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => (value ? value : undefined)),
+  presentation: homeAnnouncementPresentation.default('both'),
+  startsAt: optionalIsoDate,
+  endsAt: optionalIsoDate,
+  minAppVersion: z
+    .string()
+    .trim()
+    .max(20)
+    .optional()
+    .or(z.literal(''))
+    .transform((value) => (value ? value : undefined)),
+  audience: homeAnnouncementAudience.default('all'),
+  sortOrder: z.coerce.number().int().min(0).max(999).default(0),
+});
+
+export const homeAnnouncementUpdateSchema = homeAnnouncementCreateSchema.omit({ campaignKey: true }).extend({
+  campaignKey: homeAnnouncementCreateSchema.shape.campaignKey.optional(),
+});

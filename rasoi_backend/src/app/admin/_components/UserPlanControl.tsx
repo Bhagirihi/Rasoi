@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { formatAdminDateTime } from '@/app/admin/_components/admin-datetime';
 import { useToast } from '@/app/admin/_components/Toast';
 import { Badge } from '@/app/admin/_components/ui';
 import {
@@ -16,13 +17,7 @@ const EXTEND_PRESETS = [3, 5, 10] as const;
 function formatTrialEndsAt(trialStartedAt: string | null, trialTotalDays: number): string | null {
   if (!trialStartedAt || trialTotalDays <= 0) return null;
   const endsAt = new Date(trialStartedAt).getTime() + trialTotalDays * 86_400_000;
-  return new Date(endsAt).toLocaleString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return formatAdminDateTime(endsAt);
 }
 
 export default function UserPlanControl({
@@ -129,7 +124,7 @@ export default function UserPlanControl({
           <p>
             Started:{' '}
             {trialStartedAt
-              ? new Date(trialStartedAt).toLocaleString('en-IN')
+              ? formatAdminDateTime(trialStartedAt)
               : 'Not set'}
           </p>
           <p className="mt-1">

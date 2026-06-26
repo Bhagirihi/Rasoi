@@ -3,6 +3,7 @@ import type {
   Admin,
   AffiliateEvent,
   AppSettings,
+  HomeAnnouncement,
   KitchenStyle,
   MealNotificationLog,
   PantrySection,
@@ -41,6 +42,7 @@ type DbClient = {
   pantrySection: Repository<PantrySection>;
   regionalCuisineOption: Repository<RegionalCuisineOption>;
   appSettings: Repository<AppSettings>;
+  homeAnnouncement: Repository<HomeAnnouncement>;
   pushToken: Repository<PushToken>;
   affiliateEvent: Repository<AffiliateEvent>;
   sponsorEvent: Repository<SponsorEvent>;
@@ -71,6 +73,7 @@ function createDbClient(): DbClient {
     pantrySection: createRepository<PantrySection>('PantrySection'),
     regionalCuisineOption: createRepository<RegionalCuisineOption>('RegionalCuisineOption'),
     appSettings: createRepository<AppSettings>('AppSettings'),
+    homeAnnouncement: createRepository<HomeAnnouncement>('HomeAnnouncement'),
     pushToken: createRepository<PushToken>('PushToken'),
     affiliateEvent: createRepository<AffiliateEvent>('AffiliateEvent'),
     sponsorEvent: createRepository<SponsorEvent>('SponsorEvent'),

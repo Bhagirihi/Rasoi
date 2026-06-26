@@ -333,6 +333,27 @@ model SponsorApplication {
   @@schema("rasoi")
 }
 
+model HomeAnnouncement {
+  id             String    @id
+  campaignKey    String    @unique
+  enabled        Boolean   @default(false)
+  title          String
+  body           String
+  imageUrl       String?
+  ctaLabel       String?
+  ctaLink        String?
+  presentation   String    @default("both")
+  startsAt       DateTime?
+  endsAt         DateTime?
+  minAppVersion  String?
+  audience       String    @default("all")
+  sortOrder      Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@schema("rasoi")
+}
+
 model UserFeedback {
   id         String   @id @default(cuid())
   userId     String?

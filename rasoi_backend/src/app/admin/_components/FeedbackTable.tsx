@@ -1,3 +1,4 @@
+import { formatAdminDate } from '@/app/admin/_components/admin-datetime';
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import FeedbackStatusButton from '@/app/admin/_components/FeedbackStatusButton';
@@ -56,11 +57,7 @@ export default function FeedbackTable({ items }: { items: FeedbackListItem[] }) 
             </Badge>
           </td>
           <td className="px-5 py-4 text-sm text-admin-muted">
-            {item.createdAt.toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
+            {formatAdminDate(item.createdAt)}
           </td>
           <td className="px-5 py-4">
             <div className="flex flex-col gap-2">

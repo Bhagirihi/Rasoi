@@ -1,3 +1,4 @@
+import { formatAdminDateTime } from '@/app/admin/_components/admin-datetime';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import { Badge } from '@/app/admin/_components/ui';
 import type { SponsorEventListItem } from '@/lib/sponsor-analytics';
@@ -30,12 +31,7 @@ export default function SponsorEventsTable({
             {item.city ?? item.user?.city ?? '—'}
           </td>
           <td className="px-5 py-4 text-sm text-admin-muted">
-            {item.createdAt.toLocaleString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+            {formatAdminDateTime(item.createdAt)}
           </td>
         </tr>
       ))}

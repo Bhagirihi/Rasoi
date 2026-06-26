@@ -1,3 +1,4 @@
+import { formatAdminDateShort } from '@/app/admin/_components/admin-datetime';
 import Link from 'next/link';
 
 import { GhostButton } from '@/app/admin/_components/ui';
@@ -60,10 +61,7 @@ export default function FeedbackOverviewPanel({
                     {categoryLabel[item.category as keyof typeof categoryLabel] ?? item.category}
                   </span>
                   <span className="text-xs text-admin-muted">
-                    {item.createdAt.toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
+                    {formatAdminDateShort(item.createdAt)}
                   </span>
                 </div>
                 <p className="mt-1 line-clamp-2 text-admin-muted">{item.message}</p>

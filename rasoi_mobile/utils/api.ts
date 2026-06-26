@@ -1,10 +1,25 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 import { getAuthToken } from '@/utils/authToken';
 import { getSupabaseSession } from '@/services/supabaseAuth';
 import { addSentryBreadcrumb, captureException } from '@/utils/sentry';
 
+function parseExpoDevHost(): string | null {
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (!hostUri) return null;
+
+  const normalized = hostUri.replace(/^exp:\/\//, '').replace(/^https?:\/\//, '');
+  const hostname = normalized.split(':')[0]?.trim();
+  if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1') {
+    return null;
+  }
+  return hostname;
+}
+
 function devApiDefault(): string {
+  const host = parseExpoDevHost();
+  if (host) return `http://${host}:3000`;
   return 'http://192.168.1.27:3000';
 }
 
@@ -137,6 +152,7 @@ function isNonCriticalApiPath(path: string): boolean {
     path.includes('/api/recipe-searches') ||
     path.includes('/api/users/me/location') ||
     path.includes('/api/recommendations') ||
+    path.includes('/api/announcements') ||
     /\/api\/recipes\/[^/]+\/(view|cooked)/.test(path)
   );
 }
