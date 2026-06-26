@@ -2,7 +2,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ArrowRight } from 'lucide-react-native';
+import { ArrowLeft, ArrowRight } from 'lucide-react-native';
 import { useMemo, useState, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,7 +18,7 @@ import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import ViewportLazyAdSlot from '@/components/ViewportLazyAdSlot';
 import SponsorOrAd from '@/components/SponsorOrAd';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
-import { InsightBanner, PrimaryButton } from '@/components/ui/Primitives';
+import { InsightBanner } from '@/components/ui/Primitives';
 import { usePantryScreenData } from '@/hooks/usePantryScreenData';
 import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
 import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
@@ -67,7 +67,6 @@ export default function PantryScreen() {
   const {
     pantryIngredients,
     togglePantryIngredient,
-    setPantryFilterActive,
     showPartners,
     partnersInTrialMode,
     pendingPantrySetup,
@@ -79,7 +78,6 @@ export default function PantryScreen() {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
-  const [stickyBarHeight, setStickyBarHeight] = useState(96);
   const [adScrollGeneration, setAdScrollGeneration] = useState(0);
   const { sponsor: pantrySponsor, loading: pantrySponsorLoading } =
     usePlacementSponsor('pantry');
@@ -92,7 +90,6 @@ export default function PantryScreen() {
 
   useDismissOnBlur(useCallback(() => setModalVisible(false), []));
 
-  const scrollBottomPadding = stickyBarHeight + tabBarHeight + spacing.lg;
   const setupSelectedCount = pantryIngredients.length;
 
   const handleToggle = (item: string) => {
@@ -108,19 +105,6 @@ export default function PantryScreen() {
     }
   };
 
-  const handleCookMatches = () => {
-    if (matchCount === 0) return;
-    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setPantryFilterActive(true);
-    router.replace('/(tabs)/recipes');
-  };
-
-  const handleBrowseRecipes = () => {
-    void Haptics.selectionAsync();
-    setPantryFilterActive(false);
-    router.replace('/(tabs)/recipes');
-  };
-
   const handleFinishPantrySetup = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     clearPendingPantrySetup();
@@ -133,33 +117,7 @@ export default function PantryScreen() {
     router.replace('/(tabs)');
   };
 
-  const stickyCta = useMemo(() => {
-    if (matchCount > 0) {
-      return {
-        label: `Cook ${matchCount} ready recipe${matchCount === 1 ? '' : 's'}`,
-        hint: 'Matched to what you have at home',
-        onPress: handleCookMatches,
-        disabled: false,
-        showArrow: true,
-      };
-    }
-    if (setupSelectedCount > 0) {
-      return {
-        label: 'Browse recipes',
-        hint: `${stockStats.percent}% stocked — add more staples for better matches`,
-        onPress: handleBrowseRecipes,
-        disabled: false,
-        showArrow: true,
-      };
-    }
-    return {
-      label: 'Select staples above',
-      hint: 'We’ll show recipes you can cook',
-      onPress: () => undefined,
-      disabled: true,
-      showArrow: false,
-    };
-  }, [matchCount, setupSelectedCount, stockStats.percent]);
+  const scrollBottomPadding = tabBarHeight + spacing.lg;
 
   return (
     <SafeAreaView
@@ -178,11 +136,49 @@ export default function PantryScreen() {
           <AppTabHeader
             compact
             eyebrow={pendingPantrySetup ? 'Welcome to Rasoi' : 'Your kitchen'}
-            title={pendingPantrySetup ? 'Stock your pantry' : "What's at home"}
+            title="What's at home"
             subtitle={
               pendingPantrySetup
                 ? 'Tap what you keep at home.'
                 : 'Tap staples — we match recipes to your diet and cuisines.'
+            }
+            leading={
+              pendingPantrySetup ? (
+                <Pressable
+                  onPress={handleSkipPantrySetup}
+                  hitSlop={12}
+                  accessibilityLabel="Skip pantry setup"
+                  style={styles.setupBackBtn}
+                >
+                  <ArrowLeft size={22} color={themeColors.charcoal} />
+                </Pressable>
+              ) : undefined
+            }
+            trailing={
+              pendingPantrySetup ? (
+                <View style={styles.setupHeaderActions}>
+                  <Pressable
+                    onPress={handleSkipPantrySetup}
+                    hitSlop={8}
+                    testID={testIds.pantrySetupSkip}
+                    style={styles.setupHeaderSkipBtn}
+                  >
+                    <Text style={[styles.setupHeaderSkip, { color: themeColors.muted }]}>Skip</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleFinishPantrySetup}
+                    disabled={setupSelectedCount === 0}
+                    testID={testIds.pantrySetupContinue}
+                    style={[
+                      styles.setupHeaderContinueBtn,
+                      setupSelectedCount === 0 && styles.setupHeaderContinueDisabled,
+                    ]}
+                  >
+                    <Text style={styles.setupHeaderContinueText}>Continue</Text>
+                    <ArrowRight size={14} color={colors.charcoal} />
+                  </Pressable>
+                </View>
+              ) : undefined
             }
           />
 
@@ -346,48 +342,6 @@ export default function PantryScreen() {
         </View>
       </ScrollViewWithFloatingIndicator>
 
-      <SafeAreaView
-        edges={['bottom']}
-        style={[
-          styles.stickyBar,
-          { backgroundColor: themeColors.white, borderTopColor: themeColors.border },
-        ]}
-        onLayout={(event) => {
-          const height = event.nativeEvent.layout.height;
-          if (height > 0 && Math.abs(height - stickyBarHeight) > 2) {
-            setStickyBarHeight(height);
-          }
-        }}
-      >
-        <View style={styles.stickyInner}>
-          {pendingPantrySetup ? (
-            <View style={styles.setupSticky}>
-              <PrimaryButton
-                label="Continue to Home"
-                icon={ArrowRight}
-                onPress={handleFinishPantrySetup}
-                disabled={setupSelectedCount === 0}
-                style={styles.stickyBtnWide}
-              />
-              <Pressable onPress={handleSkipPantrySetup} hitSlop={8} testID={testIds.pantrySetupSkip}>
-                <Text style={[styles.setupSkip, { color: themeColors.muted }]}>Skip for now</Text>
-              </Pressable>
-            </View>
-          ) : (
-            <View style={styles.stickyCtaBlock}>
-              <Text style={[styles.stickyHint, { color: themeColors.muted }]}>{stickyCta.hint}</Text>
-              <PrimaryButton
-                label={stickyCta.label}
-                icon={stickyCta.showArrow ? ArrowRight : undefined}
-                onPress={stickyCta.onPress}
-                disabled={stickyCta.disabled}
-                style={styles.stickyBtnWide}
-              />
-            </View>
-          )}
-        </View>
-      </SafeAreaView>
-
       <AffiliateCheckoutModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
@@ -490,40 +444,37 @@ const styles = StyleSheet.create({
     minWidth: 20,
     textAlign: 'right',
   },
-  setupSticky: {
-    flex: 1,
+  setupBackBtn: {
+    padding: 2,
+  },
+  setupHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: spacing.xs,
   },
-  setupSkip: {
-    fontSize: 12,
+  setupHeaderSkipBtn: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+  setupHeaderSkip: {
+    fontSize: 13,
     fontWeight: '600',
-    textDecorationLine: 'underline',
-    alignSelf: 'center',
   },
-  stickyBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderTopWidth: 1,
-    paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.sm,
-    ...shadows.cardLifted,
+  setupHeaderContinueBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: radius.pill,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: 7,
   },
-  stickyInner: {
-    paddingBottom: spacing.xs,
+  setupHeaderContinueDisabled: {
+    opacity: 0.45,
   },
-  stickyCtaBlock: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  stickyHint: {
-    fontSize: 12,
-    fontWeight: '600',
-    lineHeight: 16,
-    textAlign: 'center',
-  },
-  stickyBtnWide: {
-    width: '100%',
+  setupHeaderContinueText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.charcoal,
   },
 });

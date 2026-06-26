@@ -27,6 +27,8 @@ export function countFullyStockedRecipes(
     dietPreference: DietType;
     regionalCuisine: string;
     pantryIngredients: string[];
+    favoriteCuisines?: string[];
+    allergyExclusions?: string[];
   },
 ): number {
   return filterRecipes(recipes, {

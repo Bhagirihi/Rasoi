@@ -72,7 +72,7 @@ function formatCuisineLabels(ids: string[], kitchenStyles: KitchenStyle[]): stri
 export default function SettingsScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors, colorScheme, setColorScheme, fontScale, setFontScale } = useTheme();
+  const { colors, colorScheme, setColorScheme } = useTheme();
   const { kitchenStyles } = useReferenceData();
   const {
     userName,
@@ -262,11 +262,13 @@ export default function SettingsScreen() {
   };
 
   const handleDeleteAccount = () => {
+    const deleteWarningMessage = isGuest
+      ? 'Google Play subscriptions are not cancelled automatically.\n\nAfter deletion, this guest session is permanently removed and you will not be able to log in again.'
+      : 'Google Play subscriptions are not cancelled automatically.\n\nAfter deletion, your account is permanently removed and you will not be able to log in again.';
+
     showDialog({
       title: isGuest ? 'Delete guest session?' : 'Delete account permanently?',
-      message: isGuest
-        ? 'This removes your guest profile and saved data on our servers.'
-        : 'This permanently deletes your profile, saved recipes, pantry, and sign-in. Active Google Play subscriptions must be cancelled separately.',
+      message: deleteWarningMessage,
       buttons: [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -288,7 +290,7 @@ export default function SettingsScreen() {
 
             showDialog({
               title: 'Confirm your email',
-              message: `Type your email (${userEmail ?? 'your account email'}) in the next step to confirm deletion.`,
+              message: `Your email (${userEmail ?? 'your account email'}) must match to confirm deletion.`,
               buttons: [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -437,37 +439,6 @@ export default function SettingsScreen() {
                     ]}
                   >
                     {mode === 'light' ? 'Light' : 'Dark'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Text style={[styles.appearanceTitle, { color: colors.charcoal, marginTop: spacing.md }]}>
-            Text size
-          </Text>
-          <View style={styles.appearanceRow}>
-            {(['normal', 'large'] as const).map((scale) => {
-              const active = fontScale === scale;
-              return (
-                <Pressable
-                  key={scale}
-                  onPress={() => void setFontScale(scale)}
-                  style={[
-                    styles.appearanceOption,
-                    { borderColor: colors.border, backgroundColor: colors.white },
-                    active && styles.appearanceOptionActive,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${scale} text size`}
-                >
-                  <Text
-                    style={[
-                      styles.appearanceOptionText,
-                      { color: active ? colors.primary : colors.charcoal },
-                      scale === 'large' && { fontSize: 17 },
-                    ]}
-                  >
-                    {scale === 'normal' ? 'Normal' : 'Large'}
                   </Text>
                 </Pressable>
               );

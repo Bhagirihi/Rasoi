@@ -13,9 +13,6 @@ import { semanticColors, type ColorScheme } from '@/constants/designSystem';
 import { colors as brandColors } from '@/constants/theme';
 
 const APPEARANCE_KEY = '@rasoi/appearance';
-const FONT_SCALE_KEY = '@rasoi/font_scale';
-
-export type FontScale = 'normal' | 'large';
 
 export type AppColors = {
   primary: string;
@@ -35,9 +32,6 @@ export type AppColors = {
 type ThemeContextValue = {
   colorScheme: ColorScheme;
   setColorScheme: (scheme: ColorScheme) => Promise<void>;
-  fontScale: FontScale;
-  setFontScale: (scale: FontScale) => Promise<void>;
-  fontScaleMultiplier: number;
   colors: AppColors;
   semantic: (typeof semanticColors)[ColorScheme];
   isDark: boolean;
@@ -65,20 +59,13 @@ function buildAppColors(scheme: ColorScheme): AppColors {
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>('light');
-  const [fontScale, setFontScaleState] = useState<FontScale>('normal');
 
   useEffect(() => {
     void (async () => {
       try {
-        const [storedAppearance, storedFontScale] = await Promise.all([
-          AsyncStorage.getItem(APPEARANCE_KEY),
-          AsyncStorage.getItem(FONT_SCALE_KEY),
-        ]);
+        const storedAppearance = await AsyncStorage.getItem(APPEARANCE_KEY);
         if (storedAppearance === 'light' || storedAppearance === 'dark') {
           setColorSchemeState(storedAppearance);
-        }
-        if (storedFontScale === 'normal' || storedFontScale === 'large') {
-          setFontScaleState(storedFontScale);
         }
       } catch {
         // keep defaults
@@ -91,25 +78,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.setItem(APPEARANCE_KEY, scheme);
   }, []);
 
-  const setFontScale = useCallback(async (scale: FontScale) => {
-    setFontScaleState(scale);
-    await AsyncStorage.setItem(FONT_SCALE_KEY, scale);
-  }, []);
-
-  const fontScaleMultiplier = fontScale === 'large' ? 1.15 : 1;
-
   const value = useMemo<ThemeContextValue>(
     () => ({
       colorScheme,
       setColorScheme,
-      fontScale,
-      setFontScale,
-      fontScaleMultiplier,
       colors: buildAppColors(colorScheme),
       semantic: semanticColors[colorScheme],
       isDark: colorScheme === 'dark',
     }),
-    [colorScheme, fontScale, fontScaleMultiplier, setColorScheme, setFontScale],
+    [colorScheme, setColorScheme],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

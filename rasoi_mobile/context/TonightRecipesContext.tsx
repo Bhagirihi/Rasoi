@@ -314,25 +314,27 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setReadyToCookReady(false);
 
-    if (recipes.length === 0 || pantryIngredients.length === 0) {
+    if (pickPool.length === 0 || pantryIngredients.length === 0) {
       setReadyToCookCount(0);
       setReadyToCookReady(true);
       return;
     }
 
     const task = InteractionManager.runAfterInteractions(() => {
-      const scanPool = recipes.slice(0, READY_TO_COOK_SCAN_LIMIT);
+      const scanPool = pickPool.slice(0, READY_TO_COOK_SCAN_LIMIT);
       const count = countFullyStockedRecipes(scanPool, {
         dietPreference: dietChoiceToFilter(dietChoice),
         regionalCuisine,
+        favoriteCuisines,
         pantryIngredients,
+        allergyExclusions,
       });
       setReadyToCookCount(count);
       setReadyToCookReady(true);
     });
 
     return () => task.cancel();
-  }, [recipes.length, dietChoice, regionalCuisine, pantryIngredients]);
+  }, [pickPool, dietChoice, regionalCuisine, favoriteCuisines, pantryIngredients, allergyExclusions]);
 
   const value = useMemo<TonightRecipesContextValue>(
     () => ({

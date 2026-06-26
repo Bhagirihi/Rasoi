@@ -80,36 +80,15 @@ export default function OnboardingScreen() {
     setStep('cuisine');
   };
 
-  const proceedToLocationOrFinish = async (notificationsEnabled: boolean) => {
+  const proceedToLocationOrFinish = (notificationsEnabled: boolean) => {
     setNotificationsPreference(notificationsEnabled);
-
-    const locationGranted =
-      Platform.OS === 'web' || (await isLocationPermissionGranted());
-    if (!locationGranted) {
-      setStep('location');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await finishOnboarding(notificationsEnabled);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setStep('location');
   };
 
-  const handleCuisineContinue = async () => {
+  const handleCuisineContinue = () => {
     if (selectedCuisines.length === 0) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    const notificationsGranted =
-      Platform.OS === 'web' || (await isNotificationPermissionGranted());
-    if (!notificationsGranted) {
-      setStep('notifications');
-      return;
-    }
-
-    await proceedToLocationOrFinish(true);
+    setStep('notifications');
   };
 
   const handleEnableNotifications = async () => {
@@ -204,6 +183,7 @@ export default function OnboardingScreen() {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
+        eyebrow="Step 3 of 4"
         onEnable={handleEnableNotifications}
         onSkip={handleSkipNotifications}
         skipTestID={testIds.onboardingSkipNotify}
@@ -236,6 +216,7 @@ export default function OnboardingScreen() {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
+        eyebrow="Step 4 of 4"
         onEnable={handleEnableLocation}
         onSkip={handleSkipLocation}
         skipTestID={testIds.onboardingSkipLocation}
@@ -298,6 +279,7 @@ export default function OnboardingScreen() {
         {step === 'diet' ? (
           <>
             <View style={styles.darkContent}>
+              <Text style={styles.cuisineEyebrow}>Step 1 of 4</Text>
               <Text style={styles.darkTitle}>What is your dietary preference?</Text>
               <Text style={styles.darkSubtitle}>This helps us filter dishes you love.</Text>
 

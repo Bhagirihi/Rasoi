@@ -1,4 +1,4 @@
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, usePathname } from 'expo-router';
 import { useMemo } from 'react';
 import { Platform, View } from 'react-native';
 import { Bookmark, BookOpen, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
@@ -30,6 +30,7 @@ function getTabBarLayout(bottomInset: number) {
 export default function TabLayout() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
   const tabBarLayout = useMemo(() => getTabBarLayout(insets.bottom), [insets.bottom]);
   const {
     isHydrated,
@@ -80,6 +81,10 @@ export default function TabLayout() {
 
   if (pendingTrialWelcome && !pendingPantrySetup) {
     return <Redirect href="/(auth)/trial-welcome" />;
+  }
+
+  if (pendingPantrySetup && !pathname.includes('/pantry')) {
+    return <Redirect href="/(tabs)/pantry" />;
   }
 
   return (

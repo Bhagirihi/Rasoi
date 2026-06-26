@@ -7,13 +7,16 @@ export type MealSlot = 'breakfast' | 'lunch' | 'snack' | 'dinner' | 'lateNight';
 
 export const MEAL_SLOTS: MealSlot[] = ['breakfast', 'lunch', 'snack', 'dinner', 'lateNight'];
 
-/** Local send times (hour:minute) per meal — push cron tolerance windows. */
+/** Push nudges fire 2 hours before the meal anchor (plan-ahead reminders). */
+export const MEAL_PUSH_LEAD_HOURS = 2;
+
+/** Local send times (hour:minute) per meal — push cron ±15 min tolerance windows. */
 export const MEAL_PUSH_SCHEDULE: Record<MealSlot, { hour: number; minute: number }> = {
-  breakfast: { hour: 8, minute: 0 },
-  lunch: { hour: 12, minute: 30 },
-  snack: { hour: 16, minute: 0 },
-  dinner: { hour: 19, minute: 30 },
-  lateNight: { hour: 22, minute: 0 },
+  breakfast: { hour: 6, minute: 0 },
+  lunch: { hour: 10, minute: 30 },
+  snack: { hour: 14, minute: 0 },
+  dinner: { hour: 17, minute: 30 },
+  lateNight: { hour: 20, minute: 0 },
 };
 
 export const MEAL_SLOT_LABELS: Record<MealSlot, string> = {

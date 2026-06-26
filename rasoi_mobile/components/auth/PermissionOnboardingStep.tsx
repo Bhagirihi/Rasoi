@@ -12,6 +12,7 @@ import { testIds } from '@/constants/testIds';
 type PermissionOnboardingStepProps = {
   screenTestID?: string;
   skipTestID?: string;
+  eyebrow?: string;
   savingMessage?: string;
   savingSubtitle?: string;
   title: ReactNode;
@@ -28,6 +29,7 @@ type PermissionOnboardingStepProps = {
 export default function PermissionOnboardingStep({
   screenTestID = testIds.screenOnboarding,
   skipTestID,
+  eyebrow,
   savingMessage = 'Setting up your Rasoi…',
   savingSubtitle = 'Saving tastes and reminders',
   title,
@@ -52,6 +54,7 @@ export default function PermissionOnboardingStep({
         </View>
 
         <ScrollViewWithFloatingIndicator {...scrollIndicator} contentContainerStyle={styles.content}>
+          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
           <View style={styles.iconWrap}>{icon}</View>
@@ -132,8 +135,16 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     alignItems: 'center',
   },
+  eyebrow: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: colors.primary,
+  },
   title: {
-    marginTop: 24,
+    marginTop: 16,
     fontSize: 34,
     fontWeight: '700',
     lineHeight: 44,

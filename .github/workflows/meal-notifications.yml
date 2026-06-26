@@ -1,16 +1,18 @@
 # Fires every 15 minutes so each user's local meal window (±15 min) is hit.
-# Vercel Hobby only allows daily crons — use this workflow for all 5 meal pushes.
+# PRIMARY scheduler: Supabase pg_cron (see rasoi_mobile/supabase/migrations/*meal_notification_cron.sql).
+# This workflow is an optional backup if Supabase cron is misconfigured.
 #
 # Repository secrets (Settings → Secrets and variables → Actions):
 #   CRON_SECRET              — same value as Vercel env CRON_SECRET
 #   MEAL_NOTIFICATIONS_URL   — e.g. https://rasoiapplication.in/api/cron/meal-notifications
 
-name: Meal notifications
+name: Meal notifications (backup)
 
 on:
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
+  # Disabled — Supabase pg_cron is primary. Re-enable schedule here if needed:
+  # schedule:
+  #   - cron: '*/15 * * * *'
 
 concurrency:
   group: meal-notifications

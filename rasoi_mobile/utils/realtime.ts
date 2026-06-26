@@ -43,11 +43,29 @@ function scheduleTableChange(table: string): void {
   );
 }
 
+function findExistingSharedChannel(supabase: NonNullable<ReturnType<typeof getSupabaseClient>>) {
+  return (
+    supabase
+      .getChannels()
+      .find(
+        (channel) =>
+          channel.topic === SHARED_CHANNEL_TOPIC ||
+          channel.topic === `realtime:${SHARED_CHANNEL_TOPIC}`,
+      ) ?? null
+  );
+}
+
 function ensureSharedChannel(): void {
   if (sharedChannel) return;
 
   const supabase = getSupabaseClient();
   if (!supabase) return;
+
+  const existing = findExistingSharedChannel(supabase);
+  if (existing) {
+    sharedChannel = existing;
+    return;
+  }
 
   sharedChannel = supabase.channel(SHARED_CHANNEL_TOPIC);
 

@@ -1,8 +1,14 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
-import { Moon, RefreshCw, Timer } from "lucide-react-native";
+import { Moon, Timer } from "lucide-react-native";
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -15,7 +21,7 @@ import GuestRegisterBanner from "@/components/home/GuestRegisterBanner";
 import HomeSeasonalRail from "@/components/home/HomeSeasonalRail";
 import { AppTabHeader } from "@/components/AppTabHeader";
 import HomeBrowseLink from "@/components/home/HomeBrowseLink";
-import HomeRecipeRow from "@/components/home/HomeRecipeRow";
+import HomeRecipeRow, { HomePickShuffleButton } from "@/components/home/HomeRecipeRow";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import SponsorOrAd from "@/components/SponsorOrAd";
@@ -26,7 +32,13 @@ import { EmptyState } from "@/components/ui/Primitives";
 import { useRecipeDiscovery } from "@/hooks/useRecipeDiscovery";
 import { useDismissOnBlur } from "@/hooks/useDismissOnBlur";
 import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
-import { colors, layout, radius, scrollIndicator, spacing } from "@/constants/theme";
+import {
+  colors,
+  layout,
+  radius,
+  scrollIndicator,
+  spacing,
+} from "@/constants/theme";
 import { appFonts } from "@/constants/fonts";
 import { testIds } from "@/constants/testIds";
 import { useTheme } from "@/context/ThemeContext";
@@ -82,7 +94,9 @@ export default function HomeScreen() {
   const [modalMissing, setModalMissing] = useState<string[]>([]);
   const [modalPartner, setModalPartner] = useState<AffiliatePartner>("blinkit");
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
-  const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
+  const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(
+    null,
+  );
   const [heroIntroFinished, setHeroIntroFinished] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -107,15 +121,17 @@ export default function HomeScreen() {
 
   const { greeting, subtitle } = getLocalizedGreeting();
   const isLateNight = meal.isOvernightDual === true;
-  const hideFeaturedOvernightExtras =
-    meal.isOvernightDual === true || meal.isTomorrowBreakfast === true;
   const discoveryReady = !recipesLoading && rankingReady;
   const heroDataReady = discoveryReady;
   const showHeroIntro = !heroIntroFinished;
-  const showLateNightPick = heroIntroFinished && meal.isOvernightDual && !!lateNightPick;
+  const showLateNightPick =
+    heroIntroFinished && meal.isOvernightDual && !!lateNightPick;
   const showPickCard = heroIntroFinished && !!topPick;
   const showTonightSkeleton =
-    heroIntroFinished && !discoveryReady && tonightCards.length === 0 && !showLateNightPick;
+    heroIntroFinished &&
+    !discoveryReady &&
+    tonightCards.length === 0 &&
+    !showLateNightPick;
   const moreRecipeCount = Math.max(rankedRecipes.length - 4, 0);
   const showRecipesCluster =
     showLateNightPick ||
@@ -189,7 +205,9 @@ export default function HomeScreen() {
       return;
     }
     if (missing.length === 0) {
-      void openBrandSearch(recipe.title, partner, { context: "home_recipe_card" });
+      void openBrandSearch(recipe.title, partner, {
+        context: "home_recipe_card",
+      });
       return;
     }
     setModalPartner(partner);
@@ -227,9 +245,7 @@ export default function HomeScreen() {
               : greeting
           }
           subtitle={
-            userCity
-              ? `${subtitle} · Picks near ${userCity}`
-              : subtitle
+            userCity ? `${subtitle} · Picks near ${userCity}` : subtitle
           }
         />
 
@@ -283,15 +299,10 @@ export default function HomeScreen() {
             <View style={styles.recipesCluster}>
               {showLateNightPick && lateNightPick ? (
                 <View style={styles.tonightBlock}>
-                  <HomeSectionHeader
-                    title={meal.lateNightPickEyebrow ?? '🌙 Late night pick'}
-                    variant="featured"
-                    icon={Moon}
-                    iconColor={themeColors.muted}
-                  />
                   <HomeRecipeRow
                     key={lateNightPick.id}
                     section="pick"
+                    sectionLabel={meal.lateNightPickEyebrow ?? "🌙 Late night pick"}
                     recipe={lateNightPick}
                     pantryMatchPercent={lateNightPantryMatch}
                     cookCtaLabel="Cook now"
@@ -300,40 +311,29 @@ export default function HomeScreen() {
                     onShopMissing={(missing, partner) =>
                       openShopModal(lateNightPick, missing, partner)
                     }
+                    onNotInterested={() => handleNotInterested(lateNightPick)}
                   />
                 </View>
               ) : null}
 
               {showPickCard && topPick ? (
                 <View style={styles.tonightBlock}>
-                  <HomeSectionHeader
-                    title={
+                  <HomeRecipeRow
+                    key={topPick.id}
+                    section="pick"
+                    sectionLabel={
                       meal.isOvernightDual
                         ? (meal.tomorrowTopPickEyebrow ?? meal.topPickEyebrow)
                         : meal.topPickEyebrow
                     }
-                    subtitle={
-                      hideFeaturedOvernightExtras
-                        ? undefined
-                        : 'Best match for you right now'
+                    headerTrailing={
+                      <HomePickShuffleButton onPress={() => void refreshHomePicks(true)} />
                     }
-                    variant="featured"
-                  />
-                  <Pressable
-                    onPress={() => void refreshHomePicks(true)}
-                    style={styles.shuffleButton}
-                    accessibilityRole="button"
-                    accessibilityLabel="Show different recipe ideas"
-                  >
-                    <RefreshCw size={14} color={colors.primary} />
-                    <Text style={styles.shuffleButtonText}>Different ideas</Text>
-                  </Pressable>
-                  <HomeRecipeRow
-                    key={topPick.id}
-                    section="pick"
                     recipe={topPick}
                     pantryMatchPercent={topPickPantryMatch}
-                    cookCtaLabel={meal.isOvernightDual ? 'Plan breakfast' : meal.cookCta}
+                    cookCtaLabel={
+                      meal.isOvernightDual ? "Plan breakfast" : meal.cookCta
+                    }
                     onPress={() => router.push(`/recipe/${topPick.id}`)}
                     onCookTonight={() => openCookTonight(topPick)}
                     onShopMissing={(missing, partner) =>
@@ -347,7 +347,11 @@ export default function HomeScreen() {
               {showTonightSkeleton ? (
                 <View style={styles.tonightBlock}>
                   <HomeSectionHeader title={meal.alsoLabel} />
-                  <TonightCardsSkeleton label="" isLateNight={isLateNight} count={3} />
+                  <TonightCardsSkeleton
+                    label=""
+                    isLateNight={isLateNight}
+                    count={3}
+                  />
                 </View>
               ) : null}
 
@@ -364,7 +368,7 @@ export default function HomeScreen() {
                       return (
                         <View key={recipe.id}>
                           <HomeRecipeRow
-                            section="also"
+                            section="pick"
                             recipe={recipe}
                             pantryMatchPercent={getPantryMatchPercent(
                               recipe,
@@ -376,6 +380,7 @@ export default function HomeScreen() {
                             onShopMissing={(missing, partner) =>
                               openShopModal(recipe, missing, partner)
                             }
+                            onNotInterested={() => handleNotInterested(recipe)}
                           />
                         </View>
                       );
@@ -411,11 +416,14 @@ export default function HomeScreen() {
                 },
               ]}
             >
-              <Text style={[styles.messageTitle, { color: themeColors.charcoal }]}>
+              <Text
+                style={[styles.messageTitle, { color: themeColors.charcoal }]}
+              >
                 No recipes match your filters
               </Text>
               <Text style={[styles.messageBody, { color: themeColors.muted }]}>
-                Try updating diet or region in Settings, or turn off pantry mode.
+                Try updating diet or region in Settings, or turn off pantry
+                mode.
               </Text>
               {pantryFilterActive ? (
                 <Pressable
@@ -482,21 +490,6 @@ const styles = StyleSheet.create({
   },
   tonightBlock: {
     gap: spacing.sm,
-  },
-  shuffleButton: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(232, 93, 44, 0.1)',
-  },
-  shuffleButtonText: {
-    fontFamily: appFonts.bodyBold,
-    fontSize: 13,
-    color: colors.primary,
   },
   tonightList: {
     gap: spacing.md,

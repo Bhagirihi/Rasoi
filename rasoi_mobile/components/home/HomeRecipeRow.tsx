@@ -1,20 +1,23 @@
-import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronRight, Info, Leaf, Bookmark } from 'lucide-react-native';
-import type { ReactNode } from 'react';
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from "expo-haptics";
+import { LinearGradient } from "expo-linear-gradient";
+import { ChevronRight, Info, Leaf, Bookmark, RefreshCw } from "lucide-react-native";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { appFonts } from '@/constants/fonts';
-import { colors, radius, shadows, spacing } from '@/constants/theme';
-import type { Recipe } from '@/data/mockRecipes';
-import { useTheme } from '@/context/ThemeContext';
-import { useAppContext } from '@/context/AppContext';
-import { useAppDialog } from '@/context/AppDialogContext';
-import type { AffiliatePartner } from '@/utils/affiliate';
-import { getHomeDisplayTags, type HomeRecipeSection } from '@/utils/homeRecipeTags';
-import { getRecipeVisualIdentity } from '@/utils/recipeVisualIdentity';
-import { partitionIngredients } from '@/utils/recipes';
+import { appFonts } from "@/constants/fonts";
+import { colors, radius, shadows, spacing } from "@/constants/theme";
+import type { Recipe } from "@/data/mockRecipes";
+import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
+import { useAppDialog } from "@/context/AppDialogContext";
+import type { AffiliatePartner } from "@/utils/affiliate";
+import {
+  getHomeDisplayTags,
+  type HomeRecipeSection,
+} from "@/utils/homeRecipeTags";
+import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
+import { partitionIngredients } from "@/utils/recipes";
 
 type HomeRecipeRowProps = {
   recipe: Recipe;
@@ -31,26 +34,37 @@ type HomeRecipeRowProps = {
   hideMissingOrder?: boolean;
 };
 
-const PRIMARY_SOFT = '#FFF0EA';
-const PREP_PILL_BG = '#F3EDE6';
-const DIET_PILL_BG = '#E8F5EE';
-const MATCH_PILL_BG = '#FFF4ED';
-const ORDER_PARTNERS_LINE_COMPACT = 'Missing items · Blinkit · Zepto · Instamart';
+const PRIMARY_SOFT = "#FFF0EA";
+const PREP_PILL_BG = "#F3EDE6";
+const DIET_PILL_BG = "#E8F5EE";
+const MATCH_PILL_BG = "#FFF4ED";
+const ORDER_PARTNERS_LINE_COMPACT =
+  "Missing items · Blinkit · Zepto · Instamart";
 const ACTION_RADIUS = 10;
 
 function ThemeAccentBand({
   children,
   compact = false,
+  isDark,
 }: {
   children: ReactNode;
   compact?: boolean;
+  isDark: boolean;
 }) {
+  const gradientColors = isDark
+    ? (["rgba(255,107,53,0.22)", "rgba(255,107,53,0.1)"] as const)
+    : (["#FFE8DC", PRIMARY_SOFT] as const);
+
   return (
     <LinearGradient
-      colors={['#FFE8DC', PRIMARY_SOFT]}
+      colors={gradientColors}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      style={[styles.themeBand, compact && styles.themeBandCompact]}
+      style={[
+        styles.themeBand,
+        compact && styles.themeBandCompact,
+        isDark && styles.themeBandDark,
+      ]}
     >
       {!compact ? <View style={styles.pickAccent} /> : null}
       {children}
@@ -58,11 +72,30 @@ function ThemeAccentBand({
   );
 }
 
-function missingPreview(missing: string[], maxItems = 2): string {
-  if (missing.length === 0) return '';
-  const head = missing.slice(0, maxItems).join(', ');
-  const tail = missing.length > maxItems ? ` +${missing.length - maxItems}` : '';
-  return `${head}${tail}`;
+function formatMissingList(missing: string[]): string {
+  return missing.join(", ");
+}
+
+export function HomePickShuffleButton({ onPress }: { onPress: () => void }) {
+  const { isDark } = useTheme();
+
+  return (
+    <Pressable
+      onPress={() => {
+        void Haptics.selectionAsync();
+        onPress();
+      }}
+      style={[
+        styles.shuffleButton,
+        isDark && { backgroundColor: "rgba(255,107,53,0.18)" },
+      ]}
+      accessibilityRole="button"
+      accessibilityLabel="Show different recipe ideas"
+    >
+      <RefreshCw size={14} color={colors.primary} />
+      <Text style={styles.shuffleButtonText}>Different ideas</Text>
+    </Pressable>
+  );
 }
 
 function MetaPill({
@@ -90,38 +123,55 @@ function MetaTagsRow({
   pantryMatchPercent,
   matchColor,
   themeColors,
+  isDark,
 }: {
   recipe: Recipe;
   section: HomeRecipeSection;
   pantryMatchPercent: number;
   matchColor: string;
-  themeColors: { charcoal: string; muted: string };
+  themeColors: { charcoal: string; muted: string; border: string };
+  isDark: boolean;
 }) {
   const tags = getHomeDisplayTags(recipe, section);
   const visual = getRecipeVisualIdentity(recipe);
   const styleTag = tags[0];
+  const prepBg = isDark ? "rgba(255,255,255,0.08)" : PREP_PILL_BG;
+  const dietBg = isDark ? "rgba(0,168,107,0.18)" : DIET_PILL_BG;
+  const matchBg = isDark ? "rgba(255,107,53,0.18)" : MATCH_PILL_BG;
 
   return (
     <View style={styles.metaRow}>
       <MetaPill
         label={`${recipe.prepTime} min`}
-        backgroundColor={PREP_PILL_BG}
+        backgroundColor={prepBg}
         textColor={themeColors.charcoal}
       />
       <MetaPill
         label={recipe.dietType}
-        backgroundColor={DIET_PILL_BG}
+        backgroundColor={dietBg}
         textColor={colors.green}
         icon={<Leaf size={11} color={colors.green} strokeWidth={2.5} />}
       />
       <MetaPill
         label={`${pantryMatchPercent}% match`}
-        backgroundColor={MATCH_PILL_BG}
+        backgroundColor={matchBg}
         textColor={matchColor}
       />
       {styleTag ? (
-        <View style={[styles.stylePill, { borderColor: `${visual.accent}55` }]}>
-          <Text style={[styles.stylePillText, { color: visual.accent }]}>{styleTag}</Text>
+        <View
+          style={[
+            styles.stylePill,
+            {
+              borderColor: `${visual.accent}55`,
+              backgroundColor: isDark
+                ? "rgba(255,255,255,0.06)"
+                : "rgba(255,255,255,0.85)",
+            },
+          ]}
+        >
+          <Text style={[styles.stylePillText, { color: visual.accent }]}>
+            {styleTag}
+          </Text>
         </View>
       ) : null}
     </View>
@@ -130,7 +180,7 @@ function MetaTagsRow({
 
 export default function HomeRecipeRow({
   recipe,
-  section = 'also',
+  section = "pick",
   sectionLabel,
   headerTrailing,
   pantryMatchPercent,
@@ -141,8 +191,9 @@ export default function HomeRecipeRow({
   onNotInterested,
   hideMissingOrder = false,
 }: HomeRecipeRowProps) {
-  const { colors: themeColors } = useTheme();
-  const { isRecipeSaved, toggleSavedRecipe, pantryIngredients } = useAppContext();
+  const { colors: themeColors, isDark } = useTheme();
+  const { isRecipeSaved, toggleSavedRecipe, pantryIngredients } =
+    useAppContext();
   const { showDialog } = useAppDialog();
   const hasDescription = Boolean(recipe.description?.trim());
   const missing = useMemo(
@@ -151,8 +202,7 @@ export default function HomeRecipeRow({
   );
   const hasMissing = missing.length > 0;
   const showOrderUi = hasMissing && !hideMissingOrder;
-  const isFeatured = section === 'pick';
-  const isAlso = section === 'also';
+  const isPick = section === "pick";
   const saved = isRecipeSaved(recipe.id);
   const matchColor =
     pantryMatchPercent >= 70
@@ -165,37 +215,49 @@ export default function HomeRecipeRow({
     <View
       style={[
         styles.card,
-        isFeatured && styles.cardFeatured,
+        isPick && styles.cardFeatured,
         {
-          backgroundColor: isFeatured ? '#FFFBF8' : themeColors.white,
-          borderColor: isFeatured ? 'rgba(255,107,53,0.2)' : themeColors.border,
+          backgroundColor: isPick
+            ? isDark
+              ? themeColors.white
+              : "#FFFBF8"
+            : themeColors.white,
+          borderColor: isPick
+            ? isDark
+              ? "rgba(255,107,53,0.35)"
+              : "rgba(255,107,53,0.2)"
+            : themeColors.border,
         },
       ]}
     >
-      <View style={[styles.cardBody, isAlso && styles.cardBodyAlso, isFeatured && styles.cardBodyFeatured]}>
+      <View style={[styles.cardBody, isPick && styles.cardBodyFeatured]}>
+        {isPick && (sectionLabel || headerTrailing) ? (
+          <View style={styles.pickHeaderRow}>
+            {sectionLabel ? (
+              <Text style={styles.pickEyebrow} numberOfLines={1}>
+                {sectionLabel}
+              </Text>
+            ) : (
+              <View style={styles.sectionLabelSpacer} />
+            )}
+            {headerTrailing ?? null}
+          </View>
+        ) : null}
+
         <Pressable
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onPress();
           }}
-          style={({ pressed }) => [styles.content, pressed && styles.contentPressed]}
+          style={({ pressed }) => [
+            styles.content,
+            pressed && styles.contentPressed,
+          ]}
         >
-          {sectionLabel || headerTrailing ? (
-            <View style={styles.sectionHeaderRow}>
-              {sectionLabel ? (
-                <Text style={styles.sectionLabel} numberOfLines={1}>
-                  {sectionLabel}
-                </Text>
-              ) : (
-                <View style={styles.sectionLabelSpacer} />
-              )}
-              {headerTrailing ?? null}
-            </View>
-          ) : null}
           <View style={styles.titleRow}>
             <Text
               style={[
-                isAlso ? styles.titleAlso : styles.title,
+                styles.title,
                 styles.titleFlex,
                 { color: themeColors.charcoal },
               ]}
@@ -229,13 +291,13 @@ export default function HomeRecipeRow({
               }}
               hitSlop={10}
               style={styles.bookmarkBtn}
-              accessibilityLabel={saved ? 'Remove from saved' : 'Save recipe'}
+              accessibilityLabel={saved ? "Remove from saved" : "Save recipe"}
               accessibilityRole="button"
             >
               <Bookmark
                 size={20}
                 color={saved ? colors.primary : themeColors.muted}
-                fill={saved ? colors.primary : 'transparent'}
+                fill={saved ? colors.primary : "transparent"}
               />
             </Pressable>
           </View>
@@ -246,46 +308,35 @@ export default function HomeRecipeRow({
             pantryMatchPercent={pantryMatchPercent}
             matchColor={matchColor}
             themeColors={themeColors}
+            isDark={isDark}
           />
         </Pressable>
 
         {showOrderUi ? (
-          <View style={[styles.orderBlock, isFeatured && styles.orderBlockFeatured]}>
-            <ThemeAccentBand compact={isFeatured}>
-              {isFeatured ? (
-                <View style={styles.orderBandStack}>
-                  <Text style={styles.bandLabelCompact} numberOfLines={1}>
-                    {ORDER_PARTNERS_LINE_COMPACT}
-                  </Text>
-                  <Text
-                    style={[styles.missingInline, { color: themeColors.muted }]}
-                    numberOfLines={1}
-                  >
-                    Missing: {missingPreview(missing, 4)}
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.bandLabel} numberOfLines={1}>
+          <View style={[styles.orderBlock, styles.orderBlockFeatured]}>
+            <ThemeAccentBand compact isDark={isDark}>
+              <View style={styles.orderBandStack}>
+                <Text
+                  style={[
+                    styles.bandLabelCompact,
+                    isDark && styles.bandLabelDark,
+                  ]}
+                >
                   {ORDER_PARTNERS_LINE_COMPACT}
                 </Text>
-              )}
+                <Text style={[styles.missingInline, { color: themeColors.muted }]}>
+                  Missing: {formatMissingList(missing)}
+                </Text>
+              </View>
             </ThemeAccentBand>
-            {!isFeatured ? (
-              <Text
-                style={[styles.missingPreview, { color: themeColors.muted }]}
-                numberOfLines={1}
-              >
-                {missingPreview(missing)}
-              </Text>
-            ) : null}
           </View>
         ) : null}
 
         <View
           style={[
             styles.actionsSection,
-            isAlso && styles.actionsSectionAlso,
-            isFeatured && styles.actionsSectionFeatured,
+            styles.actionsSectionFeatured,
+            isDark && styles.actionsSectionDark,
           ]}
         >
           <View style={styles.actionRow}>
@@ -297,16 +348,23 @@ export default function HomeRecipeRow({
                 }}
                 style={({ pressed }) => [
                   styles.actionBtn,
-                  isAlso && styles.actionBtnAlso,
-                  isFeatured && styles.actionBtnFeatured,
+                  styles.actionBtnFeatured,
                   styles.orderBtn,
+                  {
+                    backgroundColor: themeColors.white,
+                    borderColor: colors.primary,
+                  },
                   pressed && styles.actionBtnPressed,
                 ]}
               >
                 <Text style={styles.orderBtnText} numberOfLines={1}>
                   Order missing
                 </Text>
-                <ChevronRight size={14} color={colors.primary} strokeWidth={2.5} />
+                <ChevronRight
+                  size={14}
+                  color={colors.primary}
+                  strokeWidth={2.5}
+                />
               </Pressable>
             ) : null}
 
@@ -317,23 +375,19 @@ export default function HomeRecipeRow({
               }}
               style={({ pressed }) => [
                 styles.actionBtn,
-                isAlso && styles.actionBtnAlso,
-                isFeatured && styles.actionBtnFeatured,
+                styles.actionBtnFeatured,
                 styles.cookBtn,
                 showOrderUi ? styles.cookBtnSplit : styles.cookBtnFull,
                 pressed && styles.actionBtnPressed,
               ]}
             >
-              <Text
-                style={[styles.cookBtnText, isAlso && styles.cookBtnTextAlso]}
-                numberOfLines={1}
-              >
+              <Text style={styles.cookBtnText} numberOfLines={1}>
                 {cookCtaLabel}
               </Text>
               <ChevronRight size={14} color={colors.white} strokeWidth={2.5} />
             </Pressable>
           </View>
-          {isFeatured && onNotInterested ? (
+          {isPick && onNotInterested ? (
             <Pressable
               onPress={() => {
                 void Haptics.selectionAsync();
@@ -341,7 +395,11 @@ export default function HomeRecipeRow({
               }}
               style={styles.notInterestedBtn}
             >
-              <Text style={styles.notInterestedText}>Not for me</Text>
+              <Text
+                style={[styles.notInterestedText, { color: themeColors.muted }]}
+              >
+                Not for me
+              </Text>
             </Pressable>
           ) : null}
         </View>
@@ -354,7 +412,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...shadows.card,
   },
   cardFeatured: {
@@ -362,19 +420,22 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.primary,
   },
   themeBand: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(255,107,53,0.16)',
+    borderBottomColor: "rgba(255,107,53,0.16)",
   },
   themeBandCompact: {
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
     gap: 0,
     borderBottomWidth: 0,
+  },
+  themeBandDark: {
+    borderBottomColor: "rgba(255,107,53,0.25)",
   },
   orderBandStack: {
     flex: 1,
@@ -392,14 +453,17 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.8,
     lineHeight: 15,
-    color: '#C44A00',
+    color: "#C44A00",
   },
   bandLabelCompact: {
     fontFamily: appFonts.bodyBold,
     fontSize: 10,
     letterSpacing: 0.4,
     lineHeight: 13,
-    color: '#C44A00',
+    color: "#C44A00",
+  },
+  bandLabelDark: {
+    color: "#FF8F66",
   },
   missingInline: {
     fontFamily: appFonts.bodyMedium,
@@ -422,37 +486,47 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.sm,
   },
-  cardBodyAlso: {
-    padding: spacing.md,
-    gap: spacing.sm,
-  },
   content: {
     gap: spacing.xs,
   },
   contentPressed: {
     opacity: 0.92,
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  pickHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: spacing.sm,
-    marginBottom: 2,
+    marginBottom: spacing.xs,
   },
-  sectionLabel: {
+  pickEyebrow: {
     flex: 1,
     fontFamily: appFonts.display,
-    fontSize: 16,
-    lineHeight: 20,
-    letterSpacing: -0.1,
+    fontSize: 18,
+    lineHeight: 23,
+    letterSpacing: -0.15,
+    color: colors.primary,
+  },
+  shuffleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.pill,
+    backgroundColor: "rgba(232, 93, 44, 0.1)",
+  },
+  shuffleButtonText: {
+    fontFamily: appFonts.bodyBold,
+    fontSize: 12,
     color: colors.primary,
   },
   sectionLabelSpacer: {
     flex: 1,
   },
   titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.xs,
   },
   titleFlex: {
@@ -472,16 +546,10 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     letterSpacing: -0.2,
   },
-  titleAlso: {
-    fontFamily: appFonts.display,
-    fontSize: 20,
-    lineHeight: 26,
-    letterSpacing: -0.15,
-  },
   metaRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
     gap: spacing.xs,
     marginTop: 2,
   },
@@ -490,7 +558,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: spacing.sm,
     paddingVertical: 6,
-    backgroundColor: 'rgba(255,255,255,0.85)',
   },
   stylePillText: {
     fontFamily: appFonts.bodyBold,
@@ -498,8 +565,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   metaPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     borderRadius: radius.pill,
     paddingHorizontal: spacing.sm,
@@ -511,55 +578,43 @@ const styles = StyleSheet.create({
     fontSize: 10,
     letterSpacing: 0.3,
   },
-  missingPreview: {
-    fontFamily: appFonts.bodyMedium,
-    fontSize: 12,
-    lineHeight: 17,
-    paddingHorizontal: spacing.xs,
-  },
   actionsSection: {
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255,107,53,0.14)',
+    borderTopColor: "rgba(255,107,53,0.14)",
   },
   actionsSectionFeatured: {
     marginTop: spacing.xs,
     paddingTop: spacing.xs,
   },
-  actionsSectionAlso: {
-    marginTop: spacing.xs,
-    paddingTop: spacing.xs,
+  actionsSectionDark: {
+    borderTopColor: "rgba(255,107,53,0.22)",
   },
   actionRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
+    flexDirection: "row",
+    alignItems: "stretch",
     gap: spacing.sm,
   },
   notInterestedBtn: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     marginTop: spacing.xs,
     paddingVertical: spacing.xs,
   },
   notInterestedText: {
     fontFamily: appFonts.body,
     fontSize: 12,
-    color: colors.muted,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
   actionBtn: {
     minHeight: 42,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 4,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: ACTION_RADIUS,
-  },
-  actionBtnAlso: {
-    minHeight: 38,
-    paddingVertical: spacing.xs + 2,
   },
   actionBtnFeatured: {
     minHeight: 36,
@@ -571,9 +626,7 @@ const styles = StyleSheet.create({
   },
   orderBtn: {
     flex: 0.42,
-    backgroundColor: colors.white,
     borderWidth: 1.5,
-    borderColor: colors.primary,
   },
   orderBtnText: {
     fontFamily: appFonts.bodyBold,
@@ -594,8 +647,5 @@ const styles = StyleSheet.create({
     fontFamily: appFonts.bodyBold,
     fontSize: 12,
     color: colors.white,
-  },
-  cookBtnTextAlso: {
-    fontSize: 11,
   },
 });

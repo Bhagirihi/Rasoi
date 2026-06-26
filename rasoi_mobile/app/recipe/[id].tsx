@@ -96,7 +96,47 @@ export default function RecipeDetailScreen() {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(
     () => new Set(),
   );
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, isDark } = useTheme();
+
+  const surface = useMemo(
+    () => ({
+      description: { color: themeColors.muted },
+      statCard: {
+        backgroundColor: themeColors.white,
+        borderColor: themeColors.border,
+      },
+      statLabel: { color: themeColors.muted },
+      statValue: { color: themeColors.charcoal },
+      sectionTitle: { color: themeColors.charcoal },
+      toolChip: {
+        backgroundColor: themeColors.white,
+        borderColor: themeColors.border,
+      },
+      toolChipActive: {
+        borderColor: colors.primary,
+        backgroundColor: isDark
+          ? "rgba(255,107,53,0.2)"
+          : "rgba(255,107,53,0.12)",
+      },
+      toolChipText: { color: themeColors.muted },
+      stepRow: {
+        backgroundColor: themeColors.white,
+        borderColor: themeColors.border,
+      },
+      stepRowDone: isDark
+        ? {
+            backgroundColor: "rgba(0,168,107,0.12)",
+            borderColor: "rgba(0,168,107,0.3)",
+          }
+        : undefined,
+      stepText: { color: themeColors.charcoal },
+      stickyBar: {
+        backgroundColor: themeColors.white,
+        borderTopColor: themeColors.border,
+      },
+    }),
+    [themeColors, isDark],
+  );
 
   useEffect(() => {
     setCookMode(startInCookMode);
@@ -229,8 +269,12 @@ export default function RecipeDetailScreen() {
 
   if (!recipe) {
     return (
-      <SafeAreaView style={styles.notFound}>
-        <Text style={styles.notFoundTitle}>Recipe not found</Text>
+      <SafeAreaView
+        style={[styles.notFound, { backgroundColor: themeColors.cream }]}
+      >
+        <Text style={[styles.notFoundTitle, { color: themeColors.charcoal }]}>
+          Recipe not found
+        </Text>
         <Pressable onPress={() => router.back()} style={styles.notFoundBtn}>
           <Text style={styles.notFoundBtnText}>Go Back</Text>
         </Pressable>
@@ -371,104 +415,36 @@ export default function RecipeDetailScreen() {
             <PlanBadge />
           </View>
 
-          <Text style={styles.description}>{recipe.description}</Text>
+          <Text style={[styles.description, surface.description]}>
+            {recipe.description}
+          </Text>
 
           <RecipeSafetyDisclaimer />
 
           <View style={styles.statsRow}>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Calories</Text>
-              <Text style={styles.statValue}>{recipe.calories}</Text>
+            <View style={[styles.statCard, surface.statCard]}>
+              <Text style={[styles.statLabel, surface.statLabel]}>Calories</Text>
+              <Text style={[styles.statValue, surface.statValue]}>
+                {recipe.calories}
+              </Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Region</Text>
-              <Text style={[styles.statValue, { color: colors.primary }]}>
+            <View style={[styles.statCard, surface.statCard]}>
+              <Text style={[styles.statLabel, surface.statLabel]}>Region</Text>
+              <Text style={[styles.statValue, surface.statValue, { color: colors.primary }]}>
                 {recipe.region}
               </Text>
             </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statLabel}>Diet</Text>
-              <Text style={[styles.statValue, { color: colors.green }]}>
+            <View style={[styles.statCard, surface.statCard]}>
+              <Text style={[styles.statLabel, surface.statLabel]}>Diet</Text>
+              <Text style={[styles.statValue, surface.statValue, { color: colors.green }]}>
                 {recipe.dietType}
               </Text>
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>How to cook</Text>
-          <View style={styles.stepsToolbar}>
-            <Pressable
-              onPress={toggleCookMode}
-              style={[styles.toolChip, cookMode && styles.toolChipActive]}
-            >
-              <Text
-                style={[
-                  styles.toolChipText,
-                  cookMode && styles.toolChipTextActive,
-                ]}
-              >
-                {cookMode ? "Cook mode on" : "Cook mode"}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                void Haptics.selectionAsync();
-                setStepsLang((lang) => (lang === "en" ? "hi" : "en"));
-              }}
-              style={[
-                styles.toolChip,
-                stepsLang === "hi" && styles.toolChipActive,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.toolChipText,
-                  stepsLang === "hi" && styles.toolChipTextActive,
-                ]}
-              >
-                {stepsLang === "hi" ? "हिंदी" : "English"}
-              </Text>
-            </Pressable>
-          </View>
-          {displaySteps.map((step, index) => {
-            const done = completedSteps.has(index);
-            return (
-              <Pressable
-                key={`${stepsLang}-${index}`}
-                onPress={cookMode ? () => toggleStepDone(index) : undefined}
-                style={[
-                  styles.stepRow,
-                  cookMode && styles.stepRowCook,
-                  done && styles.stepRowDone,
-                ]}
-              >
-                <View
-                  style={[styles.stepNumber, done && styles.stepNumberDone]}
-                >
-                  {done ? (
-                    <Check size={14} color={colors.white} strokeWidth={3} />
-                  ) : (
-                    <Text style={styles.stepNumberText}>{index + 1}</Text>
-                  )}
-                </View>
-                <Text
-                  style={[styles.stepText, cookMode && styles.stepTextCook]}
-                >
-                  {step}
-                </Text>
-              </Pressable>
-            );
-          })}
-
-          <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
-            <SponsorOrAd
-              sponsor={recipeSponsor}
-              loading={recipeSponsorLoading}
-              placement="recipe"
-              compact
-            />
-          </ViewportLazyAdSlot>
-
-          <Text style={styles.sectionTitle}>Ingredients</Text>
+          <Text style={[styles.sectionTitle, surface.sectionTitle]}>
+            Ingredients
+          </Text>
           <View style={styles.stepsToolbar}>
             {[0.5, 1, 2].map((multiplier) => {
               const active = servingMultiplier === multiplier;
@@ -479,12 +455,24 @@ export default function RecipeDetailScreen() {
                     void Haptics.selectionAsync();
                     setServingMultiplier(multiplier);
                   }}
-                  style={[styles.toolChip, active && styles.toolChipActive]}
+                  style={[
+                    styles.toolChip,
+                    surface.toolChip,
+                    active && surface.toolChipActive,
+                  ]}
                   accessibilityRole="button"
                   accessibilityLabel={`Scale servings ${multiplier}x`}
                 >
-                  <Text style={[styles.toolChipText, active && styles.toolChipTextActive]}>
-                    {multiplier === 1 ? servingMultiplierLabel(1, householdSize) : `${multiplier}×`}
+                  <Text
+                    style={[
+                      styles.toolChipText,
+                      surface.toolChipText,
+                      active && styles.toolChipTextActive,
+                    ]}
+                  >
+                    {multiplier === 1
+                      ? servingMultiplierLabel(1, householdSize)
+                      : `${multiplier}×`}
                   </Text>
                 </Pressable>
               );
@@ -503,13 +491,104 @@ export default function RecipeDetailScreen() {
               missing.length > 0 && showPartners ? openCheckout : undefined
             }
           />
+
+          <Text style={[styles.sectionTitle, surface.sectionTitle]}>
+            How to cook
+          </Text>
+          <View style={styles.stepsToolbar}>
+            <Pressable
+              onPress={toggleCookMode}
+              style={[
+                styles.toolChip,
+                surface.toolChip,
+                cookMode && surface.toolChipActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.toolChipText,
+                  surface.toolChipText,
+                  cookMode && styles.toolChipTextActive,
+                ]}
+              >
+                {cookMode ? "Cook mode on" : "Cook mode"}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                void Haptics.selectionAsync();
+                setStepsLang((lang) => (lang === "en" ? "hi" : "en"));
+              }}
+              style={[
+                styles.toolChip,
+                surface.toolChip,
+                stepsLang === "hi" && surface.toolChipActive,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.toolChipText,
+                  surface.toolChipText,
+                  stepsLang === "hi" && styles.toolChipTextActive,
+                ]}
+              >
+                {stepsLang === "hi" ? "हिंदी" : "English"}
+              </Text>
+            </Pressable>
+          </View>
+          {displaySteps.map((step, index) => {
+            const done = completedSteps.has(index);
+            return (
+              <Pressable
+                key={`${stepsLang}-${index}`}
+                onPress={cookMode ? () => toggleStepDone(index) : undefined}
+                style={[
+                  styles.stepRow,
+                  surface.stepRow,
+                  cookMode && styles.stepRowCook,
+                  done &&
+                    (surface.stepRowDone
+                      ? surface.stepRowDone
+                      : styles.stepRowDone),
+                ]}
+              >
+                <View
+                  style={[styles.stepNumber, done && styles.stepNumberDone]}
+                >
+                  {done ? (
+                    <Check size={14} color={colors.white} strokeWidth={3} />
+                  ) : (
+                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  )}
+                </View>
+                <Text
+                  style={[
+                    styles.stepText,
+                    surface.stepText,
+                    cookMode && styles.stepTextCook,
+                  ]}
+                >
+                  {step}
+                </Text>
+              </Pressable>
+            );
+          })}
+
+          <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
+            <SponsorOrAd
+              sponsor={recipeSponsor}
+              loading={recipeSponsorLoading}
+              placement="recipe"
+              compact
+            />
+          </ViewportLazyAdSlot>
         </View>
       </ScrollView>
 
       {!(deliveryModalVisible || modalVisible) && (
         <SafeAreaView
           edges={["bottom"]}
-          style={styles.stickyBar}
+          style={[styles.stickyBar, surface.stickyBar]}
           onLayout={(event) => {
             const height = event.nativeEvent.layout.height;
             if (height > 0 && Math.abs(height - stickyBarHeight) > 2) {

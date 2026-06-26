@@ -127,6 +127,46 @@ export function formatDifficultyLabel(difficulty: string): string {
   return difficulty.toLowerCase();
 }
 
-export function buildMealNotificationBody(recipe: RecipeResponse): string {
-  return `${recipe.title} · ${recipe.prepTime} min · ${formatDifficultyLabel(recipe.difficulty)}`;
+export function getMissingIngredientNames(
+  recipe: RecipeResponse,
+  pantryIngredients: string[],
+  maxItems = 6,
+): string[] {
+  const seen = new Set<string>();
+  const missing: string[] = [];
+
+  for (const ingredient of recipe.ingredients) {
+    const rawName = ingredient.name?.trim();
+    if (!rawName || pantryHasIngredient(pantryIngredients, rawName)) continue;
+
+    const label = canonicalizeIngredientName(rawName);
+    const key = label.toLowerCase();
+    if (!key || seen.has(key)) continue;
+
+    seen.add(key);
+    missing.push(label);
+    if (missing.length >= maxItems) break;
+  }
+
+  return missing;
+}
+
+export function buildMealNotificationBody(
+  recipe: RecipeResponse,
+  pantryIngredients: string[],
+): string {
+  const missing = getMissingIngredientNames(recipe, pantryIngredients, 6);
+
+  if (missing.length === 0) {
+    if (pantryIngredients.length === 0) {
+      return 'Add pantry items in the app to see what you need.';
+    }
+    return 'You have all ingredients in your pantry.';
+  }
+
+  const preview = missing.slice(0, 4);
+  const hidden = missing.length - preview.length;
+  const list = preview.join(', ') + (hidden > 0 ? ` +${hidden} more` : '');
+
+  return `Missing: ${list}`;
 }

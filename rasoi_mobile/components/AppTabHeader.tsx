@@ -11,6 +11,7 @@ export function AppTabHeader({
   title,
   subtitle,
   eyebrow,
+  leading,
   trailing,
   testID,
   compact = false,
@@ -18,6 +19,8 @@ export function AppTabHeader({
   title: string;
   subtitle?: string;
   eyebrow?: string;
+  /** Icon or control shown to the left of the title (e.g. back). */
+  leading?: ReactNode;
   trailing?: ReactNode;
   testID?: string;
   /** Tighter title block for dense screens (e.g. Pantry). */
@@ -48,14 +51,21 @@ export function AppTabHeader({
           {eyebrow}
         </Text>
       ) : null}
-      <Text
-        variant="display"
-        scheme={colorScheme}
-        style={[styles.title, compact && styles.titleCompact]}
-        {...a11yHeader(title)}
-      >
-        {title}
-      </Text>
+      <View style={styles.titleRow}>
+        {leading ? <View style={styles.leading}>{leading}</View> : null}
+        <Text
+          variant="display"
+          scheme={colorScheme}
+          style={[
+            styles.title,
+            compact && styles.titleCompact,
+            leading ? styles.titleWithLeading : null,
+          ]}
+          {...a11yHeader(title)}
+        >
+          {title}
+        </Text>
+      </View>
       {subtitle ? (
         <Text
           variant="body"
@@ -86,10 +96,22 @@ const styles = StyleSheet.create({
   eyebrow: {
     marginTop: spacing.md,
   },
-  title: {
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
     marginTop: spacing.sm,
+  },
+  leading: {
+    marginTop: spacing.xs,
+  },
+  title: {
+    flex: 1,
     fontSize: 28,
     lineHeight: 34,
+  },
+  titleWithLeading: {
+    marginTop: 0,
   },
   titleCompact: {
     fontSize: 24,

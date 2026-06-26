@@ -279,7 +279,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const tokenResult = await getExpoPushTokenDetailed();
       if (!tokenResult.ok) {
-        captureMessage(`push_token_failed: ${tokenResult.reason}`, 'warning');
+        const reason = tokenResult.reason.toLowerCase();
+        const isExpectedFailure =
+          reason.includes('expo go') ||
+          reason.includes('too_many_registrations') ||
+          reason.includes('simulator');
+        if (!isExpectedFailure) {
+          captureMessage(`push_token_failed: ${tokenResult.reason}`, 'warning');
+        }
         return;
       }
 
@@ -368,9 +375,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           notificationsEnabled: user.notificationsEnabled,
         });
       }
-      setPantryIngredients(
-        pendingPantrySetupRef.current ? [] : user.pantryIngredients,
-      );
+      setPantryIngredients(user.pantryIngredients);
       setSavedRecipeIds(user.savedRecipeIds);
       applyPlanState(planFromUser(user));
       void saveCachedUserProfile(user);
@@ -529,10 +534,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         try {
           const user = await fetchCurrentUser();
           applyUserProfile(user);
-          if (pendingPantry) {
-            setPantryIngredients([]);
-            void updatePantryIngredients([]).catch(() => undefined);
-          }
           await syncOnboardingIfNeeded(user);
           return;
         } catch (error) {
@@ -743,14 +744,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const legacyToken = await getAuthToken();
       if (session?.access_token || legacyToken) {
         await syncPendingOnboarding();
+        await syncPushTokenToServer(payload.notificationsEnabled);
       }
+
       authLog('completeOnboarding:done', {
         syncedToServer: Boolean(session?.access_token || legacyToken),
         showTrialWelcome,
       });
       return showTrialWelcome;
     },
-    [syncPendingOnboarding],
+    [syncPendingOnboarding, syncPushTokenToServer],
   );
 
   const sendEmailOtpCode = useCallback(async (name: string, phone: string, email: string) => {

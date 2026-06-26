@@ -108,15 +108,17 @@ Send test: Admin → user → **Send meal notification** → pick **Dinner**.
 
 ## Meal push schedule (server)
 
-| Slot | IST |
-|------|-----|
-| Breakfast | 8:00 AM |
-| Lunch | 12:30 PM |
-| Snack | 4:00 PM |
-| Dinner | 7:00 PM |
-| Late night | 10:00 PM |
+Pushes fire **2 hours before** the meal anchor (plan-ahead nudge). Default timezone `Asia/Kolkata` (±15 min).
 
-Cron: GitHub Actions every 15 min → `/api/cron/meal-notifications`
+| Slot | Push (IST) | Meal on Home |
+|------|------------|--------------|
+| Breakfast | 6:00 AM | 8:00 AM |
+| Lunch | 10:30 AM | 12:30 PM |
+| Snack | 2:00 PM | 4:00 PM |
+| Dinner | 5:30 PM | 7:30 PM |
+| Late night | 8:00 PM | from 9:30 PM |
+
+Cron: Supabase pg_cron (5 daily jobs) → `/api/cron/meal-notifications`
 
 ---
 

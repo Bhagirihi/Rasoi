@@ -94,13 +94,18 @@ Optional GitHub Actions backup: set repository secrets `KEEP_ALIVE_URL` and `CRO
 
 ### Meal push notifications (5× daily)
 
-Personalized breakfast, lunch, snack, dinner, and late-night picks are sent via **GitHub Actions** every 15 minutes (not Vercel cron — Hobby plan is daily-only).
+Personalized breakfast, lunch, snack, dinner, and late-night picks run via **Supabase pg_cron** — **5 daily jobs** (2 hours before each meal anchor, not Vercel — Hobby plan is daily-only).
 
-1. Set `CRON_SECRET` on Vercel (same value used below).
-2. In GitHub → **Settings → Secrets and variables → Actions**, add:
-   - `CRON_SECRET` — matches Vercel
-   - `MEAL_NOTIFICATIONS_URL` — `https://your-app.vercel.app/api/cron/meal-notifications`
-3. Enable Actions on the repo. Workflow: `.github/workflows/meal-notifications.yml`
+**Why GitHub Actions was used before:** Vercel Hobby crons are daily-only; GitHub Actions could hit the API every 15 minutes. Supabase `pg_cron` + `pg_net` is a better fit — scheduling lives next to the database and does not depend on the repo.
+
+1. Apply migration `rasoi_mobile/supabase/migrations/20250626120000_meal_notification_cron.sql` (or `supabase db push`).
+2. Set `CRON_SECRET` on Vercel.
+3. Run **once** in Supabase SQL Editor: `rasoi_backend/scripts/setup-supabase-cron-vault.sql`  
+   - `rasoi_api_base_url` → `https://rasoiapplication.in`  
+   - `rasoi_cron_secret` → same value as Vercel `CRON_SECRET`
+4. Verify in Supabase → **Integrations → Cron** (jobs `rasoi-push-breakfast` … `rasoi-push-late-night`, once daily each).
+
+Optional backup: `.github/workflows/meal-notifications.yml` (manual `workflow_dispatch` only).
 
 Local test:
 
@@ -115,7 +120,7 @@ curl -H "Authorization: Bearer your-cron-secret" \
   "https://your-app.vercel.app/api/cron/meal-notifications?forceSlot=breakfast&userId=USER_ID"
 ```
 
-Meal send times (user timezone, default `Asia/Kolkata`): **8:00**, **12:30**, **16:00**, **19:00**, **22:00** (±15 min).
+Meal push times (user timezone, default `Asia/Kolkata`, **2 hr before meal**): **6:00**, **10:30**, **14:00**, **17:30**, **20:00** (±15 min). Meal anchors on Home: 8:00, 12:30, 16:00, 19:30, 21:30+.
 
 ## Mobile app integration
 

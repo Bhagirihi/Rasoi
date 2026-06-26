@@ -29,9 +29,14 @@ export async function requestUserLocation(): Promise<UserLocationSnapshot | null
     return null;
   }
 
-  const position = await Location.getCurrentPositionAsync({
-    accuracy: Location.Accuracy.Balanced,
-  });
+  let position: Location.LocationObject;
+  try {
+    position = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+  } catch {
+    return null;
+  }
 
   const { latitude, longitude } = position.coords;
   let city: string | null = null;

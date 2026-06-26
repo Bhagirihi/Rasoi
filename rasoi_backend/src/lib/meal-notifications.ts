@@ -7,7 +7,6 @@ import {
   getLocalTimeParts,
   getMealSlotsDueNow,
   getNextMealSlotLabel,
-  MEAL_SLOT_LABELS,
   minutesUntilNextMeal,
   type MealSlot,
 } from '@/lib/meal-time';
@@ -244,8 +243,8 @@ export async function runMealNotifications(
       const recipe = pick.recipe;
 
       const payload = buildPayload(recipe, mealSlot, user, now);
-      const body = buildMealNotificationBody(recipe);
-      const mealSlotLabel = MEAL_SLOT_LABELS[mealSlot];
+      const pantryIngredients = parseJson<string[]>(user.pantryIngredients, []);
+      const body = buildMealNotificationBody(recipe, pantryIngredients);
 
       if (dryRun) {
         result.notificationsSent += tokens.length;
@@ -259,7 +258,7 @@ export async function runMealNotifications(
       }
 
       const messages = tokens.map((token) =>
-        buildMealPushMessage(token, { mealSlotLabel, body, payload }),
+        buildMealPushMessage(token, { body, payload }),
       );
 
       const pushResults = await sendExpoPushMessages(messages);

@@ -40,7 +40,6 @@ export interface CustomPushPayload {
 export function buildMealPushMessage(
   expoPushToken: string,
   options: {
-    mealSlotLabel: string;
     body: string;
     payload: MealPushPayload;
   },
@@ -48,8 +47,7 @@ export function buildMealPushMessage(
   return {
     to: expoPushToken,
     sound: 'default',
-    title: 'Rasoi',
-    subtitle: options.mealSlotLabel,
+    title: options.payload.recipeTitle.trim() || 'Suggested recipe',
     body: options.body,
     data: options.payload as unknown as Record<string, unknown>,
     priority: 'high',

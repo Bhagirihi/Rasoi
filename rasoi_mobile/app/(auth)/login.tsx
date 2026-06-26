@@ -31,7 +31,6 @@ import { authError, authLog, maskEmail } from "@/utils/authLogger";
 import { isEmailDeliveryUnavailableError } from "@/utils/emailDeliveryErrors";
 import { warmApiConnection } from "@/utils/api";
 import { getLoginEmailValidationError } from "@/utils/identityValidation";
-import { promptNotificationPermissionOnAuth } from "@/utils/notifications";
 import { normalizeEmail } from "@/utils/storage";
 
 type LoginStep = "email" | "otp";
@@ -206,7 +205,6 @@ export default function LoginScreen() {
       const nav = await verifyLoginEmailOtp(normalizedEmail, code);
       authLog("login:verifyOtp_success");
       verified = true;
-      await promptNotificationPermissionOnAuth();
       navigateAfterAuth(nav);
     } catch (error) {
       authError("login:verifyOtp_failed", error, {

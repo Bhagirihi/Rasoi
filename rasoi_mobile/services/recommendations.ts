@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Recipe } from '@/data/mockRecipes';
-import { apiFetch } from '@/utils/api';
+import { authApiFetch } from '@/utils/api';
 import { parseJson } from '@/utils/parseJson';
 import { dietChoiceToDietType } from '@/utils/recipeFilters';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
@@ -162,14 +162,14 @@ export async function fetchRecommendations(options?: {
   }
   const query = params.toString();
 
-  return apiFetch<RecommendationsResponse>(
+  return authApiFetch<RecommendationsResponse>(
     `/api/recommendations${query ? `?${query}` : ''}`,
   );
 }
 
 export async function logRecipeView(recipeId: string): Promise<void> {
   try {
-    await apiFetch(`/api/recipes/${encodeURIComponent(recipeId)}/view`, {
+    await authApiFetch(`/api/recipes/${encodeURIComponent(recipeId)}/view`, {
       method: 'POST',
       body: JSON.stringify({}),
     });
@@ -180,7 +180,7 @@ export async function logRecipeView(recipeId: string): Promise<void> {
 
 export async function logRecipeCooked(recipeId: string): Promise<void> {
   try {
-    await apiFetch(`/api/recipes/${encodeURIComponent(recipeId)}/cooked`, {
+    await authApiFetch(`/api/recipes/${encodeURIComponent(recipeId)}/cooked`, {
       method: 'POST',
       body: JSON.stringify({}),
     });
@@ -190,7 +190,7 @@ export async function logRecipeCooked(recipeId: string): Promise<void> {
 }
 
 export async function dismissRecommendation(recipeId: string): Promise<void> {
-  await apiFetch('/api/recommendations/dismiss', {
+  await authApiFetch('/api/recommendations/dismiss', {
     method: 'POST',
     body: JSON.stringify({ recipeId }),
   });
@@ -202,7 +202,7 @@ export type RecentCookItem = {
 };
 
 export async function fetchRecentCooks(limit = 8): Promise<RecentCookItem[]> {
-  const response = await apiFetch<{
+  const response = await authApiFetch<{
     items: Array<{ recipe: ApiRecipeRow; cookedAt: string }>;
   }>(`/api/users/me/recent-cooks?limit=${limit}`);
   return response.items.map((item) => ({

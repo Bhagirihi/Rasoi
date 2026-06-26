@@ -261,15 +261,31 @@ export const INTEGRATION_SERVICES: IntegrationEntry[] = [
     docsPath: 'docs/HOSTINGER.md',
   },
   {
+    id: 'supabase-cron',
+    name: 'Supabase Cron (pg_cron)',
+    category: 'infrastructure',
+    purpose: 'Meal push notifications every 15 min via pg_net → Rasoi API.',
+    usedIn: [
+      'rasoi_mobile/supabase/migrations/20250626120000_meal_notification_cron.sql',
+      'rasoi_backend/scripts/setup-supabase-cron-vault.sql',
+    ],
+    account: 'Supabase Dashboard → Integrations → Cron',
+    envVars: ['Vault: rasoi_api_base_url', 'Vault: rasoi_cron_secret (= Vercel CRON_SECRET)'],
+    status: 'configured',
+    statusNote:
+      'Five daily jobs (2 hr before meal anchors, IST). GitHub Actions workflow is manual backup only.',
+    docsPath: 'rasoi_backend/README.md',
+  },
+  {
     id: 'github-actions',
     name: 'GitHub Actions',
     category: 'Marketing & ops',
-    purpose: 'Meal notification cron every 15 min + Instagram campaign schedule.',
+    purpose: 'Instagram campaign schedule; optional manual meal-notification backup.',
     usedIn: ['.github/workflows/meal-notifications.yml', 'instagram-campaign.yml'],
     account: 'GitHub repo: Bhagirihi/Rasoi',
     envVars: ['CRON_SECRET', 'MEAL_NOTIFICATIONS_URL (GitHub secrets)'],
     status: 'configured',
-    statusNote: 'Calls /api/cron/meal-notifications on production API.',
+    statusNote: 'Meal notifications: workflow_dispatch only. Instagram campaign still scheduled.',
     consoleUrl: 'https://github.com/Bhagirihi/Rasoi/actions',
   },
   {

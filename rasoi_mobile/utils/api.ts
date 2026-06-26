@@ -130,6 +130,48 @@ export type ApiFetchOptions = {
   timeoutMs?: number;
 };
 
+function isNonCriticalApiPath(path: string): boolean {
+  return (
+    path.includes('/api/sponsor-events') ||
+    path.includes('/api/affiliate-events') ||
+    path.includes('/api/recipe-searches') ||
+    path.includes('/api/users/me/location') ||
+    path.includes('/api/recommendations') ||
+    /\/api\/recipes\/[^/]+\/(view|cooked)/.test(path)
+  );
+}
+
+function shouldReportApiErrorToSentry(error: unknown, path: string): boolean {
+  if (isNonCriticalApiPath(path)) {
+    return false;
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  const lower = message.toLowerCase();
+
+  if (lower.includes('unauthorized') || lower.includes('not authenticated')) {
+    return false;
+  }
+
+  if (
+    lower.includes('network request failed') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('request timed out')
+  ) {
+    return false;
+  }
+
+  if (
+    lower.includes('terms and privacy') ||
+    lower.includes('invalid or expired email verification') ||
+    lower.includes('plan upgrades must go through')
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
 let apiWarmPromise: Promise<void> | null = null;
 
 /** Wake the backend while the user reads the OTP email (reduces cold-start delay on verify). */
@@ -194,13 +236,7 @@ export async function apiFetch<T>(
       throw new Error('Request timed out. Check your connection and try again.');
     }
 
-    const isNonCriticalPath =
-      path.includes('/api/sponsor-events') ||
-      path.includes('/api/affiliate-events') ||
-      path.includes('/api/recipe-searches') ||
-      path.includes('/api/users/me/location');
-
-    if (!isNonCriticalPath) {
+    if (shouldReportApiErrorToSentry(error, path)) {
       captureException(error, {
         url,
         method: init?.method ?? 'GET',
