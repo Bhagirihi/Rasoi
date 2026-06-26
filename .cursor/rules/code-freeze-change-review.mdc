@@ -1,0 +1,40 @@
+---
+description: Frozen production baseline — review every change for feasibility before editing
+alwaysApply: true
+---
+
+# Code freeze & change review
+
+## Branches
+
+| Branch | Role |
+|--------|------|
+| **`main`** | **Frozen production.** Matches live Vercel (`rasoiapplication.in`). No direct feature work here unless user explicitly asks to release. |
+| **`development`** | **Active work branch.** All new changes start here. Merge to `main` only after QA + user approval to release. |
+
+**Frozen baseline (both branches start here):** `92a4765` (2026-06-26) — regional partners admin, dynamic mobile partners, recommendations hardening, admin console, announcements, permissions onboarding, RevenueCat/reference realtime, SEO fixes.
+
+## Before implementing any user change
+
+1. **Confirm branch** — Default to `development`. Warn once if the user is on `main` or asks to edit production without a release plan.
+2. **Review first** — Read affected files and trace impact (backend API, Supabase `rasoi` schema, mobile app, admin, deploy/APK rules).
+3. **Feasibility check** — Compatible with:
+   - Supabase as DB source of truth (no Prisma client)
+   - Region-scoped partners (`rasoi.PartnerLink.region`)
+   - Dynamic partner lists from backend (no hardcoded partner IDs in UI)
+   - Vercel ↔ GitHub sync and production QA before push
+4. **Warn once if not feasible** — One clear warning per request: what breaks, safer scope, what you need from the user. Then implement the narrowest safe version or stop and wait.
+
+## Default behavior
+
+- **Minimal diffs** on the frozen baseline; no unrelated refactors.
+- **Do not** undo freeze-era patterns (re-hardcode partners, skip region, bypass `normalizeRecipeIngredients`).
+- **Do** state when a migration, APK rebuild, or `main` deploy is required.
+
+## Release path (development → main)
+
+1. QA on `development` (API smoke; device QA if mobile changed).
+2. Commit + push `development`.
+3. Merge/rebase into `main`, push `main`, deploy Vercel prod only after GitHub is updated.
+
+If the user confirms after a feasibility warning, proceed with the agreed scope only.
