@@ -263,8 +263,8 @@ export const INTEGRATION_SERVICES: IntegrationEntry[] = [
   {
     id: 'supabase-cron',
     name: 'Supabase Cron (pg_cron)',
-    category: 'infrastructure',
-    purpose: 'Meal push notifications every 15 min via pg_net → Rasoi API.',
+    category: 'Backend & data',
+    purpose: 'Five daily meal push crons via pg_net → Rasoi API (2 hr before each meal window).',
     usedIn: [
       'rasoi_mobile/supabase/migrations/20250626120000_meal_notification_cron.sql',
       'rasoi_backend/scripts/setup-supabase-cron-vault.sql',
