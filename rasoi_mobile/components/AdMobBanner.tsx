@@ -28,6 +28,7 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
   const { colors: themeColors, isDark } = useTheme();
   const [adsModule, setAdsModule] = useState<BannerModule | null>(null);
   const [adFailed, setAdFailed] = useState(false);
+  const [adLoaded, setAdLoaded] = useState(false);
 
   useEffect(() => {
     if (!showAds || !isAdMobNativeAvailable()) {
@@ -58,7 +59,9 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
 
   useEffect(() => {
     setAdFailed(false);
-  }, [placement, showAds]);
+    setAdLoaded(false);
+    onVisibilityChange?.(false);
+  }, [placement, showAds, onVisibilityChange]);
 
   if (!showAds || Platform.OS === 'web' || !isAdMobNativeAvailable() || adFailed) {
     return null;
@@ -77,6 +80,7 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
     <View
       style={[
         styles.wrap,
+        !adLoaded && styles.wrapHidden,
         {
           backgroundColor: themeColors.white,
           borderColor: adBorder,
@@ -88,7 +92,10 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
         unitId={getAdMobBannerUnitId(Platform.OS, placement)}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
-        onAdLoaded={() => onVisibilityChange?.(true)}
+        onAdLoaded={() => {
+          setAdLoaded(true);
+          onVisibilityChange?.(true);
+        }}
         onAdFailedToLoad={() => {
           setAdFailed(true);
           onVisibilityChange?.(false);
@@ -107,5 +114,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  wrapHidden: {
+    height: 0,
+    marginVertical: 0,
+    borderWidth: 0,
+    opacity: 0,
   },
 });

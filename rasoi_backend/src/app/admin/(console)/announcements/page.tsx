@@ -3,8 +3,10 @@ import Link from 'next/link';
 
 import AnnouncementEnabledToggle from '@/app/admin/_components/AnnouncementEnabledToggle';
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { DataTable } from '@/app/admin/_components/DataTable';
-import { Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
+import { Badge, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteHomeAnnouncementAction } from '@/app/admin/announcement-actions';
 import { db } from '@/lib/db';
 
@@ -21,9 +23,9 @@ export default async function AdminAnnouncementsPage() {
   });
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Home announcements"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/announcements"
         description="Backend-controlled modal and banner on Home. Dismissed once per campaign on device. Lower priority than email verification and trial paywall."
         action={<PrimaryButton href="/admin/announcements/new">New campaign</PrimaryButton>}
       />
@@ -31,6 +33,7 @@ export default async function AdminAnnouncementsPage() {
       <DataTable
         columns={['Campaign', 'Presentation', 'Audience', 'Schedule', 'Status', 'Actions']}
         emptyMessage="No announcements yet. Create a campaign to nudge users without an app release."
+        footer={`${announcements.length} campaign${announcements.length === 1 ? '' : 's'}`}
       >
         {announcements.map((row) => (
           <tr key={row.id} className="transition hover:bg-[#f7f2ea]">
@@ -68,6 +71,6 @@ export default async function AdminAnnouncementsPage() {
           </tr>
         ))}
       </DataTable>
-    </div>
+    </AdminPageLayout>
   );
 }

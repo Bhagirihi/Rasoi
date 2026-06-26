@@ -1,15 +1,18 @@
 import SponsorForm from '@/app/admin/(console)/sponsors/SponsorForm';
-import { GhostButton, PageHeader } from '@/app/admin/_components/ui';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 
 export default function NewSponsorPage() {
   return (
-    <div className="space-y-8">
-      <PageHeader
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/sponsors"
         title="Add sponsor"
         description="Choose a screen placement (Home, Recipes, Pantry, Saved, or Recipe detail), then add brand copy and affiliate search terms."
-        action={<GhostButton href="/admin/sponsors">Back to sponsors</GhostButton>}
+        backHref="/admin/sponsors"
+        backLabel="Back to sponsors"
       />
       <SponsorForm />
-    </div>
+    </AdminPageLayout>
   );
 }

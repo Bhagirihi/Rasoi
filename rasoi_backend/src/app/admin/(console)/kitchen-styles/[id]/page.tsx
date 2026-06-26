@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 
 import KitchenStyleForm from '@/app/admin/(console)/kitchen-styles/KitchenStyleForm';
-import { PageHeader } from '@/app/admin/_components/ui';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { ensureKitchenStyles } from '@/lib/kitchen-styles';
 import { db } from '@/lib/db';
 
@@ -17,12 +18,15 @@ export default async function EditKitchenStylePage({
   if (!style) notFound();
 
   return (
-    <div className="space-y-8">
-      <PageHeader
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/kitchen-styles"
         title={`Edit ${style.label}`}
         description="Update label, imagery, region mapping, or disable this style in the app."
+        backHref="/admin/kitchen-styles"
+        backLabel="Back to kitchen styles"
       />
       <KitchenStyleForm style={style} />
-    </div>
+    </AdminPageLayout>
   );
 }

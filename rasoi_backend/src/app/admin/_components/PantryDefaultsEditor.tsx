@@ -127,7 +127,7 @@ export default function PantryDefaultsEditor({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-admin-border bg-[#faf8f4] px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] border border-admin-border bg-[#faf8f4] px-4 py-3">
         <p className="text-sm text-admin-muted">
           <span className="font-semibold text-admin-ink">{selected.size}</span> default items ·{' '}
           {visibleCount} shown · {catalog.length} total in catalog
@@ -139,7 +139,7 @@ export default function PantryDefaultsEditor({
 
       <div className="space-y-4">
         {grouped.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-admin-border px-4 py-8 text-center text-sm text-admin-muted">
+          <p className="rounded-[1.25rem] border border-dashed border-admin-border px-4 py-8 text-center text-sm text-admin-muted">
             No ingredients match your search.
           </p>
         ) : (

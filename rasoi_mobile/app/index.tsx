@@ -6,6 +6,7 @@ import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { colors } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { hasLegalConsent, saveLegalConsent } from '@/utils/legalConsent';
+import { shouldShowPermissionsOnboarding } from '@/utils/permissionsOnboarding';
 import { ensureTelemetryStarted } from '@/utils/telemetry';
 
 const BOOTSTRAP_STEPS = [
@@ -14,9 +15,12 @@ const BOOTSTRAP_STEPS = [
 ];
 
 export default function Index() {
-  const { isHydrated, hasCompletedOnboarding, isLoggedIn, pendingTrialWelcome, pendingPantrySetup } = useAppContext();
+  const { isHydrated, hasCompletedOnboarding, isLoggedIn, pendingTrialWelcome, pendingPantrySetup, userCity } =
+    useAppContext();
   const [legalReady, setLegalReady] = useState(false);
   const [legalConsented, setLegalConsented] = useState(false);
+  const [permissionsReady, setPermissionsReady] = useState(false);
+  const [needsPermissions, setNeedsPermissions] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -33,7 +37,19 @@ export default function Index() {
     })();
   }, [hasCompletedOnboarding, isHydrated, isLoggedIn]);
 
-  if (!legalReady || !isHydrated) {
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || !hasCompletedOnboarding) {
+      setPermissionsReady(true);
+      setNeedsPermissions(false);
+      return;
+    }
+    void shouldShowPermissionsOnboarding(userCity).then((needs) => {
+      setNeedsPermissions(needs);
+      setPermissionsReady(true);
+    });
+  }, [hasCompletedOnboarding, isHydrated, isLoggedIn, userCity]);
+
+  if (!legalReady || !isHydrated || (isLoggedIn && hasCompletedOnboarding && !permissionsReady)) {
     return (
       <View style={styles.loading}>
         <AppSavingOverlay visible steps={BOOTSTRAP_STEPS} />
@@ -51,6 +67,10 @@ export default function Index() {
 
   if (!hasCompletedOnboarding) {
     return <Redirect href="/(auth)/onboarding" />;
+  }
+
+  if (needsPermissions) {
+    return <Redirect href="/(auth)/onboarding?permissionsOnly=1" />;
   }
 
   if (pendingPantrySetup) {

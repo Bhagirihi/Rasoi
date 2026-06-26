@@ -1,9 +1,11 @@
 import Link from 'next/link';
 
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import KitchenStyleStatusToggle from '@/app/admin/(console)/kitchen-styles/KitchenStyleStatusToggle';
-import { Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
+import { Badge, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteKitchenStyleAction } from '@/app/admin/kitchen-style-actions';
 import { getAllKitchenStyles } from '@/lib/kitchen-styles';
 
@@ -11,9 +13,9 @@ export default async function AdminKitchenStylesPage() {
   const styles = await getAllKitchenStyles();
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Kitchen styles"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/kitchen-styles"
         description="Manage cuisine vibes shown during onboarding and in settings. Disabled styles are hidden from the app."
         action={<PrimaryButton href="/admin/kitchen-styles/new">Add style</PrimaryButton>}
       />
@@ -21,6 +23,7 @@ export default async function AdminKitchenStylesPage() {
       <DataTable
         columns={['Style', 'Region', 'Mood', 'Order', 'Status', 'Actions']}
         emptyMessage="No kitchen styles configured."
+        footer={`${styles.length} style${styles.length === 1 ? '' : 's'}`}
       >
         {styles.map((style) => (
           <tr key={style.id} className="transition hover:bg-[#f7f2ea]">
@@ -65,6 +68,6 @@ export default async function AdminKitchenStylesPage() {
           </tr>
         ))}
       </DataTable>
-    </div>
+    </AdminPageLayout>
   );
 }

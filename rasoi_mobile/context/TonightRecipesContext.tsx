@@ -197,19 +197,22 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           await saveOfflineRecommendations(mealWindow.windowKey, response);
           setSeasonalRail(mapped.seasonalRail ?? null);
 
-          if (mealWindow.isOvernightDual) {
-            setLateNightPick(mapped.lateNightPick);
+          if (mapped.picks.length > 0) {
+            if (mealWindow.isOvernightDual) {
+              setLateNightPick(mapped.lateNightPick);
+              setHomePicks(mapped.picks.slice(0, HOME_PICK_COUNT));
+              setPickReasons(mapped.reasons);
+              setHomePicksReady(true);
+              return;
+            }
+
+            setLateNightPick(undefined);
             setHomePicks(mapped.picks.slice(0, HOME_PICK_COUNT));
             setPickReasons(mapped.reasons);
-            setHomePicksReady(mapped.picks.length > 0);
+            setHomePicksReady(true);
             return;
           }
-
-          setLateNightPick(undefined);
-          setHomePicks(mapped.picks.slice(0, HOME_PICK_COUNT));
-          setPickReasons(mapped.reasons);
-          setHomePicksReady(mapped.picks.length > 0);
-          return;
+          // API returned no picks — fall through to local meal picks below.
         } catch {
           const offline = await loadOfflineRecommendations(mealWindow.windowKey);
           if (offline && !cancelled) {
@@ -225,11 +228,12 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       }
 
       if (recipesLoading || pickPool.length === 0) {
-      setHomePicks([]);
-      setPickReasons([]);
-      setLateNightPick(undefined);
-      setSeasonalRail(null);
-      return;
+        setHomePicks([]);
+        setPickReasons([]);
+        setLateNightPick(undefined);
+        setSeasonalRail(null);
+        setHomePicksReady(false);
+        return;
       }
 
       if (mealWindow.isOvernightDual && mealWindow.tomorrowBreakfastWindowKey) {

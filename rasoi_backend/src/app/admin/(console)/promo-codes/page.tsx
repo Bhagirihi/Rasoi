@@ -1,8 +1,11 @@
 import Link from 'next/link';
 
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
+import AdminPanel from '@/app/admin/_components/AdminPanel';
 import { DataTable } from '@/app/admin/_components/DataTable';
-import { AdminCard, Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
+import { Badge, PrimaryButton } from '@/app/admin/_components/ui';
 import { deletePromoCodeAction } from '@/app/admin/promo-code-actions';
 import { db } from '@/lib/db';
 import { getBillingPlansCatalog } from '@/lib/plan-pricing';
@@ -25,18 +28,14 @@ export default async function AdminPromoCodesPage() {
   const catalog = getBillingPlansCatalog();
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Promo codes"
-        description="In-app trial extensions and yearly Play offer unlocks. Codes are redeemed via POST /api/users/me/promo/redeem — not Google Play promo codes."
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/promo-codes"
         action={<PrimaryButton href="/admin/promo-codes/new">Add promo code</PrimaryButton>}
       />
 
-      <AdminCard className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          Google Play yearly offer (live)
-        </p>
-        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      <AdminPanel title="Google Play yearly offer (live)">
+        <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
             <dt className="text-admin-muted">Offer ID</dt>
             <dd className="font-mono text-admin-text">{catalog.yearlyPromo.playOfferId}</dd>
@@ -57,11 +56,12 @@ export default async function AdminPromoCodesPage() {
             </dd>
           </div>
         </dl>
-      </AdminCard>
+      </AdminPanel>
 
       <DataTable
         columns={['Code', 'Kind', 'Effect', 'Redemptions', 'Consumed', 'Status', 'Actions']}
         emptyMessage="No promo codes yet. Add one or run npm run db:seed to load launch codes."
+        footer={`${promoCodes.length} code${promoCodes.length === 1 ? '' : 's'}`}
       >
         {promoCodes.map((promo) => (
           <tr key={promo.id} className="transition hover:bg-[#f7f2ea]">
@@ -107,16 +107,13 @@ export default async function AdminPromoCodesPage() {
         ))}
       </DataTable>
 
-      <AdminCard className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          Rules
-        </p>
-        <ul className="mt-4 space-y-2 text-sm leading-relaxed text-admin-muted">
+      <AdminPanel title="Rules">
+        <ul className="space-y-2 text-sm leading-relaxed text-admin-muted">
           <li>Trial codes: active in-app trial only (not expired, not paid).</li>
           <li>Yearly code: sets user yearlyPromoOfferTag → Play offer at checkout.</li>
           <li>Deactivate or delete leaked codes here; run db:seed only to restore launch defaults.</li>
         </ul>
-      </AdminCard>
-    </div>
+      </AdminPanel>
+    </AdminPageLayout>
   );
 }

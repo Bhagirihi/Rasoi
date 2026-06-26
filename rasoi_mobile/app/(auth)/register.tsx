@@ -23,6 +23,7 @@ import { testIds } from '@/constants/testIds';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { useAppContext, type AuthNavigationResult } from '@/context/AppContext';
+import { resolvePostAuthHref } from '@/utils/authNavigation';
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
 import { isEmailDeliveryUnavailableError } from '@/utils/emailDeliveryErrors';
 import { warmApiConnection } from '@/utils/api';
@@ -51,6 +52,8 @@ export default function RegisterScreen() {
     userEmail,
     isGuest,
     continueWithPendingEmailVerification,
+    userCity,
+    pendingPantrySetup,
   } = useAppContext();
 
   const [step, setStep] = useState<RegisterStep>('details');
@@ -125,16 +128,12 @@ export default function RegisterScreen() {
     };
   }, []);
 
-  const navigateAfterAuth = ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
-    if (!hasCompletedOnboarding) {
-      router.replace('/(auth)/onboarding');
-      return;
-    }
-    if (showTrialWelcome) {
-      router.replace('/(auth)/trial-welcome');
-      return;
-    }
-    router.replace('/(tabs)');
+  const navigateAfterAuth = async ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
+    const href = await resolvePostAuthHref(
+      { showTrialWelcome, hasCompletedOnboarding },
+      { userCity, pendingPantrySetup },
+    );
+    router.replace(href);
   };
 
   const validateDetails = (): { name: string; phone: string; email: string } | null => {
@@ -232,7 +231,7 @@ export default function RegisterScreen() {
       });
       setEmailDeliveryBlocked(false);
       if (nav) {
-        navigateAfterAuth(nav);
+        void navigateAfterAuth(nav);
       }
     } catch (error) {
       setFieldError('general');
@@ -275,7 +274,7 @@ export default function RegisterScreen() {
       );
       authLog('register:verifyOtp_success');
       verified = true;
-      navigateAfterAuth(nav);
+      void navigateAfterAuth(nav);
     } catch (error) {
       authError('register:verifyOtp_failed', error, { email: maskEmail(details.email) });
       setFieldError('otp');
@@ -324,7 +323,7 @@ export default function RegisterScreen() {
       const trimmed = guestName.trim();
       const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
       setShowGuestModal(false);
-      navigateAfterAuth(nav);
+      void navigateAfterAuth(nav);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Could not continue as guest. Please try again.';
@@ -353,18 +352,18 @@ export default function RegisterScreen() {
     switch (busyAction) {
       case 'guest':
         return [
-          { message: 'Starting guest mode…', subtitle: 'Setting up your kitchen' },
-          { message: 'Almost ready…', subtitle: 'Opening Rasoi' },
+          { message: 'Starting guest mode', subtitle: 'Setting up your kitchen' },
+          { message: 'Almost there', subtitle: 'Opening Rasoi for you' },
         ];
       case 'verify':
-        return [{ message: 'Signing you in…', subtitle: 'Verifying code and setting up your account' }];
+        return [{ message: 'Creating your account', subtitle: 'Verifying your code and setting things up' }];
       case 'resend':
-        return [{ message: 'Sending a new code…', subtitle: 'Check your email inbox' }];
+        return [{ message: 'Sending a new code', subtitle: 'Check your inbox — it usually arrives in a few seconds' }];
       case 'send':
         return [
           {
-            message: 'Sending verification code…',
-            subtitle: 'Usually arrives in under a minute',
+            message: 'Sending your code',
+            subtitle: 'Check your inbox — it usually arrives in a few seconds',
           },
         ];
       default:

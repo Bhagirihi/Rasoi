@@ -123,7 +123,8 @@ for (const [canonical, aliases] of Object.entries(INGREDIENT_CANONICAL_ALIASES))
   CANONICAL_ALIAS_KEYS.set(canonical, keys);
 }
 
-export function canonicalizeIngredientName(name: string): string {
+export function canonicalizeIngredientName(name: string | null | undefined): string {
+  if (typeof name !== 'string') return '';
   const trimmed = name.trim();
   if (!trimmed) return trimmed;
   return ALIAS_TO_CANONICAL.get(ingredientLookupKey(trimmed)) ?? trimmed;

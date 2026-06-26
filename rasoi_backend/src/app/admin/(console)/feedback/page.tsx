@@ -1,6 +1,9 @@
 import FeedbackOverviewPanel from '@/app/admin/_components/FeedbackOverviewPanel';
 import FeedbackTable from '@/app/admin/_components/FeedbackTable';
-import { AdminCard, PageHeader } from '@/app/admin/_components/ui';
+import AdminCallout from '@/app/admin/_components/AdminCallout';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
+import AdminPanel from '@/app/admin/_components/AdminPanel';
 import { getFeedbackList, getFeedbackStats, getRecentPendingFeedback } from '@/lib/feedback-stats';
 
 export default async function FeedbackAdminPage() {
@@ -11,39 +14,28 @@ export default async function FeedbackAdminPage() {
   ]);
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="User reports"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/feedback"
         description={`${stats.pendingCount} pending · ${stats.totalCount} total · Issues, suggestions, and feedback from the Rasoi mobile app.`}
       />
 
-      <AdminCard className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          Inbox summary
-        </p>
-        <div className="mt-5">
-          <FeedbackOverviewPanel stats={stats} recentPending={recentPending} />
-        </div>
-      </AdminCard>
+      <AdminPanel title="Inbox summary">
+        <FeedbackOverviewPanel stats={stats} recentPending={recentPending} />
+      </AdminPanel>
 
-      <AdminCard className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          From the mobile app
-        </p>
-        <ul className="mt-4 space-y-2 text-sm leading-relaxed text-admin-muted">
-          <li>Settings → Support → Send feedback</li>
-          <li>Categories: report an issue, suggestion, or other</li>
-          <li>Logged-in users are linked to their Rasoi account automatically</li>
-          <li>Mark entries reviewed or resolved as you triage them</li>
-        </ul>
-      </AdminCard>
+      <AdminCallout tone="tip">
+        <strong>From the mobile app:</strong> Settings → Support → Send feedback. Categories include report
+        an issue, suggestion, or other. Logged-in users are linked automatically — mark entries reviewed or
+        resolved as you triage.
+      </AdminCallout>
 
-      <div>
-        <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          All submissions
-        </p>
+      <AdminPanel
+        title="All submissions"
+        description={`${feedbackItems.length} item${feedbackItems.length === 1 ? '' : 's'} in the log`}
+      >
         <FeedbackTable items={feedbackItems} />
-      </div>
-    </div>
+      </AdminPanel>
+    </AdminPageLayout>
   );
 }

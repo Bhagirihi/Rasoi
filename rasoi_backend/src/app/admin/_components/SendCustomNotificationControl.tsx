@@ -58,7 +58,7 @@ export default function SendCustomNotificationControl({
   };
 
   return (
-    <div className="admin-card space-y-4 rounded-2xl p-4">
+    <div className="admin-card space-y-4 rounded-[1.25rem] p-4">
       <div>
         <FieldLabel>Title</FieldLabel>
         <TextInput

@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 
 import SponsorForm from '@/app/admin/(console)/sponsors/SponsorForm';
-import { GhostButton, PageHeader } from '@/app/admin/_components/ui';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { db } from '@/lib/db';
 import { serializeSponsor } from '@/lib/serializers';
 
@@ -15,13 +16,15 @@ export default async function EditSponsorPage({ params }: PageProps) {
   const serialized = serializeSponsor(sponsor);
 
   return (
-    <div className="space-y-8">
-      <PageHeader
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/sponsors"
         title="Edit sponsor"
         description={serialized.brandName}
-        action={<GhostButton href="/admin/sponsors">Back to sponsors</GhostButton>}
+        backHref="/admin/sponsors"
+        backLabel="Back to sponsors"
       />
       <SponsorForm sponsor={serialized} />
-    </div>
+    </AdminPageLayout>
   );
 }

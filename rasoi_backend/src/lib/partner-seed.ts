@@ -8,10 +8,14 @@ export async function ensurePartnerLinks() {
       update: {
         label: link.label,
         category: link.category,
+        region: link.region,
         deepLinkUrl: link.deepLinkUrl,
         webUrl: link.webUrl,
       },
-      create: link,
+      create: {
+        ...link,
+        active: true,
+      },
     });
   }
 }

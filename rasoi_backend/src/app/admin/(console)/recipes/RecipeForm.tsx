@@ -8,6 +8,7 @@ import MobileRecipePreview, {
 } from '@/app/admin/(console)/recipes/MobileRecipePreview';
 import RecipeMarkdownImport from '@/app/admin/(console)/recipes/RecipeMarkdownImport';
 import type { ParsedRecipeMarkdown } from '@/lib/recipe-markdown';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { useToast } from '@/app/admin/_components/Toast';
 import {
   AdminCard,
@@ -20,6 +21,7 @@ import {
   TextArea,
   TextInput,
 } from '@/app/admin/_components/ui';
+import { getAdminSectionLabel } from '@/app/admin/_components/admin-nav';
 import { createRecipeAction, updateRecipeAction } from '@/app/admin/recipe-actions';
 import { DEFAULT_KITCHEN_STYLES } from '@/lib/kitchen-style-data';
 import {
@@ -222,7 +224,7 @@ export default function RecipeForm({
     : 'New recipes stay as draft until you preview on mobile and confirm publishing.';
 
   return (
-    <div className="space-y-8">
+    <AdminPageLayout>
       {previewOpen && (
         <MobileRecipePreview
           data={buildPreviewData()}
@@ -236,7 +238,10 @@ export default function RecipeForm({
 
       <PageHeader
         title={pageTitle}
+        section={getAdminSectionLabel('/admin/recipes')}
         description={pageDescription}
+        backHref="/admin/recipes"
+        backLabel="Back to recipes"
         action={
           <div className="flex flex-wrap items-center gap-2">
             {published ? (
@@ -247,7 +252,6 @@ export default function RecipeForm({
             <GhostButton type="button" onClick={handleOpenPreview}>
               View on mobile
             </GhostButton>
-            <GhostButton href="/admin/recipes">Back to recipes</GhostButton>
           </div>
         }
       />
@@ -404,6 +408,6 @@ export default function RecipeForm({
           </div>
         </form>
       </AdminCard>
-    </div>
+    </AdminPageLayout>
   );
 }

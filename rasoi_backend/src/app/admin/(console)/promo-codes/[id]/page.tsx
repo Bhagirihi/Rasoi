@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import PromoCodeForm, {
   type PromoCodeFormValues,
 } from '@/app/admin/(console)/promo-codes/PromoCodeForm';
-import { GhostButton, PageHeader } from '@/app/admin/_components/ui';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { db } from '@/lib/db';
 
 type PageProps = { params: Promise<{ id: string }> };
@@ -26,13 +27,15 @@ export default async function EditPromoCodePage({ params }: PageProps) {
   };
 
   return (
-    <div className="space-y-8">
-      <PageHeader
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/promo-codes"
         title="Edit promo code"
         description={promo.code}
-        action={<GhostButton href="/admin/promo-codes">Back to promo codes</GhostButton>}
+        backHref="/admin/promo-codes"
+        backLabel="Back to promo codes"
       />
       <PromoCodeForm promo={values} />
-    </div>
+    </AdminPageLayout>
   );
 }

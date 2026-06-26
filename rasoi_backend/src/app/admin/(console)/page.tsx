@@ -1,8 +1,12 @@
+import AdminQuickLinks from '@/app/admin/_components/AdminQuickLinks';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPanel from '@/app/admin/_components/AdminPanel';
 import PaymentsToggle from '@/app/admin/_components/PaymentsToggle';
 import FeedbackOverviewPanel from '@/app/admin/_components/FeedbackOverviewPanel';
 import StatCard from '@/app/admin/_components/StatCard';
 import SupabaseSyncPanel from '@/app/admin/_components/SupabaseSyncPanel';
-import { AdminCard, GhostButton, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
+import { GhostButton, PrimaryButton } from '@/app/admin/_components/ui';
 import { getAppConfig } from '@/lib/app-settings';
 import { getFeedbackStats, getRecentPendingFeedback } from '@/lib/feedback-stats';
 import { db } from '@/lib/db';
@@ -20,14 +24,15 @@ export default async function AdminDashboardPage() {
     ]);
 
   return (
-    <div className="space-y-10">
-      <PageHeader
-        title="Overview"
-        description="A refined control room for recipes, sponsors, partner links, and member activity across the Rasoi mobile experience."
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin"
+        description="Stats, quick links, and day-to-day operations for the Rasoi mobile app."
         action={
           <div className="flex flex-wrap gap-3">
             <PrimaryButton href="/admin/recipes/new">Add recipe</PrimaryButton>
-            <GhostButton href="/admin/partners">Partner URLs</GhostButton>
+            <GhostButton href="/admin/users">Members</GhostButton>
+            <GhostButton href="/admin/integrations">Integrations</GhostButton>
           </div>
         }
       />
@@ -45,19 +50,20 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
+      <AdminPanel
+        title="Quick links"
+        description="Jump to any admin module. Everything is grouped in the sidebar for faster navigation."
+      >
+        <AdminQuickLinks />
+      </AdminPanel>
+
       <div className="grid gap-5 lg:grid-cols-2">
-        <AdminCard className="p-6 lg:col-span-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-            Operations
-          </p>
-          <h2 className="font-display mt-2 text-2xl font-semibold text-admin-ink">
-            Content at a glance
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-admin-muted">
-            Keep the mobile app feeling curated. Publish recipes with care, rotate sponsor
-            placements seasonally, and monitor member onboarding from this console.
-          </p>
-          <ul className="mt-6 space-y-3 text-sm text-admin-ink">
+        <AdminPanel
+          title="Content at a glance"
+          description="Keep the mobile app feeling curated. Publish recipes with care, rotate sponsor placements seasonally, and monitor member onboarding from this console."
+          className="lg:col-span-2"
+        >
+          <ul className="space-y-3 text-sm text-admin-ink">
             <li className="flex items-start gap-3">
               <span className="mt-1 h-1.5 w-1.5 rounded-full bg-admin-gold" />
               Recipe cards sync directly to the Expo app feed.
@@ -71,39 +77,24 @@ export default async function AdminDashboardPage() {
               Member profiles carry pantry, saved dishes, and plan state.
             </li>
           </ul>
-        </AdminCard>
+        </AdminPanel>
 
-        <AdminCard className="p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-            Supabase sync
-          </p>
-          <div className="mt-4">
-            <SupabaseSyncPanel />
-          </div>
-        </AdminCard>
+        <AdminPanel title="Supabase sync">
+          <SupabaseSyncPanel />
+        </AdminPanel>
 
-        <AdminCard className="p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-            Payment
-          </p>
-          <div className="mt-4">
-            <PaymentsToggle paymentsEnabled={appConfig.paymentsEnabled} />
-          </div>
-        </AdminCard>
+        <AdminPanel title="Payment">
+          <PaymentsToggle paymentsEnabled={appConfig.paymentsEnabled} />
+        </AdminPanel>
 
-        <AdminCard className="p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-            User reports
-          </p>
-          <div className="mt-4">
-            <FeedbackOverviewPanel
-              stats={feedbackStats}
-              recentPending={recentPendingFeedback}
-              compact
-            />
-          </div>
-        </AdminCard>
+        <AdminPanel title="User reports">
+          <FeedbackOverviewPanel
+            stats={feedbackStats}
+            recentPending={recentPendingFeedback}
+            compact
+          />
+        </AdminPanel>
       </div>
-    </div>
+    </AdminPageLayout>
   );
 }

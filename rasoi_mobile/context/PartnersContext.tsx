@@ -11,10 +11,11 @@ import { AppState } from 'react-native';
 import { router } from 'expo-router';
 
 import {
-  DELIVERY_PARTNER_UI,
-  GROCERY_PARTNER_UI,
+  getDeliveryPartnerUi,
+  getGroceryPartnerUi,
 } from '@/constants/monetization';
 import type { AffiliatePartner, FoodDeliveryPartner } from '@/constants/partners';
+import { resolveGroceryPartnerId } from '@/constants/partners';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import {
@@ -72,17 +73,13 @@ type PartnersContextValue = {
 
 const PartnersContext = createContext<PartnersContextValue | undefined>(undefined);
 
-const GROCERY_IDS: AffiliatePartner[] = ['blinkit', 'zepto', 'instamart'];
-const DELIVERY_IDS: FoodDeliveryPartner[] = ['zomato', 'swiggy'];
-
 function mergeGroceryPartner(link: PartnerLinkResponse): GroceryPartnerCard | null {
-  if (!GROCERY_IDS.includes(link.partnerId as AffiliatePartner) || !link.active) {
+  if (link.category !== 'grocery' || !link.active) {
     return null;
   }
-  const id = link.partnerId as AffiliatePartner;
-  const ui = GROCERY_PARTNER_UI[id];
+  const ui = getGroceryPartnerUi(link.partnerId);
   return {
-    id,
+    id: link.partnerId,
     label: link.label,
     delivery: ui.delivery,
     accent: ui.accent,
@@ -91,13 +88,12 @@ function mergeGroceryPartner(link: PartnerLinkResponse): GroceryPartnerCard | nu
 }
 
 function mergeDeliveryPartner(link: PartnerLinkResponse): DeliveryPartnerCard | null {
-  if (!DELIVERY_IDS.includes(link.partnerId as FoodDeliveryPartner) || !link.active) {
+  if (link.category !== 'delivery' || !link.active) {
     return null;
   }
-  const id = link.partnerId as FoodDeliveryPartner;
-  const ui = DELIVERY_PARTNER_UI[id];
+  const ui = getDeliveryPartnerUi(link.partnerId);
   return {
-    id,
+    id: link.partnerId,
     label: link.label,
     tagline: ui.tagline,
     accent: ui.accent,
@@ -290,14 +286,16 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
   const openBrandSearch = useCallback(
     async (
       query: string,
-      partnerId: AffiliatePartner = 'blinkit',
+      partnerId?: AffiliatePartner,
       options?: { context?: string },
     ) => {
-      await openGroceryCheckout(partnerId, [query], {
+      const resolved = resolveGroceryPartnerId(partnerId, groceryPartners);
+      if (!resolved) return;
+      await openGroceryCheckout(resolved, [query], {
         context: options?.context ?? 'brand_search',
       });
     },
-    [openGroceryCheckout],
+    [groceryPartners, openGroceryCheckout],
   );
 
   const value = useMemo<PartnersContextValue>(

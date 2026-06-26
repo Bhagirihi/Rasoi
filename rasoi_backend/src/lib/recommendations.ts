@@ -4,6 +4,7 @@ import { parseKitchenPreferences } from '@/lib/kitchen-preferences';
 import type { Recipe, User } from '@/lib/db/types';
 import { isJainSafeRecipe } from '@/lib/jain-safe';
 import { dietChoiceToDietType } from '@/lib/recipe-filters';
+import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
 import {
   getLocalTimeParts,
   getScheduledMealWindowForTimezone,
@@ -134,7 +135,7 @@ function filterRecipeRows(
     if (options.dietChoice === 'Jain' && !isJainSafeRecipe(recipe)) return false;
 
     if (allergyExclusions.length > 0) {
-      const ingredients = parseJson<{ name: string }[]>(recipe.ingredients, []);
+      const ingredients = normalizeRecipeIngredients(parseJson(recipe.ingredients, []));
       if (recipeContainsAllergen(ingredients, allergyExclusions)) return false;
     }
 

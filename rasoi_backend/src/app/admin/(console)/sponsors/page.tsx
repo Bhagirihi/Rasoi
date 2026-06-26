@@ -1,9 +1,11 @@
 import Link from 'next/link';
 
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import SponsorActiveToggle from '@/app/admin/_components/SponsorActiveToggle';
-import { Badge, GhostButton, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
+import { Badge, GhostButton, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteSponsorAction } from '@/app/admin/sponsor-actions';
 import { db } from '@/lib/db';
 import { getSponsorPlacementLabel } from '@/lib/sponsor-placements';
@@ -15,9 +17,9 @@ export default async function AdminSponsorsPage() {
   });
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Sponsors"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/sponsors"
         description="Curate sponsored placements for Home, Recipes, Pantry, Saved, and Recipe detail. Toggle active to show or hide in the app."
         action={
           <div className="flex flex-wrap gap-3">
@@ -30,6 +32,7 @@ export default async function AdminSponsorsPage() {
       <DataTable
         columns={['Brand', 'Placement', 'Priority', 'Status', 'Actions']}
         emptyMessage="No sponsors configured. Add a brand placement to monetize the app."
+        footer={`${sponsors.length} placement${sponsors.length === 1 ? '' : 's'}`}
       >
         {sponsors.map((sponsor) => {
           const serialized = serializeSponsor(sponsor);
@@ -82,6 +85,6 @@ export default async function AdminSponsorsPage() {
           );
         })}
       </DataTable>
-    </div>
+    </AdminPageLayout>
   );
 }

@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import RasoiLogo from '@/app/_components/RasoiLogo';
@@ -9,7 +8,6 @@ import { useToast } from '@/app/admin/_components/Toast';
 import { AdminCard, PrimaryButton } from '@/app/admin/_components/ui';
 
 export default function LoginForm() {
-  const router = useRouter();
   const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,8 +33,7 @@ export default function LoginForm() {
 
       await setAdminToken(result.data.token);
       toast.success('Signed in successfully.');
-      router.push('/admin');
-      router.refresh();
+      window.location.assign('/admin');
     } catch {
       toast.error('Unable to reach the server');
     } finally {

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-import { PLAY_STORE_LISTING_URL, PLAY_STORE_SEO_PATH } from '@/lib/app-download';
+import { PLAY_STORE_SEO_PATH } from '@/lib/app-download';
 import { SITE_URL } from '@/lib/seo';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -24,12 +24,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: 'weekly',
       priority: 0.9,
-    },
-    {
-      url: PLAY_STORE_LISTING_URL,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.85,
     },
     {
       url: `${SITE_URL}/privacy`,

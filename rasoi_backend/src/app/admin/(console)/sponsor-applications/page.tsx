@@ -3,9 +3,11 @@ import { Suspense } from 'react';
 import { formatAdminDate } from '@/app/admin/_components/admin-datetime';
 import ApplicationStatusButton from '@/app/admin/_components/ApplicationStatusButton';
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import SponsorApplicationFilterPanel from '@/app/admin/_components/SponsorApplicationFilterPanel';
-import { Badge, PageHeader } from '@/app/admin/_components/ui';
+import { Badge } from '@/app/admin/_components/ui';
 import { deleteSponsorApplicationAction } from '@/app/admin/sponsor-application-actions';
 import { db } from '@/lib/db';
 import { getSponsorPlacementLabel } from '@/lib/sponsor-placements';
@@ -45,9 +47,9 @@ export default async function SponsorApplicationsPage({ searchParams }: PageProp
   const pendingCount = applications.filter((item) => item.status === 'pending').length;
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Sponsor applications"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/sponsor-applications"
         description={`${pendingCount} pending in view · Review brand partnership requests from the public website.`}
       />
 
@@ -58,6 +60,7 @@ export default async function SponsorApplicationsPage({ searchParams }: PageProp
       <DataTable
         columns={['Brand', 'Company', 'Placement', 'Status', 'Submitted', 'Actions']}
         emptyMessage="No applications match these filters."
+        footer={`${applications.length} application${applications.length === 1 ? '' : 's'} (max 200 shown)`}
       >
         {applications.map((application) => (
           <tr key={application.id} className="align-top transition hover:bg-[#f7f2ea]">
@@ -115,6 +118,6 @@ export default async function SponsorApplicationsPage({ searchParams }: PageProp
           </tr>
         ))}
       </DataTable>
-    </div>
+    </AdminPageLayout>
   );
 }

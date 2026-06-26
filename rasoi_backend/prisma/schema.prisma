@@ -265,11 +265,13 @@ model PartnerLink {
   partnerId    String   @id
   label        String
   category     String
+  region       String   @default("IN")
   deepLinkUrl  String
   webUrl       String
   active       Boolean  @default(true)
   updatedAt    DateTime @updatedAt
 
+  @@index([region])
   @@schema("rasoi")
 }
 

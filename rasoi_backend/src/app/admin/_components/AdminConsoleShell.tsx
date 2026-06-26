@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 
 import AdminDrawer from '@/app/admin/_components/AdminDrawer';
 import AdminSidebar, { AdminSidebarNav } from '@/app/admin/_components/AdminSidebar';
+import AdminTopBar from '@/app/admin/_components/AdminTopBar';
 
 export default function AdminConsoleShell({
   adminName,
@@ -17,50 +18,26 @@ export default function AdminConsoleShell({
   const [navDrawerOpen, setNavDrawerOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const openNavDrawer = () => setNavDrawerOpen(true);
-  const closeNavDrawer = () => setNavDrawerOpen(false);
-
   return (
     <>
       <div className="flex min-h-screen flex-col lg:flex-row">
-        {!sidebarCollapsed && (
-          <div className="hidden lg:block">
+        {!sidebarCollapsed ? (
+          <div className="hidden lg:sticky lg:top-0 lg:block lg:h-screen">
             <AdminSidebar
               adminName={adminName}
               logoutAction={logoutAction}
               onCollapse={() => setSidebarCollapsed(true)}
             />
           </div>
-        )}
+        ) : null}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-admin-border bg-admin-surface/95 px-4 py-3 backdrop-blur lg:px-6">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={openNavDrawer}
-                className="rounded-full border border-admin-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-admin-muted transition hover:border-admin-gold/50 lg:hidden"
-              >
-                Menu
-              </button>
-              {sidebarCollapsed && (
-                <button
-                  type="button"
-                  onClick={openNavDrawer}
-                  className="hidden rounded-full border border-admin-border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-admin-muted transition hover:border-admin-gold/50 lg:inline-flex"
-                >
-                  Open menu
-                </button>
-              )}
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-admin-gold">
-                  Rasoi Console
-                </p>
-                <p className="text-sm font-medium text-admin-ink">Admin workspace</p>
-              </div>
-            </div>
-            <p className="hidden text-sm text-admin-muted sm:block">{adminName}</p>
-          </header>
+          <AdminTopBar
+            adminName={adminName}
+            sidebarCollapsed={sidebarCollapsed}
+            onOpenNavDrawer={() => setNavDrawerOpen(true)}
+            onExpandSidebar={() => setSidebarCollapsed(false)}
+          />
 
           <div className="flex-1 overflow-auto">
             <main className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-6 lg:px-10 lg:py-10">{children}</main>
@@ -70,7 +47,7 @@ export default function AdminConsoleShell({
 
       <AdminDrawer
         open={navDrawerOpen}
-        onClose={closeNavDrawer}
+        onClose={() => setNavDrawerOpen(false)}
         title="Navigation"
         subtitle="Jump between admin modules"
         eyebrow="Manage"
@@ -82,7 +59,7 @@ export default function AdminConsoleShell({
           <AdminSidebarNav
             adminName={adminName}
             logoutAction={logoutAction}
-            onNavigate={closeNavDrawer}
+            onNavigate={() => setNavDrawerOpen(false)}
           />
         </aside>
       </AdminDrawer>

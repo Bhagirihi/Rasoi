@@ -2,13 +2,10 @@ import * as Haptics from 'expo-haptics';
 import { Package, ShoppingCart } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { GROCERY_PARTNER_UI } from '@/constants/monetization';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { usePartners } from '@/context/PartnersContext';
 import type { AffiliatePartner } from '@/utils/affiliate';
-
-const GROCERY_IDS: AffiliatePartner[] = ['blinkit', 'zepto', 'instamart'];
 
 interface MissingItemsPanelProps {
   missing: string[];
@@ -28,10 +25,6 @@ export default function MissingItemsPanel({
   const { colors: themeColors } = useTheme();
   const { groceryPartners } = usePartners();
 
-  const partnerLabel = (id: AffiliatePartner) =>
-    groceryPartners.find((p) => p.id === id)?.label ??
-    id.charAt(0).toUpperCase() + id.slice(1);
-
   if (missing.length === 0) {
     return (
       <View style={styles.allSetCard}>
@@ -48,6 +41,10 @@ export default function MissingItemsPanel({
 
   const stockedCount = totalCount - missing.length;
   const progress = totalCount > 0 ? stockedCount / totalCount : 0;
+  const partnerHint =
+    groceryPartners.length > 0
+      ? groceryPartners.map((partner) => partner.label).join(' · ')
+      : 'Partner checkout';
 
   return (
     <View
@@ -102,38 +99,32 @@ export default function MissingItemsPanel({
         </Pressable>
       )}
 
-      {onPartnerPress ? (
+      {onPartnerPress && groceryPartners.length > 0 ? (
         <View style={styles.partnerRow}>
-          {GROCERY_IDS.map((id) => {
-            const ui = GROCERY_PARTNER_UI[id];
-            const label = partnerLabel(id);
-            const delivery =
-              groceryPartners.find((p) => p.id === id)?.delivery ?? ui.delivery;
-            return (
-              <Pressable
-                key={id}
-                onPress={() => {
-                  void Haptics.selectionAsync();
-                  onPartnerPress(id);
-                }}
-                style={[
-                  styles.partnerChip,
-                  { backgroundColor: themeColors.white, borderColor: `${ui.accent}55` },
-                ]}
-              >
-                <View style={[styles.partnerAccent, { backgroundColor: ui.accent }]} />
-                <Text style={[styles.partnerLabel, { color: themeColors.charcoal }]} numberOfLines={1}>
-                  {label}
-                </Text>
-                <Text style={[styles.partnerEta, { color: themeColors.muted }]} numberOfLines={1}>
-                  {delivery.replace('~', '')}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {groceryPartners.map((partner) => (
+            <Pressable
+              key={partner.id}
+              onPress={() => {
+                void Haptics.selectionAsync();
+                onPartnerPress(partner.id);
+              }}
+              style={[
+                styles.partnerChip,
+                { backgroundColor: themeColors.white, borderColor: `${partner.accent}55` },
+              ]}
+            >
+              <View style={[styles.partnerAccent, { backgroundColor: partner.accent }]} />
+              <Text style={[styles.partnerLabel, { color: themeColors.charcoal }]} numberOfLines={1}>
+                {partner.label}
+              </Text>
+              <Text style={[styles.partnerEta, { color: themeColors.muted }]} numberOfLines={1}>
+                {partner.delivery.replace('~', '')}
+              </Text>
+            </Pressable>
+          ))}
         </View>
       ) : (
-        <Text style={[styles.partnerHint, { color: themeColors.muted }]}>Blinkit · Zepto · Instamart</Text>
+        <Text style={[styles.partnerHint, { color: themeColors.muted }]}>{partnerHint}</Text>
       )}
     </View>
   );

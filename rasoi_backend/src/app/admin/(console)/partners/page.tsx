@@ -1,30 +1,35 @@
 import PartnerLinksForm from '@/app/admin/(console)/partners/PartnerLinksForm';
-import { PageHeader } from '@/app/admin/_components/ui';
-import type { PartnerId } from '@/lib/partners';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
+import type { PartnerRegion } from '@/lib/partners';
 import { ensurePartnerLinks } from '@/lib/partner-seed';
 import { db } from '@/lib/db';
 
 export default async function AdminPartnersPage() {
   await ensurePartnerLinks();
 
-  const links = await db.partnerLink.findMany({ orderBy: { partnerId: 'asc' } });
+  const links = await db.partnerLink.findMany({
+    orderBy: [{ region: 'asc' }, { category: 'asc' }, { partnerId: 'asc' }],
+  });
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Partner links"
-        description="Manage Blinkit, Zepto, Instamart, Zomato, and Swiggy deep links and web fallbacks. Use {query} where the search term should appear."
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/partners"
+        description="Grocery and delivery checkout links by market — India, US, Canada, Australia."
       />
       <PartnerLinksForm
         links={links.map((link) => ({
-          partnerId: link.partnerId as PartnerId,
+          clientKey: link.partnerId,
+          partnerId: link.partnerId,
           label: link.label,
           category: link.category as 'grocery' | 'delivery',
+          region: (link.region ?? 'IN') as PartnerRegion,
           deepLinkUrl: link.deepLinkUrl,
           webUrl: link.webUrl,
           active: link.active,
         }))}
       />
-    </div>
+    </AdminPageLayout>
   );
 }

@@ -31,7 +31,8 @@ export default function SponsorRail({
   searchQuery,
   compact = false,
 }: SponsorRailProps) {
-  const { openBrandSearch } = usePartners();
+  const { openBrandSearch, groceryPartners } = usePartners();
+  const primaryGroceryPartner = groceryPartners[0]?.id;
   const { userCity } = useAppContext();
   const { colors: themeColors, semantic, isDark } = useTheme();
 
@@ -42,11 +43,11 @@ export default function SponsorRail({
       brandName,
       placement,
       sponsorId,
-      partner: 'blinkit',
+      partner: primaryGroceryPartner,
       query: searchQuery ?? brandName,
       city: userCity ?? undefined,
     });
-    void openBrandSearch(searchQuery ?? brandName, 'blinkit', { context: 'sponsor_rail' });
+    void openBrandSearch(searchQuery ?? brandName, primaryGroceryPartner, { context: 'sponsor_rail' });
   };
 
   const cardBorder = isDark ? 'rgba(255,255,255,0.28)' : themeColors.border;

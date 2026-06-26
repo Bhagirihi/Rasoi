@@ -1,8 +1,19 @@
+/** Known India partner ids — UI accents may override; any id from admin still works. */
 export const PARTNER_IDS = ['blinkit', 'zepto', 'instamart', 'zomato', 'swiggy'] as const;
 
-export type PartnerId = (typeof PARTNER_IDS)[number];
-export type AffiliatePartner = 'blinkit' | 'zepto' | 'instamart';
-export type FoodDeliveryPartner = 'zomato' | 'swiggy';
+export type PartnerId = string;
+export type AffiliatePartner = string;
+export type FoodDeliveryPartner = string;
+
+export function resolveGroceryPartnerId(
+  preferred: string | undefined,
+  partners: ReadonlyArray<{ id: string }>,
+): string | undefined {
+  if (preferred && partners.some((partner) => partner.id === preferred)) {
+    return preferred;
+  }
+  return partners[0]?.id;
+}
 
 export const DEFAULT_PARTNER_LINKS: Array<{
   partnerId: PartnerId;

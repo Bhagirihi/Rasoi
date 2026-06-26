@@ -1,11 +1,12 @@
 'use client';
 
 import FilterChipBar from '@/app/admin/_components/FilterChipBar';
+import AdminFilterShell from '@/app/admin/_components/AdminFilterShell';
 import { SPONSOR_APPLICATION_PLACEMENT_OPTIONS } from '@/lib/sponsor-placements';
 
 export default function SponsorApplicationFilterPanel() {
   return (
-    <div className="admin-card space-y-5 rounded-[1.25rem] p-5">
+    <AdminFilterShell>
       <FilterChipBar
         param="status"
         label="Status"
@@ -29,6 +30,6 @@ export default function SponsorApplicationFilterPanel() {
           })),
         ]}
       />
-    </div>
+    </AdminFilterShell>
   );
 }

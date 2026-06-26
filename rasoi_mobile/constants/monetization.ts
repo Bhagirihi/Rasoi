@@ -18,8 +18,19 @@ export const PARTNER_CHECKOUT_SUPPORT_NOTE =
 
 export const FOOD_DELIVERY_DISCLOSURE = AFFILIATE_CHECKOUT_DISCLOSURE;
 
+const DEFAULT_GROCERY_UI = {
+  delivery: 'Quick delivery',
+  accent: '#E85D2C',
+  textOnAccent: '#FFFFFF',
+} as const;
+
+const DEFAULT_DELIVERY_UI = {
+  tagline: 'Food delivery',
+  accent: '#E85D2C',
+} as const;
+
 export const GROCERY_PARTNER_UI: Record<
-  AffiliatePartner,
+  string,
   { delivery: string; accent: string; textOnAccent: string }
 > = {
   blinkit: {
@@ -39,10 +50,7 @@ export const GROCERY_PARTNER_UI: Record<
   },
 };
 
-export const DELIVERY_PARTNER_UI: Record<
-  FoodDeliveryPartner,
-  { tagline: string; accent: string }
-> = {
+export const DELIVERY_PARTNER_UI: Record<string, { tagline: string; accent: string }> = {
   zomato: {
     tagline: 'Restaurants nearby',
     accent: '#E23744',
@@ -52,6 +60,14 @@ export const DELIVERY_PARTNER_UI: Record<
     accent: '#FC8019',
   },
 };
+
+export function getGroceryPartnerUi(partnerId: string) {
+  return GROCERY_PARTNER_UI[partnerId] ?? DEFAULT_GROCERY_UI;
+}
+
+export function getDeliveryPartnerUi(partnerId: string) {
+  return DELIVERY_PARTNER_UI[partnerId] ?? DEFAULT_DELIVERY_UI;
+}
 
 /** Fallback list for static UI when PartnersContext is unavailable. */
 export const AFFILIATE_PARTNERS: Array<{

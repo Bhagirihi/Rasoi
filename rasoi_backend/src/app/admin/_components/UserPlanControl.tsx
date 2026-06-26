@@ -17,7 +17,7 @@ const EXTEND_PRESETS = [3, 5, 10] as const;
 function formatTrialEndsAt(trialStartedAt: string | null, trialTotalDays: number): string | null {
   if (!trialStartedAt || trialTotalDays <= 0) return null;
   const endsAt = new Date(trialStartedAt).getTime() + trialTotalDays * 86_400_000;
-  return formatAdminDateTime(endsAt);
+  return formatAdminDateTime(new Date(endsAt));
 }
 
 export default function UserPlanControl({
@@ -102,7 +102,7 @@ export default function UserPlanControl({
     planTier === 'trial' ? 'gold' : planTier === 'paid' ? 'success' : ('neutral' as const);
 
   return (
-    <div className="admin-card space-y-4 rounded-2xl p-4">
+    <div className="admin-card space-y-4 rounded-[1.25rem] p-4">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-admin-ink">Current plan</p>

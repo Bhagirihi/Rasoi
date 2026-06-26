@@ -12,9 +12,26 @@ async function requireAdminSession() {
   return admin;
 }
 
+function assertUniquePartnerIds(links: Array<{ partnerId: string }>) {
+  const seen = new Set<string>();
+  for (const link of links) {
+    const id = link.partnerId.trim().toLowerCase();
+    if (seen.has(id)) {
+      throw new Error(`Duplicate partner id: ${link.partnerId}`);
+    }
+    seen.add(id);
+  }
+}
+
 export async function updatePartnerLinksAction(raw: unknown) {
   await requireAdminSession();
   const input = partnerLinksSchema.parse(raw);
+  assertUniquePartnerIds(input.links);
+
+  const deletedIds = [...new Set(input.deletedPartnerIds)];
+  for (const partnerId of deletedIds) {
+    await db.partnerLink.deleteMany({ where: { partnerId } });
+  }
 
   for (const link of input.links) {
     await db.partnerLink.upsert({
@@ -22,6 +39,7 @@ export async function updatePartnerLinksAction(raw: unknown) {
       update: {
         label: link.label,
         category: link.category,
+        region: link.region,
         deepLinkUrl: link.deepLinkUrl,
         webUrl: link.webUrl,
         active: link.active,
@@ -30,6 +48,7 @@ export async function updatePartnerLinksAction(raw: unknown) {
         partnerId: link.partnerId,
         label: link.label,
         category: link.category,
+        region: link.region,
         deepLinkUrl: link.deepLinkUrl,
         webUrl: link.webUrl,
         active: link.active,
@@ -40,4 +59,3 @@ export async function updatePartnerLinksAction(raw: unknown) {
   revalidatePath('/admin/partners');
   revalidatePath('/api/partners');
 }
-

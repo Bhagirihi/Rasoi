@@ -245,19 +245,33 @@ export const adminLoginSchema = z.object({
   password: z.string().min(6),
 });
 
-const partnerId = z.enum(['blinkit', 'zepto', 'instamart', 'zomato', 'swiggy']);
+const partnerRegion = z.enum(['IN', 'US', 'CA', 'AU']);
 
 export const partnerLinkSchema = z.object({
-  partnerId: partnerId,
+  partnerId: z
+    .string()
+    .min(2)
+    .max(40)
+    .regex(/^[a-z0-9_]+$/, 'Use lowercase letters, numbers, and underscores'),
   label: z.string().min(1).max(40),
   category: z.enum(['grocery', 'delivery']),
+  region: partnerRegion,
   deepLinkUrl: z.string().min(8).max(500),
   webUrl: z.string().url().max(500),
   active: z.boolean(),
 });
 
 export const partnerLinksSchema = z.object({
-  links: z.array(partnerLinkSchema).min(1),
+  links: z.array(partnerLinkSchema),
+  deletedPartnerIds: z
+    .array(
+      z
+        .string()
+        .min(2)
+        .max(40)
+        .regex(/^[a-z0-9_]+$/),
+    )
+    .default([]),
 });
 
 export const kitchenStyleCreateSchema = z.object({

@@ -58,12 +58,59 @@ export async function configureRevenueCat(): Promise<boolean> {
   return true;
 }
 
-export async function syncRevenueCatUser(userId: string | null): Promise<void> {
+/** Profile fields synced to RevenueCat subscriber attributes (dashboard + integrations). */
+export type RevenueCatSubscriberProfile = {
+  email?: string | null;
+  displayName?: string | null;
+  phoneNumber?: string | null;
+  /** Custom keys only — do not use RevenueCat reserved `$` keys here. */
+  attributes?: Record<string, string | null | undefined>;
+};
+
+function normalizeSubscriberEmail(email?: string | null): string | null {
+  const value = email?.trim();
+  return value && value.includes('@') ? value : null;
+}
+
+function normalizeSubscriberPhone(phone?: string | null): string | null {
+  const digits = phone?.replace(/\D/g, '') ?? '';
+  if (digits.length < 10) return null;
+  if (digits.length === 10) return `+91${digits}`;
+  if (digits.startsWith('91') && digits.length === 12) return `+${digits}`;
+  return phone?.trim().startsWith('+') ? phone.trim() : `+${digits}`;
+}
+
+function buildCustomAttributes(
+  attributes: Record<string, string | null | undefined> | undefined,
+): Record<string, string | null> {
+  if (!attributes) return {};
+
+  const result: Record<string, string | null> = {};
+  for (const [key, value] of Object.entries(attributes)) {
+    if (!key || key.startsWith('$')) continue;
+    const trimmed = value?.trim();
+    result[key] = trimmed || null;
+  }
+  return result;
+}
+
+export async function syncRevenueCatUser(
+  userId: string | null,
+  profile?: RevenueCatSubscriberProfile,
+): Promise<void> {
   if (!(await configureRevenueCat())) return;
 
   const Purchases = await getPurchasesModule();
   if (userId) {
     await Purchases.logIn(userId);
+    await Purchases.setEmail(normalizeSubscriberEmail(profile?.email));
+    await Purchases.setDisplayName(profile?.displayName?.trim() || null);
+    await Purchases.setPhoneNumber(normalizeSubscriberPhone(profile?.phoneNumber));
+
+    const customAttributes = buildCustomAttributes(profile?.attributes);
+    if (Object.keys(customAttributes).length > 0) {
+      await Purchases.setAttributes(customAttributes);
+    }
     return;
   }
   await Purchases.logOut();

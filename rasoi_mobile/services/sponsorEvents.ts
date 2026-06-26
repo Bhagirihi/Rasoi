@@ -8,7 +8,7 @@ export type SponsorEventPayload = {
   brandName: string;
   placement: string;
   sponsorId?: string;
-  partner?: 'blinkit' | 'zepto' | 'instamart' | 'zomato' | 'swiggy';
+  partner?: string;
   query?: string;
   city?: string;
 };

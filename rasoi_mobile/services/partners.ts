@@ -1,9 +1,9 @@
 import { apiFetch } from '@/utils/api';
 import { getRasoiDb, isDirectSupabaseCatalogEnabled } from '@/utils/rasoiDb';
-import { buildPartnerUrl, type PartnerId } from '@/constants/partners';
+import { buildPartnerUrl } from '@/constants/partners';
 
 export type PartnerLinkResponse = {
-  partnerId: PartnerId;
+  partnerId: string;
   label: string;
   category: 'grocery' | 'delivery';
   deepLinkUrl: string;
@@ -19,6 +19,7 @@ async function loadPartnerLinksFromSupabase(): Promise<PartnerLinkResponse[]> {
   const { data, error } = await getRasoiDb()
     .from('PartnerLink')
     .select('partnerId, label, category, deepLinkUrl, webUrl, active, updatedAt')
+    .eq('region', 'IN')
     .eq('active', true)
     .order('partnerId', { ascending: true });
 
@@ -27,7 +28,7 @@ async function loadPartnerLinksFromSupabase(): Promise<PartnerLinkResponse[]> {
   }
 
   return (data ?? []).map((link) => ({
-    partnerId: link.partnerId as PartnerId,
+    partnerId: link.partnerId,
     label: link.label,
     category: link.category as PartnerLinkResponse['category'],
     deepLinkUrl: link.deepLinkUrl,
@@ -56,7 +57,7 @@ export async function loadPartnerLinks(force = false): Promise<PartnerLinkRespon
       }
     }
 
-    const links = await apiFetch<PartnerLinkResponse[]>('/api/partners');
+    const links = await apiFetch<PartnerLinkResponse[]>('/api/partners?region=IN');
     cachedLinks = links.filter((link) => link.active);
     return cachedLinks;
   })()
@@ -78,7 +79,7 @@ export function getCachedPartnerLinks(): PartnerLinkResponse[] {
 }
 
 export function buildPartnerUrls(
-  partnerId: PartnerId,
+  partnerId: string,
   query: string,
   links: PartnerLinkResponse[],
 ) {

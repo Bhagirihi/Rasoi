@@ -36,6 +36,54 @@ const EMPTY_REFERENCE: ReferenceData = {
 let cachedReference: ReferenceData | null = null;
 let loadPromise: Promise<ReferenceData> | null = null;
 
+function parseAppConfigRow(
+  paymentsEnabled: boolean | null | undefined,
+  defaultPantryRaw: string | null | undefined,
+): ReferenceData['appConfig'] {
+  return {
+    paymentsEnabled: paymentsEnabled ?? DEFAULT_APP_CONFIG.paymentsEnabled,
+    defaultPantryIngredients: parseJson<string[]>(
+      defaultPantryRaw,
+      DEFAULT_APP_CONFIG.defaultPantryIngredients,
+    ),
+  };
+}
+
+/** Always fetch payment flags live — never trust the 30-minute reference disk cache for this. */
+export async function loadAppConfigFresh(): Promise<ReferenceData['appConfig']> {
+  try {
+    if (isDirectSupabaseCatalogEnabled()) {
+      const db = getRasoiDb();
+      const { data, error } = await db
+        .from('AppSettings')
+        .select('paymentsEnabled, defaultPantryIngredients')
+        .eq('id', 'default')
+        .maybeSingle();
+      if (error) throw error;
+      return parseAppConfigRow(data?.paymentsEnabled, data?.defaultPantryIngredients);
+    }
+
+    const data = await apiFetch<ReferenceData>('/api/reference');
+    return data.appConfig ?? DEFAULT_APP_CONFIG;
+  } catch (error) {
+    console.warn('[reference] Could not refresh app config', error);
+    return cachedReference?.appConfig ?? DEFAULT_APP_CONFIG;
+  }
+}
+
+async function mergeFreshAppConfig(data: ReferenceData): Promise<ReferenceData> {
+  const appConfig = await loadAppConfigFresh();
+  const prevPantry = data.appConfig?.defaultPantryIngredients ?? [];
+  if (
+    appConfig.paymentsEnabled === data.appConfig?.paymentsEnabled &&
+    appConfig.defaultPantryIngredients.length === prevPantry.length &&
+    appConfig.defaultPantryIngredients.every((item, index) => item === prevPantry[index])
+  ) {
+    return data;
+  }
+  return { ...data, appConfig };
+}
+
 async function loadReferenceFromSupabase(): Promise<ReferenceData> {
   const db = getRasoiDb();
 
@@ -76,29 +124,30 @@ async function loadReferenceFromSupabase(): Promise<ReferenceData> {
       items: parseJson<string[]>(section.items, []),
     })),
     kitchenStyles: (kitchenResult.data ?? []) as KitchenStyle[],
-    appConfig: {
-      paymentsEnabled: settingsResult.data?.paymentsEnabled ?? DEFAULT_APP_CONFIG.paymentsEnabled,
-      defaultPantryIngredients: parseJson<string[]>(
-        settingsResult.data?.defaultPantryIngredients,
-        DEFAULT_APP_CONFIG.defaultPantryIngredients,
-      ),
-    },
+    appConfig: parseAppConfigRow(
+      settingsResult.data?.paymentsEnabled,
+      settingsResult.data?.defaultPantryIngredients,
+    ),
   };
 }
 
 export async function loadReferenceData(force = false): Promise<ReferenceData> {
   if (cachedReference && !force) {
-    return cachedReference;
+    const merged = await mergeFreshAppConfig(cachedReference);
+    cachedReference = merged;
+    return merged;
   }
 
   if (!force) {
     const diskCached = await loadCachedReferenceData();
     if (diskCached) {
-      cachedReference = {
+      const merged = await mergeFreshAppConfig({
         ...diskCached,
         appConfig: diskCached.appConfig ?? DEFAULT_APP_CONFIG,
-      };
-      return cachedReference;
+      });
+      cachedReference = merged;
+      void saveCachedReferenceData(merged);
+      return merged;
     }
   }
 

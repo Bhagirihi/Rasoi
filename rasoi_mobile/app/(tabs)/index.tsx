@@ -127,7 +127,23 @@ export default function HomeScreen() {
   const showHeroIntro = !heroIntroFinished;
   const showLateNightPick =
     heroIntroFinished && meal.isOvernightDual && !!lateNightPick;
-  const showPickCard = heroIntroFinished && !!topPick;
+  const fallbackTonightCards =
+    heroIntroFinished &&
+    discoveryReady &&
+    !topPick &&
+    tonightCards.length === 0 &&
+    rankedRecipes.length > 0
+      ? rankedRecipes.slice(0, 3)
+      : [];
+  const displayTopPick =
+    topPick ?? (fallbackTonightCards.length > 0 ? fallbackTonightCards[0] : undefined);
+  const displayAlsoCards =
+    tonightCards.length > 0
+      ? tonightCards
+      : fallbackTonightCards.length > 1
+        ? fallbackTonightCards.slice(1)
+        : [];
+  const showPickCard = heroIntroFinished && !!displayTopPick;
   const showTonightSkeleton =
     heroIntroFinished &&
     !discoveryReady &&
@@ -136,9 +152,9 @@ export default function HomeScreen() {
   const moreRecipeCount = Math.max(rankedRecipes.length - 4, 0);
   const showRecipesCluster =
     showLateNightPick ||
-    showPickCard ||
+    !!displayTopPick ||
     showTonightSkeleton ||
-    tonightCards.length > 0;
+    displayAlsoCards.length > 0;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -150,16 +166,16 @@ export default function HomeScreen() {
   }, [refreshRecipes, refreshHomePicks]);
 
   const topPickPantryMatch = useMemo(() => {
-    if (!topPick) return 0;
-    return getPantryMatchPercent(topPick, pantryIngredients);
-  }, [topPick, pantryIngredients]);
+    if (!displayTopPick) return 0;
+    return getPantryMatchPercent(displayTopPick, pantryIngredients);
+  }, [displayTopPick, pantryIngredients]);
 
   const lateNightPantryMatch = useMemo(() => {
     if (!lateNightPick) return 0;
     return getPantryMatchPercent(lateNightPick, pantryIngredients);
   }, [lateNightPick, pantryIngredients]);
 
-  const sheetRecipe = cookTonightTarget ?? topPick ?? null;
+  const sheetRecipe = cookTonightTarget ?? displayTopPick ?? null;
   const sheetMissing = useMemo(() => {
     if (!sheetRecipe) return [];
     return partitionIngredients(sheetRecipe, pantryIngredients).missing;
@@ -240,6 +256,7 @@ export default function HomeScreen() {
         ]}
       >
         <AppTabHeader
+          compact
           title={
             userName
               ? `${greeting.replace("!", "")}, ${userName.split(" ")[0]}!`
@@ -318,10 +335,10 @@ export default function HomeScreen() {
                 </View>
               ) : null}
 
-              {showPickCard && topPick ? (
+              {showPickCard && displayTopPick ? (
                 <View style={styles.tonightBlock}>
                   <HomeRecipeRow
-                    key={topPick.id}
+                    key={displayTopPick.id}
                     section="pick"
                     sectionLabel={
                       meal.isOvernightDual
@@ -331,17 +348,17 @@ export default function HomeScreen() {
                     headerTrailing={
                       <HomePickShuffleButton onPress={() => void refreshHomePicks(true)} />
                     }
-                    recipe={topPick}
+                    recipe={displayTopPick}
                     pantryMatchPercent={topPickPantryMatch}
                     cookCtaLabel={
                       meal.isOvernightDual ? "Plan breakfast" : meal.cookCta
                     }
-                    onPress={() => router.push(`/recipe/${topPick.id}`)}
-                    onCookTonight={() => openCookTonight(topPick)}
+                    onPress={() => router.push(`/recipe/${displayTopPick.id}`)}
+                    onCookTonight={() => openCookTonight(displayTopPick)}
                     onShopMissing={(missing, partner) =>
-                      openShopModal(topPick, missing, partner)
+                      openShopModal(displayTopPick, missing, partner)
                     }
-                    onNotInterested={() => handleNotInterested(topPick)}
+                    onNotInterested={() => handleNotInterested(displayTopPick)}
                   />
                 </View>
               ) : null}
@@ -357,7 +374,7 @@ export default function HomeScreen() {
                 </View>
               ) : null}
 
-              {tonightCards.length > 0 ? (
+              {displayAlsoCards.length > 0 ? (
                 <View style={styles.tonightBlock}>
                   <HomeSectionHeader
                     title={meal.alsoLabel}
@@ -366,7 +383,7 @@ export default function HomeScreen() {
                     iconColor={themeColors.muted}
                   />
                   <View style={styles.tonightList}>
-                    {tonightCards.map((recipe) => {
+                    {displayAlsoCards.map((recipe) => {
                       return (
                         <View key={recipe.id}>
                           <HomeRecipeRow
@@ -481,7 +498,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   scrollContent: {
     paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.md,
+    paddingTop: spacing.xs,
   },
   sections: {
     gap: HOME_SECTION_GAP,

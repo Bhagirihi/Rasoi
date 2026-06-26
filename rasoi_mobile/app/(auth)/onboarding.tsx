@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, useFocusEffect, Redirect } from 'expo-router';
+import { useRouter, useFocusEffect, Redirect, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
   ArrowRight,
@@ -41,12 +41,27 @@ import {
   requestUserLocation,
 } from '@/utils/location';
 import { useAppContext } from '@/context/AppContext';
+import { markPermissionsOnboardingComplete, shouldShowPermissionsOnboarding } from '@/utils/permissionsOnboarding';
 
 type OnboardingStep = 'diet' | 'cuisine' | 'notifications' | 'location';
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding, isHydrated, isLoggedIn, hasCompletedOnboarding, syncUserLocation, pendingPantrySetup } = useAppContext();
+  const { permissionsOnly: permissionsOnlyParam, step: stepParam } = useLocalSearchParams<{
+    permissionsOnly?: string;
+    step?: string;
+  }>();
+  const permissionsOnly = permissionsOnlyParam === '1';
+  const {
+    completeOnboarding,
+    isHydrated,
+    isLoggedIn,
+    hasCompletedOnboarding,
+    syncUserLocation,
+    pendingPantrySetup,
+    setNotificationsEnabled,
+    userCity,
+  } = useAppContext();
   const { kitchenStyles, refreshReference } = useReferenceData();
 
   useFocusEffect(
@@ -61,6 +76,21 @@ export default function OnboardingScreen() {
   const [notificationsPreference, setNotificationsPreference] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const finishingRef = useRef(false);
+  const [permissionsGateReady, setPermissionsGateReady] = useState(!permissionsOnly);
+  const [needsPermissionsFlow, setNeedsPermissionsFlow] = useState(permissionsOnly);
+
+  useEffect(() => {
+    if (!permissionsOnly) return;
+    setStep(stepParam === 'location' ? 'location' : 'notifications');
+  }, [permissionsOnly, stepParam]);
+
+  useEffect(() => {
+    if (!permissionsOnly || !isHydrated) return;
+    void shouldShowPermissionsOnboarding(userCity).then((needs) => {
+      setNeedsPermissionsFlow(needs);
+      setPermissionsGateReady(true);
+    });
+  }, [permissionsOnly, isHydrated, userCity]);
 
   useEffect(() => {
     const activeIds = new Set(kitchenStyles.map((style) => style.id));
@@ -142,7 +172,29 @@ export default function OnboardingScreen() {
     }
   };
 
+  const completePermissionsFlow = async (notificationsEnabled: boolean) => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    try {
+      await markPermissionsOnboardingComplete();
+      await setNotificationsEnabled(notificationsEnabled);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (pendingPantrySetup) {
+        router.replace('/(tabs)/pantry');
+        return;
+      }
+      router.replace('/(tabs)');
+    } catch {
+      finishingRef.current = false;
+      throw new Error('Could not save your preferences. Please try again.');
+    }
+  };
+
   const finishOnboarding = async (notificationsEnabled: boolean) => {
+    if (permissionsOnly) {
+      await completePermissionsFlow(notificationsEnabled);
+      return;
+    }
     if (!selectedDiet || finishingRef.current) return;
 
     finishingRef.current = true;
@@ -154,6 +206,8 @@ export default function OnboardingScreen() {
         regionalCuisine: cuisinesToRegion(selectedCuisines, kitchenStyles),
         notificationsEnabled,
       });
+
+      await markPermissionsOnboardingComplete();
 
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       if (!isLoggedIn) {
@@ -175,15 +229,28 @@ export default function OnboardingScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (isHydrated && hasCompletedOnboarding) {
+  if (isHydrated && hasCompletedOnboarding && !permissionsOnly) {
     return <Redirect href={pendingPantrySetup ? '/(tabs)/pantry' : '/(tabs)'} />;
+  }
+
+  if (
+    isHydrated &&
+    permissionsOnly &&
+    permissionsGateReady &&
+    !needsPermissionsFlow
+  ) {
+    return <Redirect href={pendingPantrySetup ? '/(tabs)/pantry' : '/(tabs)'} />;
+  }
+
+  if (permissionsOnly && !permissionsGateReady) {
+    return null;
   }
 
   if (step === 'notifications') {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
-        eyebrow="Step 3 of 4"
+        eyebrow={permissionsOnly ? undefined : 'Step 3 of 4'}
         onEnable={handleEnableNotifications}
         onSkip={handleSkipNotifications}
         skipTestID={testIds.onboardingSkipNotify}
@@ -216,7 +283,7 @@ export default function OnboardingScreen() {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
-        eyebrow="Step 4 of 4"
+        eyebrow={permissionsOnly ? undefined : 'Step 4 of 4'}
         onEnable={handleEnableLocation}
         onSkip={handleSkipLocation}
         skipTestID={testIds.onboardingSkipLocation}

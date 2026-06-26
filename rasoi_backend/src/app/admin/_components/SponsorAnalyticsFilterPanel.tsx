@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import FilterChipBar from '@/app/admin/_components/FilterChipBar';
+import AdminFilterShell from '@/app/admin/_components/AdminFilterShell';
 import { GhostButton } from '@/app/admin/_components/ui';
 import { SPONSOR_PLACEMENT_OPTIONS } from '@/lib/sponsor-placements';
 import { sponsorAnalyticsQueryString } from '@/lib/sponsor-analytics-filters';
@@ -36,7 +37,7 @@ export default function SponsorAnalyticsFilterPanel({
   };
 
   return (
-    <div className="admin-card space-y-5 rounded-[1.25rem] p-5">
+    <AdminFilterShell>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-[220px] flex-1">
           <label
@@ -87,6 +88,6 @@ export default function SponsorAnalyticsFilterPanel({
           { value: '90', label: '90 days' },
         ]}
       />
-    </div>
+    </AdminFilterShell>
   );
 }

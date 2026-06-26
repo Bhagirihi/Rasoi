@@ -3,6 +3,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   Easing,
+  FadeIn,
+  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -10,9 +12,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { colors, spacing } from '@/constants/theme';
 import RasoiBrandIcon from '@/components/RasoiBrandIcon';
-import SplashFoodCollage from '@/components/SplashFoodCollage';
+import { colors, spacing } from '@/constants/theme';
 
 type LoadingStep = {
   message: string;
@@ -27,23 +28,40 @@ type AppSavingOverlayProps = {
   steps?: LoadingStep[];
 };
 
-const STEP_INTERVAL_MS = 2200;
+const STEP_INTERVAL_MS = 2400;
 
-function AnimatedDot({ active }: { active: boolean }) {
-  const width = useSharedValue(active ? 18 : 7);
-  const opacity = useSharedValue(active ? 1 : 0.35);
+function LoadingDot({ delay }: { delay: number }) {
+  const offset = useSharedValue(0);
 
   useEffect(() => {
-    width.value = withTiming(active ? 18 : 7, { duration: 280, easing: Easing.out(Easing.quad) });
-    opacity.value = withTiming(active ? 1 : 0.35, { duration: 280 });
-  }, [active, opacity, width]);
+    offset.value = withRepeat(
+      withSequence(
+        withTiming(0, { duration: delay }),
+        withTiming(-5, { duration: 280, easing: Easing.out(Easing.quad) }),
+        withTiming(0, { duration: 280, easing: Easing.in(Easing.quad) }),
+        withTiming(0, { duration: 560 }),
+      ),
+      -1,
+      false,
+    );
+  }, [delay, offset]);
 
   const style = useAnimatedStyle(() => ({
-    width: width.value,
-    opacity: opacity.value,
+    transform: [{ translateY: offset.value }],
+    opacity: 0.35 + (1 - Math.abs(offset.value) / 5) * 0.65,
   }));
 
-  return <Animated.View style={[styles.dot, style, active && styles.dotActive]} />;
+  return <Animated.View style={[styles.dot, style]} />;
+}
+
+function LoadingDots() {
+  return (
+    <View style={styles.dotsRow} accessibilityElementsHidden>
+      <LoadingDot delay={0} />
+      <LoadingDot delay={120} />
+      <LoadingDot delay={240} />
+    </View>
+  );
 }
 
 export default function AppSavingOverlay({
@@ -53,7 +71,6 @@ export default function AppSavingOverlay({
   steps,
 }: AppSavingOverlayProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [dotIndex, setDotIndex] = useState(0);
 
   const resolvedSteps = useMemo(() => {
     if (steps && steps.length > 0) return steps;
@@ -62,39 +79,40 @@ export default function AppSavingOverlay({
 
   const activeStep = resolvedSteps[stepIndex % resolvedSteps.length] ?? resolvedSteps[0];
 
-  const scale = useSharedValue(0.94);
-  const ringOpacity = useSharedValue(0.5);
-  const rotation = useSharedValue(0);
+  const breathe = useSharedValue(1);
+  const ringRotation = useSharedValue(0);
+  const ringPulse = useSharedValue(0.55);
 
   useEffect(() => {
     if (!visible) {
       setStepIndex(0);
-      setDotIndex(0);
       return;
     }
 
-    scale.value = withRepeat(
+    breathe.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 700, easing: Easing.inOut(Easing.quad) }),
-        withTiming(0.96, { duration: 700, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1.04, { duration: 900, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1, { duration: 900, easing: Easing.inOut(Easing.quad) }),
       ),
       -1,
       false,
     );
-    ringOpacity.value = withRepeat(
+
+    ringRotation.value = withRepeat(
+      withTiming(360, { duration: 1800, easing: Easing.linear }),
+      -1,
+      false,
+    );
+
+    ringPulse.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 700, easing: Easing.inOut(Easing.quad) }),
-        withTiming(0.45, { duration: 700, easing: Easing.inOut(Easing.quad) }),
+        withTiming(1, { duration: 900, easing: Easing.inOut(Easing.quad) }),
+        withTiming(0.45, { duration: 900, easing: Easing.inOut(Easing.quad) }),
       ),
       -1,
       false,
     );
-    rotation.value = withRepeat(
-      withTiming(360, { duration: 2400, easing: Easing.linear }),
-      -1,
-      false,
-    );
-  }, [ringOpacity, rotation, scale, visible]);
+  }, [breathe, ringPulse, ringRotation, visible]);
 
   useEffect(() => {
     if (!visible || resolvedSteps.length <= 1) return;
@@ -106,63 +124,54 @@ export default function AppSavingOverlay({
     return () => clearInterval(timer);
   }, [resolvedSteps.length, visible]);
 
-  useEffect(() => {
-    if (!visible) return;
-
-    const timer = setInterval(() => {
-      setDotIndex((current) => (current + 1) % 3);
-    }, 450);
-
-    return () => clearInterval(timer);
-  }, [visible]);
-
-  const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+  const logoStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: breathe.value }],
   }));
 
   const ringStyle = useAnimatedStyle(() => ({
-    opacity: ringOpacity.value,
+    transform: [{ rotate: `${ringRotation.value}deg` }],
+    opacity: ringPulse.value,
   }));
 
-  const spinnerStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }],
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: 0.35 + ringPulse.value * 0.25,
+    transform: [{ scale: 0.92 + ringPulse.value * 0.08 }],
   }));
 
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
-      <View style={styles.backdrop}>
+      <View style={styles.root}>
         <LinearGradient
-          colors={['rgba(10,9,8,0.92)', 'rgba(15,18,16,0.94)', 'rgba(10,9,8,0.92)']}
+          colors={['#0A0908', '#12100E', '#0A0908']}
+          locations={[0, 0.55, 1]}
           style={StyleSheet.absoluteFillObject}
         />
-        <SplashFoodCollage variant="fullscreen" />
 
-        <View style={styles.card}>
+        <View style={styles.glowGreen} />
+        <View style={styles.glowOrange} />
+
+        <View style={styles.content}>
           <View style={styles.logoStage}>
-            <SplashFoodCollage variant="card" />
-            <Animated.View style={[styles.ringOuter, ringStyle]} />
-            <Animated.View style={[styles.ringInner, ringStyle]} />
-            <Animated.View style={[styles.spinnerArc, spinnerStyle]} />
-
-            <Animated.View style={iconStyle}>
-              <RasoiBrandIcon size={80} borderRadius={18} />
+            <Animated.View style={[styles.logoGlow, glowStyle]} />
+            <Animated.View style={[styles.progressRing, ringStyle]} />
+            <Animated.View style={logoStyle}>
+              <RasoiBrandIcon size={88} borderRadius={22} />
             </Animated.View>
           </View>
 
-          <Text style={styles.message} key={`msg-${stepIndex}`}>
-            {activeStep.message}
-          </Text>
-          {activeStep.subtitle ? (
-            <Text style={styles.subtitle} key={`sub-${stepIndex}`}>
-              {activeStep.subtitle}
-            </Text>
-          ) : null}
+          <Animated.View
+            key={`step-${stepIndex}`}
+            entering={FadeIn.duration(220)}
+            exiting={FadeOut.duration(160)}
+            style={styles.copy}
+          >
+            <Text style={styles.message}>{activeStep.message}</Text>
+            {activeStep.subtitle ? (
+              <Text style={styles.subtitle}>{activeStep.subtitle}</Text>
+            ) : null}
+          </Animated.View>
 
-          <View style={styles.dotsRow}>
-            {[0, 1, 2].map((index) => (
-              <AnimatedDot key={index} active={index === dotIndex} />
-            ))}
-          </View>
+          <LoadingDots />
         </View>
       </View>
     </Modal>
@@ -170,86 +179,91 @@ export default function AppSavingOverlay({
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  root: {
+    flex: 1,
+    backgroundColor: colors.dark.bg,
+  },
+  glowGreen: {
+    position: 'absolute',
+    top: '18%',
+    right: -40,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(0,168,107,0.14)',
+  },
+  glowOrange: {
+    position: 'absolute',
+    bottom: '20%',
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    backgroundColor: 'rgba(255,107,53,0.12)',
+  },
+  content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  card: {
-    width: '100%',
-    maxWidth: 320,
-    alignItems: 'center',
-    borderRadius: 28,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxxl,
-    paddingBottom: spacing.xxl,
-    zIndex: 2,
-    overflow: 'visible',
+    paddingHorizontal: spacing.xxl,
+    paddingBottom: spacing.xxxl,
   },
   logoStage: {
-    width: 180,
-    height: 180,
+    width: 148,
+    height: 148,
     alignItems: 'center',
     justifyContent: 'center',
-    overflow: 'visible',
+    marginBottom: spacing.xxxl,
   },
-  ringOuter: {
-    position: 'absolute',
-    width: 132,
-    height: 132,
-    borderRadius: 66,
-    borderWidth: 1,
-    borderColor: 'rgba(255,107,53,0.35)',
-  },
-  ringInner: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  spinnerArc: {
+  logoGlow: {
     position: 'absolute',
     width: 120,
     height: 120,
     borderRadius: 60,
+    backgroundColor: 'rgba(255,107,53,0.18)',
+  },
+  progressRing: {
+    position: 'absolute',
+    width: 124,
+    height: 124,
+    borderRadius: 62,
     borderWidth: 2,
     borderColor: 'transparent',
     borderTopColor: colors.primary,
-    borderRightColor: 'rgba(255,107,53,0.25)',
+    borderRightColor: 'rgba(255,107,53,0.22)',
+  },
+  copy: {
+    alignItems: 'center',
+    minHeight: 72,
+    paddingHorizontal: spacing.md,
   },
   message: {
-    marginTop: spacing.xl,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.dark.text,
     textAlign: 'center',
+    letterSpacing: -0.3,
   },
   subtitle: {
     marginTop: spacing.sm,
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '500',
     color: colors.dark.textMuted,
     textAlign: 'center',
+    maxWidth: 280,
   },
   dotsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: spacing.lg,
-    height: 10,
+    marginTop: spacing.xxl,
+    height: 12,
   },
   dot: {
+    width: 7,
     height: 7,
     borderRadius: 4,
-    backgroundColor: colors.primary,
-  },
-  dotActive: {
     backgroundColor: colors.primary,
   },
 });

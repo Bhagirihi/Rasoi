@@ -1,15 +1,18 @@
 import PromoCodeForm from '@/app/admin/(console)/promo-codes/PromoCodeForm';
-import { GhostButton, PageHeader } from '@/app/admin/_components/ui';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 
 export default function NewPromoCodePage() {
   return (
-    <div className="space-y-8">
-      <PageHeader
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/promo-codes"
         title="Add promo code"
         description="Create trial extension or yearly Play offer unlock codes. Users redeem them in the app paywall."
-        action={<GhostButton href="/admin/promo-codes">Back to promo codes</GhostButton>}
+        backHref="/admin/promo-codes"
+        backLabel="Back to promo codes"
       />
       <PromoCodeForm />
-    </div>
+    </AdminPageLayout>
   );
 }

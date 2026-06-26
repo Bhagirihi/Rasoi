@@ -4,25 +4,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
 import RasoiLogo from '@/app/_components/RasoiLogo';
+import { adminNavSections } from '@/app/admin/_components/admin-nav';
 import { useToast } from '@/app/admin/_components/Toast';
 
-export const adminNavItems = [
-  { href: '/admin', label: 'Overview', exact: true },
-  { href: '/admin/kitchen-styles', label: 'Kitchen styles' },
-  { href: '/admin/recipes', label: 'Recipes' },
-  { href: '/admin/sponsors', label: 'Sponsors' },
-  { href: '/admin/announcements', label: 'Announcements' },
-  { href: '/admin/sponsor-applications', label: 'Applications' },
-  { href: '/admin/partners', label: 'Partner links' },
-  { href: '/admin/payments', label: 'Payment' },
-  { href: '/admin/pantry-defaults', label: 'Pantry defaults' },
-  { href: '/admin/promo-codes', label: 'Promo codes' },
-  { href: '/admin/integrations', label: 'Integrations' },
-  { href: '/admin/users', label: 'Users' },
-  { href: '/admin/affiliate-events', label: 'Partner events' },
-  { href: '/admin/sponsor-analytics', label: 'Sponsor analytics' },
-  { href: '/admin/feedback', label: 'User reports' },
-] as const;
+export { adminNavItems, adminNavSections } from '@/app/admin/_components/admin-nav';
 
 export function AdminSidebarNav({
   adminName,
@@ -45,7 +30,7 @@ export function AdminSidebarNav({
     <>
       <div className="border-b border-[#2a2218] px-6 py-8">
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <Link href="/admin" onClick={onNavigate} className="flex items-center gap-3">
             <RasoiLogo size="md" />
             <div>
               <p className="font-display text-2xl font-semibold tracking-tight">Rasoi</p>
@@ -53,8 +38,8 @@ export function AdminSidebarNav({
                 Admin Studio
               </p>
             </div>
-          </div>
-          {showCollapse && onCollapse && (
+          </Link>
+          {showCollapse && onCollapse ? (
             <button
               type="button"
               onClick={onCollapse}
@@ -63,38 +48,45 @@ export function AdminSidebarNav({
             >
               Hide
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-6">
-        <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-admin-sidebar-muted">
-          Manage
-        </p>
-        <ul className="mt-4 space-y-1">
-          {adminNavItems.map((item) => {
-            const active =
-              'exact' in item && item.exact
-                ? pathname === item.href
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+      <nav className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="space-y-6">
+          {adminNavSections.map((section) => (
+            <div key={section.id}>
+              <p className="px-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-admin-sidebar-muted">
+                {section.label}
+              </p>
+              <ul className="mt-2 space-y-1">
+                {section.items.map((item) => {
+                  const active =
+                    item.exact === true
+                      ? pathname === item.href
+                      : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  onClick={onNavigate}
-                  className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition ${
-                    active
-                      ? 'border border-admin-gold/30 bg-[#221c18] text-admin-gold-soft'
-                      : 'text-[#d8d0c6] hover:bg-[#1c1714] hover:text-white'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={onNavigate}
+                        title={item.shortDescription}
+                        className={`flex items-center rounded-xl px-3 py-2.5 text-sm font-medium transition ${
+                          active
+                            ? 'border border-admin-gold/30 bg-[#221c18] text-admin-gold-soft'
+                            : 'text-[#d8d0c6] hover:bg-[#1c1714] hover:text-white'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
       </nav>
 
       <div className="border-t border-[#2a2218] px-6 py-5">

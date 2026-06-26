@@ -26,7 +26,8 @@ export default function BrandSponsor({
   searchQuery,
   placement = 'recipe',
 }: BrandSponsorProps) {
-  const { openBrandSearch } = usePartners();
+  const { openBrandSearch, groceryPartners } = usePartners();
+  const primaryGroceryPartner = groceryPartners[0]?.id;
   const { userCity } = useAppContext();
   const { colors: themeColors, semantic, isDark } = useTheme();
   const loggedImpressionRef = useRef(false);
@@ -48,11 +49,11 @@ export default function BrandSponsor({
       eventType: 'tap',
       brandName,
       placement,
-      partner: 'blinkit',
+      partner: primaryGroceryPartner,
       query: searchQuery ?? brandName,
       city: userCity ?? undefined,
     });
-    void openBrandSearch(searchQuery ?? brandName, 'blinkit', { context: 'brand_search' });
+    void openBrandSearch(searchQuery ?? brandName, primaryGroceryPartner, { context: 'brand_search' });
   };
 
   return (

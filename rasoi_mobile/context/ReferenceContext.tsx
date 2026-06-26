@@ -4,19 +4,18 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import {
+  loadAppConfigFresh,
   loadReferenceData,
   type KitchenStyle,
   type PantrySection,
   type ReferenceData,
 } from '@/services/reference';
-import { REFERENCE_CACHE_TTL_MS } from '@/utils/referenceCache';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
 const DEFAULT_APP_CONFIG = {
@@ -69,25 +68,31 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
     void refreshReference();
   }, [refreshReference]);
 
-  const lastForegroundRefreshRef = useRef(0);
-
   useEffect(() => {
     const handleAppState = (nextState: AppStateStatus) => {
       if (nextState !== 'active') return;
-
-      const now = Date.now();
-      if (now - lastForegroundRefreshRef.current < REFERENCE_CACHE_TTL_MS) return;
-      lastForegroundRefreshRef.current = now;
-
-      void refreshReference(false);
+      void (async () => {
+        const appConfig = await loadAppConfigFresh();
+        setReference((current) => {
+          const prevPantry = current.appConfig?.defaultPantryIngredients ?? [];
+          if (
+            appConfig.paymentsEnabled === current.appConfig?.paymentsEnabled &&
+            appConfig.defaultPantryIngredients.length === prevPantry.length &&
+            appConfig.defaultPantryIngredients.every((item, index) => item === prevPantry[index])
+          ) {
+            return current;
+          }
+          return { ...current, appConfig };
+        });
+      })();
     };
 
     const appStateSub = AppState.addEventListener('change', handleAppState);
     return () => appStateSub.remove();
-  }, [refreshReference]);
+  }, []);
 
   useRasoiRealtimeTables(
-    ['KitchenStyle', 'RegionalCuisineOption', 'PantrySection'],
+    ['KitchenStyle', 'RegionalCuisineOption', 'PantrySection', 'AppSettings'],
     () => {
       void refreshReference(true);
     },

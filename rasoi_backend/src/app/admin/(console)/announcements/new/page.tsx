@@ -1,14 +1,18 @@
 import HomeAnnouncementForm from '@/app/admin/(console)/announcements/HomeAnnouncementForm';
-import { PageHeader } from '@/app/admin/_components/ui';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 
 export default function NewHomeAnnouncementPage() {
   return (
-    <div className="space-y-8">
-      <PageHeader
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/announcements"
         title="New home announcement"
         description="Modal and/or banner on Home. Users see it once per campaign key."
+        backHref="/admin/announcements"
+        backLabel="Back to announcements"
       />
       <HomeAnnouncementForm />
-    </div>
+    </AdminPageLayout>
   );
 }

@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 
 import HomeAnnouncementForm from '@/app/admin/(console)/announcements/HomeAnnouncementForm';
-import { PageHeader } from '@/app/admin/_components/ui';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { db } from '@/lib/db';
 
 export default async function EditHomeAnnouncementPage({
@@ -14,9 +15,15 @@ export default async function EditHomeAnnouncementPage({
   if (!announcement) notFound();
 
   return (
-    <div className="space-y-8">
-      <PageHeader title="Edit home announcement" description={announcement.campaignKey} />
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/announcements"
+        title="Edit home announcement"
+        description={announcement.campaignKey}
+        backHref="/admin/announcements"
+        backLabel="Back to announcements"
+      />
       <HomeAnnouncementForm announcement={announcement} />
-    </div>
+    </AdminPageLayout>
   );
 }

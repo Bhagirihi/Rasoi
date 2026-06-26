@@ -32,13 +32,14 @@ import { isEmailDeliveryUnavailableError } from "@/utils/emailDeliveryErrors";
 import { warmApiConnection } from "@/utils/api";
 import { getLoginEmailValidationError } from "@/utils/identityValidation";
 import { normalizeEmail } from "@/utils/storage";
+import { resolvePostAuthHref } from "@/utils/authNavigation";
 
 type LoginStep = "email" | "otp";
 type FieldError = "email" | "otp" | "general" | null;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, continueWithPendingEmailVerification } =
+  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, continueWithPendingEmailVerification, userCity, pendingPantrySetup } =
     useAppContext();
 
   const [step, setStep] = useState<LoginStep>("email");
@@ -72,16 +73,12 @@ export default function LoginScreen() {
     if (step === "otp") warmApiConnection();
   }, [step]);
 
-  const navigateAfterAuth = ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
-    if (!hasCompletedOnboarding) {
-      router.replace("/(auth)/onboarding");
-      return;
-    }
-    if (showTrialWelcome) {
-      router.replace("/(auth)/trial-welcome");
-      return;
-    }
-    router.replace("/(tabs)");
+  const navigateAfterAuth = async ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
+    const href = await resolvePostAuthHref(
+      { showTrialWelcome, hasCompletedOnboarding },
+      { userCity, pendingPantrySetup },
+    );
+    router.replace(href);
   };
 
   const validateEmail = (): string | null => {
@@ -105,7 +102,7 @@ export default function LoginScreen() {
       const trimmed = guestName.trim();
       const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
       setShowGuestModal(false);
-      navigateAfterAuth(nav);
+      void navigateAfterAuth(nav);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Could not continue as guest. Please try again.";
@@ -126,7 +123,7 @@ export default function LoginScreen() {
       });
       setEmailDeliveryBlocked(false);
       if (nav) {
-        navigateAfterAuth(nav);
+        void navigateAfterAuth(nav);
       }
     } catch (error) {
       setFieldError("general");
@@ -205,7 +202,7 @@ export default function LoginScreen() {
       const nav = await verifyLoginEmailOtp(normalizedEmail, code);
       authLog("login:verifyOtp_success");
       verified = true;
-      navigateAfterAuth(nav);
+      void navigateAfterAuth(nav);
     } catch (error) {
       authError("login:verifyOtp_failed", error, {
         email: maskEmail(normalizedEmail),
@@ -275,17 +272,19 @@ export default function LoginScreen() {
           steps={
             showGuestModal
               ? [
-                  { message: "Starting guest mode…", subtitle: "Setting up your kitchen" },
-                  { message: "Almost ready…", subtitle: "Opening Rasoi" },
+                  { message: 'Starting guest mode', subtitle: 'Setting up your kitchen' },
+                  { message: 'Almost there', subtitle: 'Opening Rasoi for you' },
                 ]
-              : step === "otp"
-              ? [{ message: "Signing you in…", subtitle: "Verifying code and loading your profile" }]
-              : [
-                  {
-                    message: "Sending verification code…",
-                    subtitle: "Check your email in a moment",
-                  },
-                ]
+              : step === 'otp'
+                ? [
+                    { message: 'Signing you in', subtitle: 'Verifying your code and loading your profile' },
+                  ]
+                : [
+                    {
+                      message: 'Sending your code',
+                      subtitle: 'Check your inbox — it usually arrives in a few seconds',
+                    },
+                  ]
           }
         />
         <ScrollViewWithFloatingIndicator

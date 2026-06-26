@@ -1,10 +1,12 @@
 import { Suspense } from 'react';
 
 import SupabaseSyncPanel from '@/app/admin/_components/SupabaseSyncPanel';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
+import AdminPanel from '@/app/admin/_components/AdminPanel';
 import UserFilterPanel from '@/app/admin/_components/UserFilterPanel';
 import UsersManagementClient from '@/app/admin/_components/UsersManagementClient';
 import { buildAdminPageHref, TablePagination } from '@/app/admin/_components/TablePagination';
-import { PageHeader } from '@/app/admin/_components/ui';
 import { loadAdminMemberRows } from '@/lib/admin-members';
 import { buildUserWhere } from '@/lib/recipe-filters';
 import { db } from '@/lib/db';
@@ -74,9 +76,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   const hasFilters = hasRestrictiveFilters(filterParams);
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Members"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/users"
         description={
           hasFilters
             ? `Showing ${rows.length === 0 ? 0 : offset + 1}–${offset + rows.length} of ${memberTotal} matching accounts (${totalCount} Rasoi profiles in database). ${pushReadyCount} on this page can receive push.`
@@ -88,14 +90,9 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         <UserFilterPanel />
       </Suspense>
 
-      <div className="admin-card rounded-2xl p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          Supabase sync
-        </p>
-        <div className="mt-3">
-          <SupabaseSyncPanel compact />
-        </div>
-      </div>
+      <AdminPanel title="Supabase sync" description="Pull auth users and profiles into the member list.">
+        <SupabaseSyncPanel compact />
+      </AdminPanel>
 
       <UsersManagementClient users={rows} />
 
@@ -105,6 +102,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         total={memberTotal}
         buildHref={(nextPage) => buildAdminPageHref('/admin/users', params, nextPage)}
       />
-    </div>
+    </AdminPageLayout>
   );
 }

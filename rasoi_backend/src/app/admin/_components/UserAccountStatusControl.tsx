@@ -46,7 +46,7 @@ export default function UserAccountStatusControl({
   };
 
   return (
-    <div className="admin-card space-y-4 rounded-2xl p-4">
+    <div className="admin-card space-y-4 rounded-[1.25rem] p-4">
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-admin-ink">Current status</p>

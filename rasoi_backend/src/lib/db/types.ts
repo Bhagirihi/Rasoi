@@ -174,6 +174,7 @@ export type PartnerLink = {
   partnerId: string;
   label: string;
   category: string;
+  region: string;
   deepLinkUrl: string;
   webUrl: string;
   active: boolean;

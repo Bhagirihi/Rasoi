@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { ReferenceData } from '@/services/reference';
 
-const CACHE_KEY = '@rasoi/reference_data_v1';
+const CACHE_KEY = '@rasoi/reference_data_v2';
 export const REFERENCE_CACHE_TTL_MS = 30 * 60 * 1000;
 
 type CachedReference = {

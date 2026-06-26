@@ -72,7 +72,7 @@ export default function SendMealNotificationControl({
     <div
       className={
         isDrawer
-          ? 'admin-card space-y-4 rounded-2xl p-4'
+          ? 'admin-card space-y-4 rounded-[1.25rem] p-4'
           : 'flex min-w-[220px] flex-wrap items-center gap-2'
       }
     >

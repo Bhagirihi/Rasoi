@@ -1,10 +1,12 @@
 import EasUpdatePanel from '@/app/admin/_components/EasUpdatePanel';
 import SupabaseSyncPanel from '@/app/admin/_components/SupabaseSyncPanel';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
+import AdminPanel from '@/app/admin/_components/AdminPanel';
 import {
   AdminCard,
   Badge,
   GhostButton,
-  PageHeader,
 } from '@/app/admin/_components/ui';
 import { getAppConfig } from '@/lib/app-settings';
 import {
@@ -22,9 +24,9 @@ export default async function IntegrationsAdminPage() {
   const grouped = groupIntegrationsByCategory(INTEGRATION_SERVICES);
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Integrations"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/integrations"
         description="Services, accounts, and env vars used across Rasoi mobile, backend, and marketing. Reference for operators — no secrets are shown here."
       />
 
@@ -54,39 +56,19 @@ export default async function IntegrationsAdminPage() {
         </AdminCard>
       </div>
 
-      <AdminCard className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          Mobile OTA (EAS Update)
-        </p>
-        <h2 className="font-display mt-2 text-2xl font-semibold text-admin-ink">
-          Production JS updates
-        </h2>
-        <div className="mt-4">
-          <EasUpdatePanel />
-        </div>
-      </AdminCard>
+      <AdminPanel title="Mobile OTA (EAS Update)" description="Production JS updates without a new APK.">
+        <EasUpdatePanel />
+      </AdminPanel>
 
-      <AdminCard className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          Supabase data sync
-        </p>
-        <h2 className="font-display mt-2 text-2xl font-semibold text-admin-ink">
-          Mirror auth and content
-        </h2>
-        <div className="mt-4">
-          <SupabaseSyncPanel />
-        </div>
-      </AdminCard>
+      <AdminPanel title="Supabase data sync" description="Mirror auth users and content into Rasoi tables.">
+        <SupabaseSyncPanel />
+      </AdminPanel>
 
-      <AdminCard className="p-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
-          Email & accounts
-        </p>
-        <p className="mt-2 text-sm text-admin-muted">
-          Gmail addresses and service accounts tied to Rasoi. OTP mail is sent through Supabase SMTP, not the backend
-          directly.
-        </p>
-        <div className="mt-6 overflow-x-auto">
+      <AdminPanel
+        title="Email & accounts"
+        description="Gmail addresses and service accounts tied to Rasoi. OTP mail is sent through Supabase SMTP, not the backend directly."
+      >
+        <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead>
               <tr className="border-b border-admin-border text-[11px] font-semibold uppercase tracking-wide text-admin-muted">
@@ -131,7 +113,7 @@ export default async function IntegrationsAdminPage() {
             ))}
           </ul>
         </div>
-      </AdminCard>
+      </AdminPanel>
 
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category} className="space-y-4">
@@ -181,6 +163,6 @@ export default async function IntegrationsAdminPage() {
           </div>
         </div>
       ))}
-    </div>
+    </AdminPageLayout>
   );
 }

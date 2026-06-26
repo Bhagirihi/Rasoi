@@ -1,6 +1,7 @@
 'use client';
 
 import FilterChipBar from '@/app/admin/_components/FilterChipBar';
+import AdminFilterShell from '@/app/admin/_components/AdminFilterShell';
 import {
   DIET_CHOICE_LABELS,
   DIET_CHOICES,
@@ -16,7 +17,7 @@ const DIET_DOT_COLORS: Record<string, string> = {
 
 export default function UserFilterPanel() {
   return (
-    <div className="admin-card space-y-5 rounded-[1.25rem] p-5">
+    <AdminFilterShell>
       <FilterChipBar
         param="dietChoice"
         label="Diet preference"
@@ -74,6 +75,6 @@ export default function UserFilterPanel() {
           { value: 'inactive', label: 'Deactivated' },
         ]}
       />
-    </div>
+    </AdminFilterShell>
   );
 }

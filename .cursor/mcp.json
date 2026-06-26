@@ -37,6 +37,10 @@
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/google-play/run.sh",
       "args": []
     },
+    "google-search-console": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/google-search-console/run.sh",
+      "args": []
+    },
     "reactotron": {
       "command": "npx",
       "args": ["-y", "reactotron-mcp"],

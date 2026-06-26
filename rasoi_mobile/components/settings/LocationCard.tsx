@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { MapPin } from 'lucide-react-native';
 import { useState } from 'react';
@@ -9,9 +10,10 @@ import { useTheme } from '@/context/ThemeContext';
 import { useRefreshUserLocation } from '@/hooks/useSyncUserLocation';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
-import { formatUserLocation } from '@/utils/location';
+import { formatUserLocation, isLocationPermissionGranted } from '@/utils/location';
 
 export default function LocationCard() {
+  const router = useRouter();
   const { colors: themeColors } = useTheme();
   const { userCity, userState, isLoggedIn } = useAppContext();
   const refreshLocation = useRefreshUserLocation();
@@ -33,6 +35,11 @@ export default function LocationCard() {
     setLoading(true);
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      const granted = await isLocationPermissionGranted();
+      if (!granted) {
+        router.push('/(auth)/onboarding?permissionsOnly=1&step=location');
+        return;
+      }
       const result = await refreshLocation();
       if (!result.ok) {
         showDialog({

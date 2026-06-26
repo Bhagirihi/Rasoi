@@ -1,4 +1,5 @@
 import { canonicalizeIngredientName } from '@/lib/ingredient-canonical';
+import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
 import { parseJson } from '@/lib/serializers';
 import type { Recipe } from '@/lib/db/types';
 import type { RecipeIngredient } from '@/lib/types';
@@ -52,6 +53,7 @@ function primaryFromTitle(title: string): string | null {
 
 function primaryFromIngredients(ingredients: RecipeIngredient[]): string | null {
   for (const ingredient of ingredients) {
+    if (!ingredient.name?.trim()) continue;
     const key = ingredientStorageKey(ingredient.name);
     if (!key || STAPLE_INGREDIENT_KEYS.has(key)) continue;
     return key.replace(/\s+/g, '_');
@@ -74,7 +76,7 @@ export function resolvePrimaryIngredient(recipe: Recipe): string {
     return recipe.primaryIngredient.trim().toLowerCase();
   }
 
-  const ingredients = parseJson<RecipeIngredient[]>(recipe.ingredients, []);
+  const ingredients = normalizeRecipeIngredients(parseJson(recipe.ingredients, []));
   return (
     primaryFromTitle(recipe.title) ??
     primaryFromIngredients(ingredients) ??

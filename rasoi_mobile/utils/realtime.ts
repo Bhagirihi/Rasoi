@@ -14,6 +14,7 @@ const REALTIME_TABLES = [
   'KitchenStyle',
   'RegionalCuisineOption',
   'PantrySection',
+  'AppSettings',
 ] as const;
 
 type RealtimeListener = () => void;

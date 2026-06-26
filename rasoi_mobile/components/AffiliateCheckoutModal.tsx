@@ -12,6 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AFFILIATE_CHECKOUT_DISCLOSURE } from '@/constants/monetization';
+import { resolveGroceryPartnerId } from '@/constants/partners';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import SmoothModal from '@/components/ui/SmoothModal';
@@ -40,12 +41,16 @@ export default function AffiliateCheckoutModal({
   recipeTitle,
   recipeId,
   missingIngredients,
-  initialPartner = 'blinkit',
+  initialPartner,
   variant = 'recipe',
 }: AffiliateCheckoutModalProps) {
   const [loading, setLoading] = useState<AffiliatePartner | null>(null);
   const { partnersInTrialMode } = useAppContext();
   const { groceryPartners, openGroceryCheckout } = usePartners();
+  const highlightedPartner = useMemo(
+    () => resolveGroceryPartnerId(initialPartner, groceryPartners),
+    [initialPartner, groceryPartners],
+  );
   const { colors: themeColors } = useTheme();
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
@@ -181,7 +186,7 @@ export default function AffiliateCheckoutModal({
 
           <View style={styles.partnerList}>
             {groceryPartners.map((partner) => {
-              const isPreferred = partner.id === initialPartner;
+              const isPreferred = partner.id === highlightedPartner;
               const isLoading = loading === partner.id;
               return (
                 <Pressable

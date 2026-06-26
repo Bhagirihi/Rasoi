@@ -3,24 +3,23 @@ import { useRouter } from 'expo-router';
 import EmailVerificationModal from '@/components/auth/EmailVerificationModal';
 import EmailVerificationPendingBanner from '@/components/auth/EmailVerificationPendingBanner';
 import { useAppContext, type AuthNavigationResult } from '@/context/AppContext';
+import { resolvePostAuthHref } from '@/utils/authNavigation';
 
 export default function EmailVerificationBridge() {
   const router = useRouter();
   const {
     emailVerificationModalVisible,
     closeEmailVerificationModal,
+    userCity,
+    pendingPantrySetup,
   } = useAppContext();
 
-  const navigateAfterVerify = ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
-    if (!hasCompletedOnboarding) {
-      router.replace('/(auth)/onboarding');
-      return;
-    }
-    if (showTrialWelcome) {
-      router.replace('/(auth)/trial-welcome');
-      return;
-    }
-    router.replace('/(tabs)');
+  const navigateAfterVerify = async ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
+    const href = await resolvePostAuthHref(
+      { showTrialWelcome, hasCompletedOnboarding },
+      { userCity, pendingPantrySetup },
+    );
+    router.replace(href);
   };
 
   return (

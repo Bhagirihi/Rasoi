@@ -129,7 +129,7 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
         {selectedUser && (
           <div className="space-y-6">
             {isAuthOnlyRowId(selectedUser.id) && (
-              <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              <div className="rounded-[1.25rem] border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                 <p className="font-semibold">Supabase Auth only</p>
                 <p className="mt-1">
                   This user exists in Supabase Auth but has not opened the Rasoi app far enough to create a{' '}
@@ -171,7 +171,7 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
 
             {drawerTab === 'profile' && (
               <>
-                <section className="admin-card rounded-2xl px-4 py-2">
+                <section className="admin-card rounded-[1.25rem] px-4 py-2">
                   <DetailRow
                     label="Status"
                     value={selectedUser.isActive ? 'Active' : 'Deactivated'}
@@ -263,7 +263,7 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
                 </section>
 
                 {selectedUser.ineligibleReasons.length > 0 && (
-                  <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                  <div className="rounded-[1.25rem] border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                     <p className="font-semibold">Delivery notes</p>
                     <ul className="mt-2 list-disc space-y-1 pl-5">
                       {selectedUser.ineligibleReasons.map((reason) => (
@@ -365,7 +365,7 @@ export default function UsersManagementClient({ users }: { users: AdminUserRow[]
 
             {drawerTab === 'account' && !selectedUser.canManage && (
               <section className="space-y-3">
-                <div className="rounded-2xl border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+                <div className="rounded-[1.25rem] border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm text-amber-950">
                   Plan changes are available after this user completes Rasoi app sync and has a{' '}
                   <code className="rounded bg-white/80 px-1">rasoi.User</code> profile.
                 </div>

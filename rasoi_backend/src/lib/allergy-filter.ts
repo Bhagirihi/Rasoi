@@ -13,7 +13,8 @@ export function recipeContainsAllergen(
   );
 
   return ingredients.some((ingredient) => {
+    if (!ingredient.name?.trim()) return false;
     const canonical = canonicalizeIngredientName(ingredient.name).toLowerCase();
-    return blocked.has(canonical);
+    return canonical && blocked.has(canonical);
   });
 }

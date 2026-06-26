@@ -146,6 +146,8 @@ Description: {1 sentence answer} + Download Rasoi free — cook from your pantry
 4. Submit sitemap: `https://rasoiapplication.in/sitemap.xml`
 5. Monitor: Queries containing "aaj kya banaye", "recipe app", "rasoi"
 
+**Sitemap rule:** Only include URLs on `rasoiapplication.in`. Do not add `play.google.com` links — Search Console rejects cross-domain URLs. Use the on-site Play landing page instead: `/google-play/rasoi-aaj-kya-banaye-indian-recipe-app-android` (links to Play in-page via `sameAs` / CTAs).
+
 ### Hostinger DNS TXT (verification example)
 
 ```

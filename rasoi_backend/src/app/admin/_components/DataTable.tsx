@@ -4,10 +4,12 @@ export function DataTable({
   columns,
   children,
   emptyMessage,
+  footer,
 }: {
   columns: string[];
   children: ReactNode;
   emptyMessage?: string;
+  footer?: ReactNode;
 }) {
   const isEmpty = Children.count(children) === 0;
 
@@ -38,6 +40,11 @@ export function DataTable({
           </tbody>
         </table>
       </div>
+      {footer && !isEmpty ? (
+        <div className="border-t border-admin-border/80 bg-[#f7f2ea] px-5 py-3 text-xs text-admin-muted">
+          {footer}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -34,9 +34,10 @@ export function getRegionalMatchPercent(recipeRegion: string, preferredRegion: s
 export function getPantryMatchPercent(recipe: RecipeResponse, pantryIngredients: string[]): number {
   if (recipe.ingredients.length === 0 || pantryIngredients.length === 0) return 0;
 
-  const available = recipe.ingredients.filter((ingredient) =>
-    pantryHasIngredient(pantryIngredients, ingredient.name),
-  ).length;
+  const available = recipe.ingredients.filter((ingredient) => {
+    const name = ingredient.name?.trim();
+    return name && pantryHasIngredient(pantryIngredients, name);
+  }).length;
 
   return Math.round((available / recipe.ingredients.length) * 100);
 }

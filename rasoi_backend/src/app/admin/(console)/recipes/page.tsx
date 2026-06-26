@@ -3,10 +3,13 @@ import { Suspense } from 'react';
 
 import DownloadMarkdownSampleButton from '@/app/admin/(console)/recipes/DownloadMarkdownSampleButton';
 import ConfirmDeleteForm from '@/app/admin/_components/ConfirmDeleteForm';
+import AdminCallout from '@/app/admin/_components/AdminCallout';
+import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
+import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
 import { DataTable } from '@/app/admin/_components/DataTable';
 import RecipeFilterPanel from '@/app/admin/_components/RecipeFilterPanel';
 import { buildAdminPageHref, TablePagination } from '@/app/admin/_components/TablePagination';
-import { Badge, PageHeader, PrimaryButton } from '@/app/admin/_components/ui';
+import { Badge, PrimaryButton } from '@/app/admin/_components/ui';
 import { deleteRecipeAction } from '@/app/admin/recipe-actions';
 import { buildRecipeWhere } from '@/lib/recipe-filters';
 import { db } from '@/lib/db';
@@ -65,9 +68,9 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
     (filterParams.published && filterParams.published !== 'all');
 
   return (
-    <div className="space-y-8">
-      <PageHeader
-        title="Recipes"
+    <AdminPageLayout>
+      <AdminPageHeader
+        href="/admin/recipes"
         description={
           hasFilters
             ? `Showing ${recipes.length === 0 ? 0 : offset + 1}–${offset + recipes.length} of ${filteredCount} matching recipes (${totalCount} total in library).`
@@ -81,11 +84,11 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
         }
       />
 
-      <p className="rounded-xl border border-admin-border bg-[#f7f2ea] px-4 py-3 text-sm text-admin-muted">
-        Saves update <strong className="text-admin-ink">rasoi → Recipe</strong> (source of truth for the app).
-        If you use Supabase Table Editor, check schema <strong className="text-admin-ink">rasoi</strong> or{' '}
-        <strong className="text-admin-ink">public → recipes</strong> (synced on each save).
-      </p>
+      <AdminCallout>
+        Saves update <strong>rasoi → Recipe</strong> (source of truth for the app). If you use Supabase
+        Table Editor, check schema <strong>rasoi</strong> or <strong>public → recipes</strong> (synced on
+        each save).
+      </AdminCallout>
 
       <Suspense fallback={null}>
         <RecipeFilterPanel />
@@ -94,6 +97,7 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
       <DataTable
         columns={['Title', 'Region', 'Diet', 'Tags', 'Status', 'Actions']}
         emptyMessage="No recipes match these filters. Try All India / All diets."
+        footer={`${filteredCount} recipe${filteredCount === 1 ? '' : 's'} in view`}
       >
         {recipes.map((recipe) => {
           const serialized = serializeRecipe(recipe);
@@ -170,6 +174,6 @@ export default async function AdminRecipesPage({ searchParams }: PageProps) {
         total={filteredCount}
         buildHref={(nextPage) => buildAdminPageHref('/admin/recipes', params, nextPage)}
       />
-    </div>
+    </AdminPageLayout>
   );
 }

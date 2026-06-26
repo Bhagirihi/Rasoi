@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { GROCERY_PARTNER_UI } from '@/constants/monetization';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -11,7 +10,6 @@ import { usePartners } from '@/context/PartnersContext';
 import type { AffiliatePartner } from '@/utils/affiliate';
 import { PAYWALL_HREF } from '@/utils/routes';
 
-const GROCERY_IDS: AffiliatePartner[] = ['blinkit', 'zepto', 'instamart'];
 const MISSING_BTN_COLOR = '#EF5350';
 
 type MissingShopVariant = 'footer' | 'inline' | 'hero';
@@ -62,10 +60,6 @@ export default function MissingShopInline({
   const ingredientPreview =
     missing.slice(0, 2).join(', ') + (missing.length > 2 ? ` +${missing.length - 2}` : '');
   const missingCta = missing.length === 1 ? 'Item missing' : 'Items missing';
-
-  const partnerLabel = (id: AffiliatePartner) =>
-    groceryPartners.find((p) => p.id === id)?.label ??
-    id.charAt(0).toUpperCase() + id.slice(1);
 
   const handlePartnerPress = (id: AffiliatePartner) => {
     void Haptics.selectionAsync();
@@ -132,36 +126,33 @@ export default function MissingShopInline({
         </Text>
       )}
 
-      <View style={styles.partnerRow}>
-        {GROCERY_IDS.map((id) => {
-          const ui = GROCERY_PARTNER_UI[id];
-          const label = partnerLabel(id);
-          const delivery = groceryPartners.find((p) => p.id === id)?.delivery ?? ui.delivery;
-          return (
+      {groceryPartners.length > 0 ? (
+        <View style={styles.partnerRow}>
+          {groceryPartners.map((partner) => (
             <Pressable
-              key={id}
+              key={partner.id}
               onPress={(event) => {
                 event.stopPropagation?.();
-                handlePartnerPress(id);
+                handlePartnerPress(partner.id);
               }}
               style={[
                 styles.partnerChip,
                 isHero && styles.partnerChipHero,
                 !isHero && { backgroundColor: themeColors.white, borderColor: themeColors.border },
-                { borderColor: `${ui.accent}55` },
+                { borderColor: `${partner.accent}55` },
               ]}
             >
-              <View style={[styles.partnerAccent, { backgroundColor: ui.accent }]} />
+              <View style={[styles.partnerAccent, { backgroundColor: partner.accent }]} />
               <Text
                 style={[
                   styles.partnerLabel,
                   isHero && styles.partnerLabelHero,
                   !isHero && { color: themeColors.charcoal },
-                  id === 'blinkit' && !isHero && styles.partnerLabelDark,
+                  partner.textOnAccent === '#1A1A2E' && !isHero && styles.partnerLabelDark,
                 ]}
                 numberOfLines={1}
               >
-                {label}
+                {partner.label}
               </Text>
               <Text
                 style={[
@@ -171,12 +162,12 @@ export default function MissingShopInline({
                 ]}
                 numberOfLines={1}
               >
-                {delivery.replace('~', '')}
+                {partner.delivery.replace('~', '')}
               </Text>
             </Pressable>
-          );
-        })}
-      </View>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }

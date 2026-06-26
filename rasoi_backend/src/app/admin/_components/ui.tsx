@@ -17,23 +17,39 @@ export function PageHeader({
   title,
   description,
   action,
+  section,
+  backHref,
+  backLabel,
 }: {
   title: string;
   description?: string;
   action?: ReactNode;
+  /** Sidebar section label — auto from pathname when omitted on client pages */
+  section?: string;
+  backHref?: string;
+  backLabel?: string;
 }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4 border-b border-admin-border pb-6">
-      <div>
+      <div className="min-w-0 flex-1">
+        {backHref ? (
+          <Link
+            href={backHref}
+            className="mb-3 inline-flex items-center gap-1 text-sm font-medium text-admin-saffron transition hover:text-admin-ink"
+          >
+            <span aria-hidden>←</span>
+            {backLabel ?? 'Back'}
+          </Link>
+        ) : null}
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-admin-gold">
-          Rasoi Console
+          {section ?? 'Rasoi Console'}
         </p>
         <h1 className="font-display mt-2 text-4xl font-semibold tracking-tight text-admin-ink">
           {title}
         </h1>
-        {description && (
+        {description ? (
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-admin-muted">{description}</p>
-        )}
+        ) : null}
       </div>
       {action}
     </div>
@@ -193,10 +209,12 @@ export function SelectInput({
   value,
   onChange,
   options,
+  className = '',
 }: {
   value: string;
   onChange: (value: string) => void;
   options: string[] | ReadonlyArray<{ value: string; label: string }>;
+  className?: string;
 }) {
   const normalized = options.map((option) =>
     typeof option === 'string' ? { value: option, label: option } : option,
@@ -206,7 +224,7 @@ export function SelectInput({
     <select
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className="mt-2 w-full rounded-xl border border-admin-border bg-white/80 px-4 py-3 text-sm text-admin-ink outline-none transition focus:border-admin-gold/70 focus:ring-2 focus:ring-admin-gold/15"
+      className={`mt-2 w-full rounded-xl border border-admin-border bg-white/80 px-4 py-3 text-sm text-admin-ink outline-none transition focus:border-admin-gold/70 focus:ring-2 focus:ring-admin-gold/15 ${className}`}
     >
       {normalized.map((option) => (
         <option key={option.value} value={option.value}>

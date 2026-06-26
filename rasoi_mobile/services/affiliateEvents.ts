@@ -4,7 +4,7 @@ import { getRasoiDb, isSupabaseDirectMode } from '@/utils/rasoiDb';
 import { getOwnRasoiUserId } from '@/services/user';
 
 export type AffiliateEventPayload = {
-  partner: 'blinkit' | 'zepto' | 'instamart' | 'zomato' | 'swiggy';
+  partner: string;
   context?: string;
   recipeId?: string;
   query?: string;
