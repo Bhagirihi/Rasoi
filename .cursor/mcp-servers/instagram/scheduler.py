@@ -20,9 +20,13 @@ CAMPAIGN_START = datetime(2026, 6, 17, 10, 0, tzinfo=IST)
 POST_INTERVAL = timedelta(days=1)
 POST_HOUR = 10  # 10 AM IST daily
 
-APK_DOWNLOAD_URL = "https://rasoiapplication.in/download"
-
-from instagram_seo import BASE_HASHTAGS, CAPTION_SEO_LINE, PROFILE_BIO, PROFILE_FULL_NAME
+from instagram_seo import (
+    APK_DOWNLOAD_URL,
+    CAPTION_SEO_LINE,
+    CAPTION_VALUE_LINE,
+    ENGAGEMENT_HASHTAGS,
+    post_seo_keywords_for,
+)
 
 SEGMENT_HASHTAGS: dict[str, str] = {
     "Housewives": "#AajKyaBanaye #Homemaker #IndianMom #DinnerIdeas",
@@ -178,22 +182,27 @@ def build_caption(ad: dict[str, Any]) -> str:
     segment_tags = _segment_tags(segment)
 
     lines = [
-        CAPTION_SEO_LINE,
-        "",
         headline,
         "",
         subheadline,
         "",
-        f"👩‍🍳 {segment} · {audience}",
-        "",
         result,
         "",
-        "Rasoi recipe app — 4,000+ Indian recipes, pantry match, meal reminders.",
+        f"👩‍🍳 {segment} · {audience}",
         "",
-        "📲 Download Rasoi app free (Android APK):",
+        "Aaj ghar pe kya ban raha hai? Comment mein batao 👇",
+        "Save karo — baad mein kaam aayega 📌",
+        "",
+        CAPTION_VALUE_LINE,
+        "",
+        "📲 Free Android APK:",
         APK_DOWNLOAD_URL,
         "",
-        f"{BASE_HASHTAGS} {segment_tags}",
+        CAPTION_SEO_LINE,
+        "",
+        post_seo_keywords_for(ad.get("id")),
+        "",
+        f"{ENGAGEMENT_HASHTAGS} {segment_tags}",
     ]
     caption = "\n".join(lines)
     if len(caption) > 2200:
@@ -286,6 +295,18 @@ def get_posts_to_schedule() -> list[dict[str, Any]]:
         for row in load_campaign_posts()
         if not row["published"] and not row.get("instagram_scheduled")
     ]
+
+
+def get_published_campaign_posts() -> list[dict[str, Any]]:
+    return [row for row in load_campaign_posts() if row["published"]]
+
+
+def mark_campaign_media_id(post_id: int, media_id: str) -> None:
+    state = _read_state()
+    published = state.setdefault("published", {})
+    entry = published.setdefault(str(post_id), {})
+    entry["media_id"] = media_id
+    _write_state(state)
 
 
 def campaign_overview(limit: int = 20, include_published: bool = True) -> list[dict[str, Any]]:

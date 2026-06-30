@@ -192,6 +192,17 @@ class InstagramClient:
             "external_url": APK_DOWNLOAD_URL,
         }
 
+    def media_id_from_url(self, url: str) -> str:
+        self.login()
+        code = url.rstrip("/").split("/p/")[-1].split("/")[0]
+        if not code:
+            raise InstagramError(f"Could not parse Instagram post code from: {url}")
+        try:
+            pk = self._client.media_pk_from_code(code)
+        except Exception as exc:
+            raise InstagramError(f"Failed to resolve media id for {url}: {exc}") from exc
+        return str(pk)
+
     def edit_caption(self, media_id: str, caption: str) -> dict[str, Any]:
         self.login()
         try:

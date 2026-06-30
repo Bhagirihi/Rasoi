@@ -144,8 +144,8 @@ def play_get_manifest() -> str:
 
 
 @mcp.tool()
-def play_push_listing(package_name: str = '', language: str = 'en-US') -> str:
-    """Push store title + descriptions from manifest.json via Play edits API."""
+def play_push_listing(package_name: str = '', language: str = 'all') -> str:
+    """Push store title + descriptions from manifest.json via Play edits API. Use language=all for en-US + localizedListings."""
     try:
         return _json(push_store_listing(pkg=package_name or None, language=language))
     except PlayError as exc:

@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type ComponentType, type ReactNode } from 'react';
 import { LogBox, View } from 'react-native';
 import { useFonts, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import {
@@ -15,7 +15,11 @@ import { enableScreens } from 'react-native-screens';
 
 enableScreens(true);
 
-import LaunchSplash, { LAUNCH_SPLASH_DURATION_MS } from '@/components/LaunchSplash';
+import AnalyticsScreenBridge from '@/components/AnalyticsScreenBridge';
+import AppCrashFallback from '@/components/AppCrashFallback';
+import { AppErrorBoundary } from '@/components/AppErrorBoundary';
+import LaunchSplash from '@/components/LaunchSplash';
+import LaunchSplashGate from '@/components/LaunchSplashGate';
 import AppDialogHost from '@/components/AppDialogHost';
 import TrialExpiredPaywallModal from '@/components/paywall/TrialExpiredPaywallModal';
 import TrialEndingSoonModal from '@/components/paywall/TrialEndingSoonModal';
@@ -31,6 +35,7 @@ import { RecipesProvider } from '@/context/RecipesContext';
 import { TonightRecipesProvider } from '@/context/TonightRecipesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { initializeMobileAds } from '@/utils/admob';
+import { warmApiConnection } from '@/utils/api';
 import { checkForEasUpdateOnLaunch } from '@/utils/easUpdates';
 import { ensureTelemetryStarted } from '@/utils/telemetry';
 import { Sentry } from '@/utils/sentry';
@@ -44,9 +49,48 @@ if (__DEV__) {
   LogBox.ignoreAllLogs(true);
 }
 
-export { ErrorBoundary } from 'expo-router';
+export { AppErrorBoundary as ErrorBoundary };
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+type GlobalBoundaryProps = {
+  children: React.ReactNode;
+};
+
+/** Catches fatal JS errors outside React render (async, timers, event handlers). */
+function AppGlobalErrorBoundary({ children }: GlobalBoundaryProps) {
+  const GlobalBoundary = (
+    Sentry as typeof Sentry & {
+      GlobalErrorBoundary?: ComponentType<{
+        fallback: (props: {
+          error: Error;
+          eventId: string;
+          resetError: () => void;
+        }) => ReactNode;
+        children: ReactNode;
+      }>;
+    }
+  ).GlobalErrorBoundary;
+
+  if (!GlobalBoundary) {
+    return children;
+  }
+
+  return (
+    <GlobalBoundary
+      fallback={({ error, eventId, resetError }) => (
+        <AppCrashFallback
+          error={error instanceof Error ? error : new Error(String(error))}
+          eventId={eventId}
+          reportSent
+          onRetry={resetError}
+        />
+      )}
+    >
+      {children}
+    </GlobalBoundary>
+  );
+}
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -54,20 +98,32 @@ export const unstable_settings = {
 
 export default Sentry.wrap(function RootLayout() {
   const [launchDone, setLaunchDone] = useState(false);
+  const [splashDismissing, setSplashDismissing] = useState(false);
 
   return (
-    <ThemeProvider>
-      <RootLayoutInner launchDone={launchDone} setLaunchDone={setLaunchDone} />
-    </ThemeProvider>
+    <AppGlobalErrorBoundary>
+      <ThemeProvider>
+        <RootLayoutInner
+          launchDone={launchDone}
+          setLaunchDone={setLaunchDone}
+          splashDismissing={splashDismissing}
+          setSplashDismissing={setSplashDismissing}
+        />
+      </ThemeProvider>
+    </AppGlobalErrorBoundary>
   );
 });
 
 function RootLayoutInner({
   launchDone,
   setLaunchDone,
+  splashDismissing,
+  setSplashDismissing,
 }: {
   launchDone: boolean;
   setLaunchDone: (value: boolean) => void;
+  splashDismissing: boolean;
+  setSplashDismissing: (value: boolean) => void;
 }) {
   const { colors, isDark } = useTheme();
   const [fontsLoaded] = useFonts({
@@ -80,21 +136,24 @@ function RootLayoutInner({
   useEffect(() => {
     void ensureTelemetryStarted().catch(() => undefined);
     void initializeMobileAds().catch(() => undefined);
-    void checkForEasUpdateOnLaunch().catch(() => undefined);
+    warmApiConnection();
   }, []);
+
+  // Defer OTA reload until after first paint so paid-ad cold starts stay fast.
+  useEffect(() => {
+    if (!launchDone) return;
+    void checkForEasUpdateOnLaunch().catch(() => undefined);
+  }, [launchDone]);
+
+  const beginSplashDismiss = useCallback(() => {
+    if (splashDismissing || launchDone) return;
+    setSplashDismissing(true);
+  }, [launchDone, setSplashDismissing, splashDismissing]);
 
   const finishLaunchSplash = useCallback(async () => {
     setLaunchDone(true);
     await SplashScreen.hideAsync().catch(() => undefined);
   }, [setLaunchDone]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      void finishLaunchSplash();
-    }, LAUNCH_SPLASH_DURATION_MS);
-
-    return () => clearTimeout(timer);
-  }, [finishLaunchSplash]);
 
   if (!fontsLoaded) {
     return null;
@@ -138,7 +197,21 @@ function RootLayoutInner({
                       }}
                     />
                   </Stack>
-                  {!launchDone && <LaunchSplash />}
+                  {!launchDone && (
+                    <LaunchSplash
+                      dismissing={splashDismissing}
+                      onDismissed={() => {
+                        void finishLaunchSplash();
+                      }}
+                    />
+                  )}
+                  <LaunchSplashGate
+                    fontsLoaded={fontsLoaded}
+                    launchDone={launchDone}
+                    splashDismissing={splashDismissing}
+                    onReady={beginSplashDismiss}
+                  />
+                  <AnalyticsScreenBridge />
                   <NotificationNavigationBridge />
                   <LocationSyncBridge />
                   <RevenueCatBridge />

@@ -17,7 +17,9 @@ from scheduler import (
     get_campaign_post,
     get_due_campaign_posts,
     get_due_custom_posts,
+    get_published_campaign_posts,
     list_custom_posts,
+    mark_campaign_media_id,
     mark_campaign_published,
     mark_custom_published,
     resolve_repo_path,
@@ -134,6 +136,90 @@ def instagram_schedule_custom_post(
 def instagram_list_custom_schedule(include_published: bool = True) -> str:
     """List one-off scheduled posts in the local queue."""
     return _json(list_custom_posts(include_published=include_published))
+
+
+@mcp.tool()
+def instagram_edit_campaign_caption(post_id: int, dry_run: bool = False) -> str:
+    """Update the caption on an already-published campaign post (in-place edit, no repost)."""
+    try:
+        row = get_campaign_post(post_id)
+        if not row["published"]:
+            return _json({"error": f"Post {post_id} is not published yet"})
+        preview = {
+            "id": row["id"],
+            "headline": row["headline"],
+            "url": row.get("url"),
+            "caption_preview": row["caption"][:400] + "...",
+        }
+        if dry_run:
+            return _json({"dry_run": True, **preview})
+
+        client = _client()
+        media_id = row.get("media_id")
+        if not media_id and row.get("url"):
+            media_id = client.media_id_from_url(row["url"])
+            mark_campaign_media_id(post_id, media_id)
+
+        if not media_id:
+            return _json({"error": f"Post {post_id} has no media_id or url to resolve it"})
+
+        result = client.edit_caption(media_id, row["caption"])
+        return _json({"ok": True, **preview, **result})
+    except (InstagramError, KeyError) as exc:
+        return _json({"error": str(exc)})
+
+
+@mcp.tool()
+def instagram_refresh_published_captions(
+    dry_run: bool = False,
+    max_posts: int = 20,
+    post_ids: str = "",
+) -> str:
+    """Refresh captions on all published campaign posts with the latest template. Comma-separated post_ids optional."""
+    try:
+        rows = get_published_campaign_posts()
+        if post_ids.strip():
+            wanted = {int(part.strip()) for part in post_ids.split(",") if part.strip()}
+            rows = [row for row in rows if row["id"] in wanted]
+        rows = rows[: max(1, max_posts)]
+
+        if not rows:
+            return _json({"ok": True, "updated": [], "message": "No published posts to update."})
+
+        if dry_run:
+            return _json(
+                {
+                    "dry_run": True,
+                    "posts": [
+                        {
+                            "id": row["id"],
+                            "url": row.get("url"),
+                            "headline": row["headline"],
+                            "caption_preview": row["caption"][:200] + "...",
+                        }
+                        for row in rows
+                    ],
+                }
+            )
+
+        client = _client()
+        updated: list[dict] = []
+        errors: list[dict] = []
+        for row in rows:
+            try:
+                media_id = row.get("media_id")
+                if not media_id and row.get("url"):
+                    media_id = client.media_id_from_url(row["url"])
+                    mark_campaign_media_id(row["id"], media_id)
+                if not media_id:
+                    raise InstagramError("missing media_id and url")
+                client.edit_caption(media_id, row["caption"])
+                updated.append({"id": row["id"], "url": row.get("url"), "media_id": media_id})
+            except InstagramError as exc:
+                errors.append({"id": row["id"], "error": str(exc)})
+        return _json({"ok": not errors, "updated": updated, "errors": errors})
+    except (InstagramError, ValueError) as exc:
+        return _json({"error": str(exc)})
 
 
 @mcp.tool()

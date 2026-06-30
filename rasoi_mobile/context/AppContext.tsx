@@ -32,12 +32,14 @@ import {
   updateUserPlan,
   updateUserProfile,
 } from '@/services/user';
+import type { DeleteAccountPayload } from '@/services/user';
 import type { UserProfileResponse } from '@/types/api';
 import { authError, authLog } from '@/utils/authLogger';
 import { useRasoiUserPlanRealtime } from '@/utils/realtime';
 import { clearUserLoggedOut, getAuthToken, isUserLoggedOut, markUserLoggedOut } from '@/utils/authToken';
 import { clearSentryUser, captureException, captureMessage, setSentryUser } from '@/utils/sentry';
 import { setFirebaseUserId, setFirebaseUserProperties, logFirebaseEvent } from '@/utils/firebase';
+import { trackDietFilterChanged, trackOnboardingComplete } from '@/utils/productAnalytics';
 import { resolvePlanState, type ResolvedPlan } from '@/utils/planLogic';
 import {
   DEFAULT_HOUSEHOLD_SIZE,
@@ -56,6 +58,7 @@ import {
   getPushPlatform,
 } from '@/utils/notifications';
 import { isRemotePushAvailable } from '@/utils/notificationCapability';
+import { clearPermissionsOnboardingComplete } from '@/utils/permissionsOnboarding';
 import {
   addPantryIngredient,
   pantryHasIngredient,
@@ -100,9 +103,14 @@ export type FoodPreferencesPayload = {
   householdSize?: number;
 };
 
+export type NotificationEnableResult = { ok: true } | { ok: false; reason: string };
+
+export type PushTokenSyncResult = { ok: true } | { ok: false; reason: string };
+
 export type AuthNavigationResult = {
   showTrialWelcome: boolean;
   hasCompletedOnboarding: boolean;
+  userCity: string | null;
 };
 
 const GUEST_DEFAULT_ONBOARDING: OnboardingPayload = {
@@ -153,14 +161,14 @@ interface AppContextValue extends ResolvedPlan {
   updateProfile: (name: string, phone: string) => Promise<void>;
   syncUserLocation: (snapshot: UserLocationSnapshot) => Promise<boolean>;
   logout: () => Promise<void>;
-  deleteAccount: (confirmEmail?: string) => Promise<void>;
+  deleteAccount: (payload: DeleteAccountPayload) => Promise<void>;
   exportAccountData: () => Promise<unknown>;
   resetAppFlow: () => Promise<void>;
   togglePantryIngredient: (ingredient: string) => void;
   setDietChoice: (choice: DietChoice) => Promise<void>;
   setRegionalCuisine: (region: string) => void;
   setFavoriteCuisines: (cuisines: CuisineId[]) => Promise<void>;
-  setNotificationsEnabled: (enabled: boolean) => Promise<void>;
+  setNotificationsEnabled: (enabled: boolean) => Promise<NotificationEnableResult>;
   saveFoodPreferences: (payload: FoodPreferencesPayload) => Promise<void>;
   recordPartnerShop: () => Promise<void>;
   refreshSyncedProfile: () => Promise<void>;
@@ -262,19 +270,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     pendingPantrySetupRef.current = pendingPantrySetup;
   }, [pendingPantrySetup]);
 
-  const syncPushTokenToServer = useCallback(async (enabled: boolean) => {
+  const syncPushTokenToServer = useCallback(async (enabled: boolean): Promise<PushTokenSyncResult> => {
     if (!isRemotePushAvailable()) {
-      return;
+      return {
+        ok: false,
+        reason:
+          'Push tokens need the Rasoi release app. Expo Go on Android cannot register — install from rasoiapplication.in/download.',
+      };
     }
 
     const hasLegacyToken = Boolean(await getAuthToken());
     const session = await getSupabaseSession();
-    if (!hasLegacyToken && !session?.access_token) return;
+    if (!hasLegacyToken && !session?.access_token) {
+      return { ok: false, reason: 'Sign in to register this device for meal notifications.' };
+    }
 
     try {
       if (!enabled) {
         await deactivatePushTokens();
-        return;
+        return { ok: true };
       }
 
       const tokenResult = await getExpoPushTokenDetailed();
@@ -287,7 +301,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!isExpectedFailure) {
           captureMessage(`push_token_failed: ${tokenResult.reason}`, 'warning');
         }
-        return;
+        return { ok: false, reason: tokenResult.reason };
       }
 
       await registerPushToken({
@@ -295,8 +309,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         platform: getPushPlatform(),
         active: true,
       });
+      return { ok: true };
     } catch (error) {
       captureException(error, { scope: 'syncPushTokenToServer' });
+      const message = error instanceof Error ? error.message : 'Could not register push token';
+      return { ok: false, reason: message };
     }
   }, []);
 
@@ -432,6 +449,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const finishAuthAfterSync = useCallback(
     async (user: UserProfileResponse): Promise<AuthNavigationResult> => {
+      await clearPermissionsOnboardingComplete();
       applyUserProfile(user);
 
       let notificationsOn = user.notificationsEnabled;
@@ -447,7 +465,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setNotificationsEnabledState(GUEST_DEFAULT_ONBOARDING.notificationsEnabled);
         notificationsOn = GUEST_DEFAULT_ONBOARDING.notificationsEnabled;
         onboardingDone = true;
+        trackOnboardingComplete({
+          dietChoice: GUEST_DEFAULT_ONBOARDING.dietChoice,
+          regionalCuisine: GUEST_DEFAULT_ONBOARDING.regionalCuisine,
+          notificationsEnabled: GUEST_DEFAULT_ONBOARDING.notificationsEnabled,
+          isGuest: true,
+        });
       }
+
+      let resolvedCity = user.city ?? null;
 
       try {
         if (pendingOnboardingRef.current && !user.hasCompletedOnboarding) {
@@ -455,6 +481,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (updated) {
             notificationsOn = updated.notificationsEnabled;
             onboardingDone = updated.hasCompletedOnboarding;
+            resolvedCity = updated.city ?? resolvedCity;
           }
         } else if (user.hasCompletedOnboarding) {
           pendingOnboardingRef.current = null;
@@ -468,6 +495,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return {
         showTrialWelcome: false,
         hasCompletedOnboarding: onboardingDone,
+        userCity: resolvedCity,
       };
     },
     [applyUserProfile, syncPendingOnboarding, syncPushTokenToServer],
@@ -751,9 +779,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
         syncedToServer: Boolean(session?.access_token || legacyToken),
         showTrialWelcome,
       });
+      trackOnboardingComplete({
+        dietChoice: payload.dietChoice,
+        regionalCuisine: payload.regionalCuisine,
+        notificationsEnabled: payload.notificationsEnabled,
+        isGuest: isGuestUser,
+      });
       return showTrialWelcome;
     },
-    [syncPendingOnboarding, syncPushTokenToServer],
+    [isGuestUser, syncPendingOnboarding, syncPushTokenToServer],
   );
 
   const sendEmailOtpCode = useCallback(async (name: string, phone: string, email: string) => {
@@ -1000,10 +1034,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   logoutRef.current = logout;
 
   const deleteAccount = useCallback(
-    async (confirmEmail?: string) => {
+    async (payload: DeleteAccountPayload) => {
       await markUserLoggedOut();
       await syncPushTokenToServer(false);
-      await deleteUserAccount(confirmEmail);
+      await deleteUserAccount(payload);
       await logoutSession();
       await clearAuthState();
       pendingOnboardingRef.current = null;
@@ -1061,14 +1095,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setDietChoice = useCallback(
     async (choice: DietChoice) => {
+      const previous = dietChoice;
       const preference = dietChoiceToFilter(choice);
       setDietChoiceState(choice);
+      if (choice !== previous) {
+        trackDietFilterChanged({
+          dietChoice: choice,
+          previousDiet: previous,
+          source: 'home',
+        });
+      }
       if (isLoggedIn) {
         const user = await updateUserProfile({ dietChoice: choice, dietPreference: preference });
         applyUserProfile(user);
       }
     },
-    [applyUserProfile, isLoggedIn],
+    [applyUserProfile, dietChoice, isLoggedIn],
   );
 
   const setRegionalCuisineState = useCallback(
@@ -1098,34 +1140,54 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const setNotificationsEnabled = useCallback(
-    async (enabled: boolean) => {
+    async (enabled: boolean): Promise<NotificationEnableResult> => {
       const wasEnabled = notificationsEnabled;
-      let scheduled = false;
 
-      if (enabled) {
-        const granted = await ensureNotificationPermissions();
-        if (!granted) {
-          setNotificationsEnabledState(false);
-          if (isLoggedIn) {
-            const user = await updateUserProfile({ notificationsEnabled: false });
-            applyUserProfile(user);
-          }
-          return;
+      if (!enabled) {
+        await syncDailyReminder(false);
+        setNotificationsEnabledState(false);
+        if (isLoggedIn) {
+          const user = await updateUserProfile({ notificationsEnabled: false });
+          applyUserProfile(user);
+          await syncPushTokenToServer(false);
         }
-        scheduled = await syncDailyReminder(true);
-      } else {
-        scheduled = await syncDailyReminder(false);
+        return { ok: true };
       }
 
-      setNotificationsEnabledState(scheduled);
-      if (isLoggedIn) {
-        const user = await updateUserProfile({ notificationsEnabled: scheduled });
-        applyUserProfile(user);
-        await syncPushTokenToServer(scheduled);
+      const granted = await ensureNotificationPermissions();
+      if (!granted) {
+        setNotificationsEnabledState(false);
+        if (isLoggedIn) {
+          const user = await updateUserProfile({ notificationsEnabled: false });
+          applyUserProfile(user);
+        }
+        return {
+          ok: false,
+          reason:
+            'Notification permission is off. Allow notifications for Rasoi in your phone Settings, then try again.',
+        };
       }
-      if (scheduled && !wasEnabled) {
+
+      const tokenSync = await syncPushTokenToServer(true);
+      if (!tokenSync.ok) {
+        setNotificationsEnabledState(false);
+        if (isLoggedIn) {
+          const user = await updateUserProfile({ notificationsEnabled: false });
+          applyUserProfile(user);
+        }
+        return { ok: false, reason: tokenSync.reason };
+      }
+
+      void syncDailyReminder(true);
+      setNotificationsEnabledState(true);
+      if (isLoggedIn) {
+        const user = await updateUserProfile({ notificationsEnabled: true });
+        applyUserProfile(user);
+      }
+      if (!wasEnabled) {
         void sendDailyReminderThankYouNotification();
       }
+      return { ok: true };
     },
     [applyUserProfile, isLoggedIn, notificationsEnabled, syncPushTokenToServer],
   );
@@ -1135,6 +1197,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const preference = dietChoiceToFilter(payload.dietChoice);
       const notificationsChanged = payload.notificationsEnabled !== notificationsEnabled;
       const previousNotificationsEnabled = notificationsEnabled;
+      const previousDiet = dietChoice;
 
       setDietChoiceState(payload.dietChoice);
       setRegionalCuisine(payload.regionalCuisine);
@@ -1148,13 +1211,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       let scheduledNotifications = payload.notificationsEnabled;
       if (notificationsChanged) {
-        if (payload.notificationsEnabled) {
-          const granted = await ensureNotificationPermissions();
-          scheduledNotifications = granted ? await syncDailyReminder(true) : false;
-        } else {
-          scheduledNotifications = await syncDailyReminder(false);
+        const enableResult = await setNotificationsEnabled(payload.notificationsEnabled);
+        scheduledNotifications = enableResult.ok ? payload.notificationsEnabled : false;
+        if (!enableResult.ok && payload.notificationsEnabled) {
+          throw new Error(enableResult.reason);
         }
-        setNotificationsEnabledState(scheduledNotifications);
       }
 
       if (isLoggedIn) {
@@ -1175,17 +1236,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
           kitchenPreferences: nextKitchenPreferences,
         });
         applyUserProfile(user);
-
-        if (notificationsChanged) {
-          await syncPushTokenToServer(scheduledNotifications);
-        }
       }
 
-      if (scheduledNotifications && !previousNotificationsEnabled && notificationsChanged) {
-        void sendDailyReminderThankYouNotification();
+      if (payload.dietChoice !== previousDiet) {
+        trackDietFilterChanged({
+          dietChoice: payload.dietChoice,
+          previousDiet: previousDiet,
+          source: 'settings',
+        });
       }
     },
-    [applyUserProfile, isLoggedIn, kitchenPreferences, notificationsEnabled, syncPushTokenToServer],
+    [applyUserProfile, dietChoice, isLoggedIn, kitchenPreferences, notificationsEnabled, setNotificationsEnabled],
   );
 
   const recordPartnerShop = useCallback(async () => {

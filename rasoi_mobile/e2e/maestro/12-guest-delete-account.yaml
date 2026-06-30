@@ -15,6 +15,14 @@ appId: com.bhagihiri.rasoiapp
     id: settings-delete-account
 - extendedWaitUntil:
     visible:
+      id: delete-reason-modal
+    timeout: 10000
+- tapOn:
+    id: delete-reason-option-not_using
+- tapOn:
+    id: delete-reason-continue
+- extendedWaitUntil:
+    visible:
       text: "Delete guest session?"
     timeout: 10000
 - tapOn:

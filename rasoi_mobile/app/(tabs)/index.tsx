@@ -56,6 +56,10 @@ import {
 } from "@/utils/recipes";
 import { PAYWALL_HREF } from "@/utils/routes";
 import { dismissRecommendation } from "@/services/recommendations";
+import {
+  trackRecipeSuggestionTap,
+  type RecipeSuggestionSource,
+} from "@/utils/productAnalytics";
 
 const HOME_HERO_SEEN_KEY = "@rasoi/home_hero_intro_seen";
 
@@ -118,6 +122,19 @@ export default function HomeScreen() {
       void refreshHomePicks(true);
     },
     [refreshHomePicks],
+  );
+
+  const openRecipeSuggestion = useCallback(
+    (recipe: Recipe, source: RecipeSuggestionSource) => {
+      trackRecipeSuggestionTap({
+        recipeId: recipe.id,
+        recipeName: recipe.title,
+        source,
+        mealSlot: meal.slot,
+      });
+      router.push(`/recipe/${recipe.id}`);
+    },
+    [meal.slot, router],
   );
 
   const { greeting, subtitle } = getLocalizedGreeting();
@@ -310,7 +327,7 @@ export default function HomeScreen() {
             <HomePlanTomorrow
               lateNightPick={lateNightPick}
               tomorrowPick={topPick}
-              onRecipePress={(recipe) => router.push(`/recipe/${recipe.id}`)}
+              onRecipePress={(recipe) => openRecipeSuggestion(recipe, 'home_plan_tomorrow')}
             />
           ) : null}
 
@@ -325,7 +342,7 @@ export default function HomeScreen() {
                     recipe={lateNightPick}
                     pantryMatchPercent={lateNightPantryMatch}
                     cookCtaLabel="Cook now"
-                    onPress={() => router.push(`/recipe/${lateNightPick.id}`)}
+                    onPress={() => openRecipeSuggestion(lateNightPick, 'home_late_night')}
                     onCookTonight={() => openCookTonight(lateNightPick)}
                     onShopMissing={(missing, partner) =>
                       openShopModal(lateNightPick, missing, partner)
@@ -353,7 +370,7 @@ export default function HomeScreen() {
                     cookCtaLabel={
                       meal.isOvernightDual ? "Plan breakfast" : meal.cookCta
                     }
-                    onPress={() => router.push(`/recipe/${displayTopPick.id}`)}
+                    onPress={() => openRecipeSuggestion(displayTopPick, 'home_top_pick')}
                     onCookTonight={() => openCookTonight(displayTopPick)}
                     onShopMissing={(missing, partner) =>
                       openShopModal(displayTopPick, missing, partner)
@@ -394,7 +411,7 @@ export default function HomeScreen() {
                               pantryIngredients,
                             )}
                             cookCtaLabel={meal.cookCta}
-                            onPress={() => router.push(`/recipe/${recipe.id}`)}
+                            onPress={() => openRecipeSuggestion(recipe, 'home_also_tonight')}
                             onCookTonight={() => openCookTonight(recipe)}
                             onShopMissing={(missing, partner) =>
                               openShopModal(recipe, missing, partner)

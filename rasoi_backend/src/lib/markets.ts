@@ -41,6 +41,10 @@ export type MarketConfig = {
   plusPricing: string;
   faqs: readonly MarketFaq[];
   showSponsor: boolean;
+  /** Phone placeholder on sponsor application form */
+  sponsorPhonePlaceholder: string;
+  /** Brand name placeholder examples for sponsor form */
+  sponsorBrandExample: string;
   priceCurrency: string;
   schemaMonthlyPrice: string;
 };
@@ -204,6 +208,8 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       },
     ],
     showSponsor: true,
+    sponsorPhonePlaceholder: '+91 98765 43210',
+    sponsorBrandExample: 'e.g. Amul, Tata Sampann, MDH',
     priceCurrency: 'INR',
     schemaMonthlyPrice: '49',
   },
@@ -263,6 +269,8 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Instacart, Amazon, DoorDash, and Uber Eats',
     ),
     showSponsor: true,
+    sponsorPhonePlaceholder: '+1 (415) 555-0100',
+    sponsorBrandExample: "e.g. Rao's, MDH, Goya, Trader Joe's",
     priceCurrency: 'USD',
     schemaMonthlyPrice: '2.99',
   },
@@ -318,6 +326,8 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Instacart, Amazon.ca, SkipTheDishes, and Uber Eats',
     ),
     showSponsor: true,
+    sponsorPhonePlaceholder: '+1 (416) 555-0100',
+    sponsorBrandExample: "e.g. President's Choice, Patak's, Natrel",
     priceCurrency: 'CAD',
     schemaMonthlyPrice: '3.99',
   },
@@ -374,6 +384,8 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Woolworths, Coles, DoorDash, and Menulog',
     ),
     showSponsor: true,
+    sponsorPhonePlaceholder: '+61 412 345 678',
+    sponsorBrandExample: "e.g. Patak's, Sharwood's, Woolworths Indian",
     priceCurrency: 'AUD',
     schemaMonthlyPrice: '4.99',
   },

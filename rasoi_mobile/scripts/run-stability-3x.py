@@ -626,6 +626,11 @@ def flow_delete_guest_account() -> bool:
     else:
         tap_test_id("settings-delete-account") or tap_text_contains("Delete account")
     time.sleep(1.5)
+    if wait_for(r"Why leave Rasoi|Why are you deleting", 10):
+        tap_test_id("delete-reason-option-not_using") or tap_text_contains("don't use the app")
+        time.sleep(0.5)
+        tap_test_id("delete-reason-continue") or tap_text_exact("Continue")
+        time.sleep(1)
     if wait_for(r"Delete guest session", 10):
         tap_test_id("settings-delete-confirm") or tap_text_exact("Delete")
         time.sleep(4)

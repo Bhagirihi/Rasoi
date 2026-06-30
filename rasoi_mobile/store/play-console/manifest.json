@@ -18,12 +18,66 @@
     "pricing": "FREE"
   },
   "storeListing": {
-    "title": "Rasoi: Aaj Kya Banaye? Recipes",
-    "shortDescription": "Aaj kya banaye? Cook from your pantry. 1,200+ Indian recipes. 15 cuisines.",
-    "fullDescription": "Rasoi helps Indian home cooks answer \"Aaj kya banaye?\" every evening — decide dinner in seconds from what's already in your kitchen.\n\n🍳 TONIGHT'S PICKS\n• Smart meal suggestions for breakfast, lunch, dinner & late-night\n• Personalized picks based on your diet and regional cuisine\n\n🥘 COOK FROM YOUR PANTRY\n• Add pantry items and see recipe match %\n• Filter recipes you can cook right now\n\n📚 1,200+ INDIAN RECIPES\n• 15 regional cuisines — Gujarati, South Indian, Punjabi, Bengali & more\n• Veg, Jain, Egg & Non-Veg filters\n• Quick filters: under 20 min, leftovers, kids-friendly\n\n🛒 SHOP & ORDER (Rasoi Plus)\n• Open Blinkit, Zepto & Instamart for missing groceries\n• Zomato & Swiggy delivery when you want to order instead\n\n⭐ RASOI PLUS SUBSCRIPTION\n• Monthly ₹49 or Yearly ₹499 (save 15% vs monthly)\n• Ad-free experience across the app\n• Partner grocery & delivery checkout links\n• Cancel anytime in Google Play → Subscriptions\n\n🆓 FREE TO START\n• Free plan with recipes & pantry matching\n• Optional 3-day in-app trial for partner features (managed in-app, not a Play free trial)\n\nRasoi may use your city (optional location permission) for local recipe relevance and sponsor analytics.\n\nWebsite: https://rasoiapplication.in\nPrivacy: https://rasoiapplication.in/privacy\nTerms: https://rasoiapplication.in/terms\nSupport: cooking@rasoiapplication.in",
+    "title": "Rasoi: Aaj Kya Banaye?",
+    "shortDescription": "Aaj kya banaye? Daily dinner ideas from your pantry. 8,000+ Indian recipes.",
+    "fullDescription": "Every evening, the same question: Aaj kya banaye?\n\nRasoi is your daily Indian cooking companion — smart meal suggestions based on what's already in your kitchen, your diet, and the regional flavours you love. No more scrolling recipe blogs or staring at an empty fridge.\n\nWhether you need a quick weeknight dinner, a Jain-safe thali, or something the kids will actually eat, Rasoi picks for you — and reminds you before it's too late.\n\nWHY CHOOSE RASOI?\n\n• Tonight's picks — personalised suggestions for breakfast, lunch, dinner & late-night\n• Cook from your pantry — add ingredients at home and see recipe match % instantly\n• 8,000+ Indian recipes — Gujarati, Punjabi, South Indian, Bengali, Maharashtrian & more\n• Diet filters — Veg, Jain, Egg & Non-Veg so every household eats right\n• Regional cuisines — 15 kitchen styles including Kathiyawadi, Surti, North & South Indian\n• Quick filters — under 20 minutes, kid-friendly, leftover-friendly & budget picks\n• Daily meal reminders — gentle nudges so planning dinner becomes a habit, not a scramble\n• Save favourites — build your family's go-to rotation for busy weeks\n\nHOW IT WORKS\n\n1. Set your diet, region, and favourite cuisines during onboarding\n2. Add what's in your pantry — dal, rice, paneer, sabzi, masalas\n3. Get daily picks matched to your kitchen and preferences\n4. Cook tonight's dish or explore 8,000+ everyday Indian recipes\n\nPERFECT FOR\n\n• Homemakers tired of deciding what to cook every day\n• Working professionals who want quick, practical dinner ideas\n• New cooks learning regional family recipes\n• Jain & pure-veg households needing safe, filtered suggestions\n• Anyone who has ever opened the fridge and thought — aaj kya banaye?\n\nRASOI PLUS (OPTIONAL)\n\nUpgrade for an ad-free experience and one-tap grocery & food delivery links via Blinkit, Zepto, Instamart, Zomato & Swiggy. Core recipes, pantry matching, and daily picks are free to start.\n\nRasoi may use your city (optional) for local recipe relevance.\n\nWebsite: https://rasoiapplication.in\nPrivacy: https://rasoiapplication.in/privacy\nTerms: https://rasoiapplication.in/terms\nSupport: cooking@rasoiapplication.in\n\nDownload Rasoi today — stop wondering what to cook. Start cooking.",
     "website": "https://rasoiapplication.in",
     "email": "cooking@rasoiapplication.in",
     "privacyPolicyUrl": "https://rasoiapplication.in/privacy"
+  },
+  "localizedListings": {
+    "hi-IN": {
+      "title": "Rasoi: Aaj Kya Banaye?",
+      "shortDescription": "आज क्या बनाएं? अपनी रसोई से डिनर आइडिया। 8,000+ भारतीय रेसिपी।",
+      "fullDescription": "हर शाम एक ही सवाल: आज क्या बनाएं?\n\nRasoi आपकी रोज़ाना भारतीय रसोई साथी है — आपकी रसोई, आहार और पसंदीदा क्षेत्रीय स्वाद के अनुसार स्मार्ट भोजन सुझाव। अब खाली फ्रिज देखकर परेशान न हों।\n\nचाहे जल्दी वीकनाइट डिनर चाहिए, जैन सेफ थाली, या बच्चों को पसंद आने वाला खाना — Rasoi आपके लिए चुनता है और समय पर याद दिलाता है।\n\nRASOI क्यों चुनें?\n\n• आज की पसंद — नाश्ता, दोपहर, रात का खाना और लेट-नाइट स्नैक्स\n• अपनी रसोई से पकाएं — सामग्री जोड़ें और तुरंत रेसिपी मैच % देखें\n• 8,000+ भारतीय रेसिपी — गुजराती, पंजाबी, दक्षिण भारतीय, बंगाली, महाराष्ट्रीयन और अधिक\n• आहार फ़िल्टर — शाकाहारी, जैन, अंडा और मांसाहारी\n• क्षेत्रीय व्यंजन — काठियावाड़ी, सूरती, उत्तर और दक्षिण भारतीय सहित 15 शैलियाँ\n• क्विक फ़िल्टर — 20 मिनट से कम, बच्चों के लिए, बचे हुए खाने से, बजट फ्रेंडली\n• दैनिक रिमाइंडर — डिनर प्लानिंग आदत बनाएं\n• पसंदीदा सेव करें — परिवार की फेवरेट डिशेज़ एक जगह\n\nकैसे काम करता है\n\n1. ऑनबोर्डिंग में आहार, क्षेत्र और पसंदीदा व्यंजन चुनें\n2. रसोई की सामग्री जोड़ें — दाल, चावल, पनीर, सब्ज़ी, मसाले\n3. रोज़ाना सुझाव पाएं जो आपकी रसोई से मेल खाते हों\n4. आज की डिश पकाएं या 8,000+ रोज़मर्रा की भारतीय रेसिपी देखें\n\nकिसके लिए बेहतरीन\n\n• रोज़ खाना तय करने से थकी गृहिणियाँ\n• व्यस्त प्रोफेशनल जिन्हें जल्दी डिनर आइडिया चाहिए\n• नए रसोइये जो परिवार की रेसिपी सीख रहे हैं\n• जैन और शुद्ध शाकाहारी परिवार\n• हर वो व्यक्ति जिसने सोचा हो — आज क्या बनाएं?\n\nRASOI PLUS (वैकल्पिक)\n\nविज्ञापन-मुक्त अनुभव और Blinkit, Zepto, Instamart, Zomato व Swiggy लिंक। मुख्य रेसिपी, पैंट्री मैच और दैनिक सुझाव मुफ़्त में शुरू करें।\n\nवेबसाइट: https://rasoiapplication.in\nगोपनीयता: https://rasoiapplication.in/privacy\nसहायता: cooking@rasoiapplication.in\n\nRasoi डाउनलोड करें — आज क्या बनाएं, अब और सोचना नहीं।"
+    }
+  },
+  "asoKeywordBank": {
+    "headTerms": [
+      "aaj kya banaye",
+      "aaj kya banaye app",
+      "what to cook today",
+      "dinner recipe app India",
+      "Indian recipe app",
+      "everyday cooking ideas"
+    ],
+    "mealPlanning": [
+      "dinner menu planner",
+      "daily meal suggestions",
+      "what to cook tonight",
+      "meal reminder app",
+      "weeknight dinner ideas",
+      "breakfast lunch dinner recipes"
+    ],
+    "dietLifestyle": [
+      "veg recipe app India",
+      "Jain recipe app",
+      "pure veg recipes",
+      "vegetarian dinner ideas",
+      "Jain food recipes",
+      "kids friendly recipes"
+    ],
+    "regionalPanIndian": [
+      "North Indian recipes",
+      "South Indian recipes",
+      "Punjabi recipes app",
+      "Bengali recipes",
+      "Maharashtrian recipes"
+    ],
+    "regionalGujarati": [
+      "Gujarati recipe app",
+      "Kathiyawadi recipes",
+      "Surti recipes",
+      "Gujarati thali ideas",
+      "Jain Gujarati recipes"
+    ],
+    "featureDifferentiated": [
+      "cook from pantry app",
+      "pantry recipe matcher",
+      "ingredients based recipes",
+      "quick recipes under 20 minutes",
+      "Indian home cooking app"
+    ]
   },
   "declarations": {
     "ads": true,

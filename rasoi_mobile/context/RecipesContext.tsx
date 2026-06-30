@@ -18,7 +18,7 @@ import {
   type RecipeFetchFilters,
 } from "@/services/recipes";
 import { RECIPE_PAGE_SIZE } from "@/types/pagination";
-import { formatUserFacingApiError } from "@/utils/api";
+import { formatUserFacingApiError, warmApiConnection } from "@/utils/api";
 import { useRasoiRealtimeTables } from "@/utils/realtime";
 
 type RecipesContextValue = {

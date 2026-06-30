@@ -25,6 +25,10 @@
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/instagram/run.sh",
       "args": []
     },
+    "meta-business": {
+      "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/meta-business/run.sh",
+      "args": []
+    },
     "firebase": {
       "command": "/Users/dhruvdave/Documents/Dhruv/work/Dhruv_Work/OWN/Rasoi/.cursor/mcp-servers/firebase/run.sh",
       "args": []

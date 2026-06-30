@@ -10,15 +10,14 @@ export default function EmailVerificationBridge() {
   const {
     emailVerificationModalVisible,
     closeEmailVerificationModal,
-    userCity,
     pendingPantrySetup,
   } = useAppContext();
 
-  const navigateAfterVerify = async ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
-    const href = await resolvePostAuthHref(
-      { showTrialWelcome, hasCompletedOnboarding },
-      { userCity, pendingPantrySetup },
-    );
+  const navigateAfterVerify = async (nav: AuthNavigationResult) => {
+    const href = await resolvePostAuthHref(nav, {
+      userCity: nav.userCity,
+      pendingPantrySetup,
+    });
     router.replace(href);
   };
 

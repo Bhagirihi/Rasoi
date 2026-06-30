@@ -97,6 +97,51 @@ export function captureException(
   });
 }
 
+/** Capture a crash and return the Sentry event id for the support reference field. */
+export function captureAppCrash(
+  error: unknown,
+  context?: Record<string, unknown>,
+): string | null {
+  void recordFirebaseError(
+    error,
+    context as Record<string, string | number | boolean | null | undefined> | undefined,
+  );
+
+  if (!isSentryEnabled()) {
+    return null;
+  }
+
+  let eventId: string | undefined;
+  Sentry.withScope((scope) => {
+    if (context) {
+      scope.setContext('crash', context);
+    }
+    eventId = Sentry.captureException(error);
+  });
+
+  return eventId ?? Sentry.lastEventId() ?? null;
+}
+
+/** Attach optional user note to the crash event already sent to Sentry. */
+export function sendCrashUserNote(
+  message: string,
+  associatedEventId?: string | null,
+): void {
+  const trimmed = message.trim();
+  if (!trimmed || !isSentryEnabled()) {
+    return;
+  }
+
+  try {
+    Sentry.captureFeedback({
+      message: trimmed,
+      associatedEventId: associatedEventId ?? undefined,
+    });
+  } catch {
+    // Feedback must never block retry.
+  }
+}
+
 export function captureMessage(
   message: string,
   level: Sentry.SeverityLevel = 'info',

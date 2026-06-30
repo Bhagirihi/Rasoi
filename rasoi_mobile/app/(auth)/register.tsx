@@ -52,7 +52,6 @@ export default function RegisterScreen() {
     userEmail,
     isGuest,
     continueWithPendingEmailVerification,
-    userCity,
     pendingPantrySetup,
   } = useAppContext();
 
@@ -128,11 +127,11 @@ export default function RegisterScreen() {
     };
   }, []);
 
-  const navigateAfterAuth = async ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
-    const href = await resolvePostAuthHref(
-      { showTrialWelcome, hasCompletedOnboarding },
-      { userCity, pendingPantrySetup },
-    );
+  const navigateAfterAuth = async (nav: AuthNavigationResult) => {
+    const href = await resolvePostAuthHref(nav, {
+      userCity: nav.userCity,
+      pendingPantrySetup,
+    });
     router.replace(href);
   };
 

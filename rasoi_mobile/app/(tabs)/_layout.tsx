@@ -1,18 +1,12 @@
 import { Redirect, Tabs, usePathname } from 'expo-router';
 import { useMemo } from 'react';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
 import { Bookmark, BookOpen, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
-
-const BOOTSTRAP_STEPS = [
-  { message: 'Opening Rasoi…', subtitle: 'Loading your kitchen' },
-  { message: 'Syncing preferences…', subtitle: 'Just a moment' },
-];
 
 const TAB_BAR_TOP_PADDING = 8;
 const TAB_BAR_BODY_HEIGHT = Platform.OS === 'ios' ? 49 : 48;
@@ -64,11 +58,7 @@ export default function TabLayout() {
   );
 
   if (!isHydrated) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.cream }}>
-        <AppSavingOverlay visible steps={BOOTSTRAP_STEPS} />
-      </View>
-    );
+    return <Redirect href="/" />;
   }
 
   if (!hasCompletedOnboarding) {

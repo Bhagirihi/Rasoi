@@ -1,5 +1,10 @@
 import type { AuthNavigationResult } from '@/context/AppContext';
-import { shouldShowPermissionsOnboarding } from '@/utils/permissionsOnboarding';
+import {
+  getMissingPermissionsState,
+  isPermissionsOnboardingComplete,
+  markPermissionsOnboardingComplete,
+  permissionsOnboardingHref,
+} from '@/utils/permissionsOnboarding';
 
 export async function resolvePostAuthHref(
   nav: AuthNavigationResult,
@@ -12,8 +17,13 @@ export async function resolvePostAuthHref(
     return '/(auth)/onboarding';
   }
 
-  if (await shouldShowPermissionsOnboarding(options.userCity)) {
-    return '/(auth)/onboarding?permissionsOnly=1';
+  const permissionsPromptDone = await isPermissionsOnboardingComplete();
+  if (!permissionsPromptDone) {
+    const permState = await getMissingPermissionsState(options.userCity);
+    if (permState.needsFlow) {
+      return permissionsOnboardingHref(permState.initialStep);
+    }
+    await markPermissionsOnboardingComplete();
   }
 
   if (options.pendingPantrySetup) {

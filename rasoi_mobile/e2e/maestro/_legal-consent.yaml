@@ -1,4 +1,4 @@
-# Accept Terms & Privacy — one Switch toggle, one Continue tap.
+# Accept Terms & Privacy — auto-guest lands on Home.
 appId: com.bhagihiri.rasoiapp
 ---
 - extendedWaitUntil:
@@ -15,5 +15,7 @@ appId: com.bhagihiri.rasoiapp
     id: legal-consent-continue
 - extendedWaitUntil:
     visible:
-      id: screen-login
-    timeout: 30000
+      id: screen-home
+    timeout: 60000
+- runFlow:
+    file: _dismiss-permissions.yaml

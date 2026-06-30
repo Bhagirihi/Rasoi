@@ -311,6 +311,21 @@ export const feedbackSchema = z.object({
   platform: z.enum(['ios', 'android', 'web']).optional(),
 });
 
+export const deleteAccountReason = z.enum([
+  'not_using',
+  'missing_recipes',
+  'too_many_notifications',
+  'technical_issues',
+  'privacy_concerns',
+  'other',
+]);
+
+export const deleteAccountSchema = z.object({
+  confirmEmail: allowedEmail.optional(),
+  reason: deleteAccountReason,
+  reasonDetail: z.string().trim().max(500).optional(),
+});
+
 export const sponsorApplicationSchema = z.object({
   companyName: z.string().trim().min(2).max(120),
   contactName: z.string().trim().min(2).max(80),

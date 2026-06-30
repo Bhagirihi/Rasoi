@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
   useAnimatedStyle,
   useSharedValue,
@@ -76,6 +77,11 @@ function FloatingDishTile({
         true,
       ),
     );
+
+    return () => {
+      cancelAnimation(drift);
+      cancelAnimation(opacity);
+    };
   }, [drift, layout.delay, opacity, variant]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -127,7 +133,10 @@ function FeaturedDish({ variant }: { variant: CollageVariant }) {
       }, 350);
     }, 2800);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      cancelAnimation(fade);
+    };
   }, [fade, variant]);
 
   const fadeStyle = useAnimatedStyle(() => ({ opacity: fade.value * 0.38 }));

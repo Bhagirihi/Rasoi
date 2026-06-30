@@ -2,7 +2,6 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect, Redirect, useLocalSearchParams } from 'expo-router';
 import {
-  ArrowLeft,
   ArrowRight,
   Bell,
   MapPin,
@@ -29,6 +28,7 @@ import {
   colors,
   gradients,
   scrollIndicator,
+  spacing,
 } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
@@ -41,9 +41,10 @@ import {
   requestUserLocation,
 } from '@/utils/location';
 import { useAppContext } from '@/context/AppContext';
-import { markPermissionsOnboardingComplete, shouldShowPermissionsOnboarding } from '@/utils/permissionsOnboarding';
+import { markPermissionsOnboardingComplete, getMissingPermissionsState } from '@/utils/permissionsOnboarding';
+import { resolvePostAuthHref } from '@/utils/authNavigation';
 
-type OnboardingStep = 'diet' | 'cuisine' | 'notifications' | 'location';
+type OnboardingStep = 'preferences' | 'notifications' | 'location';
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -59,6 +60,7 @@ export default function OnboardingScreen() {
     hasCompletedOnboarding,
     syncUserLocation,
     pendingPantrySetup,
+    pendingTrialWelcome,
     setNotificationsEnabled,
     userCity,
   } = useAppContext();
@@ -70,32 +72,79 @@ export default function OnboardingScreen() {
     }, [refreshReference]),
   );
 
-  const [step, setStep] = useState<OnboardingStep>('diet');
+  const [step, setStep] = useState<OnboardingStep>('preferences');
   const [selectedDiet, setSelectedDiet] = useState<DietChoice | null>(null);
   const [selectedCuisines, setSelectedCuisines] = useState<CuisineId[]>([]);
   const [notificationsPreference, setNotificationsPreference] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const finishingRef = useRef(false);
+  const permissionsInitialStepSetRef = useRef(false);
   const [permissionsGateReady, setPermissionsGateReady] = useState(!permissionsOnly);
   const [needsPermissionsFlow, setNeedsPermissionsFlow] = useState(permissionsOnly);
 
   useEffect(() => {
-    if (!permissionsOnly) return;
-    setStep(stepParam === 'location' ? 'location' : 'notifications');
-  }, [permissionsOnly, stepParam]);
-
-  useEffect(() => {
-    if (!permissionsOnly || !isHydrated) return;
-    void shouldShowPermissionsOnboarding(userCity).then((needs) => {
-      setNeedsPermissionsFlow(needs);
+    if (!permissionsOnly || !isHydrated || permissionsInitialStepSetRef.current) return;
+    void getMissingPermissionsState(userCity).then((state) => {
+      setNeedsPermissionsFlow(state.needsFlow);
+      if (stepParam === 'location') {
+        setStep('location');
+      } else if (state.initialStep) {
+        setStep(state.initialStep);
+      }
+      permissionsInitialStepSetRef.current = true;
       setPermissionsGateReady(true);
     });
-  }, [permissionsOnly, isHydrated, userCity]);
+  }, [permissionsOnly, isHydrated, userCity, stepParam]);
+
+  const finishPermissionsFromNotifications = async (notificationsEnabled: boolean) => {
+    const state = await getMissingPermissionsState(userCity);
+    if (state.needsLocation) {
+      setNotificationsPreference(notificationsEnabled);
+      setStep('location');
+      return;
+    }
+    await completePermissionsFlow(notificationsEnabled);
+  };
 
   useEffect(() => {
     const activeIds = new Set(kitchenStyles.map((style) => style.id));
     setSelectedCuisines((current) => current.filter((id) => activeIds.has(id)));
   }, [kitchenStyles]);
+
+  const redirectAfterPermissions = async () => {
+    const href = await resolvePostAuthHref(
+      { showTrialWelcome: pendingTrialWelcome, hasCompletedOnboarding: true, userCity },
+      { userCity, pendingPantrySetup },
+    );
+    router.replace(href);
+  };
+
+  const completePermissionsFlow = async (notificationsEnabled: boolean) => {
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    try {
+      await markPermissionsOnboardingComplete();
+      if (notificationsEnabled) {
+        await setNotificationsEnabled(true);
+      } else {
+        await setNotificationsEnabled(false);
+      }
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await redirectAfterPermissions();
+    } catch {
+      finishingRef.current = false;
+      throw new Error('Could not save your preferences. Please try again.');
+    }
+  };
+
+  const proceedToLocationOrFinish = async (notificationsEnabled: boolean) => {
+    setNotificationsPreference(notificationsEnabled);
+    if (permissionsOnly) {
+      await finishPermissionsFromNotifications(notificationsEnabled);
+      return;
+    }
+    setStep('location');
+  };
 
   const toggleCuisine = (id: CuisineId) => {
     void Haptics.selectionAsync();
@@ -104,19 +153,8 @@ export default function OnboardingScreen() {
     );
   };
 
-  const handleDietContinue = () => {
-    if (!selectedDiet) return;
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setStep('cuisine');
-  };
-
-  const proceedToLocationOrFinish = (notificationsEnabled: boolean) => {
-    setNotificationsPreference(notificationsEnabled);
-    setStep('location');
-  };
-
-  const handleCuisineContinue = () => {
-    if (selectedCuisines.length === 0) return;
+  const handlePreferencesContinue = () => {
+    if (!selectedDiet || selectedCuisines.length === 0) return;
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStep('notifications');
   };
@@ -172,24 +210,6 @@ export default function OnboardingScreen() {
     }
   };
 
-  const completePermissionsFlow = async (notificationsEnabled: boolean) => {
-    if (finishingRef.current) return;
-    finishingRef.current = true;
-    try {
-      await markPermissionsOnboardingComplete();
-      await setNotificationsEnabled(notificationsEnabled);
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      if (pendingPantrySetup) {
-        router.replace('/(tabs)/pantry');
-        return;
-      }
-      router.replace('/(tabs)');
-    } catch {
-      finishingRef.current = false;
-      throw new Error('Could not save your preferences. Please try again.');
-    }
-  };
-
   const finishOnboarding = async (notificationsEnabled: boolean) => {
     if (permissionsOnly) {
       await completePermissionsFlow(notificationsEnabled);
@@ -239,7 +259,17 @@ export default function OnboardingScreen() {
     permissionsGateReady &&
     !needsPermissionsFlow
   ) {
-    return <Redirect href={pendingPantrySetup ? '/(tabs)/pantry' : '/(tabs)'} />;
+    return (
+      <Redirect
+        href={
+          pendingPantrySetup
+            ? '/(tabs)/pantry'
+            : pendingTrialWelcome
+              ? '/(auth)/trial-welcome'
+              : '/(tabs)'
+        }
+      />
+    );
   }
 
   if (permissionsOnly && !permissionsGateReady) {
@@ -250,7 +280,7 @@ export default function OnboardingScreen() {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
-        eyebrow={permissionsOnly ? undefined : 'Step 3 of 4'}
+        eyebrow={permissionsOnly ? undefined : 'Step 2 of 3'}
         onEnable={handleEnableNotifications}
         onSkip={handleSkipNotifications}
         skipTestID={testIds.onboardingSkipNotify}
@@ -283,7 +313,7 @@ export default function OnboardingScreen() {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
-        eyebrow={permissionsOnly ? undefined : 'Step 4 of 4'}
+        eyebrow={permissionsOnly ? undefined : 'Step 3 of 3'}
         onEnable={handleEnableLocation}
         onSkip={handleSkipLocation}
         skipTestID={testIds.onboardingSkipLocation}
@@ -326,149 +356,99 @@ export default function OnboardingScreen() {
       <View style={styles.glowGreen} />
 
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={testIds.screenOnboarding}>
-        {step === 'cuisine' && (
-          <Pressable
-            onPress={() => {
-              void Haptics.selectionAsync();
-              setStep('diet');
-            }}
-            style={styles.backButton}
-            hitSlop={12}
-          >
-            <ArrowLeft size={22} color={colors.dark.text} />
-          </Pressable>
-        )}
-
-        <View style={step === 'cuisine' ? styles.headerWithBack : styles.header}>
+        <View style={styles.header}>
           <Text style={styles.brand}>Rasoi</Text>
         </View>
 
-        {step === 'diet' ? (
-          <>
-            <View style={styles.darkContent}>
-              <Text style={styles.cuisineEyebrow}>Step 1 of 4</Text>
-              <Text style={styles.darkTitle}>What is your dietary preference?</Text>
-              <Text style={styles.darkSubtitle}>This helps us filter dishes you love.</Text>
+        <ScrollViewWithFloatingIndicator
+          style={styles.flex}
+          {...scrollIndicator}
+          contentContainerStyle={styles.cuisineContent}
+        >
+          <Text style={styles.cuisineEyebrow}>Step 1 of 3</Text>
+          <Text style={styles.darkTitle}>Tell us what you cook</Text>
+          <Text style={styles.darkSubtitle}>
+            Pick your diet and the kitchen styles you love — we&apos;ll personalize tonight&apos;s
+            picks right away.
+          </Text>
 
-              <View style={styles.dietList}>
-                <DietPreferenceList
-                  selected={selectedDiet}
-                  onSelect={setSelectedDiet}
-                  variant="dark"
-                />
-              </View>
-            </View>
+          <Text style={styles.sectionLabel}>Diet</Text>
+          <View style={styles.dietList}>
+            <DietPreferenceList
+              selected={selectedDiet}
+              onSelect={setSelectedDiet}
+              variant="dark"
+            />
+          </View>
 
-            <View style={styles.darkFooter}>
-              <Pressable
-                onPress={handleDietContinue}
-                disabled={!selectedDiet}
-                testID={testIds.onboardingDietContinue}
-                style={[
-                  styles.darkPrimaryButton,
-                  !selectedDiet
-                    ? styles.darkPrimaryButtonDisabled
-                    : styles.darkPrimaryButtonActive,
-                ]}
+          <Text style={[styles.sectionLabel, styles.sectionLabelSpaced]}>Kitchen styles</Text>
+          <View style={styles.selectionBar}>
+            <Text style={styles.selectionCount}>
+              {selectedCuisines.length === 0
+                ? 'No styles picked yet'
+                : `${selectedCuisines.length} style${selectedCuisines.length > 1 ? 's' : ''} added`}
+            </Text>
+            {selectedCuisines.length > 0 && (
+              <ScrollView
+                horizontal
+                {...scrollIndicator}
+                contentContainerStyle={styles.selectedChipRow}
               >
-                <Text
-                  style={[
-                    styles.darkPrimaryButtonText,
-                    !selectedDiet && styles.darkPrimaryButtonTextDisabled,
-                  ]}
-                >
-                  CONTINUE
-                </Text>
-                <ArrowRight
-                  size={18}
-                  color={selectedDiet ? colors.dark.text : colors.dark.buttonDisabledText}
-                />
-              </Pressable>
-              <Text style={styles.footerHint}>Select 1 to continue</Text>
-            </View>
-          </>
-        ) : (
-          <>
-            <ScrollViewWithFloatingIndicator
-              style={styles.flex}
-              {...scrollIndicator}
-              contentContainerStyle={styles.cuisineContent}
+                {selectedCuisines.map((id) => (
+                  <View key={id} style={styles.selectedChip}>
+                    <Text style={styles.selectedChipText}>
+                      {getKitchenStyleLabel(id, kitchenStyles)}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+
+          <View style={styles.cuisineList}>
+            <CuisinePreferenceList
+              selected={selectedCuisines}
+              onToggle={toggleCuisine}
+              variant="dark"
+            />
+          </View>
+        </ScrollViewWithFloatingIndicator>
+
+        <View style={styles.darkFooter}>
+          <Pressable
+            onPress={handlePreferencesContinue}
+            disabled={!selectedDiet || selectedCuisines.length === 0}
+            testID={testIds.onboardingDietContinue}
+            style={[
+              styles.darkPrimaryButton,
+              (!selectedDiet || selectedCuisines.length === 0) && styles.darkPrimaryButtonDisabled,
+              selectedDiet && selectedCuisines.length > 0 && styles.darkPrimaryButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.darkPrimaryButtonText,
+                (!selectedDiet || selectedCuisines.length === 0) &&
+                  styles.darkPrimaryButtonTextDisabled,
+              ]}
             >
-              <Text style={styles.cuisineEyebrow}>Step 2 of 4</Text>
-              <Text style={styles.darkTitle}>Shape your Rasoi feed</Text>
-              <Text style={styles.darkSubtitle}>
-                Which kitchen styles do you actually cook? Choose every vibe that feels like
-                yours — we&apos;ll mix them into your daily picks.
-              </Text>
-
-              <View style={styles.selectionBar}>
-                <Text style={styles.selectionCount}>
-                  {selectedCuisines.length === 0
-                    ? 'No styles picked yet'
-                    : `${selectedCuisines.length} style${selectedCuisines.length > 1 ? 's' : ''} added`}
-                </Text>
-                {selectedCuisines.length > 0 && (
-                  <ScrollView
-                    horizontal
-                    {...scrollIndicator}
-                    contentContainerStyle={styles.selectedChipRow}
-                  >
-                    {selectedCuisines.map((id) => (
-                      <View key={id} style={styles.selectedChip}>
-                        <Text style={styles.selectedChipText}>
-                          {getKitchenStyleLabel(id, kitchenStyles)}
-                        </Text>
-                      </View>
-                    ))}
-                  </ScrollView>
-                )}
-              </View>
-
-              <View style={styles.cuisineList}>
-                <CuisinePreferenceList
-                  selected={selectedCuisines}
-                  onToggle={toggleCuisine}
-                  variant="dark"
-                />
-              </View>
-            </ScrollViewWithFloatingIndicator>
-
-            <View style={styles.darkFooter}>
-              <Pressable
-                onPress={handleCuisineContinue}
-                disabled={selectedCuisines.length === 0}
-                testID={testIds.onboardingCuisineContinue}
-                style={[
-                  styles.darkPrimaryButton,
-                  selectedCuisines.length === 0 && styles.darkPrimaryButtonDisabled,
-                  selectedCuisines.length > 0 && styles.darkPrimaryButtonActive,
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.darkPrimaryButtonText,
-                    selectedCuisines.length === 0 && styles.darkPrimaryButtonTextDisabled,
-                  ]}
-                >
-                  {selectedCuisines.length === 0
-                    ? 'Pick at least one style'
-                    : `Save ${selectedCuisines.length} taste${selectedCuisines.length > 1 ? 's' : ''} & continue`}
-                </Text>
-                <ArrowRight
-                  size={18}
-                  color={
-                    selectedCuisines.length > 0
-                      ? colors.dark.text
-                      : colors.dark.buttonDisabledText
-                  }
-                />
-              </Pressable>
-              <Text style={styles.footerHint}>
-                Mix and match freely — update anytime from Settings.
-              </Text>
-            </View>
-          </>
-        )}
+              {!selectedDiet
+                ? 'Pick your diet to continue'
+                : selectedCuisines.length === 0
+                  ? 'Pick at least one kitchen style'
+                  : 'Continue'}
+            </Text>
+            <ArrowRight
+              size={18}
+              color={
+                selectedDiet && selectedCuisines.length > 0
+                  ? colors.dark.text
+                  : colors.dark.buttonDisabledText
+              }
+            />
+          </Pressable>
+          <Text style={styles.footerHint}>You can change these anytime in Settings.</Text>
+        </View>
       </SafeAreaView>
     </View>
   );
@@ -592,6 +572,15 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: colors.primary,
     marginBottom: 10,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.dark.text,
+    marginBottom: spacing.sm,
+  },
+  sectionLabelSpaced: {
+    marginTop: spacing.lg,
   },
   selectionBar: {
     marginTop: 20,

@@ -4,6 +4,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Bell } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -25,6 +26,7 @@ import {
 import { PrimaryButton } from '@/components/ui/Primitives';
 import { CuisineId, DietChoice, colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useAppDialog } from '@/context/AppDialogContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { COMMON_ALLERGY_OPTIONS } from '@/utils/kitchenPreferences';
@@ -35,6 +37,7 @@ export default function EditPreferencesScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { colors: themeColors, colorScheme } = useTheme();
   const prefVariant = colorScheme === 'dark' ? 'dark' : 'light';
+  const { showDialog } = useAppDialog();
   const {
     dietChoice,
     regionalCuisine,
@@ -83,12 +86,25 @@ export default function EditPreferencesScreen() {
 
   const handleNotificationsToggle = async (next: boolean) => {
     void Haptics.selectionAsync();
-    if (next) {
-      const granted = await ensureNotificationPermissions();
-      setDraftNotifications(granted);
+    if (!next) {
+      setDraftNotifications(false);
       return;
     }
-    setDraftNotifications(false);
+    const granted = await ensureNotificationPermissions();
+    if (!granted) {
+      setDraftNotifications(false);
+      showDialog({
+        title: 'Could not enable notifications',
+        message:
+          'Notification permission is off. Allow notifications for Rasoi in your phone Settings, then try again.',
+        buttons: [
+          { text: 'Open Settings', onPress: () => void Linking.openSettings() },
+          { text: 'OK', style: 'cancel' },
+        ],
+      });
+      return;
+    }
+    setDraftNotifications(true);
   };
 
   const handleSave = async () => {
@@ -104,6 +120,20 @@ export default function EditPreferencesScreen() {
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Could not save your preferences. Please try again.';
+      const openSettings = message.toLowerCase().includes('permission');
+      showDialog({
+        title: 'Could not save preferences',
+        message,
+        buttons: openSettings
+          ? [
+              { text: 'Open Settings', onPress: () => void Linking.openSettings() },
+              { text: 'OK', style: 'cancel' },
+            ]
+          : [{ text: 'OK' }],
+      });
     } finally {
       setIsSaving(false);
     }

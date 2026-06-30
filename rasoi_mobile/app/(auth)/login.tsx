@@ -39,7 +39,7 @@ type FieldError = "email" | "otp" | "general" | null;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, continueWithPendingEmailVerification, userCity, pendingPantrySetup } =
+  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, continueWithPendingEmailVerification, pendingPantrySetup } =
     useAppContext();
 
   const [step, setStep] = useState<LoginStep>("email");
@@ -73,11 +73,11 @@ export default function LoginScreen() {
     if (step === "otp") warmApiConnection();
   }, [step]);
 
-  const navigateAfterAuth = async ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
-    const href = await resolvePostAuthHref(
-      { showTrialWelcome, hasCompletedOnboarding },
-      { userCity, pendingPantrySetup },
-    );
+  const navigateAfterAuth = async (nav: AuthNavigationResult) => {
+    const href = await resolvePostAuthHref(nav, {
+      userCity: nav.userCity,
+      pendingPantrySetup,
+    });
     router.replace(href);
   };
 

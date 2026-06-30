@@ -16,6 +16,14 @@ export const testIds = {
   screenLegalConsent: 'screen-legal-consent',
   screenOnboarding: 'screen-onboarding',
   screenTrialWelcome: 'screen-trial-welcome',
+  screenCrashFallback: 'screen-crash-fallback',
+
+  crashRetry: 'crash-retry',
+  crashSendFeedback: 'crash-send-feedback',
+  crashFeedbackInput: 'crash-feedback-input',
+  crashSupportRef: 'crash-support-ref',
+
+  settingsTestCrash: 'settings-test-crash',
 
   legalConsentCheckbox: 'legal-consent-checkbox',
   legalConsentContinue: 'legal-consent-continue',
@@ -62,4 +70,10 @@ export const testIds = {
   settingsLogoutConfirm: 'settings-logout-confirm',
   settingsDeleteAccount: 'settings-delete-account',
   settingsDeleteConfirm: 'settings-delete-confirm',
+
+  deleteReasonModal: 'delete-reason-modal',
+  deleteReasonOption: 'delete-reason-option',
+  deleteReasonDetail: 'delete-reason-detail',
+  deleteReasonContinue: 'delete-reason-continue',
+  deleteReasonCancel: 'delete-reason-cancel',
 } as const;

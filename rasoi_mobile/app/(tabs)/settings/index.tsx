@@ -3,7 +3,6 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import {
   Crown,
-  Download,
   Drumstick,
   Egg,
   Hand,
@@ -14,13 +13,15 @@ import {
   Trash2,
   User,
 } from 'lucide-react-native';
-import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AdMobBanner from '@/components/AdMobBanner';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
+import type { DeleteAccountReason } from '@/constants/deleteAccount';
+import DeleteAccountReasonModal from '@/components/settings/DeleteAccountReasonModal';
 import RateRasoiCard from '@/components/settings/RateRasoiCard';
 import FeedbackLinkCard from '@/components/settings/FeedbackLinkCard';
 import LocationCard from '@/components/settings/LocationCard';
@@ -86,7 +87,6 @@ export default function SettingsScreen() {
     setNotificationsEnabled,
     logout,
     deleteAccount,
-    exportAccountData,
     resetAppFlow,
     effectiveTier,
     trialStartedAt,
@@ -104,6 +104,12 @@ export default function SettingsScreen() {
   const { trialTimeLabel, trialEndsAtLabel } = useTrialClock(trialStartedAt, effectiveTier);
   const { showDialog } = useAppDialog();
   const [isSessionEnding, setIsSessionEnding] = useState(false);
+  const [crashTestRequested, setCrashTestRequested] = useState(false);
+  const [deleteReasonModalVisible, setDeleteReasonModalVisible] = useState(false);
+
+  if (crashTestRequested) {
+    throw new Error('Rasoi crash screen test (settings)');
+  }
 
   const dietMeta = DIET_META[dietChoice];
   const hasPlusPartners = effectiveTier === 'trial' || effectiveTier === 'paid';
@@ -163,7 +169,20 @@ export default function SettingsScreen() {
 
   const handleNotificationsToggle = async (next: boolean) => {
     void Haptics.selectionAsync();
-    await setNotificationsEnabled(next);
+    const result = await setNotificationsEnabled(next);
+    if (!result.ok) {
+      const openSettings = result.reason.toLowerCase().includes('permission');
+      showDialog({
+        title: 'Could not enable notifications',
+        message: result.reason,
+        buttons: openSettings
+          ? [
+              { text: 'Open Settings', onPress: () => void Linking.openSettings() },
+              { text: 'OK', style: 'cancel' },
+            ]
+          : [{ text: 'OK' }],
+      });
+    }
   };
 
   const handleSwitchAccount = () => {
@@ -240,28 +259,10 @@ export default function SettingsScreen() {
     });
   };
 
-  const handleExportData = () => {
-    void (async () => {
-      try {
-        setIsSessionEnding(true);
-        const data = await exportAccountData();
-        await Share.share({
-          message: JSON.stringify(data, null, 2),
-          title: 'Rasoi account export',
-        });
-      } catch {
-        showDialog({
-          title: 'Export failed',
-          message: 'Could not export your data right now. Try again or email cooking@rasoiapplication.in.',
-          buttons: [{ text: 'OK' }],
-        });
-      } finally {
-        setIsSessionEnding(false);
-      }
-    })();
-  };
-
-  const handleDeleteAccount = () => {
+  const proceedWithAccountDeletion = (
+    reason: DeleteAccountReason,
+    reasonDetail?: string,
+  ) => {
     const deleteWarningMessage = isGuest
       ? 'Google Play subscriptions are not cancelled automatically.\n\nAfter deletion, this guest session is permanently removed and you will not be able to log in again.'
       : 'Google Play subscriptions are not cancelled automatically.\n\nAfter deletion, your account is permanently removed and you will not be able to log in again.';
@@ -279,7 +280,7 @@ export default function SettingsScreen() {
               void (async () => {
                 setIsSessionEnding(true);
                 try {
-                  await deleteAccount();
+                  await deleteAccount({ reason, reasonDetail });
                   router.replace('/(auth)/login');
                 } finally {
                   setIsSessionEnding(false);
@@ -308,7 +309,11 @@ export default function SettingsScreen() {
                     void (async () => {
                       setIsSessionEnding(true);
                       try {
-                        await deleteAccount(userEmail);
+                        await deleteAccount({
+                          confirmEmail: userEmail,
+                          reason,
+                          reasonDetail,
+                        });
                         router.replace('/(auth)/login');
                       } catch {
                         showDialog({
@@ -330,6 +335,10 @@ export default function SettingsScreen() {
     });
   };
 
+  const handleDeleteAccount = () => {
+    setDeleteReasonModalVisible(true);
+  };
+
   const handleAppearanceChange = async (next: 'light' | 'dark') => {
     void Haptics.selectionAsync();
     await setColorScheme(next);
@@ -347,6 +356,17 @@ export default function SettingsScreen() {
           { message: 'Signing you out…', subtitle: 'Saving your preferences on this device' },
           { message: 'Almost done…', subtitle: 'Clearing your session' },
         ]}
+      />
+      <DeleteAccountReasonModal
+        visible={deleteReasonModalVisible}
+        isGuest={isGuest}
+        onClose={() => {
+          setDeleteReasonModalVisible(false);
+        }}
+        onContinue={(reason, reasonDetail) => {
+          setDeleteReasonModalVisible(false);
+          proceedWithAccountDeletion(reason, reasonDetail);
+        }}
       />
       <ScrollViewWithFloatingIndicator
         {...scrollIndicator}
@@ -534,14 +554,6 @@ export default function SettingsScreen() {
         <SettingsGroupLabel label="Privacy & data" />
         <SettingsCard>
           <SettingsNavRow
-            icon={Download}
-            iconBg="rgba(0,168,107,0.12)"
-            iconColor={brandColors.green}
-            label="Export my data"
-            value="JSON copy"
-            onPress={handleExportData}
-          />
-          <SettingsNavRow
             icon={Trash2}
             iconBg="rgba(229,57,53,0.1)"
             iconColor={brandColors.danger}
@@ -563,7 +575,11 @@ export default function SettingsScreen() {
           onReset={handleResetFlow}
         />
 
-        <SettingsFooter />
+        <SettingsFooter
+          onTestCrash={() => {
+            setCrashTestRequested(true);
+          }}
+        />
       </ScrollViewWithFloatingIndicator>
     </SafeAreaView>
   );

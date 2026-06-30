@@ -422,35 +422,55 @@ def create_rasoi_subscriptions(*, activate: bool = True, pkg: str | None = None)
     }
 
 
-def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> dict[str, Any]:
-    """Push title, short + full description from manifest via edits API."""
-    pkg = (pkg or package_name()).strip()
-    manifest = load_manifest()
-    listing = manifest.get('storeListing', {})
-    service = get_service()
-
-    edit = service.edits().insert(packageName=pkg, body={}).execute()
-    edit_id = edit['id']
-
-    body = {
+def _listing_body(listing: dict[str, Any]) -> dict[str, Any]:
+    return {
         'title': listing.get('title', app_title())[:50],
         'shortDescription': listing.get('shortDescription', '')[:80],
         'fullDescription': listing.get('fullDescription', '')[:4000],
     }
 
-    updated = (
-        service.edits()
-        .listings()
-        .update(packageName=pkg, editId=edit_id, language=language, body=body)
-        .execute()
-    )
+
+def _listings_from_manifest(manifest: dict[str, Any], language: str) -> list[tuple[str, dict[str, Any]]]:
+    if language == 'all':
+        entries: list[tuple[str, dict[str, Any]]] = [('en-US', manifest.get('storeListing', {}))]
+        for lang, loc in (manifest.get('localizedListings') or {}).items():
+            entries.append((lang, loc))
+        return entries
+
+    if language == 'en-US':
+        return [('en-US', manifest.get('storeListing', {}))]
+
+    localized = (manifest.get('localizedListings') or {}).get(language)
+    if not localized:
+        raise PlayError(f'No localized listing for "{language}" in manifest.localizedListings')
+    return [(language, localized)]
+
+
+def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> dict[str, Any]:
+    """Push title, short + full description from manifest via edits API."""
+    pkg = (pkg or package_name()).strip()
+    manifest = load_manifest()
+    service = get_service()
+
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+
+    updated_listings: list[dict[str, Any]] = []
+    for lang, listing in _listings_from_manifest(manifest, language):
+        updated = (
+            service.edits()
+            .listings()
+            .update(packageName=pkg, editId=edit_id, language=lang, body=_listing_body(listing))
+            .execute()
+        )
+        updated_listings.append({'language': lang, 'listing': updated})
 
     committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
 
     return {
         'package_name': pkg,
-        'language': language,
-        'listing': updated,
+        'languages': [entry['language'] for entry in updated_listings],
+        'listings': updated_listings,
         'commit': committed,
     }
 
@@ -475,7 +495,7 @@ def full_rasoi_setup(*, pkg: str | None = None, activate_subscriptions: bool = T
         return steps
 
     try:
-        steps['listing'] = push_store_listing(pkg=pkg)
+        steps['listing'] = push_store_listing(pkg=pkg, language='all')
     except Exception as exc:  # noqa: BLE001
         steps['listing'] = {'error': str(exc)}
 

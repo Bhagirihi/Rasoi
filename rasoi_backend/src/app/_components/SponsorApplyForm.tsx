@@ -7,7 +7,15 @@ import {
   type SponsorApplicationPlacement,
 } from '@/lib/sponsor-placements';
 
-export default function SponsorApplyForm() {
+type SponsorApplyFormProps = {
+  phonePlaceholder?: string;
+  brandExample?: string;
+};
+
+export default function SponsorApplyForm({
+  phonePlaceholder = '+91 98765 43210',
+  brandExample = 'e.g. Amul, Tata Sampann',
+}: SponsorApplyFormProps) {
   const [companyName, setCompanyName] = useState('');
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
@@ -86,7 +94,7 @@ export default function SponsorApplyForm() {
             value={brandName}
             onChange={(event) => setBrandName(event.target.value)}
             required
-            placeholder="e.g. Amul, Tata Sampann"
+            placeholder={brandExample}
             className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
           />
         </label>
@@ -117,7 +125,7 @@ export default function SponsorApplyForm() {
           <input
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
-            placeholder="+91"
+            placeholder={phonePlaceholder}
             className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
           />
         </label>

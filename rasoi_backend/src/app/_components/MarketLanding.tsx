@@ -201,9 +201,9 @@ export default function MarketLanding({ market, recipeCount }: MarketLandingProp
                   </p>
                   <h2 className="font-display mt-3 text-4xl font-semibold">Sponsor with Rasoi</h2>
                   <p className="mt-4 leading-relaxed text-[#6b6560]">
-                    Put your brand in front of home cooks actively planning dinner. Rasoi offers
-                    native sponsored placements on Home, Recipes, Pantry, Saved, and Recipe detail
-                    — right when users are deciding what to cook and what to buy.
+                    {market.id === 'IN'
+                      ? 'Put your brand in front of home cooks actively planning dinner. Rasoi offers native sponsored placements on Home, Recipes, Pantry, Saved, and Recipe detail — right when users are deciding what to cook and what to buy.'
+                      : `Reach Indian home cooks and the diaspora in ${market.countryName}. Rasoi offers sponsored placements when users browse recipes, match pantry items, and plan weeknight dinners.`}
                   </p>
                   <p className="mt-6 text-sm text-[#6b6560]">
                     Questions about sponsorship?{' '}
@@ -213,9 +213,17 @@ export default function MarketLanding({ market, recipeCount }: MarketLandingProp
                     >
                       {LEGAL_CONTACT_EMAIL}
                     </a>
+                    <span className="text-[#d9d0c4]"> · </span>
+                    <span className="text-[#6b6560]">
+                      Phone example ({market.label}):{' '}
+                      <span className="font-semibold text-[#1a1a2e]">{market.sponsorPhonePlaceholder}</span>
+                    </span>
                   </p>
                 </div>
-                <SponsorApplyForm />
+                <SponsorApplyForm
+                  phonePlaceholder={market.sponsorPhonePlaceholder}
+                  brandExample={market.sponsorBrandExample}
+                />
               </div>
             </div>
           </section>
