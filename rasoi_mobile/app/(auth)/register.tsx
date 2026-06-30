@@ -230,7 +230,7 @@ export default function RegisterScreen() {
       });
       setEmailDeliveryBlocked(false);
       if (nav) {
-        void navigateAfterAuth(nav);
+        router.replace('/(auth)/legal-consent?from=register');
       }
     } catch (error) {
       setFieldError('general');
@@ -271,9 +271,9 @@ export default function RegisterScreen() {
         details.phone,
         { acceptedTerms: true },
       );
-      authLog('register:verifyOtp_success');
+      authLog('register:verifyOtp_success', { onboardingDone: nav.hasCompletedOnboarding });
       verified = true;
-      void navigateAfterAuth(nav);
+      router.replace('/(auth)/legal-consent?from=register');
     } catch (error) {
       authError('register:verifyOtp_failed', error, { email: maskEmail(details.email) });
       setFieldError('otp');

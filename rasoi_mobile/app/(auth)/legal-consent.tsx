@@ -1,5 +1,5 @@
 import * as Linking from 'expo-linking';
-import { useRouter, type Href } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,7 +15,6 @@ import {
 import { colors, radius, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useAppContext } from '@/context/AppContext';
-import { formatUserFacingApiError } from '@/utils/api';
 import { resolvePostAuthHref } from '@/utils/authNavigation';
 import { saveLegalConsent } from '@/utils/legalConsent';
 import { markTelemetryStarted } from '@/utils/telemetry';
@@ -36,40 +35,29 @@ function HighlightSection({ title, items }: { title: string; items: readonly str
 
 export default function LegalConsentScreen() {
   const router = useRouter();
-  const { loginAsGuest, isLoggedIn, userCity, pendingPantrySetup } = useAppContext();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const fromRegister = from === 'register';
+  const { pendingPantrySetup, pendingTrialWelcome, userCity, hasCompletedOnboarding, isHydrated } =
+    useAppContext();
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+
+  if (isHydrated && !fromRegister) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const handleContinue = async () => {
     if (!checked || busy) return;
     setBusy(true);
-    setErrorMessage('');
     try {
       await saveLegalConsent();
       markTelemetryStarted();
 
-      if (isLoggedIn) {
-        router.replace('/');
-        return;
-      }
-
-      try {
-        const nav = await loginAsGuest();
-        const href = await resolvePostAuthHref(nav, {
-          userCity: nav.userCity,
-          pendingPantrySetup,
-        });
-        router.replace(href as Href);
-      } catch (guestError) {
-        setErrorMessage(
-          formatUserFacingApiError(
-            guestError,
-            'Could not start as guest. You can sign in with email instead.',
-          ),
-        );
-        router.replace('/(auth)/login');
-      }
+      const href = await resolvePostAuthHref(
+        { showTrialWelcome: pendingTrialWelcome, hasCompletedOnboarding, userCity },
+        { userCity, pendingPantrySetup },
+      );
+      router.replace(href as Href);
     } finally {
       setBusy(false);
     }
@@ -110,8 +98,6 @@ export default function LegalConsentScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {errorMessage ? <Text style={localStyles.error}>{errorMessage}</Text> : null}
 
       <View style={localStyles.footer}>
         <View style={localStyles.checkRow}>
@@ -266,12 +252,5 @@ const localStyles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 16,
     overflow: 'hidden',
-  },
-  error: {
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.sm,
-    fontSize: 13,
-    lineHeight: 20,
-    color: '#B42318',
   },
 });

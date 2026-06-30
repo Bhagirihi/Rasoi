@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { colors } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
-import { hasLegalConsent, saveLegalConsent } from '@/utils/legalConsent';
+import { hasLegalConsent } from '@/utils/legalConsent';
 import {
   getMissingPermissionsState,
   isPermissionsOnboardingComplete,
@@ -30,25 +30,18 @@ export default function Index() {
     loginAsGuest,
   } = useAppContext();
   const [legalReady, setLegalReady] = useState(false);
-  const [legalConsented, setLegalConsented] = useState(false);
   const [permissionsReady, setPermissionsReady] = useState(false);
   const [permissionsRedirect, setPermissionsRedirect] = useState<string | null>(null);
   const [guestAttempted, setGuestAttempted] = useState(false);
 
   useEffect(() => {
     void (async () => {
-      let consented = await hasLegalConsent();
-      if (!consented && isHydrated && (isLoggedIn || hasCompletedOnboarding)) {
-        await saveLegalConsent();
-        consented = true;
-      }
-      setLegalConsented(consented);
-      if (consented) {
+      if (await hasLegalConsent()) {
         await ensureTelemetryStarted();
       }
       setLegalReady(true);
     })();
-  }, [hasCompletedOnboarding, isHydrated, isLoggedIn]);
+  }, []);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn || !hasCompletedOnboarding) {
@@ -74,7 +67,7 @@ export default function Index() {
   }, [hasCompletedOnboarding, isHydrated, isLoggedIn, userCity]);
 
   useEffect(() => {
-    if (!legalReady || !legalConsented || !isHydrated || isLoggedIn || guestAttempted) return;
+    if (!legalReady || !isHydrated || isLoggedIn || guestAttempted) return;
 
     let cancelled = false;
     void (async () => {
@@ -90,9 +83,9 @@ export default function Index() {
     return () => {
       cancelled = true;
     };
-  }, [guestAttempted, isHydrated, isLoggedIn, legalConsented, legalReady, loginAsGuest]);
+  }, [guestAttempted, isHydrated, isLoggedIn, legalReady, loginAsGuest]);
 
-  const bootstrappingGuest = legalConsented && isHydrated && !isLoggedIn && !guestAttempted;
+  const bootstrappingGuest = legalReady && isHydrated && !isLoggedIn && !guestAttempted;
 
   if (
     !legalReady ||
@@ -105,10 +98,6 @@ export default function Index() {
         <AppSavingOverlay visible steps={BOOTSTRAP_STEPS} />
       </View>
     );
-  }
-
-  if (!legalConsented) {
-    return <Redirect href="/(auth)/legal-consent" />;
   }
 
   if (!isLoggedIn) {

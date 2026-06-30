@@ -1,4 +1,4 @@
-# Fresh install: legal consent → guest home (no login wall)
+# Fresh install: auto guest bootstrap → onboarding or home (no legal consent gate)
 appId: com.bhagihiri.rasoiapp
 ---
 - launchApp:
@@ -7,16 +7,9 @@ appId: com.bhagihiri.rasoiapp
       all: allow
 - extendedWaitUntil:
     visible:
-      id: legal-consent-checkbox
+      id: screen-onboarding
     timeout: 60000
-- waitForAnimationToEnd
-- tapOn:
-    id: legal-consent-checkbox
-- tapOn:
-    id: legal-consent-continue
-- extendedWaitUntil:
-    visible:
-      id: screen-home
-    timeout: 60000
+- runFlow:
+    file: _onboarding.yaml
 - runFlow:
     file: _dismiss-permissions.yaml

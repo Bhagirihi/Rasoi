@@ -251,7 +251,7 @@ export default function SettingsScreen() {
             void (async () => {
               void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
               await resetAppFlow();
-              router.replace('/(auth)/legal-consent');
+              router.replace('/(auth)/login');
             })();
           },
         },

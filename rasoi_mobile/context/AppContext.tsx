@@ -59,6 +59,7 @@ import {
 } from '@/utils/notifications';
 import { isRemotePushAvailable } from '@/utils/notificationCapability';
 import { clearPermissionsOnboardingComplete } from '@/utils/permissionsOnboarding';
+import { clearLegalConsent } from '@/utils/legalConsent';
 import {
   addPantryIngredient,
   pantryHasIngredient,
@@ -1068,6 +1069,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await syncPushTokenToServer(false);
     await logoutSession();
     await clearAuthState();
+    await clearLegalConsent();
     pendingOnboardingRef.current = null;
     setHasCompletedOnboarding(false);
     setIsLoggedIn(false);
