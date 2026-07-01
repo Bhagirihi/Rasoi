@@ -33,6 +33,8 @@ export default function Index() {
   const [permissionsReady, setPermissionsReady] = useState(false);
   const [permissionsRedirect, setPermissionsRedirect] = useState<string | null>(null);
   const [guestAttempted, setGuestAttempted] = useState(false);
+  const [guestRouteReady, setGuestRouteReady] = useState(false);
+  const [guestBootstrapHref, setGuestBootstrapHref] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -85,12 +87,37 @@ export default function Index() {
     };
   }, [guestAttempted, isHydrated, isLoggedIn, legalReady, loginAsGuest]);
 
+  useEffect(() => {
+    if (!isHydrated || !isLoggedIn || hasCompletedOnboarding) {
+      setGuestRouteReady(true);
+      setGuestBootstrapHref(null);
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const legalDone = await hasLegalConsent();
+      if (cancelled) return;
+      setGuestBootstrapHref(
+        legalDone ? '/(auth)/onboarding' : '/(auth)/legal-consent?from=guest',
+      );
+      setGuestRouteReady(true);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hasCompletedOnboarding, isHydrated, isLoggedIn]);
+
   const bootstrappingGuest = legalReady && isHydrated && !isLoggedIn && !guestAttempted;
+  const bootstrappingGuestRoute =
+    isLoggedIn && !hasCompletedOnboarding && !guestRouteReady;
 
   if (
     !legalReady ||
     !isHydrated ||
     bootstrappingGuest ||
+    bootstrappingGuestRoute ||
     (isLoggedIn && hasCompletedOnboarding && !permissionsReady)
   ) {
     return (
@@ -104,8 +131,8 @@ export default function Index() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (!hasCompletedOnboarding) {
-    return <Redirect href="/(auth)/onboarding" />;
+  if (!hasCompletedOnboarding && guestBootstrapHref) {
+    return <Redirect href={guestBootstrapHref} />;
   }
 
   if (permissionsRedirect) {

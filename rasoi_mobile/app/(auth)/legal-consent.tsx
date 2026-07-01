@@ -37,12 +37,17 @@ export default function LegalConsentScreen() {
   const router = useRouter();
   const { from } = useLocalSearchParams<{ from?: string }>();
   const fromRegister = from === 'register';
-  const { pendingPantrySetup, pendingTrialWelcome, userCity, hasCompletedOnboarding, isHydrated } =
+  const fromGuest = from === 'guest';
+  const { pendingPantrySetup, pendingTrialWelcome, userCity, hasCompletedOnboarding, isHydrated, isLoggedIn } =
     useAppContext();
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  if (isHydrated && !fromRegister) {
+  if (isHydrated && !fromRegister && !fromGuest) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  if (isHydrated && fromGuest && !isLoggedIn) {
     return <Redirect href="/(auth)/login" />;
   }
 

@@ -9,8 +9,8 @@
     "packageName": "com.bhagihiri.rasoiapp",
     "expoSlug": "rasoi",
     "expoOwner": "takeyshi",
-    "versionName": "1.0.4",
-    "versionCode": 5,
+    "versionName": "1.0.8",
+    "versionCode": 9,
     "category": "FOOD_AND_DRINK",
     "appType": "APPLICATION",
     "contentRating": "Everyone",
@@ -233,11 +233,11 @@
     "countries": ["IN"],
     "testerLimit": "unlimited",
     "optInUrl": "https://play.google.com/apps/testing/com.bhagihiri.rasoiapp",
-    "versionCodeLink": "https://play.google.com/apps/test/com.bhagihiri.rasoiapp/5",
+    "versionCodeLink": "https://play.google.com/apps/test/com.bhagihiri.rasoiapp/9",
     "storeListingUrl": "https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp",
     "release": {
-      "versionName": "1.0.4",
-      "versionCode": 5
+      "versionName": "1.0.8",
+      "versionCode": 9
     }
   },
   "firebaseIntegrations": {

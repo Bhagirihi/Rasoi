@@ -89,11 +89,44 @@ function normalizeProductionApiUrl(raw: string): string {
   }
 }
 
+function isProductionApiUrl(url: string): boolean {
+  try {
+    const host = new URL(url.replace(/\/$/, '')).hostname;
+    return host === 'rasoiapplication.in' || host.endsWith('.rasoiapplication.in');
+  } catch {
+    return false;
+  }
+}
+
+/** Dev URLs that only work on a LAN host or local machine — not on the Android emulator. */
+function isPrivateDevApiUrl(url: string): boolean {
+  try {
+    const host = new URL(url.replace(/\/$/, '')).hostname;
+    return (
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '10.0.2.2' ||
+      /^192\.168\./.test(host) ||
+      /^10\./.test(host)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function getApiBaseUrl(): string {
   const configured = process.env.EXPO_PUBLIC_API_URL?.trim();
 
   if (__DEV__) {
-    return normalizeProductionApiUrl(resolveDevApiUrl(configured));
+    if (configured && isProductionApiUrl(configured)) {
+      return normalizeProductionApiUrl(configured);
+    }
+    const resolved = resolveDevApiUrl(configured);
+    // Emulator cannot reach a developer's LAN IP or host :3000; use production for QA.
+    if (isAndroidEmulator() && isPrivateDevApiUrl(resolved)) {
+      return PROD_API_URL;
+    }
+    return normalizeProductionApiUrl(resolved);
   }
 
   return normalizeProductionApiUrl(configured ?? PROD_API_URL);

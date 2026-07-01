@@ -129,11 +129,56 @@ def is_home_screen() -> bool:
     )
 
 
+def flow_dev_reset_to_login() -> bool:
+    """Dev-only: Settings → Reset full flow → login."""
+    tap_test_id("tab-settings") or tap_desc("Settings")
+    time.sleep(2)
+    for _ in range(8):
+        adb("shell", "input", "swipe", "540", "1800", "540", "400", "300", check=False)
+        time.sleep(0.4)
+        if tap_text_contains("Reset full flow"):
+            break
+    time.sleep(1)
+    if wait_for(r"Reset everything", 8):
+        tap_text_contains("Reset")
+        time.sleep(3)
+    return wait_for(r"Welcome back", 25)
+
+
 def flow_legal_to_login() -> bool:
-    if wait_for(r"Terms & Privacy", 45):
+    """Reach login after fresh install (legal consent is post-register only; auto-guest is common)."""
+    dismiss_system_dialogs()
+    if wait_for(r"Welcome back", 8):
+        return True
+    if wait_for(r"Terms & Privacy", 5):
         tap_text_contains("I have read and agree") or tap_xy(111, 1912)
         time.sleep(0.5)
-        tap_text_exact("Continue") or tap_xy(540, 2099)
+        tap_text_contains("Continue") or tap_xy(540, 2099)
+        time.sleep(3)
+        if wait_for(r"Welcome back", 20):
+            return True
+    if wait_for(
+        r"What is your dietary|Tell us what you cook|dietary preference|screen-onboarding",
+        25,
+    ):
+        if flow_guest_to_home():
+            return flow_dev_reset_to_login()
+    if wait_for(r"Good Morning|Good Afternoon|Good Evening|Good Night|LATE-NIGHT|screen-home", 12):
+        return flow_dev_reset_to_login()
+    return wait_for(r"Welcome back", 15)
+
+
+def flow_logout_to_login() -> bool:
+    tap_test_id("tab-settings") or tap_desc("Settings")
+    time.sleep(2)
+    for _ in range(6):
+        adb("shell", "input", "swipe", "540", "1800", "540", "400", "300", check=False)
+        time.sleep(0.4)
+        if tap_test_id("settings-logout") or tap_text_contains("Log out"):
+            break
+    time.sleep(1)
+    if wait_for(r"Log out\?", 8):
+        tap_text_contains("Log out")
         time.sleep(3)
     return wait_for(r"Welcome back", 25)
 
@@ -147,11 +192,17 @@ def flow_guest_to_home() -> bool:
         tap_text_contains("Continue as guest") or tap_text_exact("Continue as guest")
         time.sleep(4)
     dismiss_system_dialogs()
-    # Diet step
-    if wait_for(r"What is your dietary|dietary preference", 15):
+    # Diet + cuisine on one screen
+    if wait_for(r"What is your dietary|Tell us what you cook|dietary preference|screen-onboarding", 20):
         tap_test_id("onboarding-diet-veg") or tap_text_contains("PLANT-BASED") or tap_xy(540, 790)
-        time.sleep(1.5)
-        for _ in range(8):
+        time.sleep(1)
+        for _ in range(6):
+            adb("shell", "input", "swipe", "540", "1800", "540", "600", "300", check=False)
+            time.sleep(0.4)
+            if tap_test_id("onboarding-cuisine-first") or tap_text_contains("Gujarati"):
+                break
+        time.sleep(1)
+        for _ in range(10):
             root = dump_ui()
             for node in root.iter("node"):
                 if "onboarding-diet-continue" in node.attrib.get("resource-id", ""):
@@ -164,13 +215,6 @@ def flow_guest_to_home() -> bool:
                 time.sleep(0.5)
                 continue
             break
-        time.sleep(3)
-    dismiss_system_dialogs()
-    # Cuisine step
-    if wait_for(r"Shape your Rasoi feed|kitchen styles|Save .* continue", 15):
-        tap_text_contains("Gujarati") or tap_text_contains("North Indian") or tap_xy(540, 750)
-        time.sleep(1)
-        tap_text_contains("Save") or tap_text_contains("CONTINUE") or tap_xy(540, 2050)
         time.sleep(3)
     dismiss_system_dialogs()
     # Notifications skip

@@ -2,7 +2,8 @@
 # Env: QA_OTP
 appId: com.bhagihiri.rasoiapp
 ---
-- launchApp
+- launchApp:
+    stopApp: false
 - extendedWaitUntil:
     visible:
       text: "Check your email"
@@ -25,9 +26,7 @@ appId: com.bhagihiri.rasoiapp
 - hideKeyboard
 - tapOn:
     text: "Sign in"
-- extendedWaitUntil:
-    visible:
-      id: screen-home
-    timeout: 60000
+- runFlow:
+    file: _reach-home.yaml
 - assertVisible:
     id: screen-home

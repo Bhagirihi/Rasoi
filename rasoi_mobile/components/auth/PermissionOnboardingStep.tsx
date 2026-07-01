@@ -12,6 +12,7 @@ import { testIds } from '@/constants/testIds';
 type PermissionOnboardingStepProps = {
   screenTestID?: string;
   skipTestID?: string;
+  enableTestID?: string;
   eyebrow?: string;
   savingMessage?: string;
   savingSubtitle?: string;
@@ -29,6 +30,7 @@ type PermissionOnboardingStepProps = {
 export default function PermissionOnboardingStep({
   screenTestID = testIds.screenOnboarding,
   skipTestID,
+  enableTestID,
   eyebrow,
   savingMessage = 'Setting up your Rasoi…',
   savingSubtitle = 'Saving tastes and reminders',
@@ -53,7 +55,11 @@ export default function PermissionOnboardingStep({
           <Text style={styles.brand}>Rasoi</Text>
         </View>
 
-        <ScrollViewWithFloatingIndicator {...scrollIndicator} contentContainerStyle={styles.content}>
+        <ScrollViewWithFloatingIndicator
+          style={styles.flex}
+          {...scrollIndicator}
+          contentContainerStyle={styles.content}
+        >
           {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
@@ -64,6 +70,7 @@ export default function PermissionOnboardingStep({
           <Pressable
             onPress={onEnable}
             disabled={isSubmitting}
+            testID={enableTestID}
             style={[styles.buttonWrap, isSubmitting && styles.buttonDisabled]}
           >
             <LinearGradient

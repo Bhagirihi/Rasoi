@@ -1,7 +1,6 @@
 # TC-006: Home tab loads with recipe content
 appId: com.bhagihiri.rasoiapp
 ---
-- launchApp
 - extendedWaitUntil:
     visible:
       id: screen-home

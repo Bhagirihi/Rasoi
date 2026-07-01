@@ -128,9 +128,6 @@ export function getLoginEmailValidationError(email: string): string | null {
   if (isDisposableEmail(normalized)) {
     return getDisposableEmailError();
   }
-  if (isPlusAliasEmail(normalized)) {
-    return 'Sign in with your main email only (e.g. you@gmail.com, not you+alias@gmail.com).';
-  }
   return null;
 }
 

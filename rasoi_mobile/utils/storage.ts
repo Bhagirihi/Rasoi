@@ -89,6 +89,11 @@ export async function loadLocalOnboardingState(): Promise<LocalOnboardingState> 
   };
 }
 
+/** Server says onboarding is incomplete — drop stale local complete flag (e.g. old guest auto-skip). */
+export async function clearLocalOnboardingCompleteFlag(): Promise<void> {
+  await AsyncStorage.removeItem(KEYS.onboardingComplete);
+}
+
 export async function saveOnboardingComplete(payload: OnboardingPayload): Promise<void> {
   await AsyncStorage.multiSet([
     [KEYS.onboardingComplete, 'true'],

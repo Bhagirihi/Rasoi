@@ -32,7 +32,7 @@ import { isEmailDeliveryUnavailableError } from "@/utils/emailDeliveryErrors";
 import { warmApiConnection } from "@/utils/api";
 import { getLoginEmailValidationError } from "@/utils/identityValidation";
 import { normalizeEmail } from "@/utils/storage";
-import { resolvePostAuthHref } from "@/utils/authNavigation";
+import { resolveGuestLoginHref, resolvePostAuthHref } from "@/utils/authNavigation";
 
 type LoginStep = "email" | "otp";
 type FieldError = "email" | "otp" | "general" | null;
@@ -73,6 +73,14 @@ export default function LoginScreen() {
     if (step === "otp") warmApiConnection();
   }, [step]);
 
+  const navigateAfterGuest = async (nav: AuthNavigationResult) => {
+    const href = await resolveGuestLoginHref(nav, {
+      userCity: nav.userCity,
+      pendingPantrySetup,
+    });
+    router.replace(href);
+  };
+
   const navigateAfterAuth = async (nav: AuthNavigationResult) => {
     const href = await resolvePostAuthHref(nav, {
       userCity: nav.userCity,
@@ -102,7 +110,7 @@ export default function LoginScreen() {
       const trimmed = guestName.trim();
       const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
       setShowGuestModal(false);
-      void navigateAfterAuth(nav);
+      void navigateAfterGuest(nav);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Could not continue as guest. Please try again.";

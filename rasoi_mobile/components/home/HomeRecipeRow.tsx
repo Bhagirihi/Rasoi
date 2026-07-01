@@ -153,7 +153,7 @@ function MetaTagsRow({
         icon={<Leaf size={11} color={colors.green} strokeWidth={2.5} />}
       />
       <MetaPill
-        label={`${pantryMatchPercent}% match`}
+        label={`${pantryMatchPercent}% pantry match`}
         backgroundColor={matchBg}
         textColor={matchColor}
       />

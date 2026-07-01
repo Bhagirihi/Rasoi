@@ -13,6 +13,7 @@ import {
   isDummyIndianPhone,
 } from '../_shared/identityValidation.ts';
 import { normalizePhone, serializeUser } from '../_shared/serializeUser.ts';
+import { newUserRowIds } from '../_shared/userInsert.ts';
 
 const CURRENT_TERMS_VERSION = Deno.env.get('RASOI_TERMS_VERSION') ?? '2025-06-01';
 
@@ -217,6 +218,7 @@ Deno.serve(async (request) => {
     const { data, error } = await db
       .from('User')
       .insert({
+        ...newUserRowIds(now),
         name,
         phone: phone ?? null,
         email: authUser.email,

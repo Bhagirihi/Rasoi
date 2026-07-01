@@ -51,6 +51,7 @@ export const testIds = {
   onboardingCuisineFirst: 'onboarding-cuisine-first',
   onboardingCuisineContinue: 'onboarding-cuisine-continue',
   onboardingSkipNotify: 'onboarding-skip-notify',
+  onboardingEnableNotify: 'onboarding-enable-notify',
   onboardingSkipLocation: 'onboarding-skip-location',
 
   pantrySetupContinue: 'pantry-setup-continue',

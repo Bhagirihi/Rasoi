@@ -115,7 +115,7 @@ export default function SettingsScreen() {
   const hasPlusPartners = effectiveTier === 'trial' || effectiveTier === 'paid';
   const displayName = userName || 'Guest';
   const profileSub = isGuest
-    ? 'Sign in to sync recipes & preferences'
+    ? 'Sign up to sync recipes & preferences'
     : userEmail
       ? userEmail
       : userPhone
@@ -124,6 +124,10 @@ export default function SettingsScreen() {
 
   const openEditProfile = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    if (isGuest) {
+      router.replace('/(auth)/register');
+      return;
+    }
     router.push('/(tabs)/settings/edit-profile');
   };
 
@@ -162,9 +166,9 @@ export default function SettingsScreen() {
           ? 'Subscribe before trial ends'
           : 'View Rasoi Plus plans';
 
-  const openLogin = () => {
+  const openRegister = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.replace('/(auth)/login');
+    router.replace('/(auth)/register');
   };
 
   const handleNotificationsToggle = async (next: boolean) => {
@@ -411,7 +415,7 @@ export default function SettingsScreen() {
           />
           <SettingsQuickTile
             label="Profile"
-            sublabel={isGuest ? 'Sign in' : 'Name & phone'}
+            sublabel={isGuest ? 'Sign up' : 'Name & phone'}
             icon={User}
             onPress={openEditProfile}
           />
@@ -569,7 +573,7 @@ export default function SettingsScreen() {
         <SettingsGroupLabel label="Account" />
         <AccountActionsCard
           isGuest={isGuest}
-          onSignIn={openEditProfile}
+          onSignIn={openRegister}
           onSwitchAccount={handleSwitchAccount}
           onLogout={handleLogout}
           onReset={handleResetFlow}

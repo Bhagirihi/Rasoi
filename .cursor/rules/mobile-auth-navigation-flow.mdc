@@ -1,0 +1,56 @@
+---
+description: Frozen mobile auth & navigation flows — do not reorder or skip steps
+globs: rasoi_mobile/app/**/*.tsx,rasoi_mobile/utils/authNavigation.ts,rasoi_mobile/context/AppContext.tsx
+alwaysApply: false
+---
+
+# Mobile auth & navigation flows (frozen)
+
+**Do not change step order, skip screens, or merge flows without explicit user approval.**
+
+## Register path (new account)
+
+`Register (details)` → `OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` → `Pantry` → optional `Trial welcome` → `Dashboard (tabs)`
+
+Onboarding sub-steps (fixed order):
+
+1. Food preferences (diet + cuisines)
+2. Notifications permission
+3. Location permission
+
+Implementation anchors: `register.tsx` (OTP → legal-consent), `legal-consent.tsx`, `onboarding.tsx`, `authNavigation.ts` (`pendingPantrySetup` → pantry), `trial-welcome.tsx`.
+
+## Login path (existing account)
+
+`Login` → `OTP` → `resolvePostAuthHref`:
+
+- Onboarding **only if** `hasCompletedOnboarding` is false (full prefs → notifications → location).
+- Else **permissions-only** flow (`onboarding?permissionsOnly=1`) when OS notification/location still missing.
+- Then `Dashboard` (skip pantry unless `pendingPantrySetup`).
+
+Login **must not** show legal-consent (register-only).
+
+## Guest login (first time)
+
+`Continue as guest` / splash auto-guest → `Terms & Privacy` (`legal-consent?from=guest`) → `Onboarding` → `Pantry` → `Dashboard`
+
+Do **not** auto-complete onboarding with default prefs (`GUEST_DEFAULT_ONBOARDING`).
+
+## Guest → sign up (upgrade)
+
+`Settings` → **Sign up** → `Register` (not Login).
+
+Guest may still use Login for returning accounts; Settings upgrade CTA goes to Register.
+
+## Splash / cold start
+
+Splash → bootstrap → auto guest when no session → route via `app/index.tsx`. Do not add Login/Register buttons on splash.
+
+## Key files
+
+| Concern | File |
+|---------|------|
+| Post-auth routing | `utils/authNavigation.ts` |
+| Root redirect | `app/index.tsx` |
+| Guest upgrade CTA | `app/(tabs)/settings/index.tsx`, `components/settings/SettingsBlocks.tsx` |
+| New signup pantry gate | `AppContext.tsx` (`pendingPantrySetup` on signup) |

@@ -41,7 +41,7 @@ def main() -> int:
     s.clear_app()
     s.launch_app()
     legal = s.flow_legal_to_login()
-    step("TC-GUEST-001 Legal → login", legal)
+    step("TC-GUEST-001 Fresh install → login", legal)
     if not legal:
         _report(device, results)
         return 1

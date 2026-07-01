@@ -216,10 +216,10 @@ export function partitionIngredients(
 }
 
 export function getPantryMatchPercent(recipe: Recipe, pantryIngredients: string[]): number {
-  if (recipe.ingredients.length === 0) return 0;
-  if (pantryIngredients.length === 0) return 0;
-  const { available } = partitionIngredients(recipe, pantryIngredients);
-  return Math.round((available.length / recipe.ingredients.length) * 100);
+  const { available, missing } = partitionIngredients(recipe, pantryIngredients);
+  const total = available.length + missing.length;
+  if (total === 0) return 0;
+  return Math.round((available.length / total) * 100);
 }
 
 export function scoreRecipeForTonight(

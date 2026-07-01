@@ -1,4 +1,5 @@
-import type { Session } from '@supabase/supabase-js';
+import type { AuthError, Session } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
 import { mapSupabaseOtpSendError } from '@/utils/emailDeliveryErrors';
@@ -16,6 +17,63 @@ import {
 } from '@/utils/supabase';
 
 export type OtpFlow = 'signup' | 'login' | 'guest_upgrade';
+
+const ANONYMOUS_AUTH_DISABLED_KEY = '@rasoi/anonymous_auth_disabled';
+
+export class AnonymousAuthDisabledError extends Error {
+  constructor() {
+    super('Anonymous sign-ins are disabled');
+    this.name = 'AnonymousAuthDisabledError';
+  }
+}
+
+export function isAnonymousAuthDisabledError(error: unknown): boolean {
+  if (error instanceof AnonymousAuthDisabledError) return true;
+  const authErrorLike = error as AuthError | null;
+  if (authErrorLike?.code === 'anonymous_provider_disabled') return true;
+  const message = error instanceof Error ? error.message : String(error);
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('anonymous sign-ins are disabled') ||
+    lower.includes('anonymous_provider_disabled') ||
+    lower.includes('guest mode is temporarily unavailable')
+  );
+}
+
+export async function isAnonymousAuthKnownDisabled(): Promise<boolean> {
+  try {
+    return (await AsyncStorage.getItem(ANONYMOUS_AUTH_DISABLED_KEY)) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+async function markAnonymousAuthDisabled(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(ANONYMOUS_AUTH_DISABLED_KEY, 'true');
+  } catch {
+    // Non-fatal — we will retry anonymous once per install if storage fails.
+  }
+}
+
+/** Returns a session when anonymous auth works; null when disabled (API-only guest). */
+export async function trySignInAnonymously(): Promise<Session | null> {
+  if (await isAnonymousAuthKnownDisabled()) {
+    authLog('trySignInAnonymously:skipped_known_disabled');
+    return null;
+  }
+
+  try {
+    return await signInAnonymously();
+  } catch (error) {
+    if (isAnonymousAuthDisabledError(error)) {
+      await markAnonymousAuthDisabled();
+      authLog('trySignInAnonymously:disabled');
+      return null;
+    }
+    throw error;
+  }
+}
 
 type OtpVerifyType = 'signup' | 'email' | 'email_change';
 
@@ -60,13 +118,14 @@ export async function signInAnonymously(): Promise<Session> {
   const { data, error } = await supabase.auth.signInAnonymously();
 
   if (error) {
+    if (isAnonymousAuthDisabledError(error)) {
+      authLog('signInAnonymously:disabled', { code: error.code });
+      throw new AnonymousAuthDisabledError();
+    }
     authError('signInAnonymously:supabase_error', error, {
       status: error.status,
       code: error.code,
     });
-    if (error.message.toLowerCase().includes('anonymous')) {
-      throw new Error('Guest mode is temporarily unavailable. Please create an account or try again later.');
-    }
     throw new Error(error.message || 'Could not start guest session. Try again.');
   }
 

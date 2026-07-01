@@ -47,15 +47,34 @@ fi
 if curl -sf --max-time 3 "http://localhost:8081/status" >/dev/null 2>&1; then
   adb reverse tcp:8081 tcp:8081 >/dev/null 2>&1 || true
   ok "Metro running (adb reverse tcp:8081 set)"
+  EMU_ABI="$(adb shell getprop ro.product.cpu.abi 2>/dev/null | tr -d '\r' || true)"
+  if [[ "$EMU_ABI" == "x86_64" || "$EMU_ABI" == "x86" ]]; then
+    APK_PATH="${ROOT}/android/app/build/outputs/apk/debug/app-debug.apk"
+    if [[ -f "$APK_PATH" ]] && ! unzip -l "$APK_PATH" 2>/dev/null | rg -q "lib/${EMU_ABI}/libreactnative.so"; then
+      echo "⚠ Emulator is ${EMU_ABI} but debug APK may be ARM-only."
+      echo "  Rebuild for emulator: cd android && ./gradlew assembleDebug -PreactNativeArchitectures=${EMU_ABI}"
+    fi
+  fi
+  if [[ -z "${EXPO_PUBLIC_API_URL:-}" ]] && [[ -f "${ROOT}/.env.development" ]] && rg -q "192\\.168\\.|localhost|127\\.0\\.0\\.1" "${ROOT}/.env.development" 2>/dev/null; then
+    if ! curl -sf --max-time 2 "http://127.0.0.1:3000/api/recipes" >/dev/null 2>&1; then
+      echo "⚠ Debug build on emulator uses host :3000 — start backend or run Metro with:"
+      echo "  EXPO_PUBLIC_API_URL=https://rasoiapplication.in npm run start:prod-api"
+    fi
+  fi
 else
   echo "⚠ Metro not running — start: cd rasoi_mobile && npx expo start"
   echo "  Debug builds will show redbox until Metro is reachable."
 fi
 
 if curl -sf --max-time 8 "https://rasoiapplication.in/api/recipes" >/dev/null 2>&1; then
-  ok "Backend API reachable"
+  ok "Backend API reachable (production)"
+elif curl -sf --max-time 5 "http://127.0.0.1:3000/api/recipes" >/dev/null 2>&1; then
+  ok "Backend API reachable (local :3000)"
 else
-  echo "⚠ Backend API not reachable — recipe flows may fail if cache is empty"
+  echo "⚠ No API on production or localhost:3000 — debug builds use EXPO_PUBLIC_API_URL from .env.development."
+  echo "  Start backend: cd rasoi_backend && npm run dev"
+  echo "  Or Metro with prod API: npm run start:prod-api"
+  fail "API unreachable for device QA (OTP and recipes need a live backend)"
 fi
 
 if command -v npx >/dev/null 2>&1; then

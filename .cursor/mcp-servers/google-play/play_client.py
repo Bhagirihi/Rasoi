@@ -523,6 +523,175 @@ def convert_region_prices(price_inr: float, pkg: str | None = None) -> dict[str,
     )
 
 
+TRACK_ALIASES = {
+    'internal': 'internal',
+    'closed': 'alpha',
+    'alpha': 'alpha',
+    'open': 'beta',
+    'beta': 'beta',
+    'openTesting': 'beta',
+    'open_testing': 'beta',
+    'production': 'production',
+    'prod': 'production',
+}
+
+
+def normalize_track(track: str) -> str:
+    key = track.strip()
+    resolved = TRACK_ALIASES.get(key) or TRACK_ALIASES.get(key.lower())
+    if not resolved:
+        raise PlayError(
+            f'Unknown track "{track}". Use internal, alpha (closed), beta (open), or production.',
+        )
+    return resolved
+
+
+def get_track_releases(*, pkg: str | None = None, tracks: list[str] | None = None) -> dict[str, Any]:
+    """Read current releases on Play tracks (read-only edit, not committed)."""
+    pkg = (pkg or package_name()).strip()
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+    track_names = [normalize_track(t) for t in (tracks or ['internal', 'alpha', 'beta', 'production'])]
+    result: dict[str, Any] = {'package_name': pkg, 'tracks': {}}
+    for track in track_names:
+        try:
+            data = service.edits().tracks().get(packageName=pkg, editId=edit_id, track=track).execute()
+            result['tracks'][track] = data
+        except Exception as exc:  # noqa: BLE001
+            result['tracks'][track] = {'error': str(exc)}
+    return result
+
+
+def rollout_release(
+    *,
+    track: str,
+    version_code: int,
+    release_notes: list[dict[str, str]] | None = None,
+    status: str = 'completed',
+    name: str = '',
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    """Roll out an uploaded app bundle (by versionCode) to a Play track."""
+    pkg = (pkg or package_name()).strip()
+    normalized = normalize_track(track)
+    if status not in {'completed', 'draft', 'halted', 'inProgress'}:
+        raise PlayError(f'Invalid release status "{status}".')
+
+    release: dict[str, Any] = {
+        'versionCodes': [str(version_code)],
+        'status': status,
+    }
+    if name.strip():
+        release['name'] = name.strip()
+    if release_notes:
+        release['releaseNotes'] = [
+            {'language': note['language'], 'text': note['text'][:500]}
+            for note in release_notes
+            if note.get('language') and note.get('text')
+        ]
+
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+    updated = (
+        service.edits()
+        .tracks()
+        .update(
+            packageName=pkg,
+            editId=edit_id,
+            track=normalized,
+            body={'track': normalized, 'releases': [release]},
+        )
+        .execute()
+    )
+    committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
+    return {
+        'package_name': pkg,
+        'track': normalized,
+        'version_code': version_code,
+        'status': status,
+        'release': updated,
+        'commit': committed,
+    }
+
+
+def rollout_rasoi_open_testing(
+    *,
+    version_code: int = 9,
+    version_name: str = '1.0.8',
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    notes = [
+        {
+            'language': 'en-US',
+            'text': (
+                '• Opens faster — no Terms screen when you launch the app\n'
+                '• Smoother login and permission setup\n'
+                '• Easier to turn on meal reminders\n'
+                '• More stable — better recovery if something goes wrong\n'
+                '• Bug fixes in onboarding and settings'
+            ),
+        },
+        {
+            'language': 'hi-IN',
+            'text': (
+                '• ऐप तेज़ खुलता है — ओपन पर Terms स्क्रीन नहीं\n'
+                '• लॉगिन और अनुमति सेटअप आसान\n'
+                '• भोजन रिमाइंडर चालू करना आसान\n'
+                '• ऐप ज़्यादा स्थिर — गड़बड़ी पर बेहतर रिकवरी\n'
+                '• ऑनबोर्डिंग और सेटिंग्स में सुधार'
+            ),
+        },
+    ]
+    return rollout_release(
+        track='beta',
+        version_code=version_code,
+        release_notes=notes,
+        status='completed',
+        name=version_name,
+        pkg=pkg,
+    )
+
+
+def rollout_rasoi_production(
+    *,
+    version_code: int = 9,
+    version_name: str = '1.0.8',
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    notes = [
+        {
+            'language': 'en-US',
+            'text': (
+                '• Opens faster — no Terms screen when you launch the app\n'
+                '• Smoother login and permission setup\n'
+                '• Easier to turn on meal reminders\n'
+                '• More stable — better recovery if something goes wrong\n'
+                '• Bug fixes in onboarding and settings'
+            ),
+        },
+        {
+            'language': 'hi-IN',
+            'text': (
+                '• ऐप तेज़ खुलता है — ओपन पर Terms स्क्रीन नहीं\n'
+                '• लॉगिन और अनुमति सेटअप आसान\n'
+                '• भोजन रिमाइंडर चालू करना आसान\n'
+                '• ऐप ज़्यादा स्थिर — गड़बड़ी पर बेहतर रिकवरी\n'
+                '• ऑनबोर्डिंग और सेटिंग्स में सुधार'
+            ),
+        },
+    ]
+    return rollout_release(
+        track='production',
+        version_code=version_code,
+        release_notes=notes,
+        status='completed',
+        name=version_name,
+        pkg=pkg,
+    )
+
+
 def rasoi_codebase_config() -> dict[str, Any]:
     repo_root = ROOT.parents[2]
     payments_ts = repo_root / 'rasoi_mobile' / 'constants' / 'payments.ts'

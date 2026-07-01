@@ -8,6 +8,7 @@ import {
 } from 'lucide-react-native';
 import { useRef, useState, useCallback, useEffect } from 'react';
 import {
+  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -131,9 +132,11 @@ export default function OnboardingScreen() {
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await redirectAfterPermissions();
-    } catch {
+    } catch (error) {
       finishingRef.current = false;
-      throw new Error('Could not save your preferences. Please try again.');
+      throw error instanceof Error
+        ? error
+        : new Error('Could not save your preferences. Please try again.');
     }
   };
 
@@ -159,6 +162,12 @@ export default function OnboardingScreen() {
     setStep('notifications');
   };
 
+  const showPermissionStepError = (error: unknown) => {
+    const message =
+      error instanceof Error ? error.message : 'Something went wrong. Please try again.';
+    Alert.alert('Could not continue', message);
+  };
+
   const handleEnableNotifications = async () => {
     setIsSubmitting(true);
     try {
@@ -168,6 +177,8 @@ export default function OnboardingScreen() {
             (await ensureNotificationPermissions())
           : false;
       await proceedToLocationOrFinish(enabled);
+    } catch (error) {
+      showPermissionStepError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -177,6 +188,8 @@ export default function OnboardingScreen() {
     setIsSubmitting(true);
     try {
       await proceedToLocationOrFinish(false);
+    } catch (error) {
+      showPermissionStepError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -249,7 +262,7 @@ export default function OnboardingScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (isHydrated && hasCompletedOnboarding && !permissionsOnly) {
+  if (isHydrated && hasCompletedOnboarding && !permissionsOnly && step === 'preferences') {
     return <Redirect href={pendingPantrySetup ? '/(tabs)/pantry' : '/(tabs)'} />;
   }
 
@@ -284,6 +297,7 @@ export default function OnboardingScreen() {
         onEnable={handleEnableNotifications}
         onSkip={handleSkipNotifications}
         skipTestID={testIds.onboardingSkipNotify}
+        enableTestID={testIds.onboardingEnableNotify}
         title={
           <>
             Never ask <Text style={styles.notifyHighlight}>&quot;What&apos;s for dinner?&quot;</Text>{' '}

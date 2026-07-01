@@ -44,7 +44,7 @@ import { useRecipes } from "@/context/RecipesContext";
 import { fetchRecipeSponsor, type SponsorCardData } from "@/services/sponsors";
 import type { Recipe } from "@/data/mockRecipes";
 import { useRasoiRealtimeTables } from "@/utils/realtime";
-import { getRegionalMatchPercent, partitionIngredients } from "@/utils/recipes";
+import { getPantryMatchPercent, partitionIngredients } from "@/utils/recipes";
 import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
 import { getRecipeSteps } from "@/utils/recipeSteps";
 import { getRecipeStepsHi } from "@/utils/recipeStepsHi";
@@ -69,7 +69,6 @@ export default function RecipeDetailScreen() {
   const router = useRouter();
   const {
     pantryIngredients,
-    regionalCuisine,
     isRecipeSaved,
     toggleSavedRecipe,
     showPartners,
@@ -282,7 +281,7 @@ export default function RecipeDetailScreen() {
     );
   }
 
-  const matchPercent = getRegionalMatchPercent(recipe.region, regionalCuisine);
+  const pantryMatchPercent = getPantryMatchPercent(recipe, pantryIngredients);
   const recipeVisual = getRecipeVisualIdentity(recipe);
   const saved = isRecipeSaved(recipe.id);
 
@@ -387,7 +386,7 @@ export default function RecipeDetailScreen() {
               <View style={[styles.heroPill, styles.heroPillGreen]}>
                 <MapPin size={14} color={colors.white} />
                 <Text style={styles.heroPillText}>
-                  {matchPercent}% regional match
+                  {pantryMatchPercent}% pantry match
                 </Text>
               </View>
             </View>

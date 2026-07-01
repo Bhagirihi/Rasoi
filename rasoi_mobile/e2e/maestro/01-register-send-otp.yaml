@@ -3,7 +3,7 @@
 appId: com.bhagihiri.rasoiapp
 ---
 - runFlow:
-    file: _bootstrap.yaml
+    file: _bootstrap-to-login.yaml
 - runFlow:
     when:
       visible:

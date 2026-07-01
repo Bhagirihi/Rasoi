@@ -74,6 +74,7 @@ import {
   localStateToOnboardingPayload,
   loadPendingTrialWelcome,
   loadPendingPantrySetup,
+  clearLocalOnboardingCompleteFlag,
   saveOnboardingComplete,
   savePendingTrialWelcome,
   savePendingPantrySetup,
@@ -112,14 +113,6 @@ export type AuthNavigationResult = {
   showTrialWelcome: boolean;
   hasCompletedOnboarding: boolean;
   userCity: string | null;
-};
-
-const GUEST_DEFAULT_ONBOARDING: OnboardingPayload = {
-  dietPreference: 'Veg',
-  dietChoice: 'Veg',
-  regionalCuisine: 'All India',
-  favoriteCuisines: [],
-  notificationsEnabled: false,
 };
 
 interface AppContextValue extends ResolvedPlan {
@@ -451,28 +444,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const finishAuthAfterSync = useCallback(
     async (user: UserProfileResponse): Promise<AuthNavigationResult> => {
       await clearPermissionsOnboardingComplete();
+      if (!user.hasCompletedOnboarding) {
+        await clearLocalOnboardingCompleteFlag();
+        pendingOnboardingRef.current = null;
+      }
       applyUserProfile(user);
+      if (!user.hasCompletedOnboarding) {
+        setHasCompletedOnboarding(false);
+      }
 
       let notificationsOn = user.notificationsEnabled;
       let onboardingDone = user.hasCompletedOnboarding;
-
-      if (user.isGuest && !onboardingDone && !pendingOnboardingRef.current) {
-        pendingOnboardingRef.current = GUEST_DEFAULT_ONBOARDING;
-        await saveOnboardingComplete(GUEST_DEFAULT_ONBOARDING);
-        setHasCompletedOnboarding(true);
-        setDietChoiceState(GUEST_DEFAULT_ONBOARDING.dietChoice);
-        setRegionalCuisine(GUEST_DEFAULT_ONBOARDING.regionalCuisine);
-        setFavoriteCuisines(GUEST_DEFAULT_ONBOARDING.favoriteCuisines);
-        setNotificationsEnabledState(GUEST_DEFAULT_ONBOARDING.notificationsEnabled);
-        notificationsOn = GUEST_DEFAULT_ONBOARDING.notificationsEnabled;
-        onboardingDone = true;
-        trackOnboardingComplete({
-          dietChoice: GUEST_DEFAULT_ONBOARDING.dietChoice,
-          regionalCuisine: GUEST_DEFAULT_ONBOARDING.regionalCuisine,
-          notificationsEnabled: GUEST_DEFAULT_ONBOARDING.notificationsEnabled,
-          isGuest: true,
-        });
-      }
 
       let resolvedCity = user.city ?? null;
 
@@ -562,7 +544,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         try {
           const user = await fetchCurrentUser();
+          if (!user.hasCompletedOnboarding) {
+            await clearLocalOnboardingCompleteFlag();
+            pendingOnboardingRef.current = null;
+          }
           applyUserProfile(user);
+          if (!user.hasCompletedOnboarding) {
+            setHasCompletedOnboarding(false);
+          }
           await syncOnboardingIfNeeded(user);
           return;
         } catch (error) {
@@ -896,9 +885,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     authLog('loginAsGuest:context_start');
     const { user } = await loginAsGuestUser(options);
     const nav = await finishAuthAfterSync(user);
+    if (user.isGuest && !user.hasCompletedOnboarding) {
+      setPendingPantrySetup(true);
+    }
     void logFirebaseEvent('guest_login');
     return nav;
-  }, [finishAuthAfterSync]);
+  }, [finishAuthAfterSync, setPendingPantrySetup]);
 
   const openEmailVerificationModal = useCallback(() => {
     setEmailVerificationModalVisible(true);

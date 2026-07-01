@@ -1,24 +1,34 @@
-# Guest smoke — legal → guest login → onboarding → all tabs
+# Guest smoke — bootstrap → guest login (if needed) → onboarding gates → all tabs
 appId: com.bhagihiri.rasoiapp
 ---
 - runFlow:
     file: _bootstrap.yaml
-- tapOn:
-    id: login-guest
 - runFlow:
     when:
       visible:
-        id: guest-continue-button
+        id: login-guest
     commands:
       - tapOn:
-          id: guest-continue-button
+          id: login-guest
+      - runFlow:
+          when:
+            visible:
+              id: guest-continue-button
+          commands:
+            - tapOn:
+                id: guest-continue-button
+      - runFlow:
+          when:
+            visible: "Continue as guest"
+          commands:
+            - tapOn: "Continue as guest"
+      - extendedWaitUntil:
+          notVisible:
+            text: "Opening Rasoi for you"
+          timeout: 120000
+          optional: true
 - runFlow:
-    when:
-      visible: "Continue as guest"
-    commands:
-      - tapOn: "Continue as guest"
-- runFlow:
-    file: _onboarding.yaml
+    file: _reach-home.yaml
 - tapOn:
     id: tab-pantry
 - assertVisible:

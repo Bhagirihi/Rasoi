@@ -23,7 +23,7 @@ import { testIds } from '@/constants/testIds';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { useAppContext, type AuthNavigationResult } from '@/context/AppContext';
-import { resolvePostAuthHref } from '@/utils/authNavigation';
+import { resolveGuestLoginHref, resolvePostAuthHref } from '@/utils/authNavigation';
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
 import { isEmailDeliveryUnavailableError } from '@/utils/emailDeliveryErrors';
 import { warmApiConnection } from '@/utils/api';
@@ -127,8 +127,8 @@ export default function RegisterScreen() {
     };
   }, []);
 
-  const navigateAfterAuth = async (nav: AuthNavigationResult) => {
-    const href = await resolvePostAuthHref(nav, {
+  const navigateAfterGuest = async (nav: AuthNavigationResult) => {
+    const href = await resolveGuestLoginHref(nav, {
       userCity: nav.userCity,
       pendingPantrySetup,
     });
@@ -322,7 +322,7 @@ export default function RegisterScreen() {
       const trimmed = guestName.trim();
       const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
       setShowGuestModal(false);
-      void navigateAfterAuth(nav);
+      void navigateAfterGuest(nav);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Could not continue as guest. Please try again.';

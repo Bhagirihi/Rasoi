@@ -198,9 +198,9 @@ export function AccountActionsCard({
             style={styles.accountSignInGradient}
           >
             <View style={styles.accountSignInText}>
-              <Text style={styles.accountSignInTitle}>Sign in to Rasoi</Text>
+              <Text style={styles.accountSignInTitle}>Sign up to Rasoi</Text>
               <Text style={styles.accountSignInSub}>
-                Save recipes with your name & mobile
+                Create a free account with your name & mobile
               </Text>
             </View>
             <View style={styles.accountSignInArrow}>
@@ -403,7 +403,7 @@ export function SettingsProfileHero({
           </View>
           <View style={[styles.heroPill, isGuest && styles.heroPillGuest]}>
             <Text style={[styles.heroPillText, isGuest && styles.heroPillTextGuest]}>
-              {isGuest ? 'Sign in' : 'Edit'}
+              {isGuest ? 'Sign up' : 'Edit'}
             </Text>
           </View>
         </View>

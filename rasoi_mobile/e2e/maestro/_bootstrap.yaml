@@ -1,15 +1,72 @@
-# Fresh install: auto guest bootstrap → onboarding or home (no legal consent gate)
+# Fresh install: auto guest → permissions/onboarding → home (no launch legal consent)
 appId: com.bhagihiri.rasoiapp
 ---
 - launchApp:
     clearState: true
     permissions:
       all: allow
+- runFlow:
+    when:
+      visible:
+        id: onboarding-skip-notify
+    commands:
+      - tapOn:
+          id: onboarding-skip-notify
+- runFlow:
+    when:
+      visible:
+        id: onboarding-skip-location
+    commands:
+      - tapOn:
+          id: onboarding-skip-location
+- runFlow:
+    file: _dismiss-permissions.yaml
+- runFlow:
+    when:
+      visible:
+        id: screen-onboarding
+    commands:
+      - runFlow:
+          file: _onboarding.yaml
+- runFlow:
+    when:
+      visible:
+        id: screen-trial-welcome
+    commands:
+      - tapOn:
+          id: trial-continue
+- runFlow:
+    when:
+      visible:
+        id: pantry-setup-skip
+    commands:
+      - tapOn:
+          id: pantry-setup-skip
+# Auto-guest may land on home, onboarding, or login (if guest bootstrap is slow).
 - extendedWaitUntil:
     visible:
-      id: screen-onboarding
-    timeout: 60000
+      id: screen-home
+    timeout: 90000
+    optional: true
 - runFlow:
-    file: _onboarding.yaml
+    when:
+      notVisible:
+        id: screen-home
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            text: "Opening Rasoi for you"
+          timeout: 120000
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: screen-onboarding
+          timeout: 60000
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: screen-login
+          timeout: 60000
+          optional: true
 - runFlow:
     file: _dismiss-permissions.yaml

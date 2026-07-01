@@ -51,7 +51,7 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (isGuest) {
-      router.push('/(auth)/login');
+      router.push('/(auth)/register');
       return;
     }
 
@@ -119,7 +119,7 @@ export default function EditProfileScreen() {
         }
       />
       <SettingsSubHeader
-        title={isGuest ? 'Sign in' : 'Edit profile'}
+        title={isGuest ? 'Sign up' : 'Edit profile'}
         onBack={() => router.back()}
       />
 
@@ -138,7 +138,7 @@ export default function EditProfileScreen() {
           </Text>
           <Text style={[styles.subtitle, { color: themeColors.muted }]}>
             {isGuest
-              ? 'Sign in from the login screen to verify your email.'
+              ? 'Create your account on the register screen to verify your email.'
               : 'Update your name or mobile anytime. Email is verified at sign-in.'}
           </Text>
 
@@ -223,7 +223,7 @@ export default function EditProfileScreen() {
           )}
 
           <PrimaryButton
-            label={isGuest ? 'Sign in to Rasoi' : 'Save changes'}
+            label={isGuest ? 'Sign up to Rasoi' : 'Save changes'}
             onPress={handleSave}
             disabled={isSubmitting}
             style={styles.cta}

@@ -1,0 +1,30 @@
+---
+description: Frozen pantry match % and missing-ingredient UX on Home, Recipes, Detail
+globs: rasoi_mobile/app/(tabs)/index.tsx,rasoi_mobile/app/(tabs)/recipes.tsx,rasoi_mobile/app/recipe/**/*.tsx,rasoi_mobile/components/home/**,rasoi_mobile/components/RecipeCard.tsx,rasoi_mobile/utils/recipes.ts
+alwaysApply: false
+---
+
+# Recipe pantry match & missing-ingredient UX (frozen)
+
+**Do not swap metrics or hide missing-ingredient actions without explicit user approval.**
+
+## Pantry match %
+
+- **Single metric** across Home, Recipes tab, and Recipe detail hero: `getPantryMatchPercent(recipe, pantryIngredients)` from `utils/recipes.ts`.
+- Label: **`{n}% pantry match`** (Home may shorten to **`{n}% match`** only if context is clearly pantry).
+- **Do not** show `getRegionalMatchPercent` as the primary hero/list match pill — regional fit belongs in pick reasons, tags, or the detail stats row (`Region`).
+
+`getPantryMatchPercent` must use the same ingredient set as `partitionIngredients` (named ingredients only).
+
+## Missing ingredient button (Home)
+
+On `HomeRecipeRow` featured/tonight cards:
+
+- Show **Order missing** + missing-ingredients strip when `partitionIngredients` reports `missing.length > 0`.
+- Do not gate visibility on `showPartners` / paywall (paywall applies on tap, not render).
+- Recipes tab equivalent: `MissingShopInline` **Items missing →** footer on `RecipeCard`.
+
+## Detail ingredients section
+
+- `IngredientList` / `MissingItemsPanel` shows stocked vs need-to-buy breakdown.
+- Hero pantry % must match list cards for the same recipe + pantry state.

@@ -2,7 +2,7 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, ArrowRight } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { useMemo, useState, useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -142,44 +142,6 @@ export default function PantryScreen() {
                 ? 'Tap what you keep at home.'
                 : 'Tap staples — we match recipes to your diet and cuisines.'
             }
-            leading={
-              pendingPantrySetup ? (
-                <Pressable
-                  onPress={handleSkipPantrySetup}
-                  hitSlop={12}
-                  accessibilityLabel="Skip pantry setup"
-                  style={styles.setupBackBtn}
-                >
-                  <ArrowLeft size={22} color={themeColors.charcoal} />
-                </Pressable>
-              ) : undefined
-            }
-            trailing={
-              pendingPantrySetup ? (
-                <View style={styles.setupHeaderActions}>
-                  <Pressable
-                    onPress={handleSkipPantrySetup}
-                    hitSlop={8}
-                    testID={testIds.pantrySetupSkip}
-                    style={styles.setupHeaderSkipBtn}
-                  >
-                    <Text style={[styles.setupHeaderSkip, { color: themeColors.muted }]}>Skip</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={handleFinishPantrySetup}
-                    disabled={setupSelectedCount === 0}
-                    testID={testIds.pantrySetupContinue}
-                    style={[
-                      styles.setupHeaderContinueBtn,
-                      setupSelectedCount === 0 && styles.setupHeaderContinueDisabled,
-                    ]}
-                  >
-                    <Text style={styles.setupHeaderContinueText}>Continue</Text>
-                    <ArrowRight size={14} color={colors.charcoal} />
-                  </Pressable>
-                </View>
-              ) : undefined
-            }
           />
 
           {pendingPantrySetup ? (
@@ -197,7 +159,7 @@ export default function PantryScreen() {
               />
               <View style={styles.setupBannerRow}>
                 <Text style={[styles.setupBannerTitle, { color: themeColors.charcoal }]}>
-                  Pick staples for {preferenceSummary.headline}
+                  Your Staples Picks
                 </Text>
                 <Text style={[styles.setupBannerCount, { color: colors.primary }]}>
                   {setupSelectedCount === 0 ? '0' : setupSelectedCount}
@@ -339,6 +301,39 @@ export default function PantryScreen() {
               compact
             />
           </ViewportLazyAdSlot>
+
+          {pendingPantrySetup ? (
+            <View style={styles.setupActions}>
+              <Pressable
+                onPress={handleSkipPantrySetup}
+                testID={testIds.pantrySetupSkip}
+                accessibilityRole="button"
+                accessibilityLabel="Skip pantry setup"
+                style={({ pressed }) => [
+                  styles.setupSkipBtn,
+                  { borderColor: themeColors.border, backgroundColor: themeColors.white },
+                  pressed && styles.setupBtnPressed,
+                ]}
+              >
+                <Text style={[styles.setupSkipText, { color: themeColors.muted }]}>Skip</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleFinishPantrySetup}
+                disabled={setupSelectedCount === 0}
+                testID={testIds.pantrySetupContinue}
+                accessibilityRole="button"
+                accessibilityLabel="Continue to home"
+                style={({ pressed }) => [
+                  styles.setupContinueBtn,
+                  setupSelectedCount === 0 && styles.setupContinueDisabled,
+                  pressed && setupSelectedCount > 0 && styles.setupBtnPressed,
+                ]}
+              >
+                <Text style={styles.setupContinueText}>Continue</Text>
+                <ArrowRight size={16} color={colors.charcoal} />
+              </Pressable>
+            </View>
+          ) : null}
         </View>
       </ScrollViewWithFloatingIndicator>
 
@@ -444,37 +439,43 @@ const styles = StyleSheet.create({
     minWidth: 20,
     textAlign: 'right',
   },
-  setupBackBtn: {
-    padding: 2,
-  },
-  setupHeaderActions: {
+  setupActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  setupSkipBtn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+  },
+  setupSkipText: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  setupContinueBtn: {
+    flex: 1.4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
-  },
-  setupHeaderSkipBtn: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 6,
-  },
-  setupHeaderSkip: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  setupHeaderContinueBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
+    minHeight: 48,
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
-    paddingHorizontal: spacing.sm + 2,
-    paddingVertical: 7,
   },
-  setupHeaderContinueDisabled: {
+  setupContinueDisabled: {
     opacity: 0.45,
   },
-  setupHeaderContinueText: {
-    fontSize: 13,
-    fontWeight: '700',
+  setupContinueText: {
+    fontSize: 15,
+    fontWeight: '800',
     color: colors.charcoal,
+  },
+  setupBtnPressed: {
+    opacity: 0.9,
   },
 });
