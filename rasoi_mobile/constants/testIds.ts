@@ -65,6 +65,7 @@ export const testIds = {
 
   recipeCardFirst: 'recipe-card-first',
   recipesSearchInput: 'recipes-search-input',
+  recipesPantryMatchSort: 'recipes-pantry-match-sort',
   recipeSaveButton: 'recipe-save-button',
 
   settingsLogout: 'settings-logout',

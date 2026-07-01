@@ -1,9 +1,10 @@
 import * as Haptics from 'expo-haptics';
-import { Baby, Coins, Recycle, Search, SlidersHorizontal, Sparkles, Timer, Users, X } from 'lucide-react-native';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Baby, Coins, Recycle, Search, SlidersHorizontal, Sparkles, Timer, TrendingUp, Users, X } from 'lucide-react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
+import type { RecipeSearchSuggestion } from '@/utils/recipeSearchLocal';
 import type { FastFilter, ToggleableFastFilter } from '@/utils/recipes';
 
 const QUICK_FILTERS: Array<{
@@ -37,6 +38,12 @@ type QuickFiltersSectionProps = {
   resultCount?: number;
   totalCount?: number;
   onClearAll?: () => void;
+  pantryMatchSortActive?: boolean;
+  onPantryMatchSortToggle?: () => void;
+  pantryMatchSortTestId?: string;
+  searchSuggestions?: RecipeSearchSuggestion[];
+  onSuggestionSelect?: (label: string) => void;
+  searchLoading?: boolean;
 };
 
 export function getQuickFilterLabels(activeFilters: ToggleableFastFilter[]): string[] {
@@ -62,17 +69,32 @@ export default function QuickFiltersSection({
   resultCount,
   totalCount,
   onClearAll,
+  pantryMatchSortActive = false,
+  onPantryMatchSortToggle,
+  pantryMatchSortTestId,
+  searchSuggestions = [],
+  onSuggestionSelect,
+  searchLoading = false,
 }: QuickFiltersSectionProps) {
   const { colors: themeColors, isDark } = useTheme();
   const isRecipesVariant = variant === 'recipes';
   const hasSearch = searchQuery.trim().length > 0;
-  const showActiveRow = isRecipesVariant && (hasQuickFilters || hasSearch);
+  const showActiveRow = isRecipesVariant && (hasQuickFilters || hasSearch || pantryMatchSortActive);
   const countLabel =
     resultCount !== undefined && totalCount !== undefined
       ? hasSearch
         ? `${resultCount} of ${totalCount}`
         : `${totalCount} dishes`
       : null;
+
+  const showSuggestions =
+    isRecipesVariant && hasSearch && searchSuggestions.length > 0 && Boolean(onSuggestionSelect);
+
+  const suggestionKindLabel = (kind: RecipeSearchSuggestion['kind']) => {
+    if (kind === 'dish') return 'Dish';
+    if (kind === 'ingredient') return 'Ingredient';
+    return 'Tag';
+  };
 
   const filterChipScroll = (
     <ScrollView
@@ -113,6 +135,40 @@ export default function QuickFiltersSection({
           </Pressable>
         );
       })}
+      {isRecipesVariant && onPantryMatchSortToggle && (
+        <Pressable
+          onPress={() => {
+            void Haptics.selectionAsync();
+            onPantryMatchSortToggle();
+          }}
+          testID={pantryMatchSortTestId}
+          accessibilityRole="button"
+          accessibilityState={{ selected: pantryMatchSortActive }}
+          style={[
+            styles.filterChip,
+            styles.filterChipCompact,
+            {
+              backgroundColor: pantryMatchSortActive ? 'rgba(0,168,107,0.12)' : themeColors.cream,
+              borderColor: pantryMatchSortActive ? colors.green : themeColors.border,
+              borderWidth: pantryMatchSortActive ? 1.5 : 1,
+            },
+          ]}
+        >
+          <TrendingUp
+            size={13}
+            color={pantryMatchSortActive ? colors.green : themeColors.muted}
+          />
+          <Text
+            style={[
+              styles.filterText,
+              { color: pantryMatchSortActive ? colors.green : themeColors.charcoal },
+              pantryMatchSortActive && styles.filterTextActive,
+            ]}
+          >
+            Best match
+          </Text>
+        </Pressable>
+      )}
       {isRecipesVariant && pantryFilterActive && (
         <Pressable
           onPress={() => {
@@ -209,7 +265,47 @@ export default function QuickFiltersSection({
               <X size={14} color={themeColors.muted} />
             </Pressable>
           )}
+          {searchLoading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : null}
         </View>
+
+        {showSuggestions ? (
+          <View
+            style={[
+              styles.suggestionsBox,
+              { backgroundColor: themeColors.cream, borderColor: themeColors.border },
+            ]}
+          >
+            {searchSuggestions.map((suggestion, index) => (
+              <Pressable
+                key={suggestion.key}
+                testID={index === 0 ? 'recipes-search-suggestion-first' : undefined}
+                onPress={() => {
+                  void Haptics.selectionAsync();
+                  onSuggestionSelect?.(suggestion.label);
+                }}
+                style={({ pressed }) => [
+                  styles.suggestionRow,
+                  index < searchSuggestions.length - 1 && styles.suggestionRowBorder,
+                  { borderBottomColor: themeColors.border },
+                  pressed && styles.suggestionRowPressed,
+                ]}
+              >
+                <Search size={14} color={colors.primary} />
+                <Text
+                  style={[styles.suggestionLabel, { color: themeColors.charcoal }]}
+                  numberOfLines={1}
+                >
+                  {suggestion.label}
+                </Text>
+                <Text style={[styles.suggestionKind, { color: themeColors.muted }]}>
+                  {suggestionKindLabel(suggestion.kind)}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        ) : null}
 
         <View style={styles.filtersHeaderRow}>
           <View style={styles.filtersTitleRow}>
@@ -228,6 +324,7 @@ export default function QuickFiltersSection({
                 hasSearch ? `"${searchQuery.trim()}"` : null,
                 activeFilterLabels.length > 0 ? activeFilterLabels.join(' · ') : null,
                 pantryFilterActive ? 'Pantry mode' : null,
+                pantryMatchSortActive ? 'Best pantry match' : null,
               ]
                 .filter(Boolean)
                 .join(' · ')}
@@ -327,6 +424,35 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  suggestionsBox: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  suggestionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+  },
+  suggestionRowBorder: {
+    borderBottomWidth: 1,
+  },
+  suggestionRowPressed: {
+    opacity: 0.85,
+  },
+  suggestionLabel: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  suggestionKind: {
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
   },
   filtersHeaderRow: {
     flexDirection: 'row',

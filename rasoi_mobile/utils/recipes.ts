@@ -4,6 +4,7 @@ import { ingredientKey, pantryHasIngredient } from '@/utils/recipeIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
 import { recipeContainsAllergen } from '@/utils/allergyFilter';
+import { recipeMatchesSearchQuery } from '@/utils/recipeSearchLocal';
 import {
   isBudgetFriendlyRecipe,
   isKidsFriendlyRecipe,
@@ -75,47 +76,7 @@ export function recipeMatchesFavoriteCuisines(
 }
 
 export function recipeMatchesSearch(recipe: Recipe, query: string): boolean {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return true;
-
-  const terms = expandLocalSearchTerms(normalized);
-
-  const haystack = [
-    recipe.title,
-    recipe.description,
-    recipe.region,
-    recipe.dietType,
-    ...recipe.tags,
-    ...recipe.ingredients.map((ingredient) => ingredient.name),
-  ]
-    .join(' ')
-    .toLowerCase();
-
-  return terms.some((term) => haystack.includes(term));
-}
-
-const LOCAL_SEARCH_SYNONYMS: Record<string, string[]> = {
-  curd: ['dahi', 'yogurt'],
-  dahi: ['curd', 'yogurt'],
-  brinjal: ['baingan', 'eggplant'],
-  baingan: ['brinjal', 'eggplant'],
-  bhindi: ['okra'],
-  okra: ['bhindi'],
-  dal: ['daal', 'lentil'],
-  daal: ['dal', 'lentil'],
-  chana: ['chole', 'chickpea'],
-  chole: ['chana', 'chickpea'],
-};
-
-function expandLocalSearchTerms(query: string): string[] {
-  const terms = new Set<string>([query]);
-  for (const [key, synonyms] of Object.entries(LOCAL_SEARCH_SYNONYMS)) {
-    if (query.includes(key) || synonyms.some((synonym) => query.includes(synonym))) {
-      terms.add(key);
-      for (const synonym of synonyms) terms.add(synonym);
-    }
-  }
-  return [...terms];
+  return recipeMatchesSearchQuery(recipe, query);
 }
 
 export function filterRecipes(
@@ -220,6 +181,19 @@ export function getPantryMatchPercent(recipe: Recipe, pantryIngredients: string[
   const total = available.length + missing.length;
   if (total === 0) return 0;
   return Math.round((available.length / total) * 100);
+}
+
+/** Recipes tab: highest pantry match first (stable title tie-break). */
+export function sortRecipesByPantryMatch(
+  recipes: Recipe[],
+  pantryIngredients: string[],
+): Recipe[] {
+  return [...recipes].sort((a, b) => {
+    const diff =
+      getPantryMatchPercent(b, pantryIngredients) - getPantryMatchPercent(a, pantryIngredients);
+    if (diff !== 0) return diff;
+    return a.title.localeCompare(b.title);
+  });
 }
 
 export function scoreRecipeForTonight(
