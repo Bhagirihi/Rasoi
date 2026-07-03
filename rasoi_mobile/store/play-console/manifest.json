@@ -20,7 +20,8 @@
   "localizationSetup": {
     "note": "Add gu-IN, mr-IN, ta-IN, te-IN, bn-IN in Play Console → Main store listing → Manage translations → Add language. Then run MCP play_push_listing language=all.",
     "apiPushed": ["en-US", "hi-IN", "mr-IN", "ta-IN", "te-IN"],
-    "pendingConsoleEnable": ["gu-IN", "bn-IN"]
+    "pendingConsoleEnable": ["gu-IN", "bn-IN"],
+    "pendingConsoleEnableNote": "Enable gu-IN and bn-IN under Play Console → Main store listing → Manage translations → Add language, then run play_push_listing for each locale."
   },
   "playConsoleTagsNote": "Set tags manually in Play Console → Store settings → App category and tags (API does not support tags).",
   "playConsoleTags": [

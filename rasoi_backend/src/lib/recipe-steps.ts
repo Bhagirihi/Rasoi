@@ -633,7 +633,10 @@ function buildBreakfastGrainSteps(input: RecipeStepInput): string[] {
 function buildBreadSnackSteps(input: RecipeStepInput): string[] {
   const title = input.title;
   const pairing = servingPairing(input.kitchenStyleId, 'street');
-  const temper = cuisineTemperOil(input.kitchenStyleId);
+  const temper =
+    input.kitchenStyleId === 'street'
+      ? 'mustard seeds, cumin, and curry leaves'
+      : cuisineTemperOil(input.kitchenStyleId);
 
   return [
     'Tear or cube stale bread into bite-sized pieces; keep slightly dry so it toasts instead of turning mushy.',

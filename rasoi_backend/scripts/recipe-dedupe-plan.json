@@ -1,0 +1,3421 @@
+{
+  "generatedAt": "2026-07-03T06:28:57.347Z",
+  "removeCount": 548,
+  "keepCount": 7702,
+  "duplicateGroups": [
+    {
+      "title": "undhiyu",
+      "canonicalId": "gujarati-01",
+      "removedIds": [
+        "gujarati-299"
+      ]
+    },
+    {
+      "title": "methi thepla",
+      "canonicalId": "diabetic-friendly-b9-002",
+      "removedIds": [
+        "gujarati-03",
+        "gujarati-304"
+      ]
+    },
+    {
+      "title": "handvo",
+      "canonicalId": "gujarati-04",
+      "removedIds": [
+        "gujarati-300"
+      ]
+    },
+    {
+      "title": "dal dhokli",
+      "canonicalId": "gujarati-05",
+      "removedIds": [
+        "gujarati-295"
+      ]
+    },
+    {
+      "title": "patra",
+      "canonicalId": "gujarati-07",
+      "removedIds": [
+        "gujarati-312"
+      ]
+    },
+    {
+      "title": "gujarati kadhi",
+      "canonicalId": "gujarati-08",
+      "removedIds": [
+        "gujarati-318"
+      ]
+    },
+    {
+      "title": "vada pav",
+      "canonicalId": "street-01",
+      "removedIds": [
+        "maharashtrian-12",
+        "street-300",
+        "maharashtrian-301"
+      ]
+    },
+    {
+      "title": "pav bhaji",
+      "canonicalId": "street-02",
+      "removedIds": [
+        "street-299",
+        "maharashtrian-300"
+      ]
+    },
+    {
+      "title": "misal pav",
+      "canonicalId": "street-03",
+      "removedIds": [
+        "maharashtrian-11",
+        "maharashtrian-292",
+        "maharashtrian-299",
+        "street-301"
+      ]
+    },
+    {
+      "title": "bhel puri",
+      "canonicalId": "street-04",
+      "removedIds": [
+        "street-304"
+      ]
+    },
+    {
+      "title": "sev puri",
+      "canonicalId": "street-05",
+      "removedIds": [
+        "street-305"
+      ]
+    },
+    {
+      "title": "ragda pattice",
+      "canonicalId": "street-09",
+      "removedIds": [
+        "street-294",
+        "street-306"
+      ]
+    },
+    {
+      "title": "keema pav",
+      "canonicalId": "street-10",
+      "removedIds": [
+        "street-297",
+        "street-316"
+      ]
+    },
+    {
+      "title": "masala dosa",
+      "canonicalId": "south-01",
+      "removedIds": [
+        "south-299"
+      ]
+    },
+    {
+      "title": "medu vada",
+      "canonicalId": "south-03",
+      "removedIds": [
+        "south-296",
+        "south-306",
+        "ad-mkt-medu-vada-01"
+      ]
+    },
+    {
+      "title": "lemon rice",
+      "canonicalId": "south-04",
+      "removedIds": [
+        "south-293",
+        "south-314"
+      ]
+    },
+    {
+      "title": "curd rice",
+      "canonicalId": "south-05",
+      "removedIds": [
+        "south-294",
+        "south-315"
+      ]
+    },
+    {
+      "title": "chole bhature",
+      "canonicalId": "north-01",
+      "removedIds": [
+        "vegetarian-b9-004",
+        "north-296",
+        "punjabi-303",
+        "north-317"
+      ]
+    },
+    {
+      "title": "rajma chawal",
+      "canonicalId": "north-02",
+      "removedIds": [
+        "punjabi-296",
+        "north-318",
+        "ad-mkt-rajma-chawal-01"
+      ]
+    },
+    {
+      "title": "aloo paratha",
+      "canonicalId": "north-03",
+      "removedIds": [
+        "punjabi-21",
+        "north-295",
+        "north-312",
+        "punjabi-316"
+      ]
+    },
+    {
+      "title": "dal makhani",
+      "canonicalId": "north-04",
+      "removedIds": [
+        "vegetarian-b9-005",
+        "punjabi-11",
+        "north-299",
+        "punjabi-301"
+      ]
+    },
+    {
+      "title": "paneer butter masala",
+      "canonicalId": "vegetarian-b9-001",
+      "removedIds": [
+        "north-05",
+        "north-306"
+      ]
+    },
+    {
+      "title": "jeera rice",
+      "canonicalId": "north-06",
+      "removedIds": [
+        "north-309",
+        "punjabi-321",
+        "ad-mkt-jeera-rice-01"
+      ]
+    },
+    {
+      "title": "egg curry",
+      "canonicalId": "north-07",
+      "removedIds": [
+        "punjabi-319"
+      ]
+    },
+    {
+      "title": "baingan bharta",
+      "canonicalId": "north-09",
+      "removedIds": [
+        "vegetarian-b9-010",
+        "punjabi-25",
+        "north-294",
+        "north-304",
+        "punjabi-320"
+      ]
+    },
+    {
+      "title": "sarson da saag",
+      "canonicalId": "punjabi-01",
+      "removedIds": [
+        "punjabi-12",
+        "north-13",
+        "punjabi-292",
+        "punjabi-299"
+      ]
+    },
+    {
+      "title": "makki di roti",
+      "canonicalId": "punjabi-02",
+      "removedIds": [
+        "punjabi-293",
+        "punjabi-300"
+      ]
+    },
+    {
+      "title": "amritsari chole",
+      "canonicalId": "punjabi-03",
+      "removedIds": [
+        "punjabi-13"
+      ]
+    },
+    {
+      "title": "paneer tikka masala",
+      "canonicalId": "punjabi-04",
+      "removedIds": [
+        "punjabi-17"
+      ]
+    },
+    {
+      "title": "punjabi kadhi pakora",
+      "canonicalId": "punjabi-05",
+      "removedIds": [
+        "punjabi-83"
+      ]
+    },
+    {
+      "title": "butter chicken",
+      "canonicalId": "punjabi-07",
+      "removedIds": [
+        "north-18",
+        "punjabi-19",
+        "punjabi-306"
+      ]
+    },
+    {
+      "title": "amritsari fish fry",
+      "canonicalId": "punjabi-08",
+      "removedIds": [
+        "north-29"
+      ]
+    },
+    {
+      "title": "tandoori chicken",
+      "canonicalId": "punjabi-09",
+      "removedIds": [
+        "punjabi-20",
+        "punjabi-305"
+      ]
+    },
+    {
+      "title": "dal baati churma",
+      "canonicalId": "rajasthani-01",
+      "removedIds": [
+        "rajasthani-11",
+        "rajasthani-299"
+      ]
+    },
+    {
+      "title": "gatte ki sabzi",
+      "canonicalId": "rajasthani-02",
+      "removedIds": [
+        "rajasthani-12",
+        "rajasthani-292",
+        "rajasthani-300"
+      ]
+    },
+    {
+      "title": "ker sangri",
+      "canonicalId": "rajasthani-03",
+      "removedIds": [
+        "rajasthani-13",
+        "rajasthani-293",
+        "rajasthani-301"
+      ]
+    },
+    {
+      "title": "pyaaz kachori",
+      "canonicalId": "rajasthani-04",
+      "removedIds": [
+        "rajasthani-21",
+        "rajasthani-297",
+        "rajasthani-302"
+      ]
+    },
+    {
+      "title": "bajra khichdi",
+      "canonicalId": "diabetic-friendly-b9-001",
+      "removedIds": [
+        "rajasthani-05"
+      ]
+    },
+    {
+      "title": "papad ki sabzi",
+      "canonicalId": "rajasthani-06",
+      "removedIds": [
+        "rajasthani-17",
+        "rajasthani-315"
+      ]
+    },
+    {
+      "title": "rajasthani kadhi",
+      "canonicalId": "rajasthani-07",
+      "removedIds": [
+        "rajasthani-14",
+        "rajasthani-323"
+      ]
+    },
+    {
+      "title": "laal maas",
+      "canonicalId": "rajasthani-09",
+      "removedIds": [
+        "rajasthani-15",
+        "north-21",
+        "rajasthani-306"
+      ]
+    },
+    {
+      "title": "mohan maas",
+      "canonicalId": "rajasthani-10",
+      "removedIds": [
+        "rajasthani-16",
+        "rajasthani-295",
+        "rajasthani-305"
+      ]
+    },
+    {
+      "title": "shorshe ilish",
+      "canonicalId": "bengali-01",
+      "removedIds": [
+        "bengali-12"
+      ]
+    },
+    {
+      "title": "chingri malai curry",
+      "canonicalId": "bengali-02",
+      "removedIds": [
+        "bengali-13",
+        "bengali-82",
+        "bengali-294",
+        "bengali-302"
+      ]
+    },
+    {
+      "title": "kosha mangsho",
+      "canonicalId": "bengali-03",
+      "removedIds": [
+        "bengali-14",
+        "bengali-295",
+        "bengali-303"
+      ]
+    },
+    {
+      "title": "aloo posto",
+      "canonicalId": "bengali-04",
+      "removedIds": [
+        "bengali-15",
+        "bengali-296",
+        "bengali-301"
+      ]
+    },
+    {
+      "title": "cholar dal",
+      "canonicalId": "bengali-05",
+      "removedIds": [
+        "bengali-17",
+        "bengali-307"
+      ]
+    },
+    {
+      "title": "shukto",
+      "canonicalId": "bengali-06",
+      "removedIds": [
+        "bengali-16",
+        "bengali-293",
+        "bengali-300"
+      ]
+    },
+    {
+      "title": "luchi aloor dom",
+      "canonicalId": "bengali-08",
+      "removedIds": [
+        "bengali-18"
+      ]
+    },
+    {
+      "title": "mishti pulao",
+      "canonicalId": "bengali-10",
+      "removedIds": [
+        "bengali-311"
+      ]
+    },
+    {
+      "title": "pithla bhakri",
+      "canonicalId": "maharashtrian-01",
+      "removedIds": [
+        "maharashtrian-13",
+        "maharashtrian-297",
+        "maharashtrian-302"
+      ]
+    },
+    {
+      "title": "bharli vangi",
+      "canonicalId": "maharashtrian-02",
+      "removedIds": [
+        "maharashtrian-14",
+        "maharashtrian-83",
+        "maharashtrian-293",
+        "maharashtrian-304"
+      ]
+    },
+    {
+      "title": "varan bhaat",
+      "canonicalId": "maharashtrian-03",
+      "removedIds": [
+        "maharashtrian-28"
+      ]
+    },
+    {
+      "title": "kothimbir vadi",
+      "canonicalId": "maharashtrian-04",
+      "removedIds": [
+        "maharashtrian-22",
+        "maharashtrian-320"
+      ]
+    },
+    {
+      "title": "sabudana khichdi",
+      "canonicalId": "maharashtrian-06",
+      "removedIds": [
+        "maharashtrian-19",
+        "maharashtrian-308"
+      ]
+    },
+    {
+      "title": "thalipeeth",
+      "canonicalId": "maharashtrian-07",
+      "removedIds": [
+        "maharashtrian-18",
+        "maharashtrian-294",
+        "maharashtrian-303"
+      ]
+    },
+    {
+      "title": "malvani fish curry",
+      "canonicalId": "maharashtrian-09",
+      "removedIds": [
+        "maharashtrian-313"
+      ]
+    },
+    {
+      "title": "hyderabadi dum biryani",
+      "canonicalId": "hyderabadi-01",
+      "removedIds": [
+        "hyderabadi-11"
+      ]
+    },
+    {
+      "title": "mirchi ka salan",
+      "canonicalId": "hyderabadi-02",
+      "removedIds": [
+        "hyderabadi-13",
+        "hyderabadi-292",
+        "hyderabadi-300"
+      ]
+    },
+    {
+      "title": "bagara baingan",
+      "canonicalId": "hyderabadi-03",
+      "removedIds": [
+        "hyderabadi-12",
+        "hyderabadi-83",
+        "hyderabadi-295",
+        "hyderabadi-301"
+      ]
+    },
+    {
+      "title": "khatti dal",
+      "canonicalId": "hyderabadi-04",
+      "removedIds": [
+        "hyderabadi-18",
+        "hyderabadi-312",
+        "gujarati-317"
+      ]
+    },
+    {
+      "title": "haleem",
+      "canonicalId": "hyderabadi-05",
+      "removedIds": [
+        "hyderabadi-302"
+      ]
+    },
+    {
+      "title": "talawa gosht",
+      "canonicalId": "hyderabadi-09",
+      "removedIds": [
+        "hyderabadi-24",
+        "hyderabadi-319"
+      ]
+    },
+    {
+      "title": "double ka meetha",
+      "canonicalId": "hyderabadi-10",
+      "removedIds": [
+        "hyderabadi-16",
+        "hyderabadi-296",
+        "hyderabadi-304"
+      ]
+    },
+    {
+      "title": "goan fish curry",
+      "canonicalId": "goan-01",
+      "removedIds": [
+        "goan-11",
+        "goan-296",
+        "goan-300"
+      ]
+    },
+    {
+      "title": "prawn balchao",
+      "canonicalId": "goan-02",
+      "removedIds": [
+        "goan-12",
+        "goan-307"
+      ]
+    },
+    {
+      "title": "chicken cafreal",
+      "canonicalId": "goan-03",
+      "removedIds": [
+        "goan-13",
+        "goan-297",
+        "goan-302"
+      ]
+    },
+    {
+      "title": "pork vindaloo",
+      "canonicalId": "goan-04",
+      "removedIds": [
+        "goan-14",
+        "goan-301"
+      ]
+    },
+    {
+      "title": "bebinca",
+      "canonicalId": "goan-10",
+      "removedIds": [
+        "goan-18",
+        "goan-294",
+        "goan-303"
+      ]
+    },
+    {
+      "title": "appam with vegetable stew",
+      "canonicalId": "kerala-01",
+      "removedIds": [
+        "kerala-11"
+      ]
+    },
+    {
+      "title": "puttu kadala curry",
+      "canonicalId": "kerala-02",
+      "removedIds": [
+        "kerala-14"
+      ]
+    },
+    {
+      "title": "avial",
+      "canonicalId": "kerala-03",
+      "removedIds": [
+        "kerala-13",
+        "south-19",
+        "kerala-297",
+        "kerala-301",
+        "south-309"
+      ]
+    },
+    {
+      "title": "cabbage thoran",
+      "canonicalId": "kerala-04",
+      "removedIds": [
+        "kerala-16"
+      ]
+    },
+    {
+      "title": "malabar parotta",
+      "canonicalId": "kerala-09",
+      "removedIds": [
+        "kerala-296",
+        "kerala-304"
+      ]
+    },
+    {
+      "title": "erissery",
+      "canonicalId": "kerala-10",
+      "removedIds": [
+        "kerala-17",
+        "kerala-294",
+        "kerala-302"
+      ]
+    },
+    {
+      "title": "veg hakka noodles",
+      "canonicalId": "chinese-01",
+      "removedIds": [
+        "vegetarian-b9-014"
+      ]
+    },
+    {
+      "title": "gobi manchurian",
+      "canonicalId": "chinese-02",
+      "removedIds": [
+        "chinese-30",
+        "chinese-300"
+      ]
+    },
+    {
+      "title": "egg fried rice",
+      "canonicalId": "chinese-04",
+      "removedIds": [
+        "chinese-23"
+      ]
+    },
+    {
+      "title": "chilli chicken",
+      "canonicalId": "chinese-06",
+      "removedIds": [
+        "chinese-13",
+        "chinese-295",
+        "chinese-307"
+      ]
+    },
+    {
+      "title": "dragon chicken",
+      "canonicalId": "chinese-09",
+      "removedIds": [
+        "chinese-315"
+      ]
+    },
+    {
+      "title": "khar",
+      "canonicalId": "assamese-01",
+      "removedIds": [
+        "assamese-294",
+        "assamese-302"
+      ]
+    },
+    {
+      "title": "masor tenga",
+      "canonicalId": "assamese-02",
+      "removedIds": [
+        "assamese-81",
+        "assamese-292",
+        "assamese-299"
+      ]
+    },
+    {
+      "title": "aloo pitika",
+      "canonicalId": "assamese-04",
+      "removedIds": [
+        "assamese-297",
+        "assamese-303"
+      ]
+    },
+    {
+      "title": "rogan josh",
+      "canonicalId": "kashmiri-01",
+      "removedIds": [
+        "kashmiri-299"
+      ]
+    },
+    {
+      "title": "gushtaba",
+      "canonicalId": "kashmiri-03",
+      "removedIds": [
+        "kashmiri-305"
+      ]
+    },
+    {
+      "title": "dum aloo kashmiri",
+      "canonicalId": "kashmiri-04",
+      "removedIds": [
+        "kashmiri-82"
+      ]
+    },
+    {
+      "title": "modur pulao",
+      "canonicalId": "kashmiri-07",
+      "removedIds": [
+        "kashmiri-83",
+        "kashmiri-309"
+      ]
+    },
+    {
+      "title": "tabak maaz",
+      "canonicalId": "kashmiri-09",
+      "removedIds": [
+        "kashmiri-307"
+      ]
+    },
+    {
+      "title": "chettinad chicken curry",
+      "canonicalId": "chettinad-01",
+      "removedIds": [
+        "south-15"
+      ]
+    },
+    {
+      "title": "chettinad fish fry",
+      "canonicalId": "chettinad-03",
+      "removedIds": [
+        "chettinad-312"
+      ]
+    },
+    {
+      "title": "kuzhi paniyaram",
+      "canonicalId": "chettinad-05",
+      "removedIds": [
+        "chettinad-317"
+      ]
+    },
+    {
+      "title": "pepper chicken",
+      "canonicalId": "chettinad-08",
+      "removedIds": [
+        "chettinad-300"
+      ]
+    },
+    {
+      "title": "khandvi",
+      "canonicalId": "gujarati-31",
+      "removedIds": [
+        "gujarati-292"
+      ]
+    },
+    {
+      "title": "sukhdi",
+      "canonicalId": "gujarati-41",
+      "removedIds": [
+        "gujarati-297"
+      ]
+    },
+    {
+      "title": "mohanthal",
+      "canonicalId": "gujarati-43",
+      "removedIds": [
+        "gujarati-296",
+        "gujarati-321"
+      ]
+    },
+    {
+      "title": "ghughra",
+      "canonicalId": "gujarati-45",
+      "removedIds": [
+        "gujarati-322"
+      ]
+    },
+    {
+      "title": "dabeli",
+      "canonicalId": "gujarati-54",
+      "removedIds": [
+        "gujarati-293",
+        "street-302"
+      ]
+    },
+    {
+      "title": "khichu",
+      "canonicalId": "gujarati-60",
+      "removedIds": [
+        "gujarati-311"
+      ]
+    },
+    {
+      "title": "samosa chaat",
+      "canonicalId": "street-11",
+      "removedIds": [
+        "street-307"
+      ]
+    },
+    {
+      "title": "tawa pulao",
+      "canonicalId": "street-15",
+      "removedIds": [
+        "street-323"
+      ]
+    },
+    {
+      "title": "bread pakora",
+      "canonicalId": "street-20",
+      "removedIds": [
+        "street-293",
+        "street-313"
+      ]
+    },
+    {
+      "title": "pani puri",
+      "canonicalId": "street-31",
+      "removedIds": [
+        "street-303"
+      ]
+    },
+    {
+      "title": "papdi chaat",
+      "canonicalId": "street-33",
+      "removedIds": [
+        "street-321"
+      ]
+    },
+    {
+      "title": "chole kulche",
+      "canonicalId": "street-41",
+      "removedIds": [
+        "street-310"
+      ]
+    },
+    {
+      "title": "triple schezwan rice",
+      "canonicalId": "chinese-38",
+      "removedIds": [
+        "street-49",
+        "chinese-312"
+      ]
+    },
+    {
+      "title": "rava dosa",
+      "canonicalId": "south-11",
+      "removedIds": [
+        "south-301"
+      ]
+    },
+    {
+      "title": "neer dosa",
+      "canonicalId": "south-12",
+      "removedIds": [
+        "south-302"
+      ]
+    },
+    {
+      "title": "kerala egg roast",
+      "canonicalId": "south-14",
+      "removedIds": [
+        "kerala-27",
+        "kerala-298",
+        "kerala-305"
+      ]
+    },
+    {
+      "title": "bisi bele bath",
+      "canonicalId": "south-20",
+      "removedIds": [
+        "south-292",
+        "south-313"
+      ]
+    },
+    {
+      "title": "set dosa",
+      "canonicalId": "south-31",
+      "removedIds": [
+        "south-303"
+      ]
+    },
+    {
+      "title": "ragi dosa",
+      "canonicalId": "diabetic-friendly-b9-006",
+      "removedIds": [
+        "healthy-b9-009",
+        "south-36"
+      ]
+    },
+    {
+      "title": "vendhaya kuzhambu",
+      "canonicalId": "south-41",
+      "removedIds": [
+        "chettinad-315"
+      ]
+    },
+    {
+      "title": "kadhi pakora",
+      "canonicalId": "north-11",
+      "removedIds": [
+        "punjabi-14",
+        "vegetarian-b9-017",
+        "north-292",
+        "north-302",
+        "punjabi-310"
+      ]
+    },
+    {
+      "title": "paneer bhurji",
+      "canonicalId": "north-16",
+      "removedIds": [
+        "vegetarian-b9-021",
+        "punjabi-22"
+      ]
+    },
+    {
+      "title": "methi malai matar",
+      "canonicalId": "north-20",
+      "removedIds": [
+        "punjabi-23",
+        "vegetarian-b9-024",
+        "north-321"
+      ]
+    },
+    {
+      "title": "keema matar",
+      "canonicalId": "north-28",
+      "removedIds": [
+        "punjabi-318"
+      ]
+    },
+    {
+      "title": "rajma masala",
+      "canonicalId": "punjabi-15",
+      "removedIds": [
+        "north-297"
+      ]
+    },
+    {
+      "title": "amritsari kulcha",
+      "canonicalId": "punjabi-16",
+      "removedIds": [
+        "street-296",
+        "punjabi-302",
+        "street-311"
+      ]
+    },
+    {
+      "title": "lassi",
+      "canonicalId": "punjabi-30",
+      "removedIds": [
+        "punjabi-312"
+      ]
+    },
+    {
+      "title": "panchmel dal",
+      "canonicalId": "rajasthani-18",
+      "removedIds": [
+        "rajasthani-308"
+      ]
+    },
+    {
+      "title": "mirchi vada",
+      "canonicalId": "rajasthani-20",
+      "removedIds": [
+        "rajasthani-296",
+        "rajasthani-303"
+      ]
+    },
+    {
+      "title": "safed maas",
+      "canonicalId": "rajasthani-25",
+      "removedIds": [
+        "rajasthani-307"
+      ]
+    },
+    {
+      "title": "begun bhaja",
+      "canonicalId": "bengali-24",
+      "removedIds": [
+        "bengali-315"
+      ]
+    },
+    {
+      "title": "bhetki paturi",
+      "canonicalId": "bengali-32",
+      "removedIds": [
+        "bengali-323"
+      ]
+    },
+    {
+      "title": "rui kalia",
+      "canonicalId": "bengali-33",
+      "removedIds": [
+        "bengali-306"
+      ]
+    },
+    {
+      "title": "potol posto",
+      "canonicalId": "bengali-38",
+      "removedIds": [
+        "bengali-316"
+      ]
+    },
+    {
+      "title": "dim er dalna",
+      "canonicalId": "bengali-58",
+      "removedIds": [
+        "bengali-313"
+      ]
+    },
+    {
+      "title": "payesh",
+      "canonicalId": "bengali-68",
+      "removedIds": [
+        "bengali-320"
+      ]
+    },
+    {
+      "title": "pandhra rassa",
+      "canonicalId": "maharashtrian-17",
+      "removedIds": [
+        "maharashtrian-317"
+      ]
+    },
+    {
+      "title": "kanda poha",
+      "canonicalId": "maharashtrian-20",
+      "removedIds": [
+        "maharashtrian-309"
+      ]
+    },
+    {
+      "title": "ukadiche modak",
+      "canonicalId": "maharashtrian-30",
+      "removedIds": [
+        "maharashtrian-295"
+      ]
+    },
+    {
+      "title": "bharli bhendi",
+      "canonicalId": "maharashtrian-39",
+      "removedIds": [
+        "maharashtrian-323"
+      ]
+    },
+    {
+      "title": "puran poli",
+      "canonicalId": "maharashtrian-62",
+      "removedIds": [
+        "maharashtrian-296",
+        "maharashtrian-305"
+      ]
+    },
+    {
+      "title": "shrikhand",
+      "canonicalId": "maharashtrian-63",
+      "removedIds": [
+        "maharashtrian-318",
+        "gujarati-319"
+      ]
+    },
+    {
+      "title": "basundi",
+      "canonicalId": "maharashtrian-64",
+      "removedIds": [
+        "maharashtrian-319",
+        "gujarati-320"
+      ]
+    },
+    {
+      "title": "pathar ka gosht",
+      "canonicalId": "hyderabadi-15",
+      "removedIds": [
+        "hyderabadi-311"
+      ]
+    },
+    {
+      "title": "lukhmi",
+      "canonicalId": "hyderabadi-19",
+      "removedIds": [
+        "hyderabadi-317"
+      ]
+    },
+    {
+      "title": "dum ka murgh",
+      "canonicalId": "hyderabadi-25",
+      "removedIds": [
+        "hyderabadi-82",
+        "hyderabadi-306"
+      ]
+    },
+    {
+      "title": "sheermal",
+      "canonicalId": "hyderabadi-28",
+      "removedIds": [
+        "kashmiri-319"
+      ]
+    },
+    {
+      "title": "dalcha",
+      "canonicalId": "hyderabadi-33",
+      "removedIds": [
+        "hyderabadi-308"
+      ]
+    },
+    {
+      "title": "chakna",
+      "canonicalId": "hyderabadi-48",
+      "removedIds": [
+        "hyderabadi-318"
+      ]
+    },
+    {
+      "title": "sheer khurma",
+      "canonicalId": "hyderabadi-61",
+      "removedIds": [
+        "hyderabadi-316"
+      ]
+    },
+    {
+      "title": "sorpotel",
+      "canonicalId": "goan-15",
+      "removedIds": [
+        "goan-305"
+      ]
+    },
+    {
+      "title": "chicken xacuti",
+      "canonicalId": "goan-16",
+      "removedIds": [
+        "goan-82",
+        "goan-320"
+      ]
+    },
+    {
+      "title": "patoleo",
+      "canonicalId": "goan-19",
+      "removedIds": [
+        "goan-313"
+      ]
+    },
+    {
+      "title": "mushroom xacuti",
+      "canonicalId": "goan-24",
+      "removedIds": [
+        "goan-317"
+      ]
+    },
+    {
+      "title": "ros omelette",
+      "canonicalId": "goan-30",
+      "removedIds": [
+        "goan-312"
+      ]
+    },
+    {
+      "title": "nadan kozhi curry",
+      "canonicalId": "kerala-18",
+      "removedIds": [
+        "kerala-319"
+      ]
+    },
+    {
+      "title": "meen pollichathu",
+      "canonicalId": "kerala-19",
+      "removedIds": [
+        "kerala-316"
+      ]
+    },
+    {
+      "title": "olan",
+      "canonicalId": "kerala-22",
+      "removedIds": [
+        "kerala-310"
+      ]
+    },
+    {
+      "title": "ada pradhaman",
+      "canonicalId": "kerala-25",
+      "removedIds": [
+        "kerala-313"
+      ]
+    },
+    {
+      "title": "hakka noodles",
+      "canonicalId": "chinese-11",
+      "removedIds": [
+        "chinese-293",
+        "chinese-303"
+      ]
+    },
+    {
+      "title": "veg manchurian",
+      "canonicalId": "chinese-12",
+      "removedIds": [
+        "vegetarian-b9-016",
+        "chinese-292",
+        "chinese-299"
+      ]
+    },
+    {
+      "title": "hot and sour soup",
+      "canonicalId": "chinese-b9-006",
+      "removedIds": [
+        "chinese-15",
+        "chinese-309"
+      ]
+    },
+    {
+      "title": "spring rolls",
+      "canonicalId": "chinese-b9-011",
+      "removedIds": [
+        "chinese-16"
+      ]
+    },
+    {
+      "title": "mapo tofu",
+      "canonicalId": "chinese-b9-001",
+      "removedIds": [
+        "chinese-17"
+      ]
+    },
+    {
+      "title": "kung pao chicken",
+      "canonicalId": "chinese-b9-002",
+      "removedIds": [
+        "chinese-18",
+        "chinese-316"
+      ]
+    },
+    {
+      "title": "dan dan noodles",
+      "canonicalId": "chinese-b9-007",
+      "removedIds": [
+        "chinese-19"
+      ]
+    },
+    {
+      "title": "scallion pancakes",
+      "canonicalId": "chinese-20",
+      "removedIds": [
+        "chinese-b9-021"
+      ]
+    },
+    {
+      "title": "garlic bok choy",
+      "canonicalId": "chinese-b9-014",
+      "removedIds": [
+        "chinese-22"
+      ]
+    },
+    {
+      "title": "szechuan eggplant",
+      "canonicalId": "chinese-b9-013",
+      "removedIds": [
+        "chinese-27"
+      ]
+    },
+    {
+      "title": "wonton soup",
+      "canonicalId": "chinese-b9-005",
+      "removedIds": [
+        "chinese-28"
+      ]
+    },
+    {
+      "title": "chilli paneer",
+      "canonicalId": "chinese-29",
+      "removedIds": [
+        "chinese-301"
+      ]
+    },
+    {
+      "title": "lemon coriander soup",
+      "canonicalId": "weight-loss-b9-016",
+      "removedIds": [
+        "chinese-37"
+      ]
+    },
+    {
+      "title": "orange chicken",
+      "canonicalId": "chinese-b9-017",
+      "removedIds": [
+        "chinese-53"
+      ]
+    },
+    {
+      "title": "posola bhaji",
+      "canonicalId": "assamese-17",
+      "removedIds": [
+        "assamese-319"
+      ]
+    },
+    {
+      "title": "til pitha",
+      "canonicalId": "assamese-29",
+      "removedIds": [
+        "assamese-315"
+      ]
+    },
+    {
+      "title": "aab gosht",
+      "canonicalId": "kashmiri-17",
+      "removedIds": [
+        "kashmiri-322"
+      ]
+    },
+    {
+      "title": "shufta",
+      "canonicalId": "kashmiri-30",
+      "removedIds": [
+        "kashmiri-297",
+        "kashmiri-304"
+      ]
+    },
+    {
+      "title": "mag ni dal",
+      "canonicalId": "gujarati-81",
+      "removedIds": [
+        "gujarati-315"
+      ]
+    },
+    {
+      "title": "chettinad egg curry",
+      "canonicalId": "south-84",
+      "removedIds": [
+        "chettinad-301"
+      ]
+    },
+    {
+      "title": "hyderabadi marag",
+      "canonicalId": "hyderabadi-81",
+      "removedIds": [
+        "hyderabadi-314"
+      ]
+    },
+    {
+      "title": "kappa puzhukku",
+      "canonicalId": "kerala-83",
+      "removedIds": [
+        "kerala-315"
+      ]
+    },
+    {
+      "title": "festive mag ni dal",
+      "canonicalId": "gujarati-87",
+      "removedIds": [
+        "gujarati-365"
+      ]
+    },
+    {
+      "title": "home style mag ni dal",
+      "canonicalId": "gujarati-88",
+      "removedIds": [
+        "gujarati-340"
+      ]
+    },
+    {
+      "title": "quick mag ni dal",
+      "canonicalId": "gujarati-92",
+      "removedIds": [
+        "gujarati-390"
+      ]
+    },
+    {
+      "title": "festive khatti dal",
+      "canonicalId": "gujarati-108",
+      "removedIds": [
+        "hyderabadi-362",
+        "gujarati-367"
+      ]
+    },
+    {
+      "title": "home style khatti dal",
+      "canonicalId": "gujarati-109",
+      "removedIds": [
+        "hyderabadi-337",
+        "gujarati-342"
+      ]
+    },
+    {
+      "title": "quick khatti dal",
+      "canonicalId": "gujarati-113",
+      "removedIds": [
+        "hyderabadi-387",
+        "gujarati-392"
+      ]
+    },
+    {
+      "title": "bajra rotla",
+      "canonicalId": "diabetic-friendly-b9-007",
+      "removedIds": [
+        "gujarati-127"
+      ]
+    },
+    {
+      "title": "home style paneer butter masala",
+      "canonicalId": "north-86",
+      "removedIds": [
+        "north-331"
+      ]
+    },
+    {
+      "title": "festive paneer butter masala",
+      "canonicalId": "north-94",
+      "removedIds": [
+        "north-356"
+      ]
+    },
+    {
+      "title": "shahi paneer",
+      "canonicalId": "vegetarian-b9-025",
+      "removedIds": [
+        "north-95"
+      ]
+    },
+    {
+      "title": "palak paneer",
+      "canonicalId": "vegetarian-b9-002",
+      "removedIds": [
+        "north-116",
+        "north-305"
+      ]
+    },
+    {
+      "title": "home style palak paneer",
+      "canonicalId": "north-118",
+      "removedIds": [
+        "north-330"
+      ]
+    },
+    {
+      "title": "festive palak paneer",
+      "canonicalId": "north-126",
+      "removedIds": [
+        "north-355"
+      ]
+    },
+    {
+      "title": "home style sarson da saag",
+      "canonicalId": "punjabi-94",
+      "removedIds": [
+        "punjabi-324"
+      ]
+    },
+    {
+      "title": "home style makki di roti",
+      "canonicalId": "punjabi-104",
+      "removedIds": [
+        "punjabi-325"
+      ]
+    },
+    {
+      "title": "home style amritsari kulcha",
+      "canonicalId": "punjabi-114",
+      "removedIds": [
+        "punjabi-327",
+        "street-336"
+      ]
+    },
+    {
+      "title": "home style chole bhature",
+      "canonicalId": "punjabi-124",
+      "removedIds": [
+        "punjabi-328",
+        "north-342"
+      ]
+    },
+    {
+      "title": "home style chole kulche",
+      "canonicalId": "punjabi-165",
+      "removedIds": [
+        "street-335"
+      ]
+    },
+    {
+      "title": "paneer tikka",
+      "canonicalId": "vegetarian-b9-007",
+      "removedIds": [
+        "punjabi-166",
+        "punjabi-298",
+        "punjabi-304"
+      ]
+    },
+    {
+      "title": "home style paneer tikka",
+      "canonicalId": "punjabi-176",
+      "removedIds": [
+        "punjabi-329"
+      ]
+    },
+    {
+      "title": "festive dal baati churma",
+      "canonicalId": "rajasthani-92",
+      "removedIds": [
+        "rajasthani-349"
+      ]
+    },
+    {
+      "title": "home style dal baati churma",
+      "canonicalId": "rajasthani-94",
+      "removedIds": [
+        "rajasthani-324"
+      ]
+    },
+    {
+      "title": "festive panchmel dal",
+      "canonicalId": "rajasthani-113",
+      "removedIds": [
+        "rajasthani-358"
+      ]
+    },
+    {
+      "title": "home style panchmel dal",
+      "canonicalId": "rajasthani-115",
+      "removedIds": [
+        "rajasthani-333"
+      ]
+    },
+    {
+      "title": "festive gatte ki sabzi",
+      "canonicalId": "rajasthani-134",
+      "removedIds": [
+        "rajasthani-350"
+      ]
+    },
+    {
+      "title": "home style gatte ki sabzi",
+      "canonicalId": "rajasthani-136",
+      "removedIds": [
+        "rajasthani-325"
+      ]
+    },
+    {
+      "title": "home style shukto",
+      "canonicalId": "bengali-88",
+      "removedIds": [
+        "bengali-325"
+      ]
+    },
+    {
+      "title": "festive shukto",
+      "canonicalId": "bengali-89",
+      "removedIds": [
+        "bengali-350"
+      ]
+    },
+    {
+      "title": "labra",
+      "canonicalId": "bengali-95",
+      "removedIds": [
+        "bengali-314"
+      ]
+    },
+    {
+      "title": "home style labra",
+      "canonicalId": "bengali-99",
+      "removedIds": [
+        "bengali-339"
+      ]
+    },
+    {
+      "title": "festive labra",
+      "canonicalId": "bengali-100",
+      "removedIds": [
+        "bengali-364"
+      ]
+    },
+    {
+      "title": "chorchori",
+      "canonicalId": "bengali-106",
+      "removedIds": [
+        "bengali-317"
+      ]
+    },
+    {
+      "title": "home style chorchori",
+      "canonicalId": "bengali-110",
+      "removedIds": [
+        "bengali-342"
+      ]
+    },
+    {
+      "title": "festive chorchori",
+      "canonicalId": "bengali-111",
+      "removedIds": [
+        "bengali-367"
+      ]
+    },
+    {
+      "title": "home style chingri malai curry",
+      "canonicalId": "bengali-175",
+      "removedIds": [
+        "bengali-327"
+      ]
+    },
+    {
+      "title": "festive chingri malai curry",
+      "canonicalId": "bengali-176",
+      "removedIds": [
+        "bengali-352"
+      ]
+    },
+    {
+      "title": "home style misal pav",
+      "canonicalId": "maharashtrian-88",
+      "removedIds": [
+        "maharashtrian-324",
+        "street-326"
+      ]
+    },
+    {
+      "title": "festive misal pav",
+      "canonicalId": "maharashtrian-89",
+      "removedIds": [
+        "maharashtrian-349",
+        "street-351"
+      ]
+    },
+    {
+      "title": "hyderabadi biryani",
+      "canonicalId": "hyderabadi-85",
+      "removedIds": [
+        "hyderabadi-299"
+      ]
+    },
+    {
+      "title": "home style hyderabadi biryani",
+      "canonicalId": "hyderabadi-92",
+      "removedIds": [
+        "hyderabadi-324"
+      ]
+    },
+    {
+      "title": "festive hyderabadi biryani",
+      "canonicalId": "hyderabadi-93",
+      "removedIds": [
+        "hyderabadi-349"
+      ]
+    },
+    {
+      "title": "paneer biryani",
+      "canonicalId": "hyderabadi-140",
+      "removedIds": [
+        "ad-mkt-paneer-biryani-01"
+      ]
+    },
+    {
+      "title": "royal paneer biryani",
+      "canonicalId": "hyderabadi-145",
+      "removedIds": [
+        "ad-mkt-paneer-biryani-05"
+      ]
+    },
+    {
+      "title": "festive paneer biryani",
+      "canonicalId": "hyderabadi-148",
+      "removedIds": [
+        "ad-mkt-paneer-biryani-04"
+      ]
+    },
+    {
+      "title": "smoky paneer biryani",
+      "canonicalId": "hyderabadi-149",
+      "removedIds": [
+        "ad-mkt-paneer-biryani-06"
+      ]
+    },
+    {
+      "title": "classic paneer biryani",
+      "canonicalId": "hyderabadi-150",
+      "removedIds": [
+        "ad-mkt-paneer-biryani-31"
+      ]
+    },
+    {
+      "title": "crab xec xec",
+      "canonicalId": "goan-107",
+      "removedIds": [
+        "goan-308"
+      ]
+    },
+    {
+      "title": "home style crab xec xec",
+      "canonicalId": "goan-112",
+      "removedIds": [
+        "goan-333"
+      ]
+    },
+    {
+      "title": "festive crab xec xec",
+      "canonicalId": "goan-113",
+      "removedIds": [
+        "goan-358"
+      ]
+    },
+    {
+      "title": "home style prawn balchao",
+      "canonicalId": "goan-122",
+      "removedIds": [
+        "goan-332"
+      ]
+    },
+    {
+      "title": "festive prawn balchao",
+      "canonicalId": "goan-123",
+      "removedIds": [
+        "goan-357"
+      ]
+    },
+    {
+      "title": "fish recheado",
+      "canonicalId": "goan-128",
+      "removedIds": [
+        "goan-292",
+        "goan-299"
+      ]
+    },
+    {
+      "title": "home style fish recheado",
+      "canonicalId": "goan-133",
+      "removedIds": [
+        "goan-324"
+      ]
+    },
+    {
+      "title": "festive fish recheado",
+      "canonicalId": "goan-134",
+      "removedIds": [
+        "goan-349"
+      ]
+    },
+    {
+      "title": "home style chicken xacuti",
+      "canonicalId": "goan-154",
+      "removedIds": [
+        "goan-345"
+      ]
+    },
+    {
+      "title": "festive chicken xacuti",
+      "canonicalId": "goan-155",
+      "removedIds": [
+        "goan-370"
+      ]
+    },
+    {
+      "title": "puttu kadala",
+      "canonicalId": "kerala-184",
+      "removedIds": [
+        "kerala-293",
+        "kerala-300"
+      ]
+    },
+    {
+      "title": "classic veg manchurian",
+      "canonicalId": "vegetarian-b9-041",
+      "removedIds": [
+        "chinese-94"
+      ]
+    },
+    {
+      "title": "baby corn manchurian",
+      "canonicalId": "chinese-127",
+      "removedIds": [
+        "chinese-319"
+      ]
+    },
+    {
+      "title": "home style masor tenga",
+      "canonicalId": "assamese-86",
+      "removedIds": [
+        "assamese-324"
+      ]
+    },
+    {
+      "title": "festive masor tenga",
+      "canonicalId": "assamese-94",
+      "removedIds": [
+        "assamese-349"
+      ]
+    },
+    {
+      "title": "home style khar",
+      "canonicalId": "assamese-162",
+      "removedIds": [
+        "assamese-327"
+      ]
+    },
+    {
+      "title": "festive khar",
+      "canonicalId": "assamese-170",
+      "removedIds": [
+        "assamese-352"
+      ]
+    },
+    {
+      "title": "kharoli",
+      "canonicalId": "assamese-171",
+      "removedIds": [
+        "assamese-320"
+      ]
+    },
+    {
+      "title": "home style kharoli",
+      "canonicalId": "assamese-173",
+      "removedIds": [
+        "assamese-345"
+      ]
+    },
+    {
+      "title": "festive kharoli",
+      "canonicalId": "assamese-181",
+      "removedIds": [
+        "assamese-370"
+      ]
+    },
+    {
+      "title": "home style gushtaba",
+      "canonicalId": "kashmiri-109",
+      "removedIds": [
+        "kashmiri-330"
+      ]
+    },
+    {
+      "title": "festive gushtaba",
+      "canonicalId": "kashmiri-111",
+      "removedIds": [
+        "kashmiri-355"
+      ]
+    },
+    {
+      "title": "rista",
+      "canonicalId": "kashmiri-117",
+      "removedIds": [
+        "kashmiri-306"
+      ]
+    },
+    {
+      "title": "home style rista",
+      "canonicalId": "kashmiri-120",
+      "removedIds": [
+        "kashmiri-331"
+      ]
+    },
+    {
+      "title": "festive rista",
+      "canonicalId": "kashmiri-122",
+      "removedIds": [
+        "kashmiri-356"
+      ]
+    },
+    {
+      "title": "shab deg",
+      "canonicalId": "kashmiri-150",
+      "removedIds": [
+        "kashmiri-321"
+      ]
+    },
+    {
+      "title": "home style shab deg",
+      "canonicalId": "kashmiri-153",
+      "removedIds": [
+        "kashmiri-346"
+      ]
+    },
+    {
+      "title": "festive shab deg",
+      "canonicalId": "kashmiri-155",
+      "removedIds": [
+        "kashmiri-371"
+      ]
+    },
+    {
+      "title": "home style chettinad egg curry",
+      "canonicalId": "chettinad-142",
+      "removedIds": [
+        "chettinad-326"
+      ]
+    },
+    {
+      "title": "festive chettinad egg curry",
+      "canonicalId": "chettinad-143",
+      "removedIds": [
+        "chettinad-351"
+      ]
+    },
+    {
+      "title": "egg curry bowl",
+      "canonicalId": "high-protein-b9-020",
+      "removedIds": [
+        "chettinad-237"
+      ]
+    },
+    {
+      "title": "lilva nu shaak",
+      "canonicalId": "gujarati-289",
+      "removedIds": [
+        "gujarati-313"
+      ]
+    },
+    {
+      "title": "bharela ringan",
+      "canonicalId": "gujarati-290",
+      "removedIds": [
+        "gujarati-314"
+      ]
+    },
+    {
+      "title": "kathi roll",
+      "canonicalId": "street-288",
+      "removedIds": [
+        "street-298",
+        "street-314"
+      ]
+    },
+    {
+      "title": "tamarind rice",
+      "canonicalId": "south-286",
+      "removedIds": [
+        "south-316"
+      ]
+    },
+    {
+      "title": "ven pongal",
+      "canonicalId": "south-287",
+      "removedIds": [
+        "south-295"
+      ]
+    },
+    {
+      "title": "bedmi puri",
+      "canonicalId": "north-285",
+      "removedIds": [
+        "north-315"
+      ]
+    },
+    {
+      "title": "malai kofta",
+      "canonicalId": "vegetarian-b9-003",
+      "removedIds": [
+        "north-289",
+        "north-298",
+        "north-307"
+      ]
+    },
+    {
+      "title": "pinni",
+      "canonicalId": "punjabi-287",
+      "removedIds": [
+        "punjabi-295",
+        "punjabi-308"
+      ]
+    },
+    {
+      "title": "amritsari fish",
+      "canonicalId": "punjabi-291",
+      "removedIds": [
+        "punjabi-294",
+        "punjabi-307"
+      ]
+    },
+    {
+      "title": "ghevar",
+      "canonicalId": "rajasthani-290",
+      "removedIds": [
+        "rajasthani-309"
+      ]
+    },
+    {
+      "title": "luchi alur dom",
+      "canonicalId": "bengali-289",
+      "removedIds": [
+        "bengali-292",
+        "bengali-299"
+      ]
+    },
+    {
+      "title": "sol kadhi",
+      "canonicalId": "maharashtrian-290",
+      "removedIds": [
+        "maharashtrian-298",
+        "maharashtrian-307",
+        "goan-315"
+      ]
+    },
+    {
+      "title": "hyderabadi haleem",
+      "canonicalId": "hyderabadi-285",
+      "removedIds": [
+        "hyderabadi-293"
+      ]
+    },
+    {
+      "title": "khubani ka meetha",
+      "canonicalId": "hyderabadi-288",
+      "removedIds": [
+        "hyderabadi-297",
+        "hyderabadi-305"
+      ]
+    },
+    {
+      "title": "festive sorpotel",
+      "canonicalId": "goan-287",
+      "removedIds": [
+        "goan-355"
+      ]
+    },
+    {
+      "title": "appam with stew",
+      "canonicalId": "kerala-285",
+      "removedIds": [
+        "kerala-292"
+      ]
+    },
+    {
+      "title": "fried rice",
+      "canonicalId": "chinese-b9-009",
+      "removedIds": [
+        "chinese-287",
+        "chinese-305"
+      ]
+    },
+    {
+      "title": "veg spring rolls",
+      "canonicalId": "chinese-290",
+      "removedIds": [
+        "chinese-296",
+        "chinese-308"
+      ]
+    },
+    {
+      "title": "assamese pitha",
+      "canonicalId": "assamese-288",
+      "removedIds": [
+        "assamese-295",
+        "assamese-304"
+      ]
+    },
+    {
+      "title": "yakhni",
+      "canonicalId": "kashmiri-285",
+      "removedIds": [
+        "kashmiri-293",
+        "kashmiri-300"
+      ]
+    },
+    {
+      "title": "dum olav",
+      "canonicalId": "kashmiri-286",
+      "removedIds": [
+        "kashmiri-294",
+        "kashmiri-301"
+      ]
+    },
+    {
+      "title": "kashmiri rajma",
+      "canonicalId": "kashmiri-288",
+      "removedIds": [
+        "kashmiri-315"
+      ]
+    },
+    {
+      "title": "lyodur tschaman",
+      "canonicalId": "kashmiri-290",
+      "removedIds": [
+        "kashmiri-296",
+        "kashmiri-303"
+      ]
+    },
+    {
+      "title": "urlai roast",
+      "canonicalId": "chettinad-287",
+      "removedIds": [
+        "chettinad-303"
+      ]
+    },
+    {
+      "title": "meen kuzhambu",
+      "canonicalId": "chettinad-289",
+      "removedIds": [
+        "chettinad-302"
+      ]
+    },
+    {
+      "title": "paniyaram",
+      "canonicalId": "chettinad-290",
+      "removedIds": [
+        "chettinad-304"
+      ]
+    },
+    {
+      "title": "mushroom chettinad",
+      "canonicalId": "chettinad-291",
+      "removedIds": [
+        "chettinad-305"
+      ]
+    },
+    {
+      "title": "egg bhurji pav",
+      "canonicalId": "street-292",
+      "removedIds": [
+        "street-312"
+      ]
+    },
+    {
+      "title": "dum aloo",
+      "canonicalId": "vegetarian-b9-018",
+      "removedIds": [
+        "north-293",
+        "north-303"
+      ]
+    },
+    {
+      "title": "tandoori roti",
+      "canonicalId": "punjabi-297",
+      "removedIds": [
+        "north-323"
+      ]
+    },
+    {
+      "title": "bajra khichda",
+      "canonicalId": "rajasthani-294",
+      "removedIds": [
+        "rajasthani-304"
+      ]
+    },
+    {
+      "title": "mishti doi",
+      "canonicalId": "bengali-297",
+      "removedIds": [
+        "bengali-308"
+      ]
+    },
+    {
+      "title": "shikampuri kebab",
+      "canonicalId": "hyderabadi-294",
+      "removedIds": [
+        "hyderabadi-303"
+      ]
+    },
+    {
+      "title": "fish moilee",
+      "canonicalId": "kerala-295",
+      "removedIds": [
+        "kerala-303"
+      ]
+    },
+    {
+      "title": "chicken fried rice",
+      "canonicalId": "chinese-294",
+      "removedIds": [
+        "chinese-306"
+      ]
+    },
+    {
+      "title": "schezwan paneer",
+      "canonicalId": "chinese-297",
+      "removedIds": [
+        "chinese-302"
+      ]
+    },
+    {
+      "title": "ou tenga maas",
+      "canonicalId": "assamese-296",
+      "removedIds": [
+        "assamese-300"
+      ]
+    },
+    {
+      "title": "komolar kheer",
+      "canonicalId": "assamese-298",
+      "removedIds": [
+        "assamese-305"
+      ]
+    },
+    {
+      "title": "kashmiri pulao",
+      "canonicalId": "kashmiri-295",
+      "removedIds": [
+        "kashmiri-302"
+      ]
+    },
+    {
+      "title": "chettinad veg kurma",
+      "canonicalId": "chettinad-293",
+      "removedIds": [
+        "chettinad-310"
+      ]
+    },
+    {
+      "title": "seeraga samba biryani",
+      "canonicalId": "chettinad-294",
+      "removedIds": [
+        "chettinad-307"
+      ]
+    },
+    {
+      "title": "milagu kozhi",
+      "canonicalId": "chettinad-295",
+      "removedIds": [
+        "chettinad-308"
+      ]
+    },
+    {
+      "title": "kothamalli chicken",
+      "canonicalId": "chettinad-296",
+      "removedIds": [
+        "chettinad-309"
+      ]
+    },
+    {
+      "title": "kara kuzhi paniyaram",
+      "canonicalId": "chettinad-298",
+      "removedIds": [
+        "chettinad-311"
+      ]
+    },
+    {
+      "title": "home style shrikhand",
+      "canonicalId": "maharashtrian-343",
+      "removedIds": [
+        "gujarati-344"
+      ]
+    },
+    {
+      "title": "home style basundi",
+      "canonicalId": "maharashtrian-344",
+      "removedIds": [
+        "gujarati-345"
+      ]
+    },
+    {
+      "title": "festive shrikhand",
+      "canonicalId": "maharashtrian-368",
+      "removedIds": [
+        "gujarati-369"
+      ]
+    },
+    {
+      "title": "festive basundi",
+      "canonicalId": "maharashtrian-369",
+      "removedIds": [
+        "gujarati-370"
+      ]
+    },
+    {
+      "title": "quick shrikhand",
+      "canonicalId": "maharashtrian-393",
+      "removedIds": [
+        "gujarati-394"
+      ]
+    },
+    {
+      "title": "quick basundi",
+      "canonicalId": "maharashtrian-394",
+      "removedIds": [
+        "gujarati-395"
+      ]
+    },
+    {
+      "title": "home style pav bhaji",
+      "canonicalId": "street-324",
+      "removedIds": [
+        "maharashtrian-325"
+      ]
+    },
+    {
+      "title": "home style vada pav",
+      "canonicalId": "street-325",
+      "removedIds": [
+        "maharashtrian-326"
+      ]
+    },
+    {
+      "title": "festive pav bhaji",
+      "canonicalId": "street-349",
+      "removedIds": [
+        "maharashtrian-350"
+      ]
+    },
+    {
+      "title": "festive vada pav",
+      "canonicalId": "street-350",
+      "removedIds": [
+        "maharashtrian-351"
+      ]
+    },
+    {
+      "title": "festive amritsari kulcha",
+      "canonicalId": "punjabi-352",
+      "removedIds": [
+        "street-361"
+      ]
+    },
+    {
+      "title": "quick pav bhaji",
+      "canonicalId": "street-374",
+      "removedIds": [
+        "maharashtrian-375"
+      ]
+    },
+    {
+      "title": "quick vada pav",
+      "canonicalId": "street-375",
+      "removedIds": [
+        "maharashtrian-376"
+      ]
+    },
+    {
+      "title": "quick misal pav",
+      "canonicalId": "maharashtrian-374",
+      "removedIds": [
+        "street-376"
+      ]
+    },
+    {
+      "title": "quick amritsari kulcha",
+      "canonicalId": "punjabi-377",
+      "removedIds": [
+        "street-386"
+      ]
+    },
+    {
+      "title": "coconut rice",
+      "canonicalId": "thai-b9-023",
+      "removedIds": [
+        "south-317"
+      ]
+    },
+    {
+      "title": "chettinad chicken",
+      "canonicalId": "chettinad-299",
+      "removedIds": [
+        "south-321"
+      ]
+    },
+    {
+      "title": "payasam",
+      "canonicalId": "kerala-314",
+      "removedIds": [
+        "south-323"
+      ]
+    },
+    {
+      "title": "home style avial",
+      "canonicalId": "kerala-326",
+      "removedIds": [
+        "south-334"
+      ]
+    },
+    {
+      "title": "home style chettinad chicken",
+      "canonicalId": "chettinad-324",
+      "removedIds": [
+        "south-346"
+      ]
+    },
+    {
+      "title": "home style payasam",
+      "canonicalId": "kerala-339",
+      "removedIds": [
+        "south-348"
+      ]
+    },
+    {
+      "title": "festive medu vada",
+      "canonicalId": "south-356",
+      "removedIds": [
+        "ad-mkt-medu-vada-04"
+      ]
+    },
+    {
+      "title": "festive avial",
+      "canonicalId": "kerala-351",
+      "removedIds": [
+        "south-359"
+      ]
+    },
+    {
+      "title": "festive chettinad chicken",
+      "canonicalId": "chettinad-349",
+      "removedIds": [
+        "south-371"
+      ]
+    },
+    {
+      "title": "festive payasam",
+      "canonicalId": "kerala-364",
+      "removedIds": [
+        "south-373"
+      ]
+    },
+    {
+      "title": "quick medu vada",
+      "canonicalId": "south-381",
+      "removedIds": [
+        "ad-mkt-medu-vada-03"
+      ]
+    },
+    {
+      "title": "quick avial",
+      "canonicalId": "kerala-376",
+      "removedIds": [
+        "south-384"
+      ]
+    },
+    {
+      "title": "quick chettinad chicken",
+      "canonicalId": "chettinad-374",
+      "removedIds": [
+        "south-396"
+      ]
+    },
+    {
+      "title": "quick payasam",
+      "canonicalId": "kerala-389",
+      "removedIds": [
+        "south-398"
+      ]
+    },
+    {
+      "title": "rajma",
+      "canonicalId": "north-300",
+      "removedIds": [
+        "punjabi-309"
+      ]
+    },
+    {
+      "title": "aloo gobi",
+      "canonicalId": "vegetarian-b9-009",
+      "removedIds": [
+        "north-308"
+      ]
+    },
+    {
+      "title": "gobi paratha",
+      "canonicalId": "north-313",
+      "removedIds": [
+        "punjabi-323"
+      ]
+    },
+    {
+      "title": "stuffed capsicum",
+      "canonicalId": "vegetarian-b9-013",
+      "removedIds": [
+        "north-320"
+      ]
+    },
+    {
+      "title": "navratan korma",
+      "canonicalId": "vegetarian-b9-019",
+      "removedIds": [
+        "north-322"
+      ]
+    },
+    {
+      "title": "home style dal makhani",
+      "canonicalId": "north-324",
+      "removedIds": [
+        "punjabi-326"
+      ]
+    },
+    {
+      "title": "home style rajma",
+      "canonicalId": "north-325",
+      "removedIds": [
+        "punjabi-334"
+      ]
+    },
+    {
+      "title": "home style kadhi pakora",
+      "canonicalId": "north-327",
+      "removedIds": [
+        "punjabi-335"
+      ]
+    },
+    {
+      "title": "home style baingan bharta",
+      "canonicalId": "north-329",
+      "removedIds": [
+        "punjabi-345"
+      ]
+    },
+    {
+      "title": "home style jeera rice",
+      "canonicalId": "north-334",
+      "removedIds": [
+        "punjabi-346"
+      ]
+    },
+    {
+      "title": "home style aloo paratha",
+      "canonicalId": "north-337",
+      "removedIds": [
+        "punjabi-341"
+      ]
+    },
+    {
+      "title": "home style gobi paratha",
+      "canonicalId": "north-338",
+      "removedIds": [
+        "punjabi-348"
+      ]
+    },
+    {
+      "title": "festive dal makhani",
+      "canonicalId": "north-349",
+      "removedIds": [
+        "punjabi-351"
+      ]
+    },
+    {
+      "title": "festive rajma",
+      "canonicalId": "north-350",
+      "removedIds": [
+        "punjabi-359"
+      ]
+    },
+    {
+      "title": "festive kadhi pakora",
+      "canonicalId": "north-352",
+      "removedIds": [
+        "punjabi-360"
+      ]
+    },
+    {
+      "title": "festive baingan bharta",
+      "canonicalId": "north-354",
+      "removedIds": [
+        "punjabi-370"
+      ]
+    },
+    {
+      "title": "festive jeera rice",
+      "canonicalId": "north-359",
+      "removedIds": [
+        "punjabi-371",
+        "ad-mkt-jeera-rice-04"
+      ]
+    },
+    {
+      "title": "festive aloo paratha",
+      "canonicalId": "north-362",
+      "removedIds": [
+        "punjabi-366"
+      ]
+    },
+    {
+      "title": "festive gobi paratha",
+      "canonicalId": "north-363",
+      "removedIds": [
+        "punjabi-373"
+      ]
+    },
+    {
+      "title": "festive chole bhature",
+      "canonicalId": "punjabi-353",
+      "removedIds": [
+        "north-367"
+      ]
+    },
+    {
+      "title": "festive rajma chawal",
+      "canonicalId": "north-368",
+      "removedIds": [
+        "ad-mkt-rajma-chawal-04"
+      ]
+    },
+    {
+      "title": "quick dal makhani",
+      "canonicalId": "north-374",
+      "removedIds": [
+        "punjabi-376"
+      ]
+    },
+    {
+      "title": "quick rajma",
+      "canonicalId": "north-375",
+      "removedIds": [
+        "punjabi-384"
+      ]
+    },
+    {
+      "title": "quick kadhi pakora",
+      "canonicalId": "north-377",
+      "removedIds": [
+        "punjabi-385"
+      ]
+    },
+    {
+      "title": "quick baingan bharta",
+      "canonicalId": "north-379",
+      "removedIds": [
+        "punjabi-395"
+      ]
+    },
+    {
+      "title": "quick jeera rice",
+      "canonicalId": "north-384",
+      "removedIds": [
+        "punjabi-396",
+        "ad-mkt-jeera-rice-03"
+      ]
+    },
+    {
+      "title": "quick aloo paratha",
+      "canonicalId": "north-387",
+      "removedIds": [
+        "punjabi-391"
+      ]
+    },
+    {
+      "title": "quick gobi paratha",
+      "canonicalId": "north-388",
+      "removedIds": [
+        "punjabi-398"
+      ]
+    },
+    {
+      "title": "quick chole bhature",
+      "canonicalId": "punjabi-378",
+      "removedIds": [
+        "north-392"
+      ]
+    },
+    {
+      "title": "quick rajma chawal",
+      "canonicalId": "north-393",
+      "removedIds": [
+        "ad-mkt-rajma-chawal-03"
+      ]
+    },
+    {
+      "title": "phirni",
+      "canonicalId": "kashmiri-320",
+      "removedIds": [
+        "punjabi-322"
+      ]
+    },
+    {
+      "title": "home style phirni",
+      "canonicalId": "kashmiri-345",
+      "removedIds": [
+        "punjabi-347"
+      ]
+    },
+    {
+      "title": "festive phirni",
+      "canonicalId": "kashmiri-370",
+      "removedIds": [
+        "punjabi-372"
+      ]
+    },
+    {
+      "title": "quick phirni",
+      "canonicalId": "kashmiri-395",
+      "removedIds": [
+        "punjabi-397"
+      ]
+    },
+    {
+      "title": "home style sol kadhi",
+      "canonicalId": "maharashtrian-332",
+      "removedIds": [
+        "goan-340"
+      ]
+    },
+    {
+      "title": "festive sol kadhi",
+      "canonicalId": "maharashtrian-357",
+      "removedIds": [
+        "goan-365"
+      ]
+    },
+    {
+      "title": "quick sol kadhi",
+      "canonicalId": "maharashtrian-382",
+      "removedIds": [
+        "goan-390"
+      ]
+    },
+    {
+      "title": "chow mein",
+      "canonicalId": "chinese-b9-008",
+      "removedIds": [
+        "chinese-304"
+      ]
+    },
+    {
+      "title": "mushroom soup",
+      "canonicalId": "continental-b9-005",
+      "removedIds": [
+        "weight-loss-b9-020"
+      ]
+    },
+    {
+      "title": "classic mushroom soup",
+      "canonicalId": "continental-b9-030",
+      "removedIds": [
+        "weight-loss-b9-045"
+      ]
+    },
+    {
+      "title": "homestyle mushroom soup",
+      "canonicalId": "continental-b9-055",
+      "removedIds": [
+        "weight-loss-b9-070"
+      ]
+    },
+    {
+      "title": "chef style mushroom soup",
+      "canonicalId": "continental-b9-080",
+      "removedIds": [
+        "weight-loss-b9-095"
+      ]
+    },
+    {
+      "title": "jain pav bhaji",
+      "canonicalId": "jain-b9-001",
+      "removedIds": [
+        "ad-mkt-jain-pav-bhaji-01"
+      ]
+    },
+    {
+      "title": "classic jain pav bhaji",
+      "canonicalId": "jain-b9-026",
+      "removedIds": [
+        "ad-mkt-jain-pav-bhaji-31"
+      ]
+    },
+    {
+      "title": "soya chunk curry",
+      "canonicalId": "high-protein-b9-005",
+      "removedIds": [
+        "ad-mkt-soya-chunk-curry-01"
+      ]
+    },
+    {
+      "title": "moong dal chilla",
+      "canonicalId": "high-protein-b9-008",
+      "removedIds": [
+        "diabetic-friendly-b9-013"
+      ]
+    },
+    {
+      "title": "classic soya chunk curry",
+      "canonicalId": "high-protein-b9-030",
+      "removedIds": [
+        "ad-mkt-soya-chunk-curry-31"
+      ]
+    },
+    {
+      "title": "classic moong dal chilla",
+      "canonicalId": "high-protein-b9-033",
+      "removedIds": [
+        "diabetic-friendly-b9-038"
+      ]
+    },
+    {
+      "title": "homestyle moong dal chilla",
+      "canonicalId": "high-protein-b9-058",
+      "removedIds": [
+        "diabetic-friendly-b9-063"
+      ]
+    },
+    {
+      "title": "chef style moong dal chilla",
+      "canonicalId": "high-protein-b9-083",
+      "removedIds": [
+        "diabetic-friendly-b9-088"
+      ]
+    },
+    {
+      "title": "palak soup",
+      "canonicalId": "weight-loss-b9-009",
+      "removedIds": [
+        "healthy-b9-011"
+      ]
+    },
+    {
+      "title": "classic ragi dosa",
+      "canonicalId": "diabetic-friendly-b9-031",
+      "removedIds": [
+        "healthy-b9-034"
+      ]
+    },
+    {
+      "title": "classic palak soup",
+      "canonicalId": "weight-loss-b9-034",
+      "removedIds": [
+        "healthy-b9-036"
+      ]
+    },
+    {
+      "title": "homestyle ragi dosa",
+      "canonicalId": "diabetic-friendly-b9-056",
+      "removedIds": [
+        "healthy-b9-059"
+      ]
+    },
+    {
+      "title": "homestyle palak soup",
+      "canonicalId": "weight-loss-b9-059",
+      "removedIds": [
+        "healthy-b9-061"
+      ]
+    },
+    {
+      "title": "chef style ragi dosa",
+      "canonicalId": "diabetic-friendly-b9-081",
+      "removedIds": [
+        "healthy-b9-084"
+      ]
+    },
+    {
+      "title": "chef style palak soup",
+      "canonicalId": "weight-loss-b9-084",
+      "removedIds": [
+        "healthy-b9-086"
+      ]
+    },
+    {
+      "title": "moong dal soup",
+      "canonicalId": "weight-loss-b9-003",
+      "removedIds": [
+        "ad-mkt-moong-dal-soup-01"
+      ]
+    },
+    {
+      "title": "ragi porridge",
+      "canonicalId": "weight-loss-b9-013",
+      "removedIds": [
+        "diabetic-friendly-b9-016"
+      ]
+    },
+    {
+      "title": "classic moong dal soup",
+      "canonicalId": "weight-loss-b9-028",
+      "removedIds": [
+        "ad-mkt-moong-dal-soup-31"
+      ]
+    },
+    {
+      "title": "classic ragi porridge",
+      "canonicalId": "weight-loss-b9-038",
+      "removedIds": [
+        "diabetic-friendly-b9-041"
+      ]
+    },
+    {
+      "title": "homestyle ragi porridge",
+      "canonicalId": "weight-loss-b9-063",
+      "removedIds": [
+        "diabetic-friendly-b9-066"
+      ]
+    },
+    {
+      "title": "chef style ragi porridge",
+      "canonicalId": "weight-loss-b9-088",
+      "removedIds": [
+        "diabetic-friendly-b9-091"
+      ]
+    }
+  ],
+  "remap": {
+    "gujarati-299": "gujarati-01",
+    "gujarati-03": "diabetic-friendly-b9-002",
+    "gujarati-304": "diabetic-friendly-b9-002",
+    "gujarati-300": "gujarati-04",
+    "gujarati-295": "gujarati-05",
+    "gujarati-312": "gujarati-07",
+    "gujarati-318": "gujarati-08",
+    "maharashtrian-12": "street-01",
+    "street-300": "street-01",
+    "maharashtrian-301": "street-01",
+    "street-299": "street-02",
+    "maharashtrian-300": "street-02",
+    "maharashtrian-11": "street-03",
+    "maharashtrian-292": "street-03",
+    "maharashtrian-299": "street-03",
+    "street-301": "street-03",
+    "street-304": "street-04",
+    "street-305": "street-05",
+    "street-294": "street-09",
+    "street-306": "street-09",
+    "street-297": "street-10",
+    "street-316": "street-10",
+    "south-299": "south-01",
+    "south-296": "south-03",
+    "south-306": "south-03",
+    "ad-mkt-medu-vada-01": "south-03",
+    "south-293": "south-04",
+    "south-314": "south-04",
+    "south-294": "south-05",
+    "south-315": "south-05",
+    "vegetarian-b9-004": "north-01",
+    "north-296": "north-01",
+    "punjabi-303": "north-01",
+    "north-317": "north-01",
+    "punjabi-296": "north-02",
+    "north-318": "north-02",
+    "ad-mkt-rajma-chawal-01": "north-02",
+    "punjabi-21": "north-03",
+    "north-295": "north-03",
+    "north-312": "north-03",
+    "punjabi-316": "north-03",
+    "vegetarian-b9-005": "north-04",
+    "punjabi-11": "north-04",
+    "north-299": "north-04",
+    "punjabi-301": "north-04",
+    "north-05": "vegetarian-b9-001",
+    "north-306": "vegetarian-b9-001",
+    "north-309": "north-06",
+    "punjabi-321": "north-06",
+    "ad-mkt-jeera-rice-01": "north-06",
+    "punjabi-319": "north-07",
+    "vegetarian-b9-010": "north-09",
+    "punjabi-25": "north-09",
+    "north-294": "north-09",
+    "north-304": "north-09",
+    "punjabi-320": "north-09",
+    "punjabi-12": "punjabi-01",
+    "north-13": "punjabi-01",
+    "punjabi-292": "punjabi-01",
+    "punjabi-299": "punjabi-01",
+    "punjabi-293": "punjabi-02",
+    "punjabi-300": "punjabi-02",
+    "punjabi-13": "punjabi-03",
+    "punjabi-17": "punjabi-04",
+    "punjabi-83": "punjabi-05",
+    "north-18": "punjabi-07",
+    "punjabi-19": "punjabi-07",
+    "punjabi-306": "punjabi-07",
+    "north-29": "punjabi-08",
+    "punjabi-20": "punjabi-09",
+    "punjabi-305": "punjabi-09",
+    "rajasthani-11": "rajasthani-01",
+    "rajasthani-299": "rajasthani-01",
+    "rajasthani-12": "rajasthani-02",
+    "rajasthani-292": "rajasthani-02",
+    "rajasthani-300": "rajasthani-02",
+    "rajasthani-13": "rajasthani-03",
+    "rajasthani-293": "rajasthani-03",
+    "rajasthani-301": "rajasthani-03",
+    "rajasthani-21": "rajasthani-04",
+    "rajasthani-297": "rajasthani-04",
+    "rajasthani-302": "rajasthani-04",
+    "rajasthani-05": "diabetic-friendly-b9-001",
+    "rajasthani-17": "rajasthani-06",
+    "rajasthani-315": "rajasthani-06",
+    "rajasthani-14": "rajasthani-07",
+    "rajasthani-323": "rajasthani-07",
+    "rajasthani-15": "rajasthani-09",
+    "north-21": "rajasthani-09",
+    "rajasthani-306": "rajasthani-09",
+    "rajasthani-16": "rajasthani-10",
+    "rajasthani-295": "rajasthani-10",
+    "rajasthani-305": "rajasthani-10",
+    "bengali-12": "bengali-01",
+    "bengali-13": "bengali-02",
+    "bengali-82": "bengali-02",
+    "bengali-294": "bengali-02",
+    "bengali-302": "bengali-02",
+    "bengali-14": "bengali-03",
+    "bengali-295": "bengali-03",
+    "bengali-303": "bengali-03",
+    "bengali-15": "bengali-04",
+    "bengali-296": "bengali-04",
+    "bengali-301": "bengali-04",
+    "bengali-17": "bengali-05",
+    "bengali-307": "bengali-05",
+    "bengali-16": "bengali-06",
+    "bengali-293": "bengali-06",
+    "bengali-300": "bengali-06",
+    "bengali-18": "bengali-08",
+    "bengali-311": "bengali-10",
+    "maharashtrian-13": "maharashtrian-01",
+    "maharashtrian-297": "maharashtrian-01",
+    "maharashtrian-302": "maharashtrian-01",
+    "maharashtrian-14": "maharashtrian-02",
+    "maharashtrian-83": "maharashtrian-02",
+    "maharashtrian-293": "maharashtrian-02",
+    "maharashtrian-304": "maharashtrian-02",
+    "maharashtrian-28": "maharashtrian-03",
+    "maharashtrian-22": "maharashtrian-04",
+    "maharashtrian-320": "maharashtrian-04",
+    "maharashtrian-19": "maharashtrian-06",
+    "maharashtrian-308": "maharashtrian-06",
+    "maharashtrian-18": "maharashtrian-07",
+    "maharashtrian-294": "maharashtrian-07",
+    "maharashtrian-303": "maharashtrian-07",
+    "maharashtrian-313": "maharashtrian-09",
+    "hyderabadi-11": "hyderabadi-01",
+    "hyderabadi-13": "hyderabadi-02",
+    "hyderabadi-292": "hyderabadi-02",
+    "hyderabadi-300": "hyderabadi-02",
+    "hyderabadi-12": "hyderabadi-03",
+    "hyderabadi-83": "hyderabadi-03",
+    "hyderabadi-295": "hyderabadi-03",
+    "hyderabadi-301": "hyderabadi-03",
+    "hyderabadi-18": "hyderabadi-04",
+    "hyderabadi-312": "hyderabadi-04",
+    "gujarati-317": "hyderabadi-04",
+    "hyderabadi-302": "hyderabadi-05",
+    "hyderabadi-24": "hyderabadi-09",
+    "hyderabadi-319": "hyderabadi-09",
+    "hyderabadi-16": "hyderabadi-10",
+    "hyderabadi-296": "hyderabadi-10",
+    "hyderabadi-304": "hyderabadi-10",
+    "goan-11": "goan-01",
+    "goan-296": "goan-01",
+    "goan-300": "goan-01",
+    "goan-12": "goan-02",
+    "goan-307": "goan-02",
+    "goan-13": "goan-03",
+    "goan-297": "goan-03",
+    "goan-302": "goan-03",
+    "goan-14": "goan-04",
+    "goan-301": "goan-04",
+    "goan-18": "goan-10",
+    "goan-294": "goan-10",
+    "goan-303": "goan-10",
+    "kerala-11": "kerala-01",
+    "kerala-14": "kerala-02",
+    "kerala-13": "kerala-03",
+    "south-19": "kerala-03",
+    "kerala-297": "kerala-03",
+    "kerala-301": "kerala-03",
+    "south-309": "kerala-03",
+    "kerala-16": "kerala-04",
+    "kerala-296": "kerala-09",
+    "kerala-304": "kerala-09",
+    "kerala-17": "kerala-10",
+    "kerala-294": "kerala-10",
+    "kerala-302": "kerala-10",
+    "vegetarian-b9-014": "chinese-01",
+    "chinese-30": "chinese-02",
+    "chinese-300": "chinese-02",
+    "chinese-23": "chinese-04",
+    "chinese-13": "chinese-06",
+    "chinese-295": "chinese-06",
+    "chinese-307": "chinese-06",
+    "chinese-315": "chinese-09",
+    "assamese-294": "assamese-01",
+    "assamese-302": "assamese-01",
+    "assamese-81": "assamese-02",
+    "assamese-292": "assamese-02",
+    "assamese-299": "assamese-02",
+    "assamese-297": "assamese-04",
+    "assamese-303": "assamese-04",
+    "kashmiri-299": "kashmiri-01",
+    "kashmiri-305": "kashmiri-03",
+    "kashmiri-82": "kashmiri-04",
+    "kashmiri-83": "kashmiri-07",
+    "kashmiri-309": "kashmiri-07",
+    "kashmiri-307": "kashmiri-09",
+    "south-15": "chettinad-01",
+    "chettinad-312": "chettinad-03",
+    "chettinad-317": "chettinad-05",
+    "chettinad-300": "chettinad-08",
+    "gujarati-292": "gujarati-31",
+    "gujarati-297": "gujarati-41",
+    "gujarati-296": "gujarati-43",
+    "gujarati-321": "gujarati-43",
+    "gujarati-322": "gujarati-45",
+    "gujarati-293": "gujarati-54",
+    "street-302": "gujarati-54",
+    "gujarati-311": "gujarati-60",
+    "street-307": "street-11",
+    "street-323": "street-15",
+    "street-293": "street-20",
+    "street-313": "street-20",
+    "street-303": "street-31",
+    "street-321": "street-33",
+    "street-310": "street-41",
+    "street-49": "chinese-38",
+    "chinese-312": "chinese-38",
+    "south-301": "south-11",
+    "south-302": "south-12",
+    "kerala-27": "south-14",
+    "kerala-298": "south-14",
+    "kerala-305": "south-14",
+    "south-292": "south-20",
+    "south-313": "south-20",
+    "south-303": "south-31",
+    "healthy-b9-009": "diabetic-friendly-b9-006",
+    "south-36": "diabetic-friendly-b9-006",
+    "chettinad-315": "south-41",
+    "punjabi-14": "north-11",
+    "vegetarian-b9-017": "north-11",
+    "north-292": "north-11",
+    "north-302": "north-11",
+    "punjabi-310": "north-11",
+    "vegetarian-b9-021": "north-16",
+    "punjabi-22": "north-16",
+    "punjabi-23": "north-20",
+    "vegetarian-b9-024": "north-20",
+    "north-321": "north-20",
+    "punjabi-318": "north-28",
+    "north-297": "punjabi-15",
+    "street-296": "punjabi-16",
+    "punjabi-302": "punjabi-16",
+    "street-311": "punjabi-16",
+    "punjabi-312": "punjabi-30",
+    "rajasthani-308": "rajasthani-18",
+    "rajasthani-296": "rajasthani-20",
+    "rajasthani-303": "rajasthani-20",
+    "rajasthani-307": "rajasthani-25",
+    "bengali-315": "bengali-24",
+    "bengali-323": "bengali-32",
+    "bengali-306": "bengali-33",
+    "bengali-316": "bengali-38",
+    "bengali-313": "bengali-58",
+    "bengali-320": "bengali-68",
+    "maharashtrian-317": "maharashtrian-17",
+    "maharashtrian-309": "maharashtrian-20",
+    "maharashtrian-295": "maharashtrian-30",
+    "maharashtrian-323": "maharashtrian-39",
+    "maharashtrian-296": "maharashtrian-62",
+    "maharashtrian-305": "maharashtrian-62",
+    "maharashtrian-318": "maharashtrian-63",
+    "gujarati-319": "maharashtrian-63",
+    "maharashtrian-319": "maharashtrian-64",
+    "gujarati-320": "maharashtrian-64",
+    "hyderabadi-311": "hyderabadi-15",
+    "hyderabadi-317": "hyderabadi-19",
+    "hyderabadi-82": "hyderabadi-25",
+    "hyderabadi-306": "hyderabadi-25",
+    "kashmiri-319": "hyderabadi-28",
+    "hyderabadi-308": "hyderabadi-33",
+    "hyderabadi-318": "hyderabadi-48",
+    "hyderabadi-316": "hyderabadi-61",
+    "goan-305": "goan-15",
+    "goan-82": "goan-16",
+    "goan-320": "goan-16",
+    "goan-313": "goan-19",
+    "goan-317": "goan-24",
+    "goan-312": "goan-30",
+    "kerala-319": "kerala-18",
+    "kerala-316": "kerala-19",
+    "kerala-310": "kerala-22",
+    "kerala-313": "kerala-25",
+    "chinese-293": "chinese-11",
+    "chinese-303": "chinese-11",
+    "vegetarian-b9-016": "chinese-12",
+    "chinese-292": "chinese-12",
+    "chinese-299": "chinese-12",
+    "chinese-15": "chinese-b9-006",
+    "chinese-309": "chinese-b9-006",
+    "chinese-16": "chinese-b9-011",
+    "chinese-17": "chinese-b9-001",
+    "chinese-18": "chinese-b9-002",
+    "chinese-316": "chinese-b9-002",
+    "chinese-19": "chinese-b9-007",
+    "chinese-b9-021": "chinese-20",
+    "chinese-22": "chinese-b9-014",
+    "chinese-27": "chinese-b9-013",
+    "chinese-28": "chinese-b9-005",
+    "chinese-301": "chinese-29",
+    "chinese-37": "weight-loss-b9-016",
+    "chinese-53": "chinese-b9-017",
+    "assamese-319": "assamese-17",
+    "assamese-315": "assamese-29",
+    "kashmiri-322": "kashmiri-17",
+    "kashmiri-297": "kashmiri-30",
+    "kashmiri-304": "kashmiri-30",
+    "gujarati-315": "gujarati-81",
+    "chettinad-301": "south-84",
+    "hyderabadi-314": "hyderabadi-81",
+    "kerala-315": "kerala-83",
+    "gujarati-365": "gujarati-87",
+    "gujarati-340": "gujarati-88",
+    "gujarati-390": "gujarati-92",
+    "hyderabadi-362": "gujarati-108",
+    "gujarati-367": "gujarati-108",
+    "hyderabadi-337": "gujarati-109",
+    "gujarati-342": "gujarati-109",
+    "hyderabadi-387": "gujarati-113",
+    "gujarati-392": "gujarati-113",
+    "gujarati-127": "diabetic-friendly-b9-007",
+    "north-331": "north-86",
+    "north-356": "north-94",
+    "north-95": "vegetarian-b9-025",
+    "north-116": "vegetarian-b9-002",
+    "north-305": "vegetarian-b9-002",
+    "north-330": "north-118",
+    "north-355": "north-126",
+    "punjabi-324": "punjabi-94",
+    "punjabi-325": "punjabi-104",
+    "punjabi-327": "punjabi-114",
+    "street-336": "punjabi-114",
+    "punjabi-328": "punjabi-124",
+    "north-342": "punjabi-124",
+    "street-335": "punjabi-165",
+    "punjabi-166": "vegetarian-b9-007",
+    "punjabi-298": "vegetarian-b9-007",
+    "punjabi-304": "vegetarian-b9-007",
+    "punjabi-329": "punjabi-176",
+    "rajasthani-349": "rajasthani-92",
+    "rajasthani-324": "rajasthani-94",
+    "rajasthani-358": "rajasthani-113",
+    "rajasthani-333": "rajasthani-115",
+    "rajasthani-350": "rajasthani-134",
+    "rajasthani-325": "rajasthani-136",
+    "bengali-325": "bengali-88",
+    "bengali-350": "bengali-89",
+    "bengali-314": "bengali-95",
+    "bengali-339": "bengali-99",
+    "bengali-364": "bengali-100",
+    "bengali-317": "bengali-106",
+    "bengali-342": "bengali-110",
+    "bengali-367": "bengali-111",
+    "bengali-327": "bengali-175",
+    "bengali-352": "bengali-176",
+    "maharashtrian-324": "maharashtrian-88",
+    "street-326": "maharashtrian-88",
+    "maharashtrian-349": "maharashtrian-89",
+    "street-351": "maharashtrian-89",
+    "hyderabadi-299": "hyderabadi-85",
+    "hyderabadi-324": "hyderabadi-92",
+    "hyderabadi-349": "hyderabadi-93",
+    "ad-mkt-paneer-biryani-01": "hyderabadi-140",
+    "ad-mkt-paneer-biryani-05": "hyderabadi-145",
+    "ad-mkt-paneer-biryani-04": "hyderabadi-148",
+    "ad-mkt-paneer-biryani-06": "hyderabadi-149",
+    "ad-mkt-paneer-biryani-31": "hyderabadi-150",
+    "goan-308": "goan-107",
+    "goan-333": "goan-112",
+    "goan-358": "goan-113",
+    "goan-332": "goan-122",
+    "goan-357": "goan-123",
+    "goan-292": "goan-128",
+    "goan-299": "goan-128",
+    "goan-324": "goan-133",
+    "goan-349": "goan-134",
+    "goan-345": "goan-154",
+    "goan-370": "goan-155",
+    "kerala-293": "kerala-184",
+    "kerala-300": "kerala-184",
+    "chinese-94": "vegetarian-b9-041",
+    "chinese-319": "chinese-127",
+    "assamese-324": "assamese-86",
+    "assamese-349": "assamese-94",
+    "assamese-327": "assamese-162",
+    "assamese-352": "assamese-170",
+    "assamese-320": "assamese-171",
+    "assamese-345": "assamese-173",
+    "assamese-370": "assamese-181",
+    "kashmiri-330": "kashmiri-109",
+    "kashmiri-355": "kashmiri-111",
+    "kashmiri-306": "kashmiri-117",
+    "kashmiri-331": "kashmiri-120",
+    "kashmiri-356": "kashmiri-122",
+    "kashmiri-321": "kashmiri-150",
+    "kashmiri-346": "kashmiri-153",
+    "kashmiri-371": "kashmiri-155",
+    "chettinad-326": "chettinad-142",
+    "chettinad-351": "chettinad-143",
+    "chettinad-237": "high-protein-b9-020",
+    "gujarati-313": "gujarati-289",
+    "gujarati-314": "gujarati-290",
+    "street-298": "street-288",
+    "street-314": "street-288",
+    "south-316": "south-286",
+    "south-295": "south-287",
+    "north-315": "north-285",
+    "north-289": "vegetarian-b9-003",
+    "north-298": "vegetarian-b9-003",
+    "north-307": "vegetarian-b9-003",
+    "punjabi-295": "punjabi-287",
+    "punjabi-308": "punjabi-287",
+    "punjabi-294": "punjabi-291",
+    "punjabi-307": "punjabi-291",
+    "rajasthani-309": "rajasthani-290",
+    "bengali-292": "bengali-289",
+    "bengali-299": "bengali-289",
+    "maharashtrian-298": "maharashtrian-290",
+    "maharashtrian-307": "maharashtrian-290",
+    "goan-315": "maharashtrian-290",
+    "hyderabadi-293": "hyderabadi-285",
+    "hyderabadi-297": "hyderabadi-288",
+    "hyderabadi-305": "hyderabadi-288",
+    "goan-355": "goan-287",
+    "kerala-292": "kerala-285",
+    "chinese-287": "chinese-b9-009",
+    "chinese-305": "chinese-b9-009",
+    "chinese-296": "chinese-290",
+    "chinese-308": "chinese-290",
+    "assamese-295": "assamese-288",
+    "assamese-304": "assamese-288",
+    "kashmiri-293": "kashmiri-285",
+    "kashmiri-300": "kashmiri-285",
+    "kashmiri-294": "kashmiri-286",
+    "kashmiri-301": "kashmiri-286",
+    "kashmiri-315": "kashmiri-288",
+    "kashmiri-296": "kashmiri-290",
+    "kashmiri-303": "kashmiri-290",
+    "chettinad-303": "chettinad-287",
+    "chettinad-302": "chettinad-289",
+    "chettinad-304": "chettinad-290",
+    "chettinad-305": "chettinad-291",
+    "street-312": "street-292",
+    "north-293": "vegetarian-b9-018",
+    "north-303": "vegetarian-b9-018",
+    "north-323": "punjabi-297",
+    "rajasthani-304": "rajasthani-294",
+    "bengali-308": "bengali-297",
+    "hyderabadi-303": "hyderabadi-294",
+    "kerala-303": "kerala-295",
+    "chinese-306": "chinese-294",
+    "chinese-302": "chinese-297",
+    "assamese-300": "assamese-296",
+    "assamese-305": "assamese-298",
+    "kashmiri-302": "kashmiri-295",
+    "chettinad-310": "chettinad-293",
+    "chettinad-307": "chettinad-294",
+    "chettinad-308": "chettinad-295",
+    "chettinad-309": "chettinad-296",
+    "chettinad-311": "chettinad-298",
+    "gujarati-344": "maharashtrian-343",
+    "gujarati-345": "maharashtrian-344",
+    "gujarati-369": "maharashtrian-368",
+    "gujarati-370": "maharashtrian-369",
+    "gujarati-394": "maharashtrian-393",
+    "gujarati-395": "maharashtrian-394",
+    "maharashtrian-325": "street-324",
+    "maharashtrian-326": "street-325",
+    "maharashtrian-350": "street-349",
+    "maharashtrian-351": "street-350",
+    "street-361": "punjabi-352",
+    "maharashtrian-375": "street-374",
+    "maharashtrian-376": "street-375",
+    "street-376": "maharashtrian-374",
+    "street-386": "punjabi-377",
+    "south-317": "thai-b9-023",
+    "south-321": "chettinad-299",
+    "south-323": "kerala-314",
+    "south-334": "kerala-326",
+    "south-346": "chettinad-324",
+    "south-348": "kerala-339",
+    "ad-mkt-medu-vada-04": "south-356",
+    "south-359": "kerala-351",
+    "south-371": "chettinad-349",
+    "south-373": "kerala-364",
+    "ad-mkt-medu-vada-03": "south-381",
+    "south-384": "kerala-376",
+    "south-396": "chettinad-374",
+    "south-398": "kerala-389",
+    "punjabi-309": "north-300",
+    "north-308": "vegetarian-b9-009",
+    "punjabi-323": "north-313",
+    "north-320": "vegetarian-b9-013",
+    "north-322": "vegetarian-b9-019",
+    "punjabi-326": "north-324",
+    "punjabi-334": "north-325",
+    "punjabi-335": "north-327",
+    "punjabi-345": "north-329",
+    "punjabi-346": "north-334",
+    "punjabi-341": "north-337",
+    "punjabi-348": "north-338",
+    "punjabi-351": "north-349",
+    "punjabi-359": "north-350",
+    "punjabi-360": "north-352",
+    "punjabi-370": "north-354",
+    "punjabi-371": "north-359",
+    "ad-mkt-jeera-rice-04": "north-359",
+    "punjabi-366": "north-362",
+    "punjabi-373": "north-363",
+    "north-367": "punjabi-353",
+    "ad-mkt-rajma-chawal-04": "north-368",
+    "punjabi-376": "north-374",
+    "punjabi-384": "north-375",
+    "punjabi-385": "north-377",
+    "punjabi-395": "north-379",
+    "punjabi-396": "north-384",
+    "ad-mkt-jeera-rice-03": "north-384",
+    "punjabi-391": "north-387",
+    "punjabi-398": "north-388",
+    "north-392": "punjabi-378",
+    "ad-mkt-rajma-chawal-03": "north-393",
+    "punjabi-322": "kashmiri-320",
+    "punjabi-347": "kashmiri-345",
+    "punjabi-372": "kashmiri-370",
+    "punjabi-397": "kashmiri-395",
+    "goan-340": "maharashtrian-332",
+    "goan-365": "maharashtrian-357",
+    "goan-390": "maharashtrian-382",
+    "chinese-304": "chinese-b9-008",
+    "weight-loss-b9-020": "continental-b9-005",
+    "weight-loss-b9-045": "continental-b9-030",
+    "weight-loss-b9-070": "continental-b9-055",
+    "weight-loss-b9-095": "continental-b9-080",
+    "ad-mkt-jain-pav-bhaji-01": "jain-b9-001",
+    "ad-mkt-jain-pav-bhaji-31": "jain-b9-026",
+    "ad-mkt-soya-chunk-curry-01": "high-protein-b9-005",
+    "diabetic-friendly-b9-013": "high-protein-b9-008",
+    "ad-mkt-soya-chunk-curry-31": "high-protein-b9-030",
+    "diabetic-friendly-b9-038": "high-protein-b9-033",
+    "diabetic-friendly-b9-063": "high-protein-b9-058",
+    "diabetic-friendly-b9-088": "high-protein-b9-083",
+    "healthy-b9-011": "weight-loss-b9-009",
+    "healthy-b9-034": "diabetic-friendly-b9-031",
+    "healthy-b9-036": "weight-loss-b9-034",
+    "healthy-b9-059": "diabetic-friendly-b9-056",
+    "healthy-b9-061": "weight-loss-b9-059",
+    "healthy-b9-084": "diabetic-friendly-b9-081",
+    "healthy-b9-086": "weight-loss-b9-084",
+    "ad-mkt-moong-dal-soup-01": "weight-loss-b9-003",
+    "diabetic-friendly-b9-016": "weight-loss-b9-013",
+    "ad-mkt-moong-dal-soup-31": "weight-loss-b9-028",
+    "diabetic-friendly-b9-041": "weight-loss-b9-038",
+    "diabetic-friendly-b9-066": "weight-loss-b9-063",
+    "diabetic-friendly-b9-091": "weight-loss-b9-088"
+  }
+}

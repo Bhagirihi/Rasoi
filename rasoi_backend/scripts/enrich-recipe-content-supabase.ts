@@ -12,7 +12,7 @@ import { getDirectDatabaseUrl } from '../src/lib/database-url';
 import { localizeDescriptionToHindi, buildDetailedStepsHi } from '../src/lib/recipe-content-hi';
 import { buildRecipeDescription, buildRecipeDescriptionHi } from '../src/lib/recipe-description';
 import type { RecipeIngredient } from '../src/lib/types';
-import { resolveRecipeSteps, stepsLookVague, stepsMismatchTitle, type RecipeStepInput } from '../src/lib/recipe-steps';
+import { resolveRecipeSteps, stepsLookVague, stepsMismatchTitle, buildDetailedSteps, type RecipeStepInput } from '../src/lib/recipe-steps';
 
 const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 
@@ -65,11 +65,17 @@ function enrichRecipe(recipe: DbRecipe) {
   };
 
   const steps = resolveRecipeSteps(input);
-  const description = buildRecipeDescription({ ...input, steps });
-  const descriptionHi = buildRecipeDescriptionHi({ ...input, steps });
-  const stepsHi = buildDetailedStepsHi({ ...input, steps, description });
+  // Always refresh description/Hindi to match resolved steps; force-regenerate mismatched steps.
+  const forceSteps =
+    storedSteps.length > 0 &&
+    (stepsLookVague(storedSteps) || stepsMismatchTitle(recipe.title, storedSteps))
+      ? buildDetailedSteps({ ...input, steps: undefined })
+      : steps;
+  const description = buildRecipeDescription({ ...input, steps: forceSteps });
+  const descriptionHi = buildRecipeDescriptionHi({ ...input, steps: forceSteps });
+  const stepsHi = buildDetailedStepsHi({ ...input, steps: forceSteps, description });
 
-  return { description, steps, descriptionHi, stepsHi };
+  return { description, steps: forceSteps, descriptionHi, stepsHi };
 }
 
 async function ensureColumns(): Promise<void> {
