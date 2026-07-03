@@ -1,7 +1,7 @@
 {
-  "name": "Rasoi: Aaj Kya Banaye?",
+  "name": "Rasoi App: Aaj Kya Banaye?",
   "short_name": "Rasoi",
-  "description": "Rasoi: Aaj Kya Banaye? — Indian home cooking app with pantry match and regional recipes.",
+  "description": "Rasoi App: Aaj Kya Banaye? — Indian home cooking app with pantry match and regional recipes.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0A0908",

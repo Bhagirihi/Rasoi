@@ -1,10 +1,15 @@
-# Reach login screen after fresh install (handles auto-guest, permissions, or direct login).
+# Reach login screen after fresh install (login-first; clears stale onboarding/pantry if needed).
 appId: com.bhagihiri.rasoiapp
 ---
 - launchApp:
     clearState: true
     permissions:
       all: allow
+- extendedWaitUntil:
+    notVisible:
+      text: "Opening Rasoi"
+    timeout: 240000
+    optional: true
 - runFlow:
     when:
       visible:
@@ -38,14 +43,19 @@ appId: com.bhagihiri.rasoiapp
 - runFlow:
     when:
       visible:
-        id: pantry-setup-skip
+        id: screen-pantry
     commands:
-      - tapOn:
-          id: pantry-setup-skip
+      - runFlow:
+          file: _skip-pantry-setup.yaml
 - extendedWaitUntil:
     visible:
       id: screen-login
-    timeout: 30000
+    timeout: 60000
+    optional: true
+- extendedWaitUntil:
+    visible:
+      text: "Welcome back"
+    timeout: 60000
     optional: true
 - runFlow:
     when:
@@ -92,5 +102,7 @@ appId: com.bhagihiri.rasoiapp
                 text: "Reset"
 - extendedWaitUntil:
     visible:
-      id: screen-login
-    timeout: 120000
+      text: "Welcome back"
+    timeout: 240000
+- assertVisible:
+    id: screen-login

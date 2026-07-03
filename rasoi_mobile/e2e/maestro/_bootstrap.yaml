@@ -38,10 +38,10 @@ appId: com.bhagihiri.rasoiapp
 - runFlow:
     when:
       visible:
-        id: pantry-setup-skip
+        id: screen-pantry
     commands:
-      - tapOn:
-          id: pantry-setup-skip
+      - runFlow:
+          file: _skip-pantry-setup.yaml
 # Auto-guest may land on home, onboarding, or login (if guest bootstrap is slow).
 - extendedWaitUntil:
     visible:

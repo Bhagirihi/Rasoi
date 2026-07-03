@@ -27,7 +27,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}${PLAY_STORE_SEO_PATH}`,
       lastModified,
       changeFrequency: 'weekly',
-      priority: 0.95,
+      priority: 0.98,
     },
     {
       url: `${SITE_URL}/download`,

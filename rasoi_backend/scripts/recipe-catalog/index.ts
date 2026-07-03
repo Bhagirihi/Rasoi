@@ -16,6 +16,7 @@ import { CHINESE_BATCH2_RECIPES } from './chinese-batch2';
 import { CHINESE_EXTRA_RECIPES } from './chinese-extra';
 import { GOAN_BATCH2_RECIPES } from './goan-batch2';
 import { GOAN_EXTRA_RECIPES } from './goan-extra';
+import { HOUSEHOLD_STAPLES_RECIPES } from './household-staples-batch';
 import { GUJARATI_BATCH2_RECIPES } from './gujarati-batch2';
 import { GUJARATI_EXTRA_RECIPES } from './gujarati-extra';
 import { HYDERABADI_BATCH2_RECIPES } from './hyderabadi-batch2';
@@ -39,6 +40,7 @@ import { STREET_BATCH2_RECIPES } from './street-batch2';
 import { STREET_EXTRA_RECIPES } from './street-extra';
 import type { RecipeCatalogEntry } from './types';
 import { resolveRecipeSteps } from './step-builder';
+import { buildRecipeDedupePlan, buildExtendedCleanupPlan } from '../recipe-dedupe';
 
 const VALID_KITCHEN_STYLES = new Set([
   'gujarati',
@@ -122,6 +124,7 @@ const EXTRA_RECIPES: RecipeCatalogEntry[] = [
   ...ALL_CUISINES_BATCH8_RECIPES,
   ...ALL_CUISINES_BATCH9_RECIPES,
   ...MARKETING_AD_MISSING_RECIPES,
+  ...HOUSEHOLD_STAPLES_RECIPES,
 ];
 
 function resolveKitchenStyleId(styleId: string | undefined): string | undefined {
@@ -161,9 +164,28 @@ function sanitizeEntry(entry: RecipeCatalogEntry): RecipeCatalogEntry {
   };
 }
 
-export const ALL_CATALOG_RECIPES: RecipeCatalogEntry[] = [...BASE_RECIPES, ...EXTRA_RECIPES].map(
+export const RAW_CATALOG_RECIPES: RecipeCatalogEntry[] = [...BASE_RECIPES, ...EXTRA_RECIPES].map(
   sanitizeEntry,
 );
+
+const DEDUPE_PLAN = buildRecipeDedupePlan(RAW_CATALOG_RECIPES);
+
+/** After exact-title dedupe only (matches Supabase before extended cleanup). */
+export const EXACT_DEDUPED_CATALOG_RECIPES: RecipeCatalogEntry[] = DEDUPE_PLAN.dedupedRecipes;
+
+const EXTENDED_CLEANUP_PLAN = buildExtendedCleanupPlan(EXACT_DEDUPED_CATALOG_RECIPES);
+
+/** Canonical catalog — exact-title dedupe + extended non-marketing cleanup. */
+export const ALL_CATALOG_RECIPES: RecipeCatalogEntry[] = EXTENDED_CLEANUP_PLAN.dedupedRecipes;
+
+export const RECIPE_DEDUPE_REMOVED_IDS = new Set([
+  ...DEDUPE_PLAN.removeIds,
+  ...EXTENDED_CLEANUP_PLAN.removeIds,
+]);
+export const RECIPE_DEDUPE_REMAP = new Map([
+  ...DEDUPE_PLAN.remap,
+  ...EXTENDED_CLEANUP_PLAN.remap,
+]);
 
 export function countByKitchenStyle(): Record<string, number> {
   const counts: Record<string, number> = {};

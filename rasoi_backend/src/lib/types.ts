@@ -41,10 +41,12 @@ export interface RecipeResponse {
   dietType: DietType;
   difficulty: RecipeDifficulty;
   description: string;
+  descriptionHi?: string;
   imageUrl: string;
   tags: RecipeTag[];
   ingredients: RecipeIngredient[];
   steps?: string[];
+  stepsHi?: string[];
   published: boolean;
   createdAt: string;
   updatedAt: string;

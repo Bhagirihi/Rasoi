@@ -78,18 +78,8 @@ appId: com.bhagihiri.rasoiapp
           id: trial-continue
 - runFlow:
     file: _dismiss-permissions.yaml
-- extendedWaitUntil:
-    visible:
-      id: screen-pantry
-    timeout: 60000
-    optional: true
 - runFlow:
-    when:
-      visible:
-        id: pantry-setup-skip
-    commands:
-      - tapOn:
-          id: pantry-setup-skip
+    file: _skip-pantry-setup.yaml
 - extendedWaitUntil:
     visible:
       id: screen-home

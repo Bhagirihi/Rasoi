@@ -224,9 +224,18 @@ export default function RecipeDetailScreen() {
   const displaySteps = useMemo(() => {
     if (!recipe) return [];
     if (stepsLang === "hi") {
+      if (recipe.stepsHi?.length) return recipe.stepsHi;
       return getRecipeStepsHi(recipe.id, recipe.title, recipe);
     }
     return recipe.steps ?? getRecipeSteps(recipe.id, recipe.title);
+  }, [recipe, stepsLang]);
+
+  const displayDescription = useMemo(() => {
+    if (!recipe) return "";
+    if (stepsLang === "hi" && recipe.descriptionHi?.trim()) {
+      return recipe.descriptionHi;
+    }
+    return recipe.description;
   }, [recipe, stepsLang]);
 
   const scaledRecipe = useMemo(() => {
@@ -415,7 +424,7 @@ export default function RecipeDetailScreen() {
           </View>
 
           <Text style={[styles.description, surface.description]}>
-            {recipe.description}
+            {displayDescription}
           </Text>
 
           <RecipeSafetyDisclaimer />

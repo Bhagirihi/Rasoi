@@ -1,9 +1,7 @@
-# TC-015: Login — verify OTP and reach home
+# TC-015: Login — verify OTP and reach home (continues session after 10-login-send-otp)
 # Env: QA_OTP
 appId: com.bhagihiri.rasoiapp
 ---
-- launchApp:
-    stopApp: false
 - extendedWaitUntil:
     visible:
       text: "Check your email"
@@ -15,6 +13,7 @@ appId: com.bhagihiri.rasoiapp
     commands:
       - tapOn:
           id: login-otp-input
+      - eraseText
       - inputText: ${QA_OTP}
 - runFlow:
     when:
@@ -22,6 +21,7 @@ appId: com.bhagihiri.rasoiapp
         id: login-otp-input
     commands:
       - tapOn: "123456"
+      - eraseText
       - inputText: ${QA_OTP}
 - hideKeyboard
 - tapOn:

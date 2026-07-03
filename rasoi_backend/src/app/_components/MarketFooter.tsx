@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { PLAY_STORE_SEO_PATH } from '@/lib/app-download';
+import { PLAY_STORE_LISTING_URL, PLAY_STORE_SEO_PATH } from '@/lib/app-download';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 import { getAllMarkets } from '@/lib/markets';
 
@@ -53,14 +53,15 @@ export default function MarketFooter({ showIndiaAppLinks = false }: MarketFooter
           <div className="flex flex-wrap items-center gap-6">
             {showIndiaAppLinks ? (
               <>
-                <Link
-                  href={PLAY_STORE_SEO_PATH}
+                <a
+                  href={PLAY_STORE_LISTING_URL}
                   className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+                  rel="noopener noreferrer"
                 >
                   Google Play
-                </Link>
-                <Link href="/download" className="font-semibold hover:text-[#c45c2a]">
-                  Download APK
+                </a>
+                <Link href={PLAY_STORE_SEO_PATH} className="font-semibold hover:text-[#c45c2a]">
+                  Play Store page
                 </Link>
               </>
             ) : null}

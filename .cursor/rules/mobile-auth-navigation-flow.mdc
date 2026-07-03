@@ -44,7 +44,7 @@ Guest may still use Login for returning accounts; Settings upgrade CTA goes to R
 
 ## Splash / cold start
 
-Splash → bootstrap → auto guest when no session → route via `app/index.tsx`. Do not add Login/Register buttons on splash.
+Splash → bootstrap → **Login screen when no session** → route via `app/index.tsx`. Cold start no longer auto-creates a guest; the user lands on `Login`, which offers **Create account** (Register) and **Explore as Guest**. The splash itself still shows no Login/Register buttons — routing happens in `app/index.tsx`.
 
 ## Key files
 

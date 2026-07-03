@@ -107,10 +107,12 @@ export type Recipe = {
   dietType: string;
   difficulty: string;
   description: string;
+  descriptionHi?: string | null;
   imageUrl: string;
   tags: string;
   ingredients: string;
   steps: string | null;
+  stepsHi?: string | null;
   primaryIngredient: string | null;
   popularityScore: number;
   qualityScore: number;

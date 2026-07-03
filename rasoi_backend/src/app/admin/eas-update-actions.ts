@@ -4,9 +4,12 @@ import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
 import {
+  getEasOtaAdminDisabledReason,
+  getEasOtaBranch,
   isEasOtaAdminConfigured,
   listEasProductionUpdates,
   rollbackLastEasOtaUpdate,
+  type EasOtaAdminStatus,
   type EasRollbackResult,
   type EasUpdateSummary,
 } from '@/lib/eas-updates';
@@ -17,14 +20,12 @@ async function requireAdminSession() {
   return admin;
 }
 
-export async function getEasOtaAdminStatusAction(): Promise<{
-  configured: boolean;
-  branch: string;
-}> {
+export async function getEasOtaAdminStatusAction(): Promise<EasOtaAdminStatus> {
   await requireAdminSession();
   return {
     configured: isEasOtaAdminConfigured(),
-    branch: process.env.EAS_OTA_BRANCH?.trim() || 'production',
+    branch: getEasOtaBranch(),
+    disabledReason: getEasOtaAdminDisabledReason() ?? undefined,
   };
 }
 

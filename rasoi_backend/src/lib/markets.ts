@@ -1,3 +1,5 @@
+import { APP_NAME } from '@/lib/app-download';
+
 export const MARKET_COOKIE = 'rasoi_market';
 
 export const MARKET_IDS = ['IN', 'US', 'CA', 'AU'] as const;
@@ -133,7 +135,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     hreflang: 'en-IN',
     countryName: 'India',
     geoCountryCodes: ['IN'],
-    title: 'Rasoi — Aaj Kya Banaye? | Indian Home Cooking, Pantry Match & Regional Recipes',
+    title: `${APP_NAME} | Indian Home Cooking, Pantry Match & Regional Recipes`,
     description:
       'Rasoi helps Indian home cooks answer "Aaj kya banaye?" — match recipes to your pantry, browse 1,200+ regional dishes, Veg & Jain filters, and practical guides on rasoiapplication.in.',
     keywords: [
@@ -151,8 +153,8 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'South Indian recipe app',
       'what to cook tonight app India',
     ],
-    heroBadge: 'Aaj kya banaye? · Indian home cooking',
-    heroTitle: 'Rasoi: Aaj Kya Banaye?',
+    heroBadge: 'Google Play · Aaj kya banaye? · Indian home cooking',
+    heroTitle: APP_NAME,
     heroSubtitle: 'Decide dinner from your pantry and your region.',
     heroBody:
       'Discover regional dishes, match recipes to what you already have, save favourites, and shop missing ingredients via Blinkit, Zepto, Instamart, Zomato, or Swiggy — built for real Indian kitchens.',
@@ -178,7 +180,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     plusPricing: '₹49/month or ₹499/year (save ~15% vs monthly)',
     faqs: [
       {
-        question: 'What is Rasoi: Aaj Kya Banaye?',
+        question: `What is ${APP_NAME}?`,
         answer:
           'Rasoi answers the daily question "Aaj kya banaye?" for Indian home cooks — dinner ideas from your pantry, 1,200+ regional recipes, and filters for Veg, Jain, Egg, and Non-Veg.',
       },

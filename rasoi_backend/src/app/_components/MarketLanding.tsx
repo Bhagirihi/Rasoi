@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import MarketFooter from '@/app/_components/MarketFooter';
+import { PLAY_STORE_LISTING_URL, PLAY_STORE_SEO_PATH } from '@/lib/app-download';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import SponsorApplyForm from '@/app/_components/SponsorApplyForm';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
@@ -69,21 +70,35 @@ export default function MarketLanding({ market, recipeCount }: MarketLandingProp
               <p className="mt-6 max-w-xl text-lg leading-relaxed text-[#6b6560]">{market.heroBody}</p>
               <div className="mt-8 flex flex-wrap gap-4">
                 {isIndia ? (
-                  <Link
-                    href="/indian-recipe-app"
+                  <>
+                    <a
+                      href={PLAY_STORE_LISTING_URL}
+                      className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
+                      rel="noopener noreferrer"
+                    >
+                      Get it on Google Play
+                    </a>
+                    <Link
+                      href={PLAY_STORE_SEO_PATH}
+                      className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-[#c9a227]/50"
+                    >
+                      Play Store listing
+                    </Link>
+                    <Link
+                      href="/indian-recipe-app"
+                      className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-[#c9a227]/50"
+                    >
+                      Browse recipe guides
+                    </Link>
+                  </>
+                ) : (
+                  <a
+                    href="#features"
                     className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
                   >
-                    Browse recipe guides
-                  </Link>
-                ) : null}
-                <a
-                  href="#features"
-                  className={`rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-[#c9a227]/50${
-                    isIndia ? '' : ' bg-[#14110f] text-[#f5f0e8] hover:bg-[#1c1714] hover:border-transparent'
-                  }`}
-                >
-                  Explore features
-                </a>
+                    Explore features
+                  </a>
+                )}
                 {isIndia ? (
                   <Link
                     href="/aaj-kya-banaye"

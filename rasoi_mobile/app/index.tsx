@@ -27,12 +27,10 @@ export default function Index() {
     pendingTrialWelcome,
     pendingPantrySetup,
     userCity,
-    loginAsGuest,
   } = useAppContext();
   const [legalReady, setLegalReady] = useState(false);
   const [permissionsReady, setPermissionsReady] = useState(false);
   const [permissionsRedirect, setPermissionsRedirect] = useState<string | null>(null);
-  const [guestAttempted, setGuestAttempted] = useState(false);
   const [guestRouteReady, setGuestRouteReady] = useState(false);
   const [guestBootstrapHref, setGuestBootstrapHref] = useState<string | null>(null);
 
@@ -69,25 +67,6 @@ export default function Index() {
   }, [hasCompletedOnboarding, isHydrated, isLoggedIn, userCity]);
 
   useEffect(() => {
-    if (!legalReady || !isHydrated || isLoggedIn || guestAttempted) return;
-
-    let cancelled = false;
-    void (async () => {
-      try {
-        await loginAsGuest();
-      } catch {
-        // User can sign in manually on the login screen.
-      } finally {
-        if (!cancelled) setGuestAttempted(true);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [guestAttempted, isHydrated, isLoggedIn, legalReady, loginAsGuest]);
-
-  useEffect(() => {
     if (!isHydrated || !isLoggedIn || hasCompletedOnboarding) {
       setGuestRouteReady(true);
       setGuestBootstrapHref(null);
@@ -109,14 +88,12 @@ export default function Index() {
     };
   }, [hasCompletedOnboarding, isHydrated, isLoggedIn]);
 
-  const bootstrappingGuest = legalReady && isHydrated && !isLoggedIn && !guestAttempted;
   const bootstrappingGuestRoute =
     isLoggedIn && !hasCompletedOnboarding && !guestRouteReady;
 
   if (
     !legalReady ||
     !isHydrated ||
-    bootstrappingGuest ||
     bootstrappingGuestRoute ||
     (isLoggedIn && hasCompletedOnboarding && !permissionsReady)
   ) {

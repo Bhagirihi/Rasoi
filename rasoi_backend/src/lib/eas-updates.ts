@@ -36,6 +36,12 @@ export type EasRollbackResult = {
   previousHeadGroup?: string;
 };
 
+export type EasOtaAdminStatus = {
+  configured: boolean;
+  branch: string;
+  disabledReason?: string;
+};
+
 function requireExpoToken(): string {
   const token = process.env.EXPO_TOKEN?.trim();
   if (!token) {
@@ -46,7 +52,7 @@ function requireExpoToken(): string {
   return token;
 }
 
-function resolveMobileRoot(): string {
+function findMobileRoot(): string | null {
   const candidates = [
     path.join(process.cwd(), 'rasoi_mobile'),
     path.join(process.cwd(), '..', 'rasoi_mobile'),
@@ -58,7 +64,16 @@ function resolveMobileRoot(): string {
     }
   }
 
-  throw new Error('rasoi_mobile directory not found (expected app.json beside backend).');
+  return null;
+}
+
+function resolveMobileRoot(): string {
+  const mobileRoot = findMobileRoot();
+  if (mobileRoot) return mobileRoot;
+
+  throw new Error(
+    'rasoi_mobile is not available in this backend runtime. Run EAS OTA commands locally from the monorepo.',
+  );
 }
 
 async function runEasCli(args: string[]): Promise<{ stdout: string; stderr: string }> {
@@ -113,11 +128,23 @@ export function getEasOtaBranch(): string {
   return process.env.EAS_OTA_BRANCH?.trim() || DEFAULT_OTA_BRANCH;
 }
 
+export function getEasOtaAdminDisabledReason(): string | null {
+  if (!process.env.EXPO_TOKEN?.trim()) {
+    return 'EXPO_TOKEN is not set on this backend.';
+  }
+  if (!findMobileRoot()) {
+    return 'rasoi_mobile/app.json is not available in this backend runtime. Run EAS OTA commands locally from the monorepo.';
+  }
+  return null;
+}
+
 export function isEasOtaAdminConfigured(): boolean {
-  return Boolean(process.env.EXPO_TOKEN?.trim());
+  return getEasOtaAdminDisabledReason() === null;
 }
 
 export async function listEasProductionUpdates(limit = 8): Promise<EasUpdateSummary[]> {
+  if (!isEasOtaAdminConfigured()) return [];
+
   const branch = getEasOtaBranch();
   const { stdout } = await runEasCli([
     'update:list',

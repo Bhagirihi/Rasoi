@@ -2,7 +2,7 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
 
 /** Matches Google Play listing title — use in SEO titles and JSON-LD. */
-export const APP_NAME = 'Rasoi: Aaj Kya Banaye?';
+export const APP_NAME = 'Rasoi App: Aaj Kya Banaye?';
 
 export const APP_SHORT_NAME = 'Rasoi';
 
@@ -28,8 +28,11 @@ export const ANDROID_APK_URL = `${SITE_URL}/api/download/apk`;
 
 export const APP_DOWNLOAD_PATH = '/download';
 
-/** Keyword-rich public URL for Google Play SEO (indexable landing page). */
-export const PLAY_STORE_SEO_PATH =
+/** Canonical indexable URL for Google Play SEO landing page. */
+export const PLAY_STORE_SEO_PATH = '/play-store';
+
+/** Legacy keyword-rich path — 301 redirects to PLAY_STORE_SEO_PATH. */
+export const PLAY_STORE_LEGACY_SEO_PATH =
   '/google-play/rasoi-aaj-kya-banaye-indian-recipe-app-android';
 
 /** Short redirect — 302 to Play Store listing (share in campaigns). */

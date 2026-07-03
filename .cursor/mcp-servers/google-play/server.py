@@ -24,6 +24,7 @@ from play_client import (
     package_name,
     push_store_listing,
     rasoi_codebase_config,
+    upload_and_rollout_open_testing,
     rollout_rasoi_open_testing,
     rollout_rasoi_production,
     rollout_release,
@@ -204,12 +205,35 @@ def play_rollout_release(
 
 
 @mcp.tool()
-def play_rollout_rasoi_open_testing(version_code: int = 9, version_name: str = '1.0.8', package_name: str = '') -> str:
-    """Roll out Rasoi to Open testing (beta) with en-US + hi-IN release notes."""
+def play_rollout_rasoi_open_testing(
+    version_code: int = 11,
+    version_name: str = '1.0.10',
+    package_name: str = '',
+) -> str:
+    """Roll out an already-uploaded bundle to Open testing (beta) with all release-note locales from manifest JSON."""
     try:
         return _json(
             rollout_rasoi_open_testing(
                 version_code=version_code,
+                version_name=version_name,
+                pkg=package_name or None,
+            ),
+        )
+    except PlayError as exc:
+        return _json({'error': str(exc)})
+
+
+@mcp.tool()
+def play_upload_and_rollout_open_testing(
+    aab_path: str,
+    version_name: str = '1.0.10',
+    package_name: str = '',
+) -> str:
+    """Upload AAB to Play, then roll out to Open testing (beta) with all localized release notes."""
+    try:
+        return _json(
+            upload_and_rollout_open_testing(
+                aab_path=aab_path,
                 version_name=version_name,
                 pkg=package_name or None,
             ),

@@ -30,6 +30,7 @@ export function getRecipeStepsHi(
   recipe?: {
     ingredients: { name: string; isStaple: boolean }[];
     steps?: string[];
+    stepsHi?: string[];
     prepTime?: number;
     dietType?: string;
     difficulty?: string;
@@ -37,6 +38,10 @@ export function getRecipeStepsHi(
     description?: string;
   },
 ): string[] {
+  if (recipe?.stepsHi && recipe.stepsHi.length > 0) {
+    return recipe.stepsHi;
+  }
+
   if (RECIPE_STEPS_HI[recipeId]) {
     return RECIPE_STEPS_HI[recipeId];
   }

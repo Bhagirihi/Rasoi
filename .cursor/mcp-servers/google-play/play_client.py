@@ -23,7 +23,7 @@ OAUTH_REDIRECT_PORT = 8766
 
 DEFAULT_PACKAGE = 'com.bhagihiri.rasoiapp'
 DEFAULT_REGIONS_VERSION = '2025/01'
-DEFAULT_DEVELOPER_NAME = 'Bhagihiri Applications'
+DEFAULT_DEVELOPER_NAME = 'Karbh It Solutions'
 DEFAULT_APP_TITLE = 'Rasoi APP'
 
 
@@ -490,7 +490,7 @@ def full_rasoi_setup(*, pkg: str | None = None, activate_subscriptions: bool = T
     if not verify.get('ok'):
         steps['status'] = 'blocked'
         steps['message'] = (
-            'App not reachable. Create "Rasoi APP" in Play Console under Bhagihiri Applications first.'
+            'App not reachable. Create "Rasoi APP" in Play Console under Karbh It Solutions first.'
         )
         return steps
 
@@ -521,6 +521,27 @@ def convert_region_prices(price_inr: float, pkg: str | None = None) -> dict[str,
         )
         .execute()
     )
+
+
+def load_release_notes(version_name: str | None = None) -> list[dict[str, str]]:
+    """Load Play release notes from store/play-console/release-notes-{version}.json."""
+    manifest = load_manifest()
+    vn = (version_name or manifest.get('application', {}).get('versionName') or '').strip()
+    notes_dir = manifest_path().parent
+    candidates = [notes_dir / f'release-notes-{vn}.json'] if vn else []
+    candidates.append(notes_dir / 'release-notes-1.0.10.json')
+    path = next((p for p in candidates if p.exists()), None)
+    if path is None:
+        raise PlayError(f'Release notes JSON not found for version "{vn}" under {notes_dir}')
+    data = json.loads(path.read_text(encoding='utf-8'))
+    notes: list[dict[str, str]] = []
+    for key, text in data.items():
+        if key in {'versionName', 'versionCode'} or not isinstance(text, str):
+            continue
+        notes.append({'language': key, 'text': text})
+    if not notes:
+        raise PlayError(f'No localized release notes in {path}')
+    return notes
 
 
 TRACK_ALIASES = {
@@ -618,40 +639,89 @@ def rollout_release(
 
 def rollout_rasoi_open_testing(
     *,
-    version_code: int = 9,
-    version_name: str = '1.0.8',
+    version_code: int | None = None,
+    version_name: str | None = None,
     pkg: str | None = None,
 ) -> dict[str, Any]:
-    notes = [
-        {
-            'language': 'en-US',
-            'text': (
-                '• Opens faster — no Terms screen when you launch the app\n'
-                '• Smoother login and permission setup\n'
-                '• Easier to turn on meal reminders\n'
-                '• More stable — better recovery if something goes wrong\n'
-                '• Bug fixes in onboarding and settings'
-            ),
-        },
-        {
-            'language': 'hi-IN',
-            'text': (
-                '• ऐप तेज़ खुलता है — ओपन पर Terms स्क्रीन नहीं\n'
-                '• लॉगिन और अनुमति सेटअप आसान\n'
-                '• भोजन रिमाइंडर चालू करना आसान\n'
-                '• ऐप ज़्यादा स्थिर — गड़बड़ी पर बेहतर रिकवरी\n'
-                '• ऑनबोर्डिंग और सेटिंग्स में सुधार'
-            ),
-        },
-    ]
+    manifest = load_manifest()
+    app = manifest.get('application', {})
+    vn = (version_name or app.get('versionName') or '1.0.10').strip()
+    vc = version_code if version_code is not None else int(app.get('versionCode', 11))
+    notes = load_release_notes(vn)
     return rollout_release(
         track='beta',
-        version_code=version_code,
+        version_code=vc,
         release_notes=notes,
         status='completed',
-        name=version_name,
+        name=vn,
         pkg=pkg,
     )
+
+
+def upload_and_rollout_open_testing(
+    *,
+    aab_path: str,
+    version_name: str | None = None,
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    """Upload an AAB and roll it out to Open testing (beta) with all release-note locales."""
+    from googleapiclient.http import MediaFileUpload
+
+    path = Path(aab_path).expanduser().resolve()
+    if not path.exists():
+        raise PlayError(f'AAB not found: {path}')
+
+    pkg = (pkg or package_name()).strip()
+    manifest = load_manifest()
+    app = manifest.get('application', {})
+    vn = (version_name or app.get('versionName') or '1.0.10').strip()
+    notes = load_release_notes(vn)
+
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+
+    media = MediaFileUpload(str(path), mimetype='application/octet-stream', resumable=True)
+    bundle = (
+        service.edits()
+        .bundles()
+        .upload(packageName=pkg, editId=edit_id, media_body=media)
+        .execute()
+    )
+    version_code = int(bundle['versionCode'])
+
+    release: dict[str, Any] = {
+        'versionCodes': [str(version_code)],
+        'status': 'completed',
+        'name': vn,
+        'releaseNotes': [
+            {'language': note['language'], 'text': note['text'][:500]}
+            for note in notes
+            if note.get('language') and note.get('text')
+        ],
+    }
+    updated = (
+        service.edits()
+        .tracks()
+        .update(
+            packageName=pkg,
+            editId=edit_id,
+            track='beta',
+            body={'track': 'beta', 'releases': [release]},
+        )
+        .execute()
+    )
+    committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
+    return {
+        'package_name': pkg,
+        'track': 'beta',
+        'aab_path': str(path),
+        'version_code': version_code,
+        'version_name': vn,
+        'release_note_languages': [note['language'] for note in notes],
+        'release': updated,
+        'commit': committed,
+    }
 
 
 def rollout_rasoi_production(

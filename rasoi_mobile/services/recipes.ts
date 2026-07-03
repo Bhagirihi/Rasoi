@@ -203,10 +203,12 @@ type ApiRecipe = {
   dietType: Recipe['dietType'];
   difficulty: Recipe['difficulty'];
   description: string;
+  descriptionHi?: string;
   imageUrl: string;
   tags: Recipe['tags'];
   ingredients: Recipe['ingredients'];
   steps?: string[];
+  stepsHi?: string[];
   published: boolean;
 };
 
@@ -234,10 +236,12 @@ function mapApiRecipe(recipe: ApiRecipe): Recipe {
     dietType: recipe.dietType,
     difficulty: recipe.difficulty,
     description: recipe.description,
+    descriptionHi: recipe.descriptionHi,
     imageUrl: recipe.imageUrl,
     tags: recipe.tags ?? [],
     ingredients: normalizeRecipeIngredients(recipe.ingredients),
     steps: recipe.steps,
+    stepsHi: recipe.stepsHi,
   };
 }
 

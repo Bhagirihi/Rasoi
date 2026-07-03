@@ -92,7 +92,7 @@ const updatesUrl = `https://u.expo.dev/${EAS_PROJECT_ID}`;
 
 export default (): ExpoConfig => ({
   ...base,
-  runtimeVersion: base.version ?? '1.0.8',
+  runtimeVersion: base.version ?? '1.0.10',
   updates: {
     ...(typeof base.updates === 'object' ? base.updates : {}),
     url: updatesUrl,

@@ -14,6 +14,8 @@ import type {
   UserProfileResponse,
 } from '@/lib/types';
 import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
+import { buildRecipeDescription, buildRecipeDescriptionHi } from '@/lib/recipe-description';
+import { buildDetailedStepsHi } from '@/lib/recipe-content-hi';
 import { resolveStepsForRecipe } from '@/lib/recipe-steps';
 
 export function parseJson<T>(value: string, fallback: T): T {
@@ -29,6 +31,11 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
   const resolvedKitchenStyleIds =
     kitchenStyleIds.length > 0 ? kitchenStyleIds : [recipe.kitchenStyleId];
 
+  const ingredients = normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, []));
+  const steps = resolveStepsForRecipe(recipe);
+  const storedStepsHi = parseJson<string[]>(recipe.stepsHi ?? '[]', []);
+  const storedDescHi = recipe.descriptionHi?.trim() ?? '';
+
   return {
     id: recipe.id,
     title: recipe.title,
@@ -39,11 +46,42 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
     kitchenStyleIds: resolvedKitchenStyleIds,
     dietType: recipe.dietType as DietType,
     difficulty: recipe.difficulty as RecipeDifficulty,
-    description: recipe.description,
+    description: recipe.description?.trim() || buildRecipeDescription({
+      title: recipe.title,
+      kitchenStyleId: recipe.kitchenStyleId,
+      dietType: recipe.dietType,
+      ingredients,
+      prepTime: recipe.prepTime,
+      difficulty: recipe.difficulty,
+      description: recipe.description,
+      steps,
+    }),
+    descriptionHi:
+      storedDescHi ||
+      buildRecipeDescriptionHi({
+        title: recipe.title,
+        kitchenStyleId: recipe.kitchenStyleId,
+        dietType: recipe.dietType,
+        ingredients,
+        prepTime: recipe.prepTime,
+        difficulty: recipe.difficulty,
+        steps,
+      }),
     imageUrl: recipe.imageUrl,
     tags: parseJson<RecipeTag[]>(recipe.tags, []),
-    ingredients: normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, [])),
-    steps: resolveStepsForRecipe(recipe),
+    ingredients,
+    steps,
+    stepsHi:
+      storedStepsHi.length > 0 ? storedStepsHi : buildDetailedStepsHi({
+        title: recipe.title,
+        kitchenStyleId: recipe.kitchenStyleId,
+        dietType: recipe.dietType,
+        ingredients,
+        prepTime: recipe.prepTime,
+        difficulty: recipe.difficulty,
+        description: recipe.description,
+        steps,
+      }),
     published: recipe.published,
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),

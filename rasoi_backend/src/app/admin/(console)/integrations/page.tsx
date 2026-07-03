@@ -18,10 +18,20 @@ import {
   INTEGRATION_EMAIL_EXCLUSIONS,
   INTEGRATION_SERVICES,
 } from '@/lib/integrations-catalog';
+import {
+  getEasOtaAdminDisabledReason,
+  getEasOtaBranch,
+  isEasOtaAdminConfigured,
+} from '@/lib/eas-updates';
 
 export default async function IntegrationsAdminPage() {
   const [envStatus, appConfig] = await Promise.all([Promise.resolve(getBackendEnvStatus()), getAppConfig()]);
   const grouped = groupIntegrationsByCategory(INTEGRATION_SERVICES);
+  const easStatus = {
+    configured: isEasOtaAdminConfigured(),
+    branch: getEasOtaBranch(),
+    disabledReason: getEasOtaAdminDisabledReason() ?? undefined,
+  };
 
   return (
     <AdminPageLayout>
@@ -57,7 +67,7 @@ export default async function IntegrationsAdminPage() {
       </div>
 
       <AdminPanel title="Mobile OTA (EAS Update)" description="Production JS updates without a new APK.">
-        <EasUpdatePanel />
+        <EasUpdatePanel initialStatus={easStatus} />
       </AdminPanel>
 
       <AdminPanel title="Supabase data sync" description="Mirror auth users and content into Rasoi tables.">

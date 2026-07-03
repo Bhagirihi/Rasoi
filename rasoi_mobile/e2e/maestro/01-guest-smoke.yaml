@@ -1,8 +1,8 @@
-# Guest smoke — bootstrap → guest login (if needed) → onboarding gates → all tabs
+# Guest smoke — login first → Explore as Guest → onboarding → all tabs
 appId: com.bhagihiri.rasoiapp
 ---
 - runFlow:
-    file: _bootstrap.yaml
+    file: _bootstrap-to-login.yaml
 - runFlow:
     when:
       visible:
