@@ -113,7 +113,11 @@ export async function syncRevenueCatUser(
     }
     return;
   }
-  await Purchases.logOut();
+
+  const appUserId = await Purchases.getAppUserID();
+  if (!appUserId.startsWith('$RCAnonymousID:')) {
+    await Purchases.logOut();
+  }
 }
 
 export function hasRasoiPlusEntitlement(customerInfo: CustomerInfo): boolean {

@@ -2,7 +2,6 @@ import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { colors } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { hasLegalConsent } from '@/utils/legalConsent';
@@ -13,11 +12,6 @@ import {
   permissionsOnboardingHref,
 } from '@/utils/permissionsOnboarding';
 import { ensureTelemetryStarted } from '@/utils/telemetry';
-
-const BOOTSTRAP_STEPS = [
-  { message: 'Opening Rasoi…', subtitle: 'Loading your kitchen' },
-  { message: 'Syncing preferences…', subtitle: 'Just a moment' },
-];
 
 export default function Index() {
   const {
@@ -97,11 +91,9 @@ export default function Index() {
     bootstrappingGuestRoute ||
     (isLoggedIn && hasCompletedOnboarding && !permissionsReady)
   ) {
-    return (
-      <View style={styles.loading}>
-        <AppSavingOverlay visible steps={BOOTSTRAP_STEPS} />
-      </View>
-    );
+    // LaunchSplash covers cold start — avoid mounting Reanimated overlay here
+    // (fast hydration → login redirect was crashing Fabric on abrupt teardown).
+    return <View style={styles.loading} />;
   }
 
   if (!isLoggedIn) {
