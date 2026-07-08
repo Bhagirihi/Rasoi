@@ -43,6 +43,7 @@ import {
 } from '@/utils/location';
 import { useAppContext } from '@/context/AppContext';
 import { markPermissionsOnboardingComplete, getMissingPermissionsState } from '@/utils/permissionsOnboarding';
+import { loadSignupPreferences } from '@/utils/storage';
 import { resolvePostAuthHref } from '@/utils/authNavigation';
 
 type OnboardingStep = 'preferences' | 'notifications' | 'location';
@@ -76,6 +77,7 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState<OnboardingStep>('preferences');
   const [selectedDiet, setSelectedDiet] = useState<DietChoice | null>(null);
   const [selectedCuisines, setSelectedCuisines] = useState<CuisineId[]>([]);
+  const [skippedPreferenceStep, setSkippedPreferenceStep] = useState(false);
   const [notificationsPreference, setNotificationsPreference] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const finishingRef = useRef(false);
@@ -96,6 +98,30 @@ export default function OnboardingScreen() {
       setPermissionsGateReady(true);
     });
   }, [permissionsOnly, isHydrated, userCity, stepParam]);
+
+  useEffect(() => {
+    if (permissionsOnly) return;
+    void loadSignupPreferences().then((prefs) => {
+      if (!prefs) return;
+      setSelectedDiet(prefs.dietChoice);
+      setSelectedCuisines(prefs.favoriteCuisines);
+      setSkippedPreferenceStep(true);
+      setStep('notifications');
+    });
+  }, [permissionsOnly]);
+
+  const permissionEyebrow =
+    skippedPreferenceStep || permissionsOnly
+      ? step === 'notifications'
+        ? 'Step 1 of 2'
+        : step === 'location'
+          ? 'Step 2 of 2'
+          : undefined
+      : step === 'notifications'
+        ? 'Step 2 of 3'
+        : step === 'location'
+          ? 'Step 3 of 3'
+          : undefined;
 
   const finishPermissionsFromNotifications = async (notificationsEnabled: boolean) => {
     const state = await getMissingPermissionsState(userCity);
@@ -293,7 +319,7 @@ export default function OnboardingScreen() {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
-        eyebrow={permissionsOnly ? undefined : 'Step 2 of 3'}
+        eyebrow={permissionEyebrow}
         onEnable={handleEnableNotifications}
         onSkip={handleSkipNotifications}
         skipTestID={testIds.onboardingSkipNotify}
@@ -306,7 +332,7 @@ export default function OnboardingScreen() {
         }
         subtitle={
           <>
-            Rasoi sends 5 personalized recipe picks daily at{' '}
+            Rasoi sends up to 5 daily meal reminders with personalized picks at{' '}
             <Text style={styles.notifyBold}>{DAILY_REMINDER_TIME_LABEL}</Text> — for{' '}
             {DAILY_REMINDER_MEAL_SUMMARY}. Enable notifications to get them.
           </>
@@ -318,7 +344,7 @@ export default function OnboardingScreen() {
         }
         enableLabel="Enable & Continue"
         enableIcon={<Bell size={18} color={colors.charcoal} />}
-        infoText="Recommended — get personalized picks at breakfast, lunch, and dinner"
+        infoText={`Recommended — personalized picks at ${DAILY_REMINDER_MEAL_SUMMARY}`}
       />
     );
   }
@@ -327,7 +353,7 @@ export default function OnboardingScreen() {
     return (
       <PermissionOnboardingStep
         isSubmitting={isSubmitting}
-        eyebrow={permissionsOnly ? undefined : 'Step 3 of 3'}
+        eyebrow={permissionEyebrow}
         onEnable={handleEnableLocation}
         onSkip={handleSkipLocation}
         skipTestID={testIds.onboardingSkipLocation}
@@ -340,8 +366,8 @@ export default function OnboardingScreen() {
         }
         subtitle={
           <>
-            Allow location so Rasoi can surface local recipes and help sponsors reach home cooks
-            near you.
+            Allow location so Rasoi can show local recipe picks. We only use your city — never
+            track you in the background.
           </>
         }
         icon={
@@ -521,13 +547,13 @@ const styles = StyleSheet.create({
   },
   darkSubtitle: {
     marginTop: 12,
+    marginBottom: spacing.xl,
     fontSize: 16,
     lineHeight: 24,
     color: colors.dark.textMuted,
   },
   dietList: {
-    marginTop: 28,
-    gap: 14,
+    marginTop: 0,
   },
   dietCard: {
     flexDirection: 'row',
@@ -588,13 +614,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sectionLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: colors.dark.text,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    color: colors.primary,
     marginBottom: spacing.sm,
   },
   sectionLabelSpaced: {
-    marginTop: spacing.lg,
+    marginTop: spacing.xxl,
   },
   selectionBar: {
     marginTop: 20,

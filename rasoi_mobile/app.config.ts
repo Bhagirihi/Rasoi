@@ -78,7 +78,7 @@ function withFirebasePlugins(plugins: ExpoConfig['plugins']): ExpoConfig['plugin
       {
         ios: {
           useFrameworks: 'static',
-          forceStaticLinking: ['RNFBApp', 'RNFBAnalytics', 'RNFBCrashlytics'],
+          forceStaticLinking: ['RNFBApp', 'RNFBAnalytics', 'RNFBCrashlytics', 'RNFBAuth'],
         },
       },
     ],

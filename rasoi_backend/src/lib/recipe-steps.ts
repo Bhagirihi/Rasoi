@@ -24,20 +24,20 @@ const DETAILED_STEP_COUNT = 5;
 
 export function stepsLookVague(steps: string[]): boolean {
   if (steps.length === 0) return true;
+  const text = steps.join(' ');
   const vague = [
     'Prepare and portion ingredients',
     'Cook the base tempering',
     'Add hero ingredients',
     'Finish with garnish and serve hot',
-    'Adjust gravy consistency, finish with fresh coriander',
-    'Wash, peel, and cut',
-    'until vegetables or protein are tender but hold shape',
     'Rinse and drain Bread',
     'Rinse and drain bread',
     'the main grain',
-    'bhaji masala and butter on a hot tawa',
+    'Prepare pantry ingredients and hero components for',
+    'Cook aromatics in ghee or oil until fragrant and lightly caramelized',
+    'Add hero ingredients with spices and simmer to desired texture',
   ];
-  return steps.some((step) => vague.some((pattern) => step.includes(pattern)));
+  return vague.some((pattern) => text.includes(pattern));
 }
 
 /** Detect auto-generated curry/bread steps applied to the wrong dish title. */
@@ -61,6 +61,13 @@ export function stepsMismatchTitle(title: string, steps: string[]): boolean {
   if (t.includes('chutney') && curryMasala) return true;
   if (t.includes('halwa') && curryMasala) return true;
   if (/\bbread\b/.test(t) && t.includes('poha') && /rinse and drain/i.test(text)) return true;
+  if (/khichdi|khichri/.test(t) && /dhebra|knead into a soft dough|lemon-sized balls|pat each ball/i.test(text)) {
+    return true;
+  }
+  if (/khichdi|khichri/.test(t) && /onion-tomato masala thickens|gravy consistency/i.test(text)) return true;
+  if (/thepla|paratha|rotla|roti|bhakri|missi|naan|dhebra/.test(t) && curryMasala) return true;
+  if (/dosa|idli|uttapam|appam/.test(t) && curryMasala) return true;
+  if (/raab|porridge|raita|salad|soup|smoothie/.test(t) && curryMasala) return true;
   if (t.includes('dal') && /onion turns golden.*tomato.*masala thickens/i.test(text) && !/pressure-cook|tadka|whistles/.test(text)) {
     return false; // dal curry steps might be ok
   }
@@ -133,6 +140,9 @@ export function detectDishKind(title: string, ingredients: RecipeIngredient[]): 
   if (/\bbread\b/.test(t) && (t.includes('poha') || t.includes('upma'))) return 'bread-snack';
   if (t.includes('raita')) return 'raita';
   if (t.includes('salad') || t.includes('kachumber')) return 'salad';
+  if (t.includes('smoothie') || t.includes('shake') && !t.includes('milkshake bowl')) return 'smoothie';
+  if (t.includes('soup') || t.includes('shorba') || (t.includes('rasam') && !t.includes('sambar'))) return 'soup';
+  if (t.includes('porridge') || t.includes('raab') || t.includes('congee')) return 'porridge';
   if (t.includes('plain rice') || t === 'rice' || (t.includes('steamed') && t.includes('rice'))) return 'plain-rice';
   if (t.includes('noodle') || t.includes('pasta') || t.includes('macaroni')) return 'noodles';
   if (t.includes('chapati') || t.includes('phulka')) return 'bread';
@@ -164,12 +174,12 @@ export function detectDishKind(title: string, ingredients: RecipeIngredient[]): 
   ) {
     return 'fried';
   }
+  if (t.includes('khichdi') || t.includes('khichri')) return 'khichdi';
   if (t.includes('dhebra') || ((t.includes('bajri') || t.includes('bajra')) && !t.includes('dal'))) return 'dhebra';
   if (t.includes('khandvi') || t.includes('locho') || t.includes('khichu') || t.includes('dhokla') || t.includes('khaman')) {
     return 'steamed';
   }
   if (t.includes('biryani') || t.includes('pulao') || t.includes('pulav')) return 'rice-layered';
-  if (t.includes('khichdi') || t.includes('khichri')) return 'khichdi';
   if (
     t.includes('paratha') ||
     t.includes('thepla') ||
@@ -424,6 +434,46 @@ function buildDrySabziSteps(input: RecipeStepInput): string[] {
     `Add ${hero}, turmeric, salt, and spice powders. Cook on medium heat, stirring occasionally, until tender and lightly browned.`,
     'Adjust seasoning and finish with fresh coriander if using.',
     `Serve ${title} hot with roti or rice. ${regionalTip(input, 'dry-sabzi')}`,
+  ];
+}
+
+function buildSmoothieSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+
+  return [
+    `Wash and prep ${hero} and any fruit or greens. Freeze banana or berries for 20 minutes if you want a thicker bowl.`,
+    `Add ingredients to a blender with a splash of milk, curd, or water. Blend on high until completely smooth and pourable.`,
+    `Taste and adjust sweetness with honey, dates, or jaggery. Add ice or more liquid to reach your preferred thickness.`,
+    `Pour into a chilled bowl and top with seeds, nuts, or fresh fruit if the title suggests a bowl-style serve.`,
+    `Serve ${title} immediately before it separates.`,
+  ];
+}
+
+function buildSoupSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+  const pairing = servingPairing(input.kitchenStyleId, 'curry');
+
+  return [
+    `Prep ${hero} and aromatics. For clear soups, keep vegetables in even bite-sized pieces; for creamy soups, reserve a portion for blending later.`,
+    `Heat oil or butter in a pot, sauté onion, ginger, and garlic until soft and fragrant without browning too dark.`,
+    `Add ${hero}, water or stock, salt, and pepper. Bring to a boil, then simmer gently until everything is tender and the broth tastes well seasoned.`,
+    `Adjust thickness: blend a ladleful for creaminess, or leave brothy. Balance with lemon, soy, vinegar, or cornflour slurry depending on the soup style.`,
+    `Serve ${title} piping hot with ${pairing} on the side if desired. ${regionalTip(input, 'soup')}`,
+  ];
+}
+
+function buildPorridgeSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+
+  return [
+    `Dry-roast or rinse ${hero} as needed. Bring water or milk to a boil in a heavy pan.`,
+    `Whisk in ${hero} slowly to avoid lumps, then reduce heat to low and cook, stirring often, until thick and smooth.`,
+    `Sweeten with jaggery or sugar, or keep savoury with salt, cumin, and ginger as the title suggests.`,
+    `Adjust consistency with a splash of hot water or milk. The porridge should coat a spoon comfortably.`,
+    `Serve ${title} warm, topped with ghee, nuts, or fresh herbs as appropriate.`,
   ];
 }
 
@@ -775,6 +825,15 @@ export function buildDetailedSteps(input: RecipeStepInput): string[] {
       break;
     case 'salad':
       steps = buildSaladSteps(normalized);
+      break;
+    case 'smoothie':
+      steps = buildSmoothieSteps(normalized);
+      break;
+    case 'soup':
+      steps = buildSoupSteps(normalized);
+      break;
+    case 'porridge':
+      steps = buildPorridgeSteps(normalized);
       break;
     case 'plain-rice':
       steps = buildPlainRiceSteps(normalized);

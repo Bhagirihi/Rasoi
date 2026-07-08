@@ -25,8 +25,8 @@ export default function Index() {
   const [legalReady, setLegalReady] = useState(false);
   const [permissionsReady, setPermissionsReady] = useState(false);
   const [permissionsRedirect, setPermissionsRedirect] = useState<string | null>(null);
-  const [guestRouteReady, setGuestRouteReady] = useState(false);
-  const [guestBootstrapHref, setGuestBootstrapHref] = useState<string | null>(null);
+  const [incompleteOnboardingReady, setIncompleteOnboardingReady] = useState(false);
+  const [incompleteOnboardingHref, setIncompleteOnboardingHref] = useState<string | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -62,8 +62,8 @@ export default function Index() {
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn || hasCompletedOnboarding) {
-      setGuestRouteReady(true);
-      setGuestBootstrapHref(null);
+      setIncompleteOnboardingReady(true);
+      setIncompleteOnboardingHref(null);
       return;
     }
 
@@ -71,10 +71,10 @@ export default function Index() {
     void (async () => {
       const legalDone = await hasLegalConsent();
       if (cancelled) return;
-      setGuestBootstrapHref(
-        legalDone ? '/(auth)/onboarding' : '/(auth)/legal-consent?from=guest',
+      setIncompleteOnboardingHref(
+        legalDone ? '/(auth)/onboarding' : '/(auth)/legal-consent?from=register',
       );
-      setGuestRouteReady(true);
+      setIncompleteOnboardingReady(true);
     })();
 
     return () => {
@@ -82,13 +82,13 @@ export default function Index() {
     };
   }, [hasCompletedOnboarding, isHydrated, isLoggedIn]);
 
-  const bootstrappingGuestRoute =
-    isLoggedIn && !hasCompletedOnboarding && !guestRouteReady;
+  const bootstrappingIncompleteOnboarding =
+    isLoggedIn && !hasCompletedOnboarding && !incompleteOnboardingReady;
 
   if (
     !legalReady ||
     !isHydrated ||
-    bootstrappingGuestRoute ||
+    bootstrappingIncompleteOnboarding ||
     (isLoggedIn && hasCompletedOnboarding && !permissionsReady)
   ) {
     // LaunchSplash covers cold start — avoid mounting Reanimated overlay here
@@ -100,8 +100,8 @@ export default function Index() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (!hasCompletedOnboarding && guestBootstrapHref) {
-    return <Redirect href={guestBootstrapHref} />;
+  if (!hasCompletedOnboarding && incompleteOnboardingHref) {
+    return <Redirect href={incompleteOnboardingHref} />;
   }
 
   if (permissionsRedirect) {

@@ -24,10 +24,12 @@ import AppDialogHost from '@/components/AppDialogHost';
 import TrialExpiredPaywallModal from '@/components/paywall/TrialExpiredPaywallModal';
 import TrialEndingSoonModal from '@/components/paywall/TrialEndingSoonModal';
 import EmailVerificationBridge from '@/components/auth/EmailVerificationBridge';
+import ShoppingReturnSheet from '@/components/shopping/ShoppingReturnSheet';
 import NotificationNavigationBridge from '@/components/NotificationNavigationBridge';
 import LocationSyncBridge from '@/components/LocationSyncBridge';
 import RevenueCatBridge from '@/components/RevenueCatBridge';
 import { AppProvider } from '@/context/AppContext';
+import { ShoppingSessionProvider } from '@/context/ShoppingSessionContext';
 import { AppDialogProvider } from '@/context/AppDialogContext';
 import { PartnersProvider } from '@/context/PartnersContext';
 import { ReferenceProvider } from '@/context/ReferenceContext';
@@ -164,6 +166,7 @@ function RootLayoutInner({
       <RecipesProvider>
         <ReferenceProvider>
           <AppProvider>
+            <ShoppingSessionProvider>
             <TonightRecipesProvider>
               <AppDialogProvider>
               <PartnersProvider>
@@ -219,10 +222,12 @@ function RootLayoutInner({
                   <TrialEndingSoonModal />
                   <TrialExpiredPaywallModal />
                   <EmailVerificationBridge />
+                  <ShoppingReturnSheet />
                 </View>
               </PartnersProvider>
               </AppDialogProvider>
             </TonightRecipesProvider>
+            </ShoppingSessionProvider>
           </AppProvider>
         </ReferenceProvider>
       </RecipesProvider>

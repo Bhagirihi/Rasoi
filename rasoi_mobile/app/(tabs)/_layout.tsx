@@ -1,7 +1,7 @@
 import { Redirect, Tabs, usePathname } from 'expo-router';
 import { useMemo } from 'react';
 import { Platform } from 'react-native';
-import { Bookmark, BookOpen, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
+import { Bookmark, BookOpen, CalendarDays, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { testIds } from '@/constants/testIds';
@@ -90,9 +90,17 @@ export default function TabLayout() {
       <Tabs.Screen
         name="recipes"
         options={{
-          title: 'Recipe',
+          title: 'Recipes',
           tabBarButtonTestID: testIds.tabRecipes,
           tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="plan"
+        options={{
+          title: 'Plan',
+          tabBarButtonTestID: testIds.tabPlan,
+          tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size - 2} />,
         }}
       />
       <Tabs.Screen

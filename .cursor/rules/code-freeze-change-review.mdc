@@ -35,6 +35,7 @@ alwaysApply: true
 
 - Auth & navigation: `.cursor/rules/mobile-auth-navigation-flow.mdc`
 - Pantry match % & missing-ingredient UX: `.cursor/rules/mobile-recipe-pantry-ux.mdc`
+- Recipe steps from DB only (never client templates): `.cursor/rules/recipe-steps-db-source.mdc`
 
 ## Release path (development → main)
 

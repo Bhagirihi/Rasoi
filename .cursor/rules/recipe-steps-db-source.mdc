@@ -1,0 +1,40 @@
+---
+description: Recipe cooking steps must come from Supabase/API — never client-side templates
+globs: rasoi_mobile/**,rasoi_backend/src/lib/recipe-steps.ts,rasoi_backend/scripts/**/fix-recipe*.ts,rasoi_backend/scripts/**/recipe-catalog/**
+alwaysApply: true
+---
+
+# Recipe steps — database is the only source of truth
+
+**Never ever show users cooking steps generated on the phone from templates.**
+
+All **5,388** recipes store `steps` (and `stepsHi`) in Supabase. The mobile app and API must **read and display those fields**. Wrong steps (e.g. Bread Poha with "Rinse and drain Pav…") happen when the app ignores DB steps and runs `generateRecipeSteps.ts` / `resolveStepsForRecipe()`.
+
+## Do not
+
+- Call `resolveStepsForRecipe`, `resolveRecipeSteps`, or `buildDetailedSteps` to **display** steps in the app.
+- Regenerate steps at recipe-detail time from title + ingredients templates.
+- "Fix" bad steps by improving mobile templates — fix **Supabase** instead.
+- Omit `steps` from API/detail fetches and backfill with generated text.
+
+## Do
+
+- **Mobile:** Parse `steps` / `stepsHi` from Supabase row or `/api/recipes/:id`. Use stored values when non-empty.
+- **API:** Return `steps` and `stepsHi` on detail routes; list views may omit for egress.
+- **Bad or missing steps:** Fix via backend (`recipe-steps.ts`, `fix-recipe-chef-quality-supabase.ts`, seed/catalog scripts) and write to Supabase — then ship.
+
+## Fallback (rare only)
+
+If `steps` is literally empty (`[]` / null) for a recipe, show a short "Steps coming soon" placeholder — **do not** substitute a generic dish template. Flag the recipe for a DB fix.
+
+## Forbidden pattern (example)
+
+```typescript
+// ❌ NEVER for user-facing steps
+steps: resolveStepsForRecipe({ title, ingredients, ... })
+
+// ✅ ALWAYS prefer DB
+steps: parseJson(recipe.steps, [])
+```
+
+Template helpers in `rasoi_mobile/utils/generateRecipeSteps.ts` and `rasoi_backend/src/lib/recipe-steps.ts` are for **offline seed/fix scripts only**, not runtime display.

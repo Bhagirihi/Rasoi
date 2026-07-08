@@ -231,4 +231,10 @@ export const authStyles = StyleSheet.create({
     lineHeight: 16,
     color: colors.muted,
   },
+  preferenceFieldError: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(229,57,53,0.35)',
+    padding: 8,
+  },
 });

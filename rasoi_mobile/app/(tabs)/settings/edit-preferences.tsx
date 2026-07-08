@@ -150,8 +150,8 @@ export default function EditPreferencesScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={[styles.intro, { color: themeColors.muted }]}>
-          Diet and region are set during signup — update them here anytime. Home only uses these
-          for recipe picks.
+          Diet and kitchen styles are set during onboarding — update them here anytime. Region
+          adjusts recipe picks; override it below if you cook across India.
         </Text>
 
         <SettingsGroupLabel label="Diet" />
@@ -190,8 +190,10 @@ export default function EditPreferencesScreen() {
           })}
         </ScrollView>
 
-        <SettingsGroupLabel label="Favourite cuisines" />
-        <Text style={[styles.sectionHint, { color: themeColors.muted }]}>Pick one or more — same as onboarding</Text>
+        <SettingsGroupLabel label="Kitchen styles" />
+        <Text style={[styles.sectionHint, { color: themeColors.muted }]}>
+          Pick one or more — regional & special collections, same as onboarding
+        </Text>
         <CuisinePreferenceList
           selected={draftCuisines}
           onToggle={toggleCuisine}
@@ -228,7 +230,8 @@ export default function EditPreferencesScreen() {
 
         <SettingsGroupLabel label="Allergies & intolerances" />
         <Text style={[styles.sectionHint, { color: themeColors.muted }]}>
-          Recipes with these ingredients will be hidden
+          Recipes with these ingredients will be hidden. Always read the full ingredient list —
+          not a substitute for medical advice.
         </Text>
         <ScrollView horizontal {...scrollIndicator} contentContainerStyle={styles.chipRow}>
           {COMMON_ALLERGY_OPTIONS.map((item) => {

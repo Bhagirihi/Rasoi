@@ -92,4 +92,4 @@ export function buildPartnerUrls(
   };
 }
 
-export { buildGroceryCheckoutQuery } from '@/constants/partners';
+export { buildGroceryCheckoutQuery, pickGroceryCheckoutItem } from '@/constants/partners';

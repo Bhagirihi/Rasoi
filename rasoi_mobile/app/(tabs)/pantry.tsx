@@ -174,7 +174,7 @@ export default function PantryScreen() {
             subtitle={
               pendingPantrySetup
                 ? "Tap what you keep at home."
-                : "Tap staples — we match recipes to your diet and cuisines."
+                : "Tap staples — we match recipes to your diet and kitchen styles."
             }
           />
 
@@ -270,11 +270,11 @@ export default function PantryScreen() {
           {cuisineSections.length > 0 ? (
             <>
               <PantrySectionLabel
-                title="For your cuisines"
+                title="For your kitchen styles"
                 hint={
                   preferenceSummary.cuisineLabels.length > 0
                     ? preferenceSummary.cuisineLabels.join(" · ")
-                    : "Extra items for your styles"
+                    : "Extra staples for your selected styles"
                 }
                 inline
               />

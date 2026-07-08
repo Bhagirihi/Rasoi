@@ -1,4 +1,5 @@
 import type { RecipeCatalogEntry } from './types';
+import { inferHeroIngredientFromTitle } from '../../src/lib/infer-hero-ingredient';
 
 type DietType = RecipeCatalogEntry['dietType'];
 type Difficulty = RecipeCatalogEntry['difficulty'];
@@ -74,21 +75,7 @@ function inferTags(idNumber: number, prepTime: number): string[] {
 }
 
 function inferProtein(title: string, fallback: string): string {
-  const lower = title.toLowerCase();
-  if (lower.includes('fish') || lower.includes('meen') || lower.includes('ilish')) return 'Fish';
-  if (lower.includes('prawn') || lower.includes('kolmi') || lower.includes('jhinga')) return 'Prawns';
-  if (lower.includes('crab')) return 'Crab';
-  if (lower.includes('mutton') || lower.includes('gosht') || lower.includes('lamb')) return 'Mutton';
-  if (lower.includes('chicken') || lower.includes('murgh')) return 'Chicken';
-  if (lower.includes('kaleji')) return 'Chicken liver';
-  if (lower.includes('keema')) return 'Keema';
-  if (lower.includes('egg') || lower.includes('anda') || lower.includes('omelette')) return 'Anda';
-  if (lower.includes('paneer')) return 'Paneer';
-  if (lower.includes('chana') || lower.includes('chole')) return 'Chana';
-  if (lower.includes('dal') || lower.includes('lentil')) return 'Dal';
-  if (lower.includes('mushroom')) return 'Mushroom';
-  if (lower.includes('soya') || lower.includes('chaap')) return 'Soya chaap';
-  return fallback;
+  return inferHeroIngredientFromTitle(title, fallback);
 }
 
 function ingredientsFor(

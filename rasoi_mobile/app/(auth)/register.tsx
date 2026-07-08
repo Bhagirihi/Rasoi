@@ -14,16 +14,17 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import GuestContinueModal from '@/components/auth/GuestContinueModal';
 import { FieldLabel } from '@/components/auth/FieldLabel';
 import TermsAcceptanceModal from '@/components/auth/TermsAcceptanceModal';
 import { authStyles as styles } from '@/components/auth/authStyles';
-import { gradients, scrollIndicator } from '@/constants/theme';
+import CuisinePreferenceList from '@/components/CuisinePreferenceList';
+import DietPreferenceList from '@/components/DietPreferenceList';
+import { gradients, scrollIndicator, type CuisineId, type DietChoice } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
-import { useAppContext, type AuthNavigationResult } from '@/context/AppContext';
-import { resolveGuestLoginHref, resolvePostAuthHref } from '@/utils/authNavigation';
+import { useAppContext } from '@/context/AppContext';
+import { useReferenceData } from '@/context/ReferenceContext';
 import { authError, authLog, maskEmail } from '@/utils/authLogger';
 import { isEmailDeliveryUnavailableError } from '@/utils/emailDeliveryErrors';
 import { warmApiConnection } from '@/utils/api';
@@ -32,43 +33,54 @@ import {
   getEmailValidationError,
   isValidEmail,
   isValidPhoneLength,
+  loadSignupPreferences,
   normalizeEmail,
   normalizeIndianPhone,
+  dietChoiceToFilter,
 } from '@/utils/storage';
+import { cuisinesToRegion } from '@/utils/kitchenStyles';
 import { scrollFieldIntoView } from '@/utils/scrollFieldIntoView';
+import {
+  clearVerifiedPhoneSignup,
+  getVerifiedPhoneDigits,
+  isPhoneVerificationSkipped,
+  resendFirebasePhoneOtp,
+  sendFirebasePhoneOtp,
+  verifyFirebasePhoneOtp,
+} from '@/services/firebasePhoneAuth';
 
-type RegisterStep = 'details' | 'otp';
-type FieldError = 'name' | 'phone' | 'email' | 'otp' | 'general' | null;
-type BusyAction = 'send' | 'verify' | 'resend' | 'guest' | null;
+type RegisterStep = 'details' | 'phone-otp' | 'email-otp';
+type FieldError = 'name' | 'phone' | 'email' | 'diet' | 'cuisine' | 'phone-otp' | 'otp' | 'general' | null;
+type BusyAction = 'send' | 'verify-phone' | 'resend-phone' | 'verify' | 'resend' | null;
 
 export default function RegisterScreen() {
   const router = useRouter();
   const {
     sendEmailOtp,
     verifyEmailOtpAndLogin,
-    loginAsGuest,
+    saveSignupPreferences,
     userName,
     userPhone,
     userEmail,
     isGuest,
-    continueWithPendingEmailVerification,
-    pendingPantrySetup,
   } = useAppContext();
+  const { kitchenStyles } = useReferenceData();
 
   const [step, setStep] = useState<RegisterStep>('details');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [selectedDiet, setSelectedDiet] = useState<DietChoice | null>(null);
+  const [selectedCuisines, setSelectedCuisines] = useState<CuisineId[]>([]);
+  const [phoneOtp, setPhoneOtp] = useState('');
   const [otp, setOtp] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [fieldError, setFieldError] = useState<FieldError>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [busyAction, setBusyAction] = useState<BusyAction>(null);
   const isSubmitting = busyAction !== null;
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [showGuestModal, setShowGuestModal] = useState(false);
-  const [guestName, setGuestName] = useState('');
-  const [guestError, setGuestError] = useState('');
   const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
 
   useEffect(() => {
@@ -80,8 +92,27 @@ export default function RegisterScreen() {
   }, [isGuest, userName, userPhone, userEmail]);
 
   useEffect(() => {
-    if (step === 'otp') warmApiConnection();
+    void loadSignupPreferences().then((prefs) => {
+      if (!prefs) return;
+      setSelectedDiet(prefs.dietChoice);
+      setSelectedCuisines(prefs.favoriteCuisines);
+    });
+  }, []);
+
+  useEffect(() => {
+    const activeIds = new Set(kitchenStyles.map((style) => style.id));
+    setSelectedCuisines((current) => current.filter((id) => activeIds.has(id)));
+  }, [kitchenStyles]);
+
+  useEffect(() => {
+    if (step === 'phone-otp' || step === 'email-otp') warmApiConnection();
   }, [step]);
+
+  useEffect(() => {
+    return () => {
+      clearVerifiedPhoneSignup();
+    };
+  }, []);
 
   const [keyboardInset, setKeyboardInset] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
@@ -89,6 +120,7 @@ export default function RegisterScreen() {
   const nameFieldRef = useRef<View>(null);
   const phoneFieldRef = useRef<View>(null);
   const emailFieldRef = useRef<View>(null);
+  const phoneOtpFieldRef = useRef<View>(null);
   const otpFieldRef = useRef<View>(null);
   const focusedFieldRef = useRef<View | null>(null);
   const keyboardLayoutRef = useRef({ height: 0, screenY: 0 });
@@ -127,14 +159,6 @@ export default function RegisterScreen() {
     };
   }, []);
 
-  const navigateAfterGuest = async (nav: AuthNavigationResult) => {
-    const href = await resolveGuestLoginHref(nav, {
-      userCity: nav.userCity,
-      pendingPantrySetup,
-    });
-    router.replace(href);
-  };
-
   const validateDetails = (): { name: string; phone: string; email: string } | null => {
     const trimmedName = name.trim();
     const normalizedPhone = normalizeIndianPhone(phone);
@@ -163,11 +187,41 @@ export default function RegisterScreen() {
       return null;
     }
 
+    if (!selectedDiet) {
+      setFieldError('diet');
+      setErrorMessage('Pick your diet (e.g. Veg) to continue.');
+      return null;
+    }
+
+    if (selectedCuisines.length === 0) {
+      setFieldError('cuisine');
+      setErrorMessage('Pick at least one kitchen style (e.g. Gujarati Home).');
+      return null;
+    }
+
     return {
       name: trimmedName,
       phone: normalizedPhone,
       email: normalizedEmail,
     };
+  };
+
+  const toggleCuisine = (id: CuisineId) => {
+    void Haptics.selectionAsync();
+    setSelectedCuisines((current) =>
+      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
+    );
+    if (fieldError === 'cuisine') setFieldError(null);
+  };
+
+  const persistSignupPreferences = async () => {
+    if (!selectedDiet || selectedCuisines.length === 0) return;
+    await saveSignupPreferences({
+      dietChoice: selectedDiet,
+      dietPreference: dietChoiceToFilter(selectedDiet),
+      favoriteCuisines: selectedCuisines,
+      regionalCuisine: cuisinesToRegion(selectedCuisines, kitchenStyles),
+    });
   };
 
   const handleSendOtp = async () => {
@@ -182,6 +236,7 @@ export default function RegisterScreen() {
       return;
     }
 
+    await persistSignupPreferences();
     await sendOtpForDetails(details);
   };
 
@@ -190,12 +245,43 @@ export default function RegisterScreen() {
     setEmailDeliveryBlocked(false);
     try {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      authLog('register:sendOtp', { email: maskEmail(details.email) });
+      authLog('register:sendPhoneOtp', { phoneLength: details.phone.length });
+
+      if (isPhoneVerificationSkipped()) {
+        await sendFirebasePhoneOtp(details.phone);
+        setPhoneVerified(true);
+        authLog('register:sendEmailOtp_after_phone_skip', { email: maskEmail(details.email) });
+        await sendEmailOtp(details.name, details.phone, details.email);
+        setStep('email-otp');
+        setOtp('');
+        return;
+      }
+
+      await sendFirebasePhoneOtp(details.phone);
+      setStep('phone-otp');
+      setPhoneOtp('');
+      setPhoneVerified(false);
+    } catch (error) {
+      authError('register:sendPhoneOtp_failed', error, { email: maskEmail(details.email) });
+      setFieldError('general');
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Could not send SMS verification code. Try again.',
+      );
+    } finally {
+      setBusyAction(null);
+    }
+  };
+
+  const sendEmailOtpAfterPhone = async (details: { name: string; phone: string; email: string }) => {
+    setBusyAction('send');
+    setEmailDeliveryBlocked(false);
+    try {
+      authLog('register:sendEmailOtp', { email: maskEmail(details.email) });
       await sendEmailOtp(details.name, details.phone, details.email);
-      setStep('otp');
+      setStep('email-otp');
       setOtp('');
     } catch (error) {
-      authError('register:sendOtp_failed', error, { email: maskEmail(details.email) });
+      authError('register:sendEmailOtp_failed', error, { email: maskEmail(details.email) });
       setFieldError('general');
       if (isEmailDeliveryUnavailableError(error)) {
         setEmailDeliveryBlocked(true);
@@ -214,28 +300,59 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleContinueWithoutEmailVerification = async (details: {
-    name: string;
-    phone: string;
-    email: string;
-  }) => {
-    setBusyAction('guest');
+  const handleVerifyPhoneOtp = async () => {
+    setFieldError(null);
+    setErrorMessage('');
+
+    const details = validateDetails();
+    if (!details) {
+      setStep('details');
+      return;
+    }
+
+    const code = phoneOtp.replace(/\D/g, '').trim();
+    if (code.length < 4) {
+      setFieldError('phone-otp');
+      setErrorMessage('Enter the SMS verification code.');
+      return;
+    }
+
+    setBusyAction('verify-phone');
     try {
-      const nav = await continueWithPendingEmailVerification({
-        email: details.email,
-        flow: 'signup',
-        name: details.name,
-        phone: details.phone,
-        termsAccepted,
-      });
-      setEmailDeliveryBlocked(false);
-      if (nav) {
-        router.replace('/(auth)/legal-consent?from=register');
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const verifiedPhone = await verifyFirebasePhoneOtp(code);
+      if (verifiedPhone !== details.phone) {
+        throw new Error('Verified mobile number does not match. Edit details and try again.');
       }
+      setPhoneVerified(true);
+      authLog('register:verifyPhoneOtp_success', { phoneLength: verifiedPhone.length });
+      await sendEmailOtpAfterPhone(details);
+    } catch (error) {
+      authError('register:verifyPhoneOtp_failed', error);
+      setFieldError('phone-otp');
+      setErrorMessage(
+        error instanceof Error ? error.message : 'Invalid or expired SMS code. Please try again.',
+      );
+      setBusyAction(null);
+    }
+  };
+
+  const handleResendPhoneOtp = async () => {
+    setFieldError(null);
+    setErrorMessage('');
+    setBusyAction('resend-phone');
+    try {
+      const details = validateDetails();
+      if (!details) {
+        setStep('details');
+        return;
+      }
+      await resendFirebasePhoneOtp(details.phone);
+      setErrorMessage('A new SMS code was sent to your mobile.');
     } catch (error) {
       setFieldError('general');
       setErrorMessage(
-        error instanceof Error ? error.message : 'Could not continue to the app. Please try again.',
+        error instanceof Error ? error.message : 'Could not resend SMS code. Try again.',
       );
     } finally {
       setBusyAction(null);
@@ -251,6 +368,15 @@ export default function RegisterScreen() {
       setStep('details');
       return;
     }
+
+    if (!phoneVerified && !isPhoneVerificationSkipped()) {
+      setFieldError('general');
+      setErrorMessage('Verify your mobile number before creating your account.');
+      setStep('phone-otp');
+      return;
+    }
+
+    const verifiedPhone = getVerifiedPhoneDigits() ?? details.phone;
 
     const code = otp.replace(/\D/g, '').trim();
     if (code.length < 6) {
@@ -268,8 +394,8 @@ export default function RegisterScreen() {
         details.email,
         code,
         details.name,
-        details.phone,
-        { acceptedTerms: true },
+        verifiedPhone,
+        { acceptedTerms: true, phoneVerified: true },
       );
       authLog('register:verifyOtp_success', { onboardingDone: nav.hasCompletedOnboarding });
       verified = true;
@@ -311,37 +437,18 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleGuest = async () => {
-    setGuestError('');
-    setFieldError(null);
-    setErrorMessage('');
-    setBusyAction('guest');
-    try {
-      void Haptics.selectionAsync();
-      Keyboard.dismiss();
-      const trimmed = guestName.trim();
-      const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
-      setShowGuestModal(false);
-      void navigateAfterGuest(nav);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Could not continue as guest. Please try again.';
-      setGuestError(message);
-      setFieldError('general');
-      setErrorMessage(message);
-    } finally {
-      setBusyAction(null);
-    }
-  };
-
-  const requestGuest = () => {
-    setGuestName('');
-    setGuestError('');
-    setShowGuestModal(true);
-  };
-
   const backToDetails = () => {
     setStep('details');
+    setPhoneOtp('');
+    setOtp('');
+    setPhoneVerified(false);
+    clearVerifiedPhoneSignup();
+    setFieldError(null);
+    setErrorMessage('');
+  };
+
+  const backToPhoneOtp = () => {
+    setStep('phone-otp');
     setOtp('');
     setFieldError(null);
     setErrorMessage('');
@@ -349,20 +456,21 @@ export default function RegisterScreen() {
 
   const overlaySteps = useMemo(() => {
     switch (busyAction) {
-      case 'guest':
-        return [
-          { message: 'Starting guest mode', subtitle: 'Setting up your kitchen' },
-          { message: 'Almost there', subtitle: 'Opening Rasoi for you' },
-        ];
       case 'verify':
         return [{ message: 'Creating your account', subtitle: 'Verifying your code and setting things up' }];
+      case 'verify-phone':
+        return [{ message: 'Verifying your mobile', subtitle: 'Checking the SMS code from Firebase' }];
+      case 'resend-phone':
+        return [{ message: 'Sending SMS code', subtitle: 'Check your phone — it usually arrives in a few seconds' }];
       case 'resend':
         return [{ message: 'Sending a new code', subtitle: 'Check your inbox — it usually arrives in a few seconds' }];
       case 'send':
         return [
           {
-            message: 'Sending your code',
-            subtitle: 'Check your inbox — it usually arrives in a few seconds',
+            message: isPhoneVerificationSkipped() ? 'Sending your code' : 'Sending SMS code',
+            subtitle: isPhoneVerificationSkipped()
+              ? 'Check your inbox — it usually arrives in a few seconds'
+              : 'Check your phone for the verification SMS',
           },
         ];
       default:
@@ -382,20 +490,10 @@ export default function RegisterScreen() {
           if (!termsAccepted) return;
           setShowTermsModal(false);
           const details = validateDetails();
-          if (details) void sendOtpForDetails(details);
+          if (details) {
+            void persistSignupPreferences().then(() => sendOtpForDetails(details));
+          }
         }}
-      />
-      <GuestContinueModal
-        visible={showGuestModal}
-        name={guestName}
-        onChangeName={setGuestName}
-        onClose={() => {
-          setShowGuestModal(false);
-          setGuestError('');
-        }}
-        onContinue={() => void handleGuest()}
-        busy={busyAction === 'guest'}
-        errorMessage={guestError}
       />
       <ScrollViewWithFloatingIndicator
           {...scrollIndicator}
@@ -416,20 +514,37 @@ export default function RegisterScreen() {
             <Text style={styles.brand}>RASOI</Text>
           </View>
 
-          {step === 'otp' && (
-            <Pressable onPress={backToDetails} style={styles.backRow}>
+          {(step === 'phone-otp' || step === 'email-otp') && (
+            <Pressable
+              onPress={
+                step === 'email-otp'
+                  ? isPhoneVerificationSkipped()
+                    ? backToDetails
+                    : backToPhoneOtp
+                  : backToDetails
+              }
+              style={styles.backRow}
+            >
               <ArrowLeft size={18} color="#c45c2a" />
-              <Text style={styles.backText}>Edit details</Text>
+              <Text style={styles.backText}>
+                {step === 'email-otp' ? 'Back to mobile verification' : 'Edit details'}
+              </Text>
             </Pressable>
           )}
 
           <Text style={styles.title}>
-            {step === 'details' ? 'Create your account' : 'Verify your email'}
+            {step === 'details'
+              ? 'Create your account'
+              : step === 'phone-otp'
+                ? 'Verify your mobile'
+                : 'Verify your email'}
           </Text>
           <Text style={styles.subtitle}>
             {step === 'details'
-              ? 'Create your account first — you’ll pick diet & cuisines next.'
-              : `Enter the code sent to ${normalizeEmail(email)}`}
+              ? 'Pick your diet and kitchen styles, then verify your mobile and email.'
+              : step === 'phone-otp'
+                ? `Enter the SMS code sent to +91 ${normalizeIndianPhone(phone)}`
+                : `Enter the code sent to ${normalizeEmail(email)}`}
           </Text>
 
           {step === 'details' ? (
@@ -476,7 +591,9 @@ export default function RegisterScreen() {
                     testID={testIds.registerPhoneInput}
                   />
                 </View>
-                <Text style={styles.hint}>10 digits, starting with 6–9 · for partner checkout</Text>
+                <Text style={styles.hint}>
+                  10 digits, starting with 6–9 · verified by SMS before signup
+                </Text>
               </View>
 
               <View ref={emailFieldRef} collapsable={false} style={styles.field}>
@@ -503,6 +620,67 @@ export default function RegisterScreen() {
                 </View>
                 <Text style={styles.hint}>We send a one-time verification code to this email</Text>
               </View>
+
+              <View style={[styles.field, fieldError === 'diet' && styles.preferenceFieldError]}>
+                <FieldLabel required>Diet</FieldLabel>
+                <DietPreferenceList
+                  selected={selectedDiet}
+                  onSelect={(value) => {
+                    setSelectedDiet(value);
+                    if (fieldError === 'diet') setFieldError(null);
+                  }}
+                  variant="light"
+                />
+              </View>
+
+              <View style={[styles.field, fieldError === 'cuisine' && styles.preferenceFieldError]}>
+                <FieldLabel required>Kitchen styles</FieldLabel>
+                <Text style={styles.hint}>
+                  {selectedCuisines.length === 0
+                    ? 'Pick at least one — e.g. Gujarati Home'
+                    : `${selectedCuisines.length} style${selectedCuisines.length > 1 ? 's' : ''} selected`}
+                </Text>
+                <CuisinePreferenceList
+                  selected={selectedCuisines}
+                  onToggle={toggleCuisine}
+                  variant="light"
+                />
+              </View>
+            </View>
+          ) : step === 'phone-otp' ? (
+            <View style={styles.form}>
+              <View ref={phoneOtpFieldRef} collapsable={false} style={styles.field}>
+                <FieldLabel required>SMS verification code</FieldLabel>
+                <View style={[styles.inputRow, fieldError === 'phone-otp' && styles.inputRowError]}>
+                  <Phone size={20} color="#6b6560" />
+                  <TextInput
+                    value={phoneOtp}
+                    onChangeText={(value) => {
+                      setPhoneOtp(value.replace(/\D/g, '').slice(0, 6));
+                      if (fieldError === 'phone-otp') setFieldError(null);
+                    }}
+                    onFocus={() => focusField(phoneOtpFieldRef)}
+                    placeholder="123456"
+                    placeholderTextColor="#a39e96"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    returnKeyType="done"
+                    onSubmitEditing={handleVerifyPhoneOtp}
+                    style={[styles.input, styles.otpInput]}
+                    autoFocus
+                    testID={testIds.registerPhoneOtpInput}
+                  />
+                </View>
+              </View>
+
+              <Pressable
+                onPress={handleResendPhoneOtp}
+                disabled={isSubmitting}
+                style={styles.resendWrap}
+                testID={testIds.registerResendPhoneOtp}
+              >
+                <Text style={styles.resendText}>Resend SMS code</Text>
+              </Pressable>
             </View>
           ) : (
             <View style={styles.form}>
@@ -556,9 +734,21 @@ export default function RegisterScreen() {
 
           <View style={styles.actions}>
             <Pressable
-              onPress={step === 'details' ? handleSendOtp : handleVerifyOtp}
+              onPress={
+                step === 'details'
+                  ? handleSendOtp
+                  : step === 'phone-otp'
+                    ? handleVerifyPhoneOtp
+                    : handleVerifyOtp
+              }
               disabled={isSubmitting}
-              testID={step === 'details' ? testIds.registerSendOtp : testIds.registerVerifyOtp}
+              testID={
+                step === 'details'
+                  ? testIds.registerSendOtp
+                  : step === 'phone-otp'
+                    ? testIds.registerVerifyPhoneOtp
+                    : testIds.registerVerifyOtp
+              }
               style={[styles.submitWrap, isSubmitting && styles.buttonDisabled]}
             >
               <LinearGradient
@@ -568,35 +758,17 @@ export default function RegisterScreen() {
                 style={styles.submitButton}
               >
                 <Text style={styles.submitButtonText}>
-                  {step === 'details' ? 'Send verification code' : 'Create account'}
+                  {step === 'details'
+                    ? 'Verify mobile number'
+                    : step === 'phone-otp'
+                      ? 'Continue to email verification'
+                      : 'Create account'}
                 </Text>
               </LinearGradient>
             </Pressable>
 
-            {emailDeliveryBlocked && step === 'details' ? (
-              <Pressable
-                onPress={() => {
-                  const details = validateDetails();
-                  if (details) void handleContinueWithoutEmailVerification(details);
-                }}
-                disabled={isSubmitting}
-                style={styles.guestButton}
-              >
-                <Text style={styles.guestButtonText}>Continue to app — verify email later</Text>
-              </Pressable>
-            ) : null}
-
             {step === 'details' ? (
               <>
-                <Pressable
-                  onPress={requestGuest}
-                  disabled={isSubmitting}
-                  testID={testIds.loginGuest}
-                  style={styles.guestButton}
-                >
-                  <Text style={styles.guestButtonText}>Explore as Guest</Text>
-                </Pressable>
-
                 <Pressable
                   onPress={() => router.push('/(auth)/login')}
                   disabled={isSubmitting}
@@ -610,9 +782,13 @@ export default function RegisterScreen() {
                 </Pressable>
 
                 <Text style={styles.disclaimer}>
-                  Mobile is required for partner checkout. Email is verified with a one-time code.
+                  Mobile is verified by SMS. Email is verified with a one-time code.
                 </Text>
               </>
+            ) : step === 'phone-otp' ? (
+              <Text style={styles.disclaimer}>
+                Did not get the SMS? Wait a minute or tap Resend SMS code.
+              </Text>
             ) : (
               <Text style={styles.disclaimer}>
                 Did not get the email? Check spam or tap Resend code.

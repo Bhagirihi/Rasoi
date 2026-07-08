@@ -6,6 +6,7 @@ import {
   type Batch9CategoryId,
 } from './batch9-dish-pools';
 import type { RecipeCatalogEntry } from './types';
+import { inferHeroIngredientFromTitle } from '../../src/lib/infer-hero-ingredient';
 
 type DietType = RecipeCatalogEntry['dietType'];
 type Difficulty = RecipeCatalogEntry['difficulty'];
@@ -98,24 +99,15 @@ function inferCalories(categoryId: Batch9CategoryId, idx: number): number {
 }
 
 function inferProtein(title: string, fallback: string): string {
+  return inferHeroIngredientFromTitle(title, fallback);
+}
+
+function secondaryIngredients(title: string): Array<{ name: string; isStaple: boolean }> {
   const lower = title.toLowerCase();
-  if (lower.includes('fish') || lower.includes('salmon')) return 'Fish';
-  if (lower.includes('prawn') || lower.includes('shrimp') || lower.includes('squid')) return 'Prawns';
-  if (lower.includes('chicken') || lower.includes('piccata') || lower.includes('schnitzel')) return 'Chicken';
-  if (lower.includes('mutton') || lower.includes('beef') || lower.includes('pork') || lower.includes('lamb')) {
-    return 'Mutton';
+  if (/khichdi|khichri/.test(lower) && !/dal/.test(lower)) {
+    return [{ name: 'Moong Dal', isStaple: false }];
   }
-  if (lower.includes('egg')) return 'Anda';
-  if (lower.includes('paneer') || lower.includes('burrata') || lower.includes('ricotta')) return 'Paneer';
-  if (lower.includes('tofu') || lower.includes('tempeh')) return 'Tofu';
-  if (lower.includes('chickpea') || lower.includes('chana') || lower.includes('rajma')) return 'Chana';
-  if (lower.includes('dal') || lower.includes('lentil') || lower.includes('moong')) return 'Dal';
-  if (lower.includes('quinoa') || lower.includes('millet') || lower.includes('bajra') || lower.includes('ragi')) {
-    return 'Millet';
-  }
-  if (lower.includes('mushroom')) return 'Mushroom';
-  if (lower.includes('jackfruit')) return 'Kathal';
-  return fallback;
+  return [];
 }
 
 function ingredientsFor(
@@ -161,10 +153,10 @@ function ingredientsFor(
   ];
 
   if (dietType === 'Non-Veg' || dietType === 'Egg') {
-    return [{ name: hero, isStaple: false }, ...base];
+    return [{ name: hero, isStaple: false }, ...secondaryIngredients(title), ...base];
   }
 
-  return [{ name: hero, isStaple: true }, ...base];
+  return [{ name: hero, isStaple: false }, ...secondaryIngredients(title), ...base];
 }
 
 function buildTitles(baseDishes: readonly string[]): string[] {

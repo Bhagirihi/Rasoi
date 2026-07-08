@@ -400,6 +400,8 @@ def schedule_facebook_post(
 
     if (local_path and local_path.is_file()) or image_url.strip():
         # Two-step: unpublished photo + scheduled feed post (shows on correct calendar day).
+        # Do not attach `link` here — Facebook replaces the uploaded image with the
+        # link's Open Graph preview (same og:image for every rasoiapplication.in URL).
         photo_id = _upload_unpublished_photo(
             page,
             image_path=local_path,
@@ -413,8 +415,6 @@ def schedule_facebook_post(
             "scheduled_publish_time": str(publish_time),
             "unpublished_content_type": "SCHEDULED",
         }
-        if link.strip():
-            feed_params["link"] = link.strip()
         return _graph_post(f"/{page['page_id']}/feed", feed_params)
 
     params: dict[str, Any] = {
@@ -445,8 +445,6 @@ def publish_facebook_now(
     local_path = Path(image_path.strip()) if image_path.strip() else None
     if local_path and local_path.is_file():
         params["caption"] = message.strip()
-        if link.strip():
-            params["link"] = link.strip()
         with local_path.open("rb") as image_file:
             response = requests.post(
                 f"{GRAPH_BASE}/{page['page_id']}/photos",
@@ -462,8 +460,6 @@ def publish_facebook_now(
     if image_url.strip():
         params["url"] = image_url.strip()
         params["caption"] = message.strip()
-        if link.strip():
-            params["link"] = link.strip()
         return _graph_post(f"/{page['page_id']}/photos", params)
 
     params["message"] = message.strip()

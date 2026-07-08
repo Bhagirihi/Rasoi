@@ -69,9 +69,12 @@ export function buildPartnerUrl(template: string, query: string): string {
   return template.replace(/\{query\}/g, encoded).replace(/\{items\}/g, encoded);
 }
 
-export function buildGroceryCheckoutQuery(items: string[]): string {
+/** Partner apps only support one search term — pick a single item to open. */
+export function pickGroceryCheckoutItem(items: string[]): string {
   const trimmed = items.map((item) => item.trim()).filter(Boolean);
-  if (trimmed.length === 0) return '';
-  // Partner apps accept one search box — join top items; user gets full list via clipboard.
-  return trimmed.slice(0, 3).join(' ');
+  return trimmed[0] ?? '';
+}
+
+export function buildGroceryCheckoutQuery(items: string[]): string {
+  return pickGroceryCheckoutItem(items);
 }

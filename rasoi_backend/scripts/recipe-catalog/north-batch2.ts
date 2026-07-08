@@ -1,4 +1,5 @@
 import type { RecipeCatalogEntry } from "./types";
+import { inferHeroIngredientFromTitle } from "../../src/lib/infer-hero-ingredient";
 
 type DietType = RecipeCatalogEntry["dietType"];
 type Difficulty = RecipeCatalogEntry["difficulty"];
@@ -83,16 +84,7 @@ function inferTags(index: number, prepTime: number): string[] {
 }
 
 function inferProtein(title: string): string {
-  const lower = title.toLowerCase();
-  if (lower.includes("fish")) return "Fish fillet";
-  if (lower.includes("mutton")) return "Mutton";
-  if (lower.includes("keema")) return "Chicken keema";
-  if (lower.includes("chicken")) return "Chicken";
-  if (lower.includes("egg") || lower.includes("anda")) return "Anda";
-  if (lower.includes("paneer")) return "Paneer";
-  if (lower.includes("chana")) return "Kabuli chana";
-  if (lower.includes("rajma")) return "Rajma";
-  return "Aloo";
+  return inferHeroIngredientFromTitle(title, "Aloo");
 }
 
 function ingredientsFor(title: string, dietType: DietType): Array<{ name: string; isStaple: boolean }> {

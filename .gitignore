@@ -21,6 +21,7 @@ rasoi_mobile/android/.gradle/
 .env
 .env.local
 .env.*.local
+backups/supabase/
 *.jks
 *.p8
 *.p12

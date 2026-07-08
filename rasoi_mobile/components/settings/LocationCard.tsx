@@ -26,7 +26,7 @@ export default function LocationCard() {
     if (!isLoggedIn) {
       showDialog({
         title: 'Session required',
-        message: 'Continue as guest or sign in to save your city.',
+        message: 'Sign in to save your city.',
         buttons: [{ text: 'OK' }],
       });
       return;

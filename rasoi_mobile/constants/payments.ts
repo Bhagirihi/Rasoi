@@ -94,9 +94,15 @@ export function getRevenueCatApiKey(platform: 'ios' | 'android' | 'web'): string
   return platform === 'ios' ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
 }
 
-export const PAYWALL_COMPARE_ROWS = [
+export type PaywallCompareCell = boolean | 'limited';
+
+export const PAYWALL_COMPARE_ROWS: ReadonlyArray<{
+  label: string;
+  free: PaywallCompareCell;
+  trial: PaywallCompareCell;
+  paid: PaywallCompareCell;
+}> = [
   { label: 'Recipes & pantry', free: true, trial: true, paid: true },
   { label: 'AdMob ads', free: true, trial: true, paid: false },
-  { label: 'Blinkit · Zepto · Instamart', free: false, trial: true, paid: true },
-  { label: 'Zomato · Swiggy delivery', free: false, trial: true, paid: true },
-] as const;
+  { label: 'Partner grocery & delivery checkout', free: 'limited', trial: true, paid: true },
+];

@@ -1,4 +1,4 @@
-# Fresh install: auto guest → permissions/onboarding → home (no launch legal consent)
+# Fresh install: login screen → register or sign-in → onboarding → home
 appId: com.bhagihiri.rasoiapp
 ---
 - launchApp:
@@ -42,7 +42,7 @@ appId: com.bhagihiri.rasoiapp
     commands:
       - runFlow:
           file: _skip-pantry-setup.yaml
-# Auto-guest may land on home, onboarding, or login (if guest bootstrap is slow).
+# Logged-in resume may land on home, onboarding, or login.
 - extendedWaitUntil:
     visible:
       id: screen-home

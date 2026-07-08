@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { ChevronRight, ShoppingBag, X } from 'lucide-react-native';
+import { Check, ChevronRight, ShoppingBag, X } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
@@ -12,14 +12,18 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AFFILIATE_CHECKOUT_DISCLOSURE } from '@/constants/monetization';
-import { resolveGroceryPartnerId } from '@/constants/partners';
+import { pickGroceryCheckoutItem, resolveGroceryPartnerId } from '@/constants/partners';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import TrialPartnerBanner from '@/components/TrialPartnerBanner';
 import SmoothModal from '@/components/ui/SmoothModal';
 import { useAppContext } from '@/context/AppContext';
 import { usePartners } from '@/context/PartnersContext';
+import { useShoppingSession } from '@/context/ShoppingSessionContext';
 import { useTheme } from '@/context/ThemeContext';
+import type { Recipe } from '@/data/mockRecipes';
 import type { AffiliatePartner } from '@/utils/affiliate';
+import { sortShoppingMissingItems } from '@/utils/shoppingOrder';
+import { ingredientKey } from '@/utils/recipeIngredients';
 
 type CheckoutVariant = 'recipe' | 'pantry';
 
@@ -28,8 +32,10 @@ interface AffiliateCheckoutModalProps {
   onClose: () => void;
   recipeTitle?: string;
   recipeId?: string;
+  recipe?: Recipe | null;
   missingIngredients: string[];
   initialPartner?: AffiliatePartner;
+  initialFocusedItem?: string | null;
   variant?: CheckoutVariant;
 }
 
@@ -40,13 +46,17 @@ export default function AffiliateCheckoutModal({
   onClose,
   recipeTitle,
   recipeId,
+  recipe,
   missingIngredients,
   initialPartner,
+  initialFocusedItem,
   variant = 'recipe',
 }: AffiliateCheckoutModalProps) {
   const [loading, setLoading] = useState<AffiliatePartner | null>(null);
+  const [focusedItem, setFocusedItem] = useState<string | null>(null);
   const { partnersInTrialMode } = useAppContext();
   const { groceryPartners, openGroceryCheckout } = usePartners();
+  const { startSession, getSessionProgress, session } = useShoppingSession();
   const highlightedPartner = useMemo(
     () => resolveGroceryPartnerId(initialPartner, groceryPartners),
     [initialPartner, groceryPartners],
@@ -57,10 +67,28 @@ export default function AffiliateCheckoutModal({
   const maxBodyScrollHeight = Math.min(windowHeight * 0.55, 420);
 
   const isPantry = variant === 'pantry';
-  const visibleItems = missingIngredients.slice(0, VISIBLE_CHIP_LIMIT);
-  const hiddenCount = Math.max(0, missingIngredients.length - VISIBLE_CHIP_LIMIT);
+
+  const orderedMissing = useMemo(
+    () => sortShoppingMissingItems(missingIngredients, recipe),
+    [missingIngredients, recipe],
+  );
+
+  const sessionProgress = getSessionProgress(recipeId);
+  const shoppedKeys = useMemo(
+    () => new Set((session?.shoppedItems ?? []).map((item) => ingredientKey(item))),
+    [session?.shoppedItems],
+  );
+
+  const visibleItems = orderedMissing.slice(0, VISIBLE_CHIP_LIMIT);
+  const hiddenCount = Math.max(0, orderedMissing.length - VISIBLE_CHIP_LIMIT);
 
   const headerCopy = useMemo(() => {
+    if (sessionProgress && sessionProgress.total > 0) {
+      return {
+        title: isPantry ? 'Restock your pantry' : 'Get ingredients delivered',
+        subtitle: `${sessionProgress.shopped} of ${sessionProgress.total} items shopped`,
+      };
+    }
     if (isPantry) {
       return {
         title: 'Restock your pantry',
@@ -76,20 +104,46 @@ export default function AffiliateCheckoutModal({
         ? `For ${recipeTitle}`
         : `${missingIngredients.length} item${missingIngredients.length === 1 ? '' : 's'} to add`,
     };
-  }, [isPantry, missingIngredients.length, recipeTitle]);
+  }, [isPantry, missingIngredients.length, recipeTitle, sessionProgress]);
 
   useEffect(() => {
-    if (!visible) setLoading(null);
-  }, [visible]);
+    if (!visible || orderedMissing.length === 0) return;
+    void startSession({
+      kind: isPantry ? 'pantry' : 'recipe',
+      recipeId,
+      recipeTitle,
+      orderedItems: orderedMissing,
+    });
+  }, [visible, isPantry, recipeId, recipeTitle, orderedMissing, startSession]);
+
+  useEffect(() => {
+    if (!visible) {
+      setLoading(null);
+      setFocusedItem(null);
+      return;
+    }
+    if (initialFocusedItem) {
+      setFocusedItem(initialFocusedItem);
+    }
+  }, [visible, initialFocusedItem]);
+
+  const defaultItem =
+    orderedMissing.find((item) => !shoppedKeys.has(ingredientKey(item))) ??
+    pickGroceryCheckoutItem(orderedMissing);
+  const checkoutItem = focusedItem ?? defaultItem;
 
   const handleCheckout = async (partner: AffiliatePartner) => {
-    if (missingIngredients.length === 0) return;
+    if (!checkoutItem) return;
     setLoading(partner);
     try {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await openGroceryCheckout(partner, missingIngredients, {
+      await openGroceryCheckout(partner, [checkoutItem], {
         context: isPantry ? 'pantry_restock' : 'recipe_checkout',
         recipeId,
+        recipeTitle,
+        shoppingItem: checkoutItem,
+        sessionItems: orderedMissing,
+        sessionKind: isPantry ? 'pantry' : 'recipe',
       });
       onClose();
     } finally {
@@ -133,44 +187,84 @@ export default function AffiliateCheckoutModal({
         >
           {partnersInTrialMode && <TrialPartnerBanner />}
 
-          {missingIngredients.length > 0 ? (
+          {orderedMissing.length > 0 ? (
             <View
               style={[
                 styles.listCard,
                 { backgroundColor: themeColors.white, borderColor: themeColors.border },
               ]}
             >
-              <Text style={[styles.listLabel, { color: themeColors.muted }]}>Shopping list</Text>
+              <Text style={[styles.listLabel, { color: themeColors.muted }]}>
+                {sessionProgress
+                  ? `Shopping checklist · ${sessionProgress.shopped}/${sessionProgress.total}`
+                  : 'Shopping list · hero first, staples last'}
+              </Text>
               <View style={styles.chipGrid}>
-                {visibleItems.map((item) => (
-                  <View
-                    key={item}
-                    style={[
-                      styles.chip,
-                      { borderColor: 'rgba(255,107,53,0.35)', backgroundColor: 'rgba(255,107,53,0.07)' },
-                    ]}
-                  >
-                    <Text style={[styles.chipText, { color: themeColors.charcoal }]}>{item}</Text>
-                  </View>
-                ))}
+                {visibleItems.map((item) => {
+                  const selected = checkoutItem === item;
+                  const done = shoppedKeys.has(ingredientKey(item));
+                  return (
+                    <Pressable
+                      key={item}
+                      onPress={() => {
+                        if (done) return;
+                        void Haptics.selectionAsync();
+                        setFocusedItem(item);
+                      }}
+                      style={[
+                        styles.chip,
+                        done && styles.chipDone,
+                        {
+                          borderColor: done
+                            ? colors.green
+                            : selected
+                              ? colors.primary
+                              : 'rgba(255,107,53,0.35)',
+                          backgroundColor: done
+                            ? 'rgba(0,168,107,0.12)'
+                            : selected
+                              ? 'rgba(255,107,53,0.16)'
+                              : 'rgba(255,107,53,0.07)',
+                        },
+                      ]}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        done ? `${item} already shopped` : `Search for ${item} on partner app`
+                      }
+                      accessibilityState={{ selected: selected && !done, disabled: done }}
+                      disabled={done}
+                    >
+                      {done ? <Check size={12} color={colors.green} /> : null}
+                      <Text
+                        style={[
+                          styles.chipText,
+                          { color: done ? colors.green : themeColors.charcoal },
+                        ]}
+                      >
+                        {item}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
                 {hiddenCount > 0 ? (
                   <View style={[styles.chip, styles.chipMore, { borderColor: themeColors.border }]}>
                     <Text style={[styles.chipText, { color: themeColors.muted }]}>+{hiddenCount} more</Text>
                   </View>
                 ) : null}
               </View>
-              {missingIngredients.length > 1 ? (
+              {orderedMissing.length > 1 ? (
                 <Text style={[styles.hint, { color: themeColors.muted }]}>
-                  Partner search opens with top items — tap Share list below for the full shopping list.
+                  Partners search one item at a time. We suggest the hero ingredient first — tap
+                  next, open a partner, then confirm when you return.
                 </Text>
               ) : null}
-              {missingIngredients.length > 1 ? (
+              {orderedMissing.length > 1 ? (
                 <Pressable
                   onPress={() => {
                     void Haptics.selectionAsync();
                     void import('react-native').then(({ Share }) =>
                       Share.share({
-                        message: `Rasoi shopping list:\n${missingIngredients.map((item) => `• ${item}`).join('\n')}`,
+                        message: `Rasoi shopping list:\n${orderedMissing.map((item) => `• ${item}`).join('\n')}`,
                       }),
                     );
                   }}
@@ -182,7 +276,9 @@ export default function AffiliateCheckoutModal({
             </View>
           ) : null}
 
-          <Text style={[styles.partnerLabel, { color: themeColors.muted }]}>Order via</Text>
+          <Text style={[styles.partnerLabel, { color: themeColors.muted }]}>
+            Search “{checkoutItem}” via
+          </Text>
 
           <View style={styles.partnerList}>
             {groceryPartners.map((partner) => {
@@ -192,7 +288,7 @@ export default function AffiliateCheckoutModal({
                 <Pressable
                   key={partner.id}
                   onPress={() => void handleCheckout(partner.id)}
-                  disabled={loading !== null || missingIngredients.length === 0}
+                  disabled={loading !== null || orderedMissing.length === 0}
                   style={({ pressed }) => [
                     styles.partnerRow,
                     {
@@ -201,7 +297,7 @@ export default function AffiliateCheckoutModal({
                     },
                     pressed && styles.partnerRowPressed,
                     isLoading && styles.partnerRowLoading,
-                    missingIngredients.length === 0 && styles.partnerRowDisabled,
+                    orderedMissing.length === 0 && styles.partnerRowDisabled,
                   ]}
                 >
                   <View style={[styles.partnerSwatch, { backgroundColor: partner.accent }]} />
@@ -306,10 +402,16 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
   },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     borderRadius: radius.pill,
     borderWidth: 1,
     paddingHorizontal: spacing.sm,
     paddingVertical: 4,
+  },
+  chipDone: {
+    opacity: 0.85,
   },
   chipMore: {
     backgroundColor: 'transparent',

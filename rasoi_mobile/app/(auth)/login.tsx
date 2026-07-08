@@ -16,7 +16,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import AppSavingOverlay from "@/components/AppSavingOverlay";
-import GuestContinueModal from "@/components/auth/GuestContinueModal";
 import RasoiBrandIcon from "@/components/RasoiBrandIcon";
 import {
   colors,
@@ -32,14 +31,14 @@ import { isEmailDeliveryUnavailableError } from "@/utils/emailDeliveryErrors";
 import { warmApiConnection } from "@/utils/api";
 import { getLoginEmailValidationError } from "@/utils/identityValidation";
 import { normalizeEmail } from "@/utils/storage";
-import { resolveGuestLoginHref, resolvePostAuthHref } from "@/utils/authNavigation";
+import { resolvePostAuthHref } from "@/utils/authNavigation";
 
 type LoginStep = "email" | "otp";
 type FieldError = "email" | "otp" | "general" | null;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, continueWithPendingEmailVerification, pendingPantrySetup } =
+  const { sendLoginEmailOtp, verifyLoginEmailOtp, pendingPantrySetup } =
     useAppContext();
 
   const [step, setStep] = useState<LoginStep>("email");
@@ -48,9 +47,6 @@ export default function LoginScreen() {
   const [fieldError, setFieldError] = useState<FieldError>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showGuestModal, setShowGuestModal] = useState(false);
-  const [guestName, setGuestName] = useState("");
-  const [guestError, setGuestError] = useState("");
   const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
 
@@ -73,14 +69,6 @@ export default function LoginScreen() {
     if (step === "otp") warmApiConnection();
   }, [step]);
 
-  const navigateAfterGuest = async (nav: AuthNavigationResult) => {
-    const href = await resolveGuestLoginHref(nav, {
-      userCity: nav.userCity,
-      pendingPantrySetup,
-    });
-    router.replace(href);
-  };
-
   const navigateAfterAuth = async (nav: AuthNavigationResult) => {
     const href = await resolvePostAuthHref(nav, {
       userCity: nav.userCity,
@@ -97,50 +85,6 @@ export default function LoginScreen() {
       return null;
     }
     return normalizeEmail(email);
-  };
-
-  const handleGuest = async () => {
-    setGuestError("");
-    setFieldError(null);
-    setErrorMessage("");
-    setIsSubmitting(true);
-    try {
-      void Haptics.selectionAsync();
-      Keyboard.dismiss();
-      const trimmed = guestName.trim();
-      const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
-      setShowGuestModal(false);
-      void navigateAfterGuest(nav);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Could not continue as guest. Please try again.";
-      setGuestError(message);
-      setFieldError("general");
-      setErrorMessage(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleContinueWithoutEmailVerification = async (normalizedEmail: string) => {
-    setIsSubmitting(true);
-    try {
-      const nav = await continueWithPendingEmailVerification({
-        email: normalizedEmail,
-        flow: "login",
-      });
-      setEmailDeliveryBlocked(false);
-      if (nav) {
-        void navigateAfterAuth(nav);
-      }
-    } catch (error) {
-      setFieldError("general");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Could not continue to the app. Please try again.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleSendOtp = async () => {
@@ -278,21 +222,16 @@ export default function LoginScreen() {
         <AppSavingOverlay
           visible={isSubmitting}
           steps={
-            showGuestModal
+            step === 'otp'
               ? [
-                  { message: 'Starting guest mode', subtitle: 'Setting up your kitchen' },
-                  { message: 'Almost there', subtitle: 'Opening Rasoi for you' },
+                  { message: 'Signing you in', subtitle: 'Verifying your code and loading your profile' },
                 ]
-              : step === 'otp'
-                ? [
-                    { message: 'Signing you in', subtitle: 'Verifying your code and loading your profile' },
-                  ]
-                : [
-                    {
-                      message: 'Sending your code',
-                      subtitle: 'Check your inbox — it usually arrives in a few seconds',
-                    },
-                  ]
+              : [
+                  {
+                    message: 'Sending your code',
+                    subtitle: 'Check your inbox — it usually arrives in a few seconds',
+                  },
+                ]
           }
         />
         <ScrollViewWithFloatingIndicator
@@ -434,48 +373,20 @@ export default function LoginScreen() {
                   </Text>
                 </LinearGradient>
               </Pressable>
-
-              {emailDeliveryBlocked && step === "email" ? (
-                <Pressable
-                  onPress={() => {
-                    const normalizedEmail = validateEmail();
-                    if (normalizedEmail) {
-                      void handleContinueWithoutEmailVerification(normalizedEmail);
-                    }
-                  }}
-                  disabled={isSubmitting}
-                  style={styles.guestButton}
-                >
-                  <Text style={styles.guestButtonText}>Continue to app — verify email later</Text>
-                </Pressable>
-              ) : null}
             </View>
 
             {step === "email" ? (
-              <>
-                <Pressable
-                  onPress={() => {
-                    setGuestError("");
-                    setShowGuestModal(true);
-                  }}
-                  disabled={isSubmitting}
-                  testID={testIds.loginGuest}
-                  style={styles.guestButton}
-                >
-                  <Text style={styles.guestButtonText}>Explore as Guest</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push("/(auth)/register")}
-                  disabled={isSubmitting}
-                  style={styles.switchAuthWrap}
-                  testID={testIds.loginGoRegister}
-                >
-                  <Text style={styles.switchAuthText}>
-                    New to Rasoi?{" "}
-                    <Text style={styles.switchAuthLink}>Create account</Text>
-                  </Text>
-                </Pressable>
-              </>
+              <Pressable
+                onPress={() => router.push("/(auth)/register")}
+                disabled={isSubmitting}
+                style={styles.switchAuthWrap}
+                testID={testIds.loginGoRegister}
+              >
+                <Text style={styles.switchAuthText}>
+                  New to Rasoi?{" "}
+                  <Text style={styles.switchAuthLink}>Create account</Text>
+                </Text>
+              </Pressable>
             ) : (
               <Text style={styles.footerHint}>
                 Didn’t get it? Check spam or tap Resend code.
@@ -483,18 +394,6 @@ export default function LoginScreen() {
             )}
           </ScrollViewWithFloatingIndicator>
       </SafeAreaView>
-      <GuestContinueModal
-        visible={showGuestModal}
-        name={guestName}
-        onChangeName={setGuestName}
-        onClose={() => {
-          setShowGuestModal(false);
-          setGuestError("");
-        }}
-        onContinue={() => void handleGuest()}
-        busy={isSubmitting}
-        errorMessage={guestError}
-      />
     </View>
   );
 }
@@ -666,20 +565,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
-  },
-  guestButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-  guestButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.dark.text,
   },
   switchAuthWrap: {
     alignItems: "center",

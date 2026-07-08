@@ -1,8 +1,8 @@
 import { Check, X } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PAYWALL_COMPARE_ROWS } from '@/constants/payments';
-import type { PlanTier } from '@/constants/plans';
+import { PAYWALL_COMPARE_ROWS, type PaywallCompareCell } from '@/constants/payments';
+import { FREE_PARTNER_COMPARE_FOOTNOTE, FREE_PARTNER_COMPARE_LABEL, type PlanTier } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
 
 type PaywallCompareTableProps = {
@@ -40,11 +40,20 @@ export default function PaywallCompareTable({ highlightTier }: PaywallCompareTab
           <CellMark value={row.paid} accent />
         </View>
       ))}
+      <Text style={styles.footnote}>{FREE_PARTNER_COMPARE_FOOTNOTE}</Text>
     </View>
   );
 }
 
-function CellMark({ value, accent }: { value: boolean; accent?: boolean }) {
+function CellMark({ value, accent }: { value: PaywallCompareCell; accent?: boolean }) {
+  if (value === 'limited') {
+    return (
+      <View style={styles.cellIcon}>
+        <Text style={styles.cellLimited}>{FREE_PARTNER_COMPARE_LABEL}</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.cellIcon}>
       {value ? (
@@ -120,5 +129,20 @@ const styles = StyleSheet.create({
   cellIcon: {
     flex: 1,
     alignItems: 'center',
+  },
+  cellLimited: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.muted,
+    textAlign: 'center',
+  },
+  footnote: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    fontSize: 10,
+    lineHeight: 14,
+    color: colors.muted,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
 });

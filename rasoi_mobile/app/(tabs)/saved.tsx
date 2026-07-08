@@ -1,35 +1,34 @@
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { useRouter } from 'expo-router';
-import { useMemo, useState, useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChefHat } from 'lucide-react-native';
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useRouter } from "expo-router";
+import { useMemo, useState, useCallback } from "react";
+import { StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ChefHat } from "lucide-react-native";
 
-import AffiliateCheckoutModal from '@/components/AffiliateCheckoutModal';
-import CookTonightSheet from '@/components/CookTonightSheet';
-import { AppTabHeader } from '@/components/AppTabHeader';
-import RecipeCard from '@/components/RecipeCard';
-import { FlatListWithFloatingIndicator } from '@/components/ScrollableScreen';
-import SponsorOrAd from '@/components/SponsorOrAd';
-import { EmptyState, InsightBanner } from '@/components/ui/Primitives';
-import { useSavedRecipes } from '@/hooks/useSavedRecipes';
-import { useFlatListAdViewability } from '@/hooks/useFlatListAdViewability';
-import { usePlacementSponsor } from '@/hooks/usePlacementSponsor';
-import { useRecipeListAdIndices } from '@/hooks/useRecipeListAdIndices';
-import { useDismissOnBlur } from '@/hooks/useDismissOnBlur';
-import { colors, layout, scrollIndicator, spacing } from '@/constants/theme';
-import { testIds } from '@/constants/testIds';
-import { useTheme } from '@/context/ThemeContext';
-import { useAppContext } from '@/context/AppContext';
-import { Recipe } from '@/data/mockRecipes';
-import type { AffiliatePartner } from '@/utils/affiliate';
-import { getMealContext } from '@/utils/mealTime';
+import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
+import CookTonightSheet from "@/components/CookTonightSheet";
+import { AppTabHeader } from "@/components/AppTabHeader";
+import RecipeCard from "@/components/RecipeCard";
+import { FlatListWithFloatingIndicator } from "@/components/ScrollableScreen";
+import SponsorOrAd from "@/components/SponsorOrAd";
+import { EmptyState, InsightBanner } from "@/components/ui/Primitives";
+import { useSavedRecipes } from "@/hooks/useSavedRecipes";
+import { useFlatListAdViewability } from "@/hooks/useFlatListAdViewability";
+import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
+import { useRecipeListAdIndices } from "@/hooks/useRecipeListAdIndices";
+import { useDismissOnBlur } from "@/hooks/useDismissOnBlur";
+import { colors, layout, scrollIndicator, spacing } from "@/constants/theme";
+import { testIds } from "@/constants/testIds";
+import { useTheme } from "@/context/ThemeContext";
+import { useAppContext } from "@/context/AppContext";
+import { Recipe } from "@/data/mockRecipes";
+import type { AffiliatePartner } from "@/utils/affiliate";
+import { getMealContext } from "@/utils/mealTime";
 import {
   getPantryMatchPercent,
   getRecipePickReason,
   partitionIngredients,
-} from '@/utils/recipes';
-import { pantryHasIngredient } from '@/utils/recipeIngredients';
+} from "@/utils/recipes";
 
 export default function SavedScreen() {
   const router = useRouter();
@@ -43,23 +42,24 @@ export default function SavedScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
   const [modalMissing, setModalMissing] = useState<string[]>([]);
-  const [modalPartner, setModalPartner] = useState<AffiliatePartner>('blinkit');
+  const [modalPartner, setModalPartner] = useState<AffiliatePartner>("blinkit");
   const [cookTonightVisible, setCookTonightVisible] = useState(false);
-  const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(null);
-  const { sponsor: savedSponsor, loading: savedSponsorLoading } = usePlacementSponsor('saved');
+  const [cookTonightTarget, setCookTonightTarget] = useState<Recipe | null>(
+    null,
+  );
+  const { sponsor: savedSponsor, loading: savedSponsorLoading } =
+    usePlacementSponsor("saved");
   const savedAdIndices = useRecipeListAdIndices(savedRecipes, {
-    stableSeed: 'saved-tab',
+    stableSeed: "saved-tab",
   });
   const { viewableIndices, viewabilityConfig, onViewableItemsChanged } =
     useFlatListAdViewability();
 
   const totalMissing = useMemo(() => {
     return savedRecipes.reduce((sum, recipe) => {
-      const missing = recipe.ingredients.filter((ing) => {
-        const name = ing.name?.trim();
-        return name && !pantryHasIngredient(pantryIngredients, name);
-      }).length;
-      return sum + missing;
+      return (
+        sum + partitionIngredients(recipe, pantryIngredients).missing.length
+      );
     }, 0);
   }, [savedRecipes, pantryIngredients]);
 
@@ -69,7 +69,7 @@ export default function SavedScreen() {
     return partitionIngredients(sheetRecipe, pantryIngredients).missing;
   }, [sheetRecipe, pantryIngredients]);
   const sheetPickReason = useMemo(() => {
-    if (!sheetRecipe) return '';
+    if (!sheetRecipe) return "";
     return getRecipePickReason(sheetRecipe, {
       regionalCuisine,
       pantryIngredients,
@@ -103,7 +103,7 @@ export default function SavedScreen() {
   const openShopModal = (
     recipe: Recipe,
     missing: string[],
-    partner: AffiliatePartner = 'blinkit',
+    partner: AffiliatePartner = "blinkit",
   ) => {
     setModalPartner(partner);
     setModalRecipe(recipe);
@@ -114,7 +114,7 @@ export default function SavedScreen() {
   return (
     <SafeAreaView
       style={[styles.safe, { backgroundColor: themeColors.cream }]}
-      edges={['top']}
+      edges={["top"]}
       testID={testIds.screenSaved}
     >
       <FlatListWithFloatingIndicator
@@ -169,7 +169,10 @@ export default function SavedScreen() {
                 dietChoice,
                 mealSlot: meal.slot,
               })}
-              pantryMatchPercent={getPantryMatchPercent(item, pantryIngredients)}
+              pantryMatchPercent={getPantryMatchPercent(
+                item,
+                pantryIngredients,
+              )}
               onShopMissing={showPartners ? openShopModal : undefined}
               onCookTonight={openCookTonight}
               cookCtaLabel={meal.cookCta}

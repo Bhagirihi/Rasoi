@@ -4,7 +4,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   ArrowLeft,
   Bookmark,
-  Check,
   Clock,
   Gauge,
   MapPin,
@@ -23,7 +22,9 @@ import ViewportLazyAdSlot from "@/components/ViewportLazyAdSlot";
 import SponsorOrAd from "@/components/SponsorOrAd";
 import FoodDeliveryModal from "@/components/FoodDeliveryModal";
 import FoodDeliveryStrip from "@/components/FoodDeliveryStrip";
-import IngredientList from "@/components/IngredientList";
+import MissingItemsPanel from "@/components/MissingItemsPanel";
+import RecipeIngredientsGuide from "@/components/recipe/RecipeIngredientsGuide";
+import RecipeMethodTimeline from "@/components/recipe/RecipeMethodTimeline";
 import PartnerUpsellCard from "@/components/PartnerUpsellCard";
 import RecipeSafetyDisclaimer from "@/components/RecipeSafetyDisclaimer";
 import TrialPartnerBanner from "@/components/TrialPartnerBanner";
@@ -41,14 +42,17 @@ import { testIds } from "@/constants/testIds";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
 import { useRecipes } from "@/context/RecipesContext";
+import { useShoppingSession } from "@/context/ShoppingSessionContext";
 import { fetchRecipeSponsor, type SponsorCardData } from "@/services/sponsors";
 import type { Recipe } from "@/data/mockRecipes";
 import { useRasoiRealtimeTables } from "@/utils/realtime";
-import { getPantryMatchPercent, partitionIngredients } from "@/utils/recipes";
+import { getPantryMatchPercent, partitionIngredients, countMatchableIngredients } from "@/utils/recipes";
 import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
-import { getRecipeSteps } from "@/utils/recipeSteps";
 import { getRecipeStepsHi } from "@/utils/recipeStepsHi";
-import { scaleIngredientLabel, servingMultiplierLabel } from "@/utils/servingScale";
+import {
+  scaleIngredientLabel,
+  servingMultiplierLabel,
+} from "@/utils/servingScale";
 import { shareRecipeOnWhatsApp } from "@/utils/shareRecipe";
 import { logRecipeView, logRecipeCooked } from "@/services/recommendations";
 import { PAYWALL_HREF } from "@/utils/routes";
@@ -76,9 +80,13 @@ export default function RecipeDetailScreen() {
     householdSize,
   } = useAppContext();
   const { getRecipeById, loadRecipeById } = useRecipes();
+  const { getSessionProgress, getNextShoppingItem } = useShoppingSession();
   const loadRecipeByIdRef = useRef(loadRecipeById);
   loadRecipeByIdRef.current = loadRecipeById;
   const [modalVisible, setModalVisible] = useState(false);
+  const [checkoutFocusedItem, setCheckoutFocusedItem] = useState<string | null>(
+    null,
+  );
   const [modalPartner, setModalPartner] = useState<AffiliatePartner>("blinkit");
   const [deliveryModalVisible, setDeliveryModalVisible] = useState(false);
   const [stickyBarHeight, setStickyBarHeight] = useState(160);
@@ -118,17 +126,6 @@ export default function RecipeDetailScreen() {
           : "rgba(255,107,53,0.12)",
       },
       toolChipText: { color: themeColors.muted },
-      stepRow: {
-        backgroundColor: themeColors.white,
-        borderColor: themeColors.border,
-      },
-      stepRowDone: isDark
-        ? {
-            backgroundColor: "rgba(0,168,107,0.12)",
-            borderColor: "rgba(0,168,107,0.3)",
-          }
-        : undefined,
-      stepText: { color: themeColors.charcoal },
       stickyBar: {
         backgroundColor: themeColors.white,
         borderTopColor: themeColors.border,
@@ -227,7 +224,7 @@ export default function RecipeDetailScreen() {
       if (recipe.stepsHi?.length) return recipe.stepsHi;
       return getRecipeStepsHi(recipe.id, recipe.title, recipe);
     }
-    return recipe.steps ?? getRecipeSteps(recipe.id, recipe.title);
+    return recipe.steps ?? [];
   }, [recipe, stepsLang]);
 
   const displayDescription = useMemo(() => {
@@ -293,17 +290,28 @@ export default function RecipeDetailScreen() {
   const pantryMatchPercent = getPantryMatchPercent(recipe, pantryIngredients);
   const recipeVisual = getRecipeVisualIdentity(recipe);
   const saved = isRecipeSaved(recipe.id);
+  const shoppingProgress = getSessionProgress(recipe.id);
+  const nextShopItem = getNextShoppingItem(recipe.id);
 
   const handleSavePress = () => {
     void Haptics.selectionAsync();
     toggleSavedRecipe(recipe.id);
   };
 
-  const openCheckout = (partner: AffiliatePartner = "blinkit") => {
+  const openCheckout = (
+    partner: AffiliatePartner = "blinkit",
+    focusItem?: string,
+  ) => {
     if (!showPartners || missing.length === 0) return;
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setCheckoutFocusedItem(focusItem ?? null);
     setModalPartner(partner);
     setModalVisible(true);
+  };
+
+  const closeCheckout = () => {
+    setModalVisible(false);
+    setCheckoutFocusedItem(null);
   };
 
   const openDelivery = () => {
@@ -351,9 +359,13 @@ export default function RecipeDetailScreen() {
         ]}
       >
         <View style={styles.hero}>
-          <RecipeVisualBadge recipe={recipe} variant="backdrop" style={StyleSheet.absoluteFillObject} />
+          <RecipeVisualBadge
+            recipe={recipe}
+            variant="backdrop"
+            style={StyleSheet.absoluteFillObject}
+          />
           <LinearGradient
-            colors={['transparent', 'rgba(26,26,46,0.88)']}
+            colors={["transparent", "rgba(26,26,46,0.88)"]}
             style={StyleSheet.absoluteFillObject}
           />
 
@@ -380,7 +392,8 @@ export default function RecipeDetailScreen() {
 
           <View style={styles.heroBottom}>
             <Text style={styles.heroEyebrow}>
-              {recipeVisual.emoji} {recipeVisual.kitchenLabel} · {recipeVisual.mood}
+              {recipeVisual.emoji} {recipeVisual.kitchenLabel} ·{" "}
+              {recipeVisual.mood}
             </Text>
             <Text style={styles.heroTitle}>{recipe.title}</Text>
             <View style={styles.heroMetaRow}>
@@ -431,27 +444,41 @@ export default function RecipeDetailScreen() {
 
           <View style={styles.statsRow}>
             <View style={[styles.statCard, surface.statCard]}>
-              <Text style={[styles.statLabel, surface.statLabel]}>Calories</Text>
+              <Text style={[styles.statLabel, surface.statLabel]}>
+                Calories
+              </Text>
               <Text style={[styles.statValue, surface.statValue]}>
                 {recipe.calories}
               </Text>
             </View>
             <View style={[styles.statCard, surface.statCard]}>
               <Text style={[styles.statLabel, surface.statLabel]}>Region</Text>
-              <Text style={[styles.statValue, surface.statValue, { color: colors.primary }]}>
+              <Text
+                style={[
+                  styles.statValue,
+                  surface.statValue,
+                  { color: colors.primary },
+                ]}
+              >
                 {recipe.region}
               </Text>
             </View>
             <View style={[styles.statCard, surface.statCard]}>
               <Text style={[styles.statLabel, surface.statLabel]}>Diet</Text>
-              <Text style={[styles.statValue, surface.statValue, { color: colors.green }]}>
+              <Text
+                style={[
+                  styles.statValue,
+                  surface.statValue,
+                  { color: colors.green },
+                ]}
+              >
                 {recipe.dietType}
               </Text>
             </View>
           </View>
 
           <Text style={[styles.sectionTitle, surface.sectionTitle]}>
-            Ingredients
+            The ingredients
           </Text>
           <View style={styles.stepsToolbar}>
             {[0.5, 1, 2].map((multiplier) => {
@@ -486,22 +513,31 @@ export default function RecipeDetailScreen() {
               );
             })}
           </View>
-          <IngredientList
-            recipe={scaledRecipe ?? recipe}
+          <RecipeIngredientsGuide
+            ingredients={(scaledRecipe ?? recipe).ingredients}
             available={available}
             missing={missing}
-            onShopMissing={
-              missing.length > 0 && showPartners
-                ? () => openCheckout()
-                : undefined
-            }
-            onPartnerPress={
-              missing.length > 0 && showPartners ? openCheckout : undefined
-            }
           />
+          <View style={styles.ingredientShopWrap}>
+            <MissingItemsPanel
+              missing={missing}
+              totalCount={countMatchableIngredients(recipe)}
+              shoppingProgress={shoppingProgress}
+              onShopAll={
+                missing.length > 0 && showPartners
+                  ? () => openCheckout()
+                  : undefined
+              }
+              onPartnerPress={
+                missing.length > 0 && showPartners
+                  ? (partner) => openCheckout(partner)
+                  : undefined
+              }
+            />
+          </View>
 
           <Text style={[styles.sectionTitle, surface.sectionTitle]}>
-            How to cook
+            {stepsLang === "hi" ? "बनाने की विधि" : `The ${recipe.title} method`}
           </Text>
           <View style={styles.stepsToolbar}>
             <Pressable
@@ -544,43 +580,14 @@ export default function RecipeDetailScreen() {
               </Text>
             </Pressable>
           </View>
-          {displaySteps.map((step, index) => {
-            const done = completedSteps.has(index);
-            return (
-              <Pressable
-                key={`${stepsLang}-${index}`}
-                onPress={cookMode ? () => toggleStepDone(index) : undefined}
-                style={[
-                  styles.stepRow,
-                  surface.stepRow,
-                  cookMode && styles.stepRowCook,
-                  done &&
-                    (surface.stepRowDone
-                      ? surface.stepRowDone
-                      : styles.stepRowDone),
-                ]}
-              >
-                <View
-                  style={[styles.stepNumber, done && styles.stepNumberDone]}
-                >
-                  {done ? (
-                    <Check size={14} color={colors.white} strokeWidth={3} />
-                  ) : (
-                    <Text style={styles.stepNumberText}>{index + 1}</Text>
-                  )}
-                </View>
-                <Text
-                  style={[
-                    styles.stepText,
-                    surface.stepText,
-                    cookMode && styles.stepTextCook,
-                  ]}
-                >
-                  {step}
-                </Text>
-              </Pressable>
-            );
-          })}
+          <RecipeMethodTimeline
+            title={recipe.title}
+            steps={displaySteps}
+            prepTime={recipe.prepTime}
+            cookMode={cookMode}
+            completedSteps={completedSteps}
+            onToggleStep={cookMode ? toggleStepDone : undefined}
+          />
 
           <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
             <SponsorOrAd
@@ -618,7 +625,26 @@ export default function RecipeDetailScreen() {
                   Zomato · Swiggy · ~30 min delivery
                 </Text>
               </Pressable>
-              {missing.length > 0 && (
+              {missing.length > 0 && nextShopItem ? (
+                <Pressable
+                  onPress={() => openCheckout("blinkit", nextShopItem)}
+                  style={styles.stickyBtnShopNext}
+                >
+                  <View style={styles.stickyShopNextIcon}>
+                    <ShoppingCart size={18} color={colors.white} />
+                  </View>
+                  <View style={styles.stickyShopNextCopy}>
+                    <Text style={styles.stickyShopNextTitle}>
+                      Shop next: {nextShopItem}
+                    </Text>
+                    <Text style={styles.stickyShopNextSub}>
+                      {shoppingProgress
+                        ? `${shoppingProgress.shopped} of ${shoppingProgress.total} shopped · tap to open partners`
+                        : "Continue your shopping checklist"}
+                    </Text>
+                  </View>
+                </Pressable>
+              ) : missing.length > 0 ? (
                 <Pressable
                   onPress={() => openCheckout()}
                   style={styles.stickyBtnGroceries}
@@ -629,7 +655,7 @@ export default function RecipeDetailScreen() {
                     {missing.length !== 1 ? "s" : ""}
                   </Text>
                 </Pressable>
-              )}
+              ) : null}
             </>
           ) : (
             <Pressable
@@ -659,11 +685,13 @@ export default function RecipeDetailScreen() {
 
           <AffiliateCheckoutModal
             visible={modalVisible}
-            onClose={() => setModalVisible(false)}
+            onClose={closeCheckout}
             recipeTitle={recipe.title}
             recipeId={recipe.id}
+            recipe={recipe}
             missingIngredients={missing}
             initialPartner={modalPartner}
+            initialFocusedItem={checkoutFocusedItem}
           />
         </>
       )}
@@ -833,9 +861,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginTop: spacing.xxxl,
     marginBottom: spacing.sm,
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: "800",
     color: colors.charcoal,
+  },
+  ingredientShopWrap: {
+    marginTop: spacing.lg,
   },
   stepsToolbar: {
     flexDirection: "row",
@@ -862,53 +893,6 @@ const styles = StyleSheet.create({
   },
   toolChipTextActive: {
     color: colors.primary,
-  },
-  stepRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.md,
-    marginBottom: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    ...shadows.card,
-  },
-  stepRowCook: {
-    paddingVertical: spacing.lg,
-  },
-  stepRowDone: {
-    opacity: 0.72,
-    backgroundColor: "rgba(0,168,107,0.06)",
-    borderColor: "rgba(0,168,107,0.25)",
-  },
-  stepNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepNumberDone: {
-    backgroundColor: colors.green,
-  },
-  stepNumberText: {
-    fontSize: 13,
-    fontWeight: "800",
-    color: colors.white,
-  },
-  stepText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 22,
-    color: colors.charcoal,
-  },
-  stepTextCook: {
-    fontSize: 17,
-    lineHeight: 26,
-    fontWeight: "600",
   },
   stickyBar: {
     position: "absolute",
@@ -964,6 +948,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.sm,
     paddingVertical: spacing.sm,
+  },
+  stickyBtnShopNext: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    ...shadows.cta,
+  },
+  stickyShopNextIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  stickyShopNextCopy: {
+    flex: 1,
+    gap: 2,
+  },
+  stickyShopNextTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: colors.white,
+  },
+  stickyShopNextSub: {
+    fontSize: 11,
+    lineHeight: 15,
+    color: "rgba(255,255,255,0.88)",
   },
   stickyGroceriesText: {
     fontSize: 13,

@@ -4,6 +4,10 @@ import { ingredientKey, pantryHasIngredient } from '@/utils/recipeIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
 import { recipeContainsAllergen } from '@/utils/allergyFilter';
+import {
+  countMatchableIngredients,
+  isPantryMatchExcluded,
+} from '@/utils/assumedAtHomeIngredients';
 import { recipeMatchesSearchQuery } from '@/utils/recipeSearchLocal';
 import {
   isBudgetFriendlyRecipe,
@@ -17,8 +21,12 @@ export type PantryMatchMode = 'any' | 'full';
 
 export function isRecipeFullyStocked(recipe: Recipe, pantryIngredients: string[]): boolean {
   if (pantryIngredients.length === 0) return false;
-  return recipe.ingredients.every((ingredient) =>
-    ingredientKey(ingredient.name) && pantryHasIngredient(pantryIngredients, ingredient.name),
+  const matchable = recipe.ingredients.filter(
+    (ingredient) => ingredient.name?.trim() && !isPantryMatchExcluded(ingredient.name),
+  );
+  if (matchable.length === 0) return true;
+  return matchable.every((ingredient) =>
+    pantryHasIngredient(pantryIngredients, ingredient.name),
   );
 }
 
@@ -145,8 +153,10 @@ export function filterRecipes(
       if (pantryMatchMode === 'full') {
         if (!isRecipeFullyStocked(recipe, pantryIngredients)) return false;
       } else {
-        const hasMatch = recipe.ingredients.some((ingredient) =>
-          pantryHasIngredient(pantryIngredients, ingredient.name),
+        const hasMatch = recipe.ingredients.some(
+          (ingredient) =>
+            !isPantryMatchExcluded(ingredient.name) &&
+            pantryHasIngredient(pantryIngredients, ingredient.name),
         );
         if (!hasMatch) return false;
       }
@@ -165,7 +175,7 @@ export function partitionIngredients(
 
   recipe.ingredients.forEach((ingredient) => {
     const name = ingredient.name?.trim();
-    if (!name) return;
+    if (!name || isPantryMatchExcluded(name)) return;
     if (pantryHasIngredient(pantryIngredients, name)) {
       available.push(name);
     } else {
@@ -175,6 +185,9 @@ export function partitionIngredients(
 
   return { available, missing };
 }
+
+/** Same ingredient set used by partitionIngredients / getPantryMatchPercent. */
+export { countMatchableIngredients };
 
 export function getPantryMatchPercent(recipe: Recipe, pantryIngredients: string[]): number {
   const { available, missing } = partitionIngredients(recipe, pantryIngredients);

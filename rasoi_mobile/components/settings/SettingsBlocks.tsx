@@ -124,7 +124,7 @@ export function KitchenPrefsCard({
           </View>
         </View>
 
-        <Text style={[styles.kitchenCuisineTitle, { color: themeColors.muted }]}>Favourite cuisines</Text>
+        <Text style={[styles.kitchenCuisineTitle, { color: themeColors.muted }]}>Kitchen styles</Text>
         <View style={styles.kitchenChipWrap}>
           {cuisineLabels.length > 0 ? (
             cuisineLabels.map((label) => (
@@ -133,7 +133,7 @@ export function KitchenPrefsCard({
               </View>
             ))
           ) : (
-            <Text style={[styles.kitchenEmpty, { color: themeColors.muted }]}>Tap to pick cuisines</Text>
+            <Text style={[styles.kitchenEmpty, { color: themeColors.muted }]}>Tap to pick kitchen styles</Text>
           )}
         </View>
       </Pressable>

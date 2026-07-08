@@ -21,7 +21,9 @@ import GuestRegisterBanner from "@/components/home/GuestRegisterBanner";
 import HomeSeasonalRail from "@/components/home/HomeSeasonalRail";
 import { AppTabHeader } from "@/components/AppTabHeader";
 import HomeBrowseLink from "@/components/home/HomeBrowseLink";
-import HomeRecipeRow, { HomePickShuffleButton } from "@/components/home/HomeRecipeRow";
+import HomeRecipeRow, {
+  HomePickShuffleButton,
+} from "@/components/home/HomeRecipeRow";
 import HomeSectionHeader from "@/components/home/HomeSectionHeader";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import SponsorOrAd from "@/components/SponsorOrAd";
@@ -153,7 +155,8 @@ export default function HomeScreen() {
       ? rankedRecipes.slice(0, 3)
       : [];
   const displayTopPick =
-    topPick ?? (fallbackTonightCards.length > 0 ? fallbackTonightCards[0] : undefined);
+    topPick ??
+    (fallbackTonightCards.length > 0 ? fallbackTonightCards[0] : undefined);
   const displayAlsoCards =
     tonightCards.length > 0
       ? tonightCards
@@ -327,7 +330,9 @@ export default function HomeScreen() {
             <HomePlanTomorrow
               lateNightPick={lateNightPick}
               tomorrowPick={topPick}
-              onRecipePress={(recipe) => openRecipeSuggestion(recipe, 'home_plan_tomorrow')}
+              onRecipePress={(recipe) =>
+                openRecipeSuggestion(recipe, "home_plan_tomorrow")
+              }
             />
           ) : null}
 
@@ -338,11 +343,15 @@ export default function HomeScreen() {
                   <HomeRecipeRow
                     key={lateNightPick.id}
                     section="pick"
-                    sectionLabel={meal.lateNightPickEyebrow ?? "🌙 Late night pick"}
+                    sectionLabel={
+                      meal.lateNightPickEyebrow ?? "🌙 Late night pick"
+                    }
                     recipe={lateNightPick}
                     pantryMatchPercent={lateNightPantryMatch}
                     cookCtaLabel="Cook now"
-                    onPress={() => openRecipeSuggestion(lateNightPick, 'home_late_night')}
+                    onPress={() =>
+                      openRecipeSuggestion(lateNightPick, "home_late_night")
+                    }
                     onCookTonight={() => openCookTonight(lateNightPick)}
                     onShopMissing={(missing, partner) =>
                       openShopModal(lateNightPick, missing, partner)
@@ -363,14 +372,18 @@ export default function HomeScreen() {
                         : meal.topPickEyebrow
                     }
                     headerTrailing={
-                      <HomePickShuffleButton onPress={() => void refreshHomePicks(true)} />
+                      <HomePickShuffleButton
+                        onPress={() => void refreshHomePicks(true)}
+                      />
                     }
                     recipe={displayTopPick}
                     pantryMatchPercent={topPickPantryMatch}
                     cookCtaLabel={
                       meal.isOvernightDual ? "Plan breakfast" : meal.cookCta
                     }
-                    onPress={() => openRecipeSuggestion(displayTopPick, 'home_top_pick')}
+                    onPress={() =>
+                      openRecipeSuggestion(displayTopPick, "home_top_pick")
+                    }
                     onCookTonight={() => openCookTonight(displayTopPick)}
                     onShopMissing={(missing, partner) =>
                       openShopModal(displayTopPick, missing, partner)
@@ -411,7 +424,9 @@ export default function HomeScreen() {
                               pantryIngredients,
                             )}
                             cookCtaLabel={meal.cookCta}
-                            onPress={() => openRecipeSuggestion(recipe, 'home_also_tonight')}
+                            onPress={() =>
+                              openRecipeSuggestion(recipe, "home_also_tonight")
+                            }
                             onCookTonight={() => openCookTonight(recipe)}
                             onShopMissing={(missing, partner) =>
                               openShopModal(recipe, missing, partner)

@@ -10,11 +10,11 @@ alwaysApply: false
 
 ## Register path (new account)
 
-`Register (details)` → `OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` → `Pantry` → optional `Trial welcome` → `Dashboard (tabs)`
+`Register (details + diet & kitchen styles)` → `Phone OTP (Firebase SMS)` → `Email OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` (notifications + location; diet/cuisines skipped if collected on Register) → `Pantry` → optional `Trial welcome` → `Dashboard (tabs)`
 
 Onboarding sub-steps (fixed order):
 
-1. Food preferences (diet + cuisines)
+1. Food preferences (diet + cuisines) — **skipped when already chosen on Register**
 2. Notifications permission
 3. Location permission
 
@@ -30,21 +30,17 @@ Implementation anchors: `register.tsx` (OTP → legal-consent), `legal-consent.t
 
 Login **must not** show legal-consent (register-only).
 
-## Guest login (first time)
+## Legacy guest upgrade (existing guest sessions only)
 
-`Continue as guest` / splash auto-guest → `Terms & Privacy` (`legal-consent?from=guest`) → `Onboarding` → `Pantry` → `Dashboard`
-
-Do **not** auto-complete onboarding with default prefs (`GUEST_DEFAULT_ONBOARDING`).
-
-## Guest → sign up (upgrade)
+New guest login is **not** offered. Existing `isGuest` users may still upgrade via:
 
 `Settings` → **Sign up** → `Register` (not Login).
 
-Guest may still use Login for returning accounts; Settings upgrade CTA goes to Register.
-
 ## Splash / cold start
 
-Splash → bootstrap → **Login screen when no session** → route via `app/index.tsx`. Cold start no longer auto-creates a guest; the user lands on `Login`, which offers **Create account** (Register) and **Explore as Guest**. The splash itself still shows no Login/Register buttons — routing happens in `app/index.tsx`.
+Splash → bootstrap → **Login screen when no session** → route via `app/index.tsx`. Cold start does not auto-create a session; the user lands on `Login`, which offers **Create account** (Register). The splash itself still shows no Login/Register buttons — routing happens in `app/index.tsx`.
+
+Logged-in users with incomplete onboarding resume via `legal-consent?from=register` (if device legal consent missing) or `onboarding`.
 
 ## Key files
 

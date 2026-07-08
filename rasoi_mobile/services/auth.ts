@@ -5,6 +5,7 @@ import { authError, authLog } from '@/utils/authLogger';
 import { clearAuthToken, clearRasoiUserId, saveRasoiUserId } from '@/utils/authToken';
 import { isSupabaseDirectMode } from '@/utils/rasoiDb';
 import { trySignInAnonymously, signOutSupabase } from '@/services/supabaseAuth';
+import { signOutFirebasePhoneAuth } from '@/services/firebasePhoneAuth';
 import { requireSupabaseClient } from '@/utils/supabase';
 import type { OnboardingPayload } from '@/utils/storage';
 
@@ -86,6 +87,7 @@ export async function syncSupabaseAccount(
     acceptedTerms?: boolean;
     linkGuestUserId?: string;
     onboarding?: OnboardingPayload;
+    phoneVerified?: boolean;
   },
 ): Promise<AuthResponse> {
   authLog('syncSupabaseAccount:start', {
@@ -105,6 +107,7 @@ export async function syncSupabaseAccount(
         ...(options?.acceptedTerms ? { acceptedTerms: true as const } : {}),
         ...(options?.linkGuestUserId ? { linkGuestUserId: options.linkGuestUserId } : {}),
         ...(options?.onboarding ? { onboarding: options.onboarding } : {}),
+        ...(options?.phoneVerified ? { phoneVerified: true as const } : {}),
       }, supabaseAccessToken);
 
       authLog('syncSupabaseAccount:edge_success', {
@@ -132,6 +135,7 @@ export async function syncSupabaseAccount(
           ...(options?.acceptedTerms ? { acceptedTerms: true as const } : {}),
           ...(options?.linkGuestUserId ? { linkGuestUserId: options.linkGuestUserId } : {}),
           ...(options?.onboarding ? { onboarding: options.onboarding } : {}),
+          ...(options?.phoneVerified ? { phoneVerified: true } : {}),
         }),
       },
       { timeoutMs: 20_000 },
@@ -236,6 +240,7 @@ export async function loginAsGuestUser(options?: { name?: string }): Promise<Aut
 export async function logoutSession(): Promise<void> {
   authLog('logout:start');
   await signOutSupabase();
+  await signOutFirebasePhoneAuth();
   await clearAuthToken();
   await clearRasoiUserId();
 }

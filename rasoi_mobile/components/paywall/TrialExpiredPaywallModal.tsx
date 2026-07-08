@@ -153,7 +153,8 @@ export default function TrialExpiredPaywallModal() {
             </View>
             <Text style={styles.heroTitle}>Partners are locked again</Text>
             <Text style={styles.heroSub}>
-              Blinkit, Zepto, Instamart, Zomato & Swiggy need an active Rasoi Plus plan.
+              Unlimited checkout needs Rasoi Plus. Free plan still includes 2 partner shops per
+              month after trial.
             </Text>
           </LinearGradient>
 

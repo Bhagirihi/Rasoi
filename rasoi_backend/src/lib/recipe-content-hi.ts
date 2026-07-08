@@ -1,28 +1,177 @@
 /** Hindi localization for recipe descriptions and cooking steps. */
 
+import { canonicalizeIngredientName } from '@/lib/ingredient-canonical';
 import { detectDishKind, type RecipeStepInput } from '@/lib/recipe-steps';
 
 import type { RecipeIngredient } from '@/lib/types';
 
+/** Exact English titles → natural Hindi dish names for UI copy. */
+const EXACT_TITLE_HI: Record<string, string> = {
+  'Plain Rice': 'सादा चावल',
+  Chapati: 'चपाती',
+  Phulka: 'फुल्का',
+  'Jeera Rice': 'जीरा चावल',
+  'Aloo Paratha': 'आलू पराठा',
+  'Aloo Jeera': 'आलू जीरा',
+  'Aloo Matar': 'आलू मटर',
+  'Aloo Tomato': 'आलू टमाटर',
+  'Aloo Capsicum': 'आलू शिमला मिर्च',
+  'Toor Dal': 'अरहर दाल',
+  'Yellow Dal': 'पीली दाल',
+  'Masoor Dal': 'मसूर दाल',
+  'Urad Dal': 'उड़द दाल',
+  'Green Chutney': 'हरी चटनी',
+  'Coconut Chutney': 'नारियल की चटनी',
+  'Onion Raita': 'प्याज़ रायता',
+  'Mint Raita': 'पुदीना रायता',
+  'Kachumber Salad': 'कचूंबर सलाद',
+  'French Fries': 'फ्रेंच फ्राइज़',
+};
+
+const TITLE_WORD_HI: [RegExp, string][] = [
+  [/\bPlain\b/gi, 'सादा'],
+  [/\bRice\b/gi, 'चावल'],
+  [/\bJeera\b/gi, 'जीरा'],
+  [/\bAloo\b/gi, 'आलू'],
+  [/\bPaneer\b/gi, 'पनीर'],
+  [/\bChicken\b/gi, 'चिकन'],
+  [/\bFish\b/gi, 'मछली'],
+  [/\bMutton\b/gi, 'मटन'],
+  [/\bEgg\b/gi, 'अंडा'],
+  [/\bEggs\b/gi, 'अंडे'],
+  [/\bChana\b/gi, 'चना'],
+  [/\bChole\b/gi, 'छोले'],
+  [/\bRajma\b/gi, 'राजमा'],
+  [/\bDal\b/gi, 'दाल'],
+  [/\bGobhi\b/gi, 'गोभी'],
+  [/\bGobi\b/gi, 'गोभी'],
+  [/\bBhindi\b/gi, 'भिंडी'],
+  [/\bPalak\b/gi, 'पालक'],
+  [/\bMatar\b/gi, 'मटर'],
+  [/\bParatha\b/gi, 'पराठा'],
+  [/\bRoti\b/gi, 'रोटी'],
+  [/\bBhakri\b/gi, 'भाकरी'],
+  [/\bKhichdi\b/gi, 'खिचड़ी'],
+  [/\bBiryani\b/gi, 'बिरयानी'],
+  [/\bPulao\b/gi, 'पुलाव'],
+  [/\bDosa\b/gi, 'दोसा'],
+  [/\bIdli\b/gi, 'इडली'],
+  [/\bUpma\b/gi, 'उपमा'],
+  [/\bPoha\b/gi, 'पोहा'],
+  [/\bRaita\b/gi, 'रायता'],
+  [/\bSalad\b/gi, 'सलाद'],
+  [/\bChutney\b/gi, 'चटनी'],
+  [/\bPickle\b/gi, 'अचार'],
+  [/\bSoup\b/gi, 'सूप'],
+  [/\bCurry\b/gi, 'करी'],
+  [/\bMasala\b/gi, 'मसाला'],
+  [/\bTikka\b/gi, 'टिक्का'],
+  [/\bKebab\b/gi, 'कबाब'],
+  [/\bKofta\b/gi, 'कोफ्ता'],
+  [/\bThepla\b/gi, 'थेपला'],
+  [/\bHandvo\b/gi, 'हांडवो'],
+  [/\bDhokla\b/gi, 'ढोकला'],
+  [/\bKadhi\b/gi, 'कढ़ी'],
+  [/\bSambar\b/gi, 'सांभर'],
+  [/\bRasam\b/gi, 'रसम'],
+  [/\bChaat\b/gi, 'चाट'],
+  [/\bwith\b/gi, 'के साथ'],
+  [/\band\b/gi, 'और'],
+  [/\bBread\b/gi, 'ब्रेड'],
+  [/\bQuick\b/gi, 'झटपट'],
+  [/\bDhaba\b/gi, 'ढाबा'],
+  [/\bFestive\b/gi, 'त्योहारी'],
+  [/\bRoyal\b/gi, 'शाही'],
+  [/\bSmoky\b/gi, 'धुएँदार'],
+  [/\bClassic\b/gi, 'क्लासिक'],
+  [/\bComfort\b/gi, 'आरामदायक'],
+  [/\bHealthy\b/gi, 'हेल्दी'],
+  [/\bGrand\b/gi, 'शाही'],
+  [/\bHome-?style\b/gi, 'घर जैसा'],
+  [/\bMumbai\b/gi, 'मुंबई'],
+  [/\bDelhi\b/gi, 'दिल्ली'],
+  [/\bBangalore\b/gi, 'बेंगलुरु'],
+  [/\bChennai\b/gi, 'चेन्नई'],
+  [/\bChef\b/gi, 'शेफ'],
+  [/\bFamily\b/gi, 'पारिवारिक'],
+  [/\bCrispy\b/gi, 'कुरकुरा'],
+  [/\bButtery\b/gi, 'मक्खन वाला'],
+];
+
+/** User-facing Hindi dish title (avoid leaving English title in HI copy). */
+export function localizeRecipeTitleToHindi(title: string): string {
+  const trimmed = title.trim();
+  if (!trimmed) return trimmed;
+
+  const exact = EXACT_TITLE_HI[trimmed] ?? EXACT_TITLE_HI[canonicalizeIngredientName(trimmed)];
+  if (exact) return exact;
+
+  const lower = trimmed.toLowerCase();
+  for (const [en, hi] of Object.entries(EXACT_TITLE_HI)) {
+    if (en.toLowerCase() === lower) return hi;
+  }
+
+  let result = trimmed;
+  for (const [pattern, replacement] of TITLE_WORD_HI) {
+    result = result.replace(pattern, replacement);
+  }
+
+  if (/[\u0900-\u097F]/.test(result)) return result.replace(/\s+/g, ' ').trim();
+  return trimmed;
+}
+
+export function hindiContentNeedsRefresh(
+  title: string,
+  descriptionHi: string | null | undefined,
+  stepsHi: string[] | undefined,
+): boolean {
+  const titleTrim = title.trim();
+  if (!titleTrim) return false;
+
+  if (descriptionHi?.includes(titleTrim)) return true;
+  if (descriptionHi && /^[A-Za-z0-9\s\-'&]+ —/.test(descriptionHi.trim())) return true;
+
+  if (stepsHi?.some((step) => step.includes(titleTrim))) return true;
+  if (stepsHi?.some((step) => /\b(Heat|Add|Cook|Stir|Serve|minutes|until golden)\b/i.test(step))) {
+    return true;
+  }
+
+  return false;
+}
+
 const INGREDIENT_HI: Record<string, string> = {
   Bateta: 'आलू',
+  Aloo: 'आलू',
   Pyaaz: 'प्याज़',
   Tamatar: 'टमाटर',
   Dahi: 'दही',
   Besan: 'बेसन',
   Chawal: 'चावल',
   'Basmati chawal': 'बासमती चावल',
+  'Basmati Chawal': 'बासमती चावल',
   Atta: 'आटा',
   'Gehu atta': 'गेहूँ का आटा',
+  'Gehu Atta': 'गेहूँ का आटा',
   Palak: 'पालक',
   Bhindi: 'भिंडी',
   Paneer: 'पनीर',
+  Chicken: 'चिकन',
+  Fish: 'मछली',
+  Mutton: 'मटन',
+  Chana: 'चना',
+  Rajma: 'राजमा',
+  'Moong Dal': 'मूंग दाल',
+  'Tuver Dal': 'अरहर दाल',
+  'Masoor Dal': 'मसूर दाल',
+  'Urad Dal': 'उड़द दाल',
   Bread: 'ब्रेड',
   Nimbu: 'नींबू',
   Dhania: 'धनिया',
   'Hari mirch': 'हरी मिर्च',
+  'Hari Mirch': 'हरी मिर्च',
   Rai: 'राई',
   'Kadi patta': 'कड़ी पत्ता',
+  'Kadi Patta': 'कड़ी पत्ता',
   Mungfali: 'मूंगफली',
   Gajar: 'गाजर',
   Ghee: 'घी',
@@ -30,6 +179,11 @@ const INGREDIENT_HI: Record<string, string> = {
   Namak: 'नमक',
   Haldi: 'हल्दी',
   Jeera: 'जीरा',
+  Matar: 'मटर',
+  Gobhi: 'गोभी',
+  Baingan: 'बैंगन',
+  Eggs: 'अंडे',
+  Anda: 'अंडा',
 };
 
 const PHRASE_MAP: [RegExp, string][] = [
@@ -94,7 +248,8 @@ const PHRASE_MAP: [RegExp, string][] = [
 function heroHi(ingredients: RecipeIngredient[]): string {
   const raw =
     ingredients.find((i) => !i.isStaple)?.name ?? ingredients[0]?.name ?? 'मुख्य सामग्री';
-  return INGREDIENT_HI[raw] ?? raw;
+  const canonical = canonicalizeIngredientName(raw);
+  return INGREDIENT_HI[raw] ?? INGREDIENT_HI[canonical] ?? canonical;
 }
 
 function localizePhrase(text: string): string {
@@ -112,7 +267,7 @@ function localizePhrase(text: string): string {
 export function buildDetailedStepsHi(input: RecipeStepInput): string[] {
   const kind = detectDishKind(input.title, input.ingredients);
   const hero = heroHi(input.ingredients);
-  const title = input.title;
+  const title = localizeRecipeTitleToHindi(input.title);
   const t = input.title.toLowerCase();
 
   const byKind: Record<string, string[]> = {
@@ -250,13 +405,15 @@ export function localizeStepsToHindi(englishSteps: string[], title: string): str
   return englishSteps.map((step, index) => {
     const localized = localizePhrase(step);
     if (localized !== step) return localized;
-    if (index === 0) return `${title}: ${step}`;
-    return step;
+    const titleHi = localizeRecipeTitleToHindi(title);
+    if (index === 0) return `${titleHi}: ${localized}`;
+    return localized;
   });
 }
 
 export function localizeDescriptionToHindi(englishDescription: string, title: string): string {
   const localized = localizePhrase(englishDescription);
   if (localized !== englishDescription) return localized;
-  return `${title} — घर पर बनने वाला भारतीय व्यंजन, ताज़ी सामग्री और सरल तरीके से तैयार।`;
+  const titleHi = localizeRecipeTitleToHindi(title);
+  return `${titleHi} — घर पर बनने वाला भारतीय व्यंजन, ताज़ी सामग्री और सरल तरीके से तैयार।`;
 }
