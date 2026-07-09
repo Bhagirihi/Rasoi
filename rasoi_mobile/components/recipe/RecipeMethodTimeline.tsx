@@ -1,9 +1,10 @@
-import { Check } from 'lucide-react-native';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Check } from "lucide-react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing } from '@/constants/theme';
-import { useTheme } from '@/context/ThemeContext';
-import { parseRecipeSteps, type ParsedRecipeStep } from '@/utils/parseRecipeStep';
+import { appFonts } from "@/constants/fonts";
+import { colors, radius, spacing } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import { parseRecipeSteps, type ParsedRecipeStep } from "@/utils/parseRecipeStep";
 
 type RecipeMethodTimelineProps = {
   title: string;
@@ -30,7 +31,7 @@ function StepCard({
   cookMode?: boolean;
   done?: boolean;
   onToggle?: () => void;
-  themeColors: ReturnType<typeof useTheme>['colors'];
+  themeColors: ReturnType<typeof useTheme>["colors"];
   isDark: boolean;
 }) {
   const content = (
@@ -53,7 +54,11 @@ function StepCard({
           <View
             style={[
               styles.connector,
-              { backgroundColor: isDark ? 'rgba(255,255,255,0.12)' : colors.border },
+              {
+                backgroundColor: isDark
+                  ? "rgba(255,255,255,0.12)"
+                  : colors.border,
+              },
             ]}
           />
         ) : null}
@@ -70,14 +75,16 @@ function StepCard({
           cookMode && styles.stepBodyCook,
         ]}
       >
-        <Text style={[styles.stepTitle, { color: themeColors.charcoal }]}>
-          {step.title}
-        </Text>
-        {step.durationLabel ? (
-          <Text style={[styles.stepDuration, { color: themeColors.muted }]}>
-            {step.durationLabel}
+        <View style={styles.stepHeader}>
+          <Text style={[styles.stepTitle, { color: themeColors.charcoal }]}>
+            {step.title}
           </Text>
-        ) : null}
+          {step.durationLabel ? (
+            <Text style={[styles.stepDuration, { color: themeColors.muted }]}>
+              {step.durationLabel}
+            </Text>
+          ) : null}
+        </View>
         <Text
           style={[
             styles.stepText,
@@ -88,10 +95,12 @@ function StepCard({
           {step.body}
         </Text>
         {step.tip ? (
-          <Text style={[styles.stepTip, { color: themeColors.muted }]}>
-            <Text style={styles.stepTipLabel}>Pro tip: </Text>
-            {step.tip}
-          </Text>
+          <View style={styles.tipBox}>
+            <Text style={[styles.stepTip, { color: themeColors.muted }]}>
+              <Text style={styles.stepTipLabel}>Tip · </Text>
+              {step.tip}
+            </Text>
+          </View>
         ) : null}
       </View>
     </View>
@@ -161,22 +170,22 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   stepRow: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
+    flexDirection: "row",
+    alignItems: "stretch",
     gap: spacing.md,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   rail: {
     width: 32,
-    alignItems: 'center',
+    alignItems: "center",
   },
   stepBadge: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: radius.sm,
     backgroundColor: colors.charcoal,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     zIndex: 1,
   },
   stepBadgeCook: {
@@ -186,76 +195,82 @@ const styles = StyleSheet.create({
     backgroundColor: colors.green,
   },
   stepBadgeText: {
+    fontFamily: appFonts.bodyBold,
     fontSize: 13,
-    fontWeight: '800',
     color: colors.white,
   },
   connector: {
     flex: 1,
     width: 2,
     marginTop: 4,
-    marginBottom: -spacing.lg,
+    marginBottom: -spacing.md,
     borderRadius: 1,
     opacity: 0.85,
   },
   stepBody: {
     flex: 1,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
-    padding: spacing.lg,
+    padding: spacing.md,
     gap: spacing.xs,
   },
   stepBodyCook: {
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.lg,
   },
   stepBodyDone: {
-    opacity: 0.78,
-    backgroundColor: 'rgba(0,168,107,0.06)',
-    borderColor: 'rgba(0,168,107,0.25)',
+    opacity: 0.82,
+    backgroundColor: "rgba(0,168,107,0.06)",
+    borderColor: "rgba(0,168,107,0.25)",
+  },
+  stepHeader: {
+    gap: 2,
   },
   stepTitle: {
+    fontFamily: appFonts.bodyBold,
     fontSize: 16,
-    fontWeight: '800',
     lineHeight: 22,
-    color: colors.charcoal,
   },
   stepDuration: {
+    fontFamily: appFonts.bodyMedium,
     fontSize: 12,
-    fontWeight: '600',
-    fontStyle: 'italic',
-    color: colors.muted,
-    marginBottom: spacing.xs,
+    fontStyle: "italic",
   },
   stepText: {
+    fontFamily: appFonts.body,
     fontSize: 15,
-    lineHeight: 24,
-    color: colors.charcoal,
+    lineHeight: 23,
   },
   stepTextCook: {
-    fontSize: 17,
-    lineHeight: 26,
-    fontWeight: '500',
+    fontSize: 16,
+    lineHeight: 25,
+    fontFamily: appFonts.bodyMedium,
+  },
+  tipBox: {
+    marginTop: spacing.xs,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: "rgba(255,107,53,0.15)",
   },
   stepTip: {
-    marginTop: spacing.sm,
-    fontSize: 14,
-    lineHeight: 22,
-    fontStyle: 'italic',
-    color: colors.muted,
+    fontFamily: appFonts.body,
+    fontSize: 13,
+    lineHeight: 20,
+    fontStyle: "italic",
   },
   stepTipLabel: {
-    fontWeight: '800',
-    fontStyle: 'normal',
+    fontFamily: appFonts.bodyBold,
+    fontStyle: "normal",
+    color: colors.primary,
   },
   empty: {
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
     padding: spacing.xl,
   },
   emptyText: {
+    fontFamily: appFonts.body,
     fontSize: 14,
     lineHeight: 22,
-    textAlign: 'center',
-    color: colors.muted,
+    textAlign: "center",
   },
 });

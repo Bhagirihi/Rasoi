@@ -1,5 +1,4 @@
 import { StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Shimmer } from "@/components/ui/Shimmer";
 import { layout, radius, spacing } from "@/constants/theme";
@@ -9,31 +8,35 @@ export default function RecipeDetailSkeleton() {
   const { colors: themeColors } = useTheme();
 
   return (
-    <SafeAreaView
-      style={[styles.safe, { backgroundColor: themeColors.cream }]}
-      edges={["top"]}
-    >
-      <View style={styles.header}>
-        <Shimmer style={styles.backBtn} borderRadius={radius.pill} />
-        <View style={styles.headerActions}>
-          <Shimmer style={styles.iconBtn} borderRadius={radius.pill} />
-          <Shimmer style={styles.iconBtn} borderRadius={radius.pill} />
-        </View>
-      </View>
+    <View style={[styles.root, { backgroundColor: themeColors.cream }]}>
+      <Shimmer style={styles.hero} borderRadius={0} />
 
-      <Shimmer style={styles.heroImage} borderRadius={radius.lg} />
-
-      <View style={styles.body}>
+      <View
+        style={[
+          styles.sheet,
+          {
+            backgroundColor: themeColors.cream,
+            borderColor: themeColors.border,
+          },
+        ]}
+      >
+        <Shimmer style={styles.eyebrow} borderRadius={radius.sm} />
         <Shimmer style={styles.title} borderRadius={radius.sm} />
         <Shimmer style={styles.titleShort} borderRadius={radius.sm} />
-        <View style={styles.metaRow}>
-          <Shimmer style={styles.metaChip} borderRadius={radius.pill} />
-          <Shimmer style={styles.metaChip} borderRadius={radius.pill} />
-          <Shimmer style={styles.metaChipWide} borderRadius={radius.pill} />
+
+        <View style={styles.chipRow}>
+          <Shimmer style={styles.chip} borderRadius={radius.pill} />
+          <Shimmer style={styles.chip} borderRadius={radius.pill} />
+          <Shimmer style={styles.chipWide} borderRadius={radius.pill} />
         </View>
 
-        <Shimmer style={styles.sectionLabel} borderRadius={radius.sm} />
-        {(["92%", "78%", "85%", "70%"] as const).map((width, index) => (
+        <Shimmer style={styles.descLine} borderRadius={radius.sm} />
+        <Shimmer style={styles.descLineShort} borderRadius={radius.sm} />
+
+        <Shimmer style={styles.calorieCard} borderRadius={radius.md} />
+
+        <Shimmer style={styles.sectionTitle} borderRadius={radius.sm} />
+        {(["100%", "92%", "78%", "85%"] as const).map((width, index) => (
           <Shimmer
             key={index}
             style={[styles.ingredientLine, { width }]}
@@ -41,69 +44,71 @@ export default function RecipeDetailSkeleton() {
           />
         ))}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
+  root: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  hero: {
+    height: 300,
+    width: "100%",
+  },
+  sheet: {
+    marginTop: -spacing.xl,
+    borderTopLeftRadius: radius.lg + 4,
+    borderTopRightRadius: radius.lg + 4,
+    borderWidth: StyleSheet.hairlineWidth,
     paddingHorizontal: layout.screenPadding,
-    paddingVertical: spacing.md,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-  },
-  headerActions: {
-    flexDirection: "row",
+    paddingTop: spacing.xl,
     gap: spacing.sm,
   },
-  iconBtn: {
-    width: 40,
-    height: 40,
-  },
-  heroImage: {
-    marginHorizontal: layout.screenPadding,
-    height: 220,
-  },
-  body: {
-    paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.lg,
-    gap: spacing.sm,
+  eyebrow: {
+    height: 14,
+    width: 140,
   },
   title: {
-    height: 22,
+    height: 28,
     width: "88%",
   },
   titleShort: {
-    height: 22,
-    width: "62%",
+    height: 28,
+    width: "55%",
   },
-  metaRow: {
+  chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing.sm,
-    marginTop: spacing.sm,
-    marginBottom: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
   },
-  metaChip: {
-    height: 28,
+  chip: {
+    height: 30,
     width: 72,
   },
-  metaChipWide: {
-    height: 28,
+  chipWide: {
+    height: 30,
     width: 96,
   },
-  sectionLabel: {
+  descLine: {
     height: 14,
-    width: 120,
+    width: "100%",
+  },
+  descLineShort: {
+    height: 14,
+    width: "72%",
+  },
+  calorieCard: {
+    height: 68,
+    width: "100%",
     marginTop: spacing.sm,
+  },
+  sectionTitle: {
+    height: 20,
+    width: 120,
+    marginTop: spacing.lg,
     marginBottom: spacing.xs,
   },
   ingredientLine: {

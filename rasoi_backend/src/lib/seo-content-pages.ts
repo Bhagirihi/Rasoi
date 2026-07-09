@@ -1,6 +1,7 @@
 import type { MarketId } from '@/lib/markets';
 import { MARKET_PATHS } from '@/lib/markets';
 import { GENERATED_SEO_RECIPE_BLOGS } from '@/lib/seo-recipe-blogs-data';
+import { getAllTaxonomyPaths } from '@/lib/seo-taxonomy';
 
 export type SeoContentFaq = {
   question: string;
@@ -379,6 +380,7 @@ export function getAllSeoContentPaths(): string[] {
     '/recipes',
     ...SEO_GUIDE_PAGES.map((p) => `/${p.slug}`),
     ...SEO_RECIPE_PAGES.map((p) => `/recipes/${p.slug}`),
+    ...getAllTaxonomyPaths(),
   ];
 }
 
@@ -386,7 +388,7 @@ export const INDIAN_RECIPE_APP_HUB = {
   path: '/indian-recipe-app',
   title: 'Indian Recipe Guides & Home Cooking | Rasoi',
   description:
-    'Indian home cooking guides on rasoiapplication.in — 55 top-searched recipe blogs, dinner ideas, Jain & veg recipes, regional cuisines, and diaspora pages for India, USA, Canada, Australia & New Zealand.',
+    'Indian home cooking guides on rasoiapplication.in — 55 recipe blogs, cuisine & ingredient hubs, dinner ideas, Jain & veg recipes, and diaspora pages for India, USA, Canada, Australia & New Zealand.',
   keywords: [
     'indian recipe guides',
     'indian home cooking',

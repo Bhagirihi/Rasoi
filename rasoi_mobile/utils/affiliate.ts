@@ -1,4 +1,5 @@
 import type { AffiliatePartner, FoodDeliveryPartner } from '@/constants/partners';
+import { buildDeliverySearchQuery } from '@/constants/partners';
 import {
   buildGroceryCheckoutQuery,
   buildPartnerUrls,
@@ -32,7 +33,7 @@ export async function openFoodDelivery(
   recipeTitle: string,
   partner: FoodDeliveryPartner,
 ): Promise<void> {
-  const trimmed = recipeTitle.trim();
+  const trimmed = buildDeliverySearchQuery(recipeTitle);
   if (!trimmed) return;
 
   const urls = buildPartnerUrls(partner, trimmed, getCachedPartnerLinks());

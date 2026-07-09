@@ -446,6 +446,17 @@ def _listings_from_manifest(manifest: dict[str, Any], language: str) -> list[tup
     return [(language, localized)]
 
 
+def repo_root() -> Path:
+    return manifest_path().parents[3]
+
+
+def resolve_repo_path(relative: str) -> Path:
+    path = Path(relative.strip())
+    if path.is_absolute():
+        return path
+    return repo_root() / path
+
+
 def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> dict[str, Any]:
     """Push title, short + full description from manifest via edits API."""
     pkg = (pkg or package_name()).strip()
@@ -456,23 +467,215 @@ def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> di
     edit_id = edit['id']
 
     updated_listings: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
     for lang, listing in _listings_from_manifest(manifest, language):
-        updated = (
-            service.edits()
-            .listings()
-            .update(packageName=pkg, editId=edit_id, language=lang, body=_listing_body(listing))
-            .execute()
-        )
-        updated_listings.append({'language': lang, 'listing': updated})
+        try:
+            updated = (
+                service.edits()
+                .listings()
+                .update(packageName=pkg, editId=edit_id, language=lang, body=_listing_body(listing))
+                .execute()
+            )
+            updated_listings.append({'language': lang, 'listing': updated})
+        except Exception as exc:  # noqa: BLE001
+            if language == 'all':
+                errors.append({'language': lang, 'error': str(exc)})
+                continue
+            raise
+
+    if not updated_listings:
+        raise PlayError(f'No listings updated. Errors: {errors}')
 
     committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
 
-    return {
+    result: dict[str, Any] = {
         'package_name': pkg,
         'languages': [entry['language'] for entry in updated_listings],
         'listings': updated_listings,
         'commit': committed,
     }
+    if errors:
+        result['errors'] = errors
+    return result
+
+
+def _delete_existing_images(
+    service: Any,
+    *,
+    pkg: str,
+    edit_id: str,
+    language: str,
+    image_type: str,
+) -> int:
+    deleted = 0
+    try:
+        listed = (
+            service.edits()
+            .images()
+            .list(packageName=pkg, editId=edit_id, language=language, imageType=image_type)
+            .execute()
+        )
+    except Exception:  # noqa: BLE001
+        return 0
+    for image in listed.get('images') or []:
+        image_id = image.get('id')
+        if not image_id:
+            continue
+        service.edits().images().delete(
+            packageName=pkg,
+            editId=edit_id,
+            language=language,
+            imageType=image_type,
+            imageId=image_id,
+        ).execute()
+        deleted += 1
+    return deleted
+
+
+def _prepare_feature_graphic(source: Path) -> Path:
+    """Play requires 1024x500 feature graphic; resize to temp file when needed."""
+    from googleapiclient.http import MediaFileUpload  # noqa: F401 — imported by caller
+
+    import subprocess
+
+    target_w, target_h = 1024, 500
+    try:
+        import PIL.Image
+
+        with PIL.Image.open(source) as img:
+            if img.size == (target_w, target_h):
+                return source
+            resized = img.resize((target_w, target_h), PIL.Image.Resampling.LANCZOS)
+            temp = ROOT / 'credentials' / '_feature_graphic_1024x500.png'
+            resized.save(temp, format='PNG')
+            return temp
+    except Exception:  # noqa: BLE001
+        pass
+
+    temp = ROOT / 'credentials' / '_feature_graphic_1024x500.png'
+    subprocess.run(
+        ['sips', '-z', str(target_h), str(target_w), str(source), '--out', str(temp)],
+        check=True,
+        capture_output=True,
+    )
+    return temp
+
+
+def push_store_graphics(
+    *,
+    pkg: str | None = None,
+    language: str | None = None,
+    replace_existing: bool = True,
+) -> dict[str, Any]:
+    """Upload feature graphic + phone screenshots from manifest.assets via Play edits API."""
+    from googleapiclient.http import MediaFileUpload
+
+    pkg = (pkg or package_name()).strip()
+    manifest = load_manifest()
+    assets = manifest.get('assets') or {}
+    lang = (language or manifest.get('application', {}).get('defaultLanguage') or 'en-US').strip()
+
+    feature_rel = assets.get('featureGraphic')
+    screenshots_rel = assets.get('phoneScreenshots') or []
+    if not feature_rel and not screenshots_rel:
+        raise PlayError('manifest.assets.featureGraphic or phoneScreenshots required')
+
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+
+    uploaded: list[dict[str, Any]] = []
+    deleted: dict[str, int] = {}
+
+    if replace_existing:
+        deleted['featureGraphic'] = _delete_existing_images(
+            service, pkg=pkg, edit_id=edit_id, language=lang, image_type='featureGraphic',
+        )
+        deleted['phoneScreenshots'] = _delete_existing_images(
+            service, pkg=pkg, edit_id=edit_id, language=lang, image_type='phoneScreenshots',
+        )
+
+    if feature_rel:
+        feature_path = resolve_repo_path(str(feature_rel))
+        if not feature_path.exists():
+            raise PlayError(f'Feature graphic not found: {feature_path}')
+        upload_path = _prepare_feature_graphic(feature_path)
+        media = MediaFileUpload(str(upload_path), mimetype='image/png', resumable=True)
+        result = (
+            service.edits()
+            .images()
+            .upload(
+                packageName=pkg,
+                editId=edit_id,
+                language=lang,
+                imageType='featureGraphic',
+                media_body=media,
+            )
+            .execute()
+        )
+        uploaded.append({'type': 'featureGraphic', 'path': str(feature_path), 'result': result})
+
+    for rel in screenshots_rel:
+        shot_path = resolve_repo_path(str(rel))
+        if not shot_path.exists():
+            raise PlayError(f'Screenshot not found: {shot_path}')
+        media = MediaFileUpload(str(shot_path), mimetype='image/png', resumable=True)
+        result = (
+            service.edits()
+            .images()
+            .upload(
+                packageName=pkg,
+                editId=edit_id,
+                language=lang,
+                imageType='phoneScreenshots',
+                media_body=media,
+            )
+            .execute()
+        )
+        uploaded.append({'type': 'phoneScreenshots', 'path': str(shot_path), 'result': result})
+
+    committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
+    return {
+        'package_name': pkg,
+        'language': lang,
+        'deleted': deleted,
+        'uploaded_count': len(uploaded),
+        'uploaded': uploaded,
+        'commit': committed,
+    }
+
+
+def push_aso_bundle(*, pkg: str | None = None, include_graphics: bool = True) -> dict[str, Any]:
+    """Push all store listings (skip unsupported locales) + optional graphics."""
+    pkg = (pkg or package_name()).strip()
+    steps: dict[str, Any] = {'package_name': pkg}
+
+    steps['verify'] = verify_app(pkg)
+    if not steps['verify'].get('ok'):
+        steps['status'] = 'blocked'
+        return steps
+
+    try:
+        steps['listing'] = push_store_listing(pkg=pkg, language='all')
+    except Exception as exc:  # noqa: BLE001
+        steps['listing'] = {'error': str(exc)}
+
+    if include_graphics:
+        try:
+            steps['graphics'] = push_store_graphics(pkg=pkg)
+        except Exception as exc:  # noqa: BLE001
+            steps['graphics'] = {'error': str(exc)}
+
+    manifest = load_manifest()
+    steps['play_console_tags'] = {
+        'tags': manifest.get('playConsoleTags', []),
+        'note': manifest.get(
+            'playConsoleTagsNote',
+            'Set tags manually in Play Console — API does not support tags.',
+        ),
+    }
+    steps['status'] = 'complete'
+    return steps
 
 
 def full_rasoi_setup(*, pkg: str | None = None, activate_subscriptions: bool = True) -> dict[str, Any]:

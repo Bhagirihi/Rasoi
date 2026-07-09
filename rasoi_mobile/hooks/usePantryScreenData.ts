@@ -4,38 +4,81 @@ import { useAppContext } from '@/context/AppContext';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { useRecipes } from '@/context/RecipesContext';
-import { getMealContext } from '@/utils/mealTime';
 import {
-  buildPersonalPantrySection,
-  collectPantryContextRecipes,
+  buildPantryRecipeSection,
+  collectPantryHomeRecipes,
   countStockedPantryItems,
   getMissingPantryLabels,
   getPantryEssentialSections,
 } from '@/utils/pantryCatalog';
+import {
+  collectPlanMenuRecipes,
+  collectPlanMenuRecipesByDay,
+  type PlanDayOffset,
+} from '@/utils/planMenu';
+import { filterRecipes } from '@/utils/recipes';
+import { dietChoiceToFilter } from '@/utils/storage';
+
+export type PantryPlanDaySection = {
+  offset: PlanDayOffset;
+  heading: string;
+  section: NonNullable<ReturnType<typeof buildPantryRecipeSection>>;
+};
 
 export function usePantryScreenData() {
-  const meal = getMealContext();
-  const { pantryIngredients, savedRecipeIds, dietChoice, favoriteCuisines } = useAppContext();
+  const {
+    pantryIngredients,
+    dietChoice,
+    regionalCuisine,
+    favoriteCuisines,
+    allergyExclusions,
+  } = useAppContext();
   const { kitchenStyles } = useReferenceData();
   const { recipes } = useRecipes();
-  const { topPick, alsoFor, readyToCookCount } = useTonightRecipes();
+  const { topPick, alsoFor, lateNightPick, readyToCookCount } = useTonightRecipes();
 
-  const savedRecipes = useMemo(
-    () => recipes.filter((recipe) => savedRecipeIds.includes(recipe.id)),
-    [recipes, savedRecipeIds],
-  );
-
-  const contextRecipes = useMemo(
+  const homeRecipes = useMemo(
     () =>
-      collectPantryContextRecipes({
+      collectPantryHomeRecipes({
         topPick,
         alsoFor,
-        saved: savedRecipes,
+        lateNightPick,
       }),
-    [topPick, alsoFor, savedRecipes],
+    [topPick, alsoFor, lateNightPick],
   );
 
-  const { sections: essentialSections, preferenceSummary } = useMemo(
+  const eligiblePlanRecipes = useMemo(() => {
+    if (recipes.length === 0) return [];
+    return filterRecipes(recipes, {
+      dietPreference: dietChoiceToFilter(dietChoice),
+      dietChoice,
+      regionalCuisine,
+      favoriteCuisines,
+      pantryIngredients: [],
+      fastFilters: [],
+      allergyExclusions,
+    });
+  }, [recipes, dietChoice, regionalCuisine, favoriteCuisines, allergyExclusions]);
+
+  const planRecipes = useMemo(
+    () => collectPlanMenuRecipes(eligiblePlanRecipes),
+    [eligiblePlanRecipes],
+  );
+
+  const planDaySections = useMemo<PantryPlanDaySection[]>(() => {
+    return collectPlanMenuRecipesByDay(eligiblePlanRecipes)
+      .map((day) => {
+        const section = buildPantryRecipeSection(
+          day.recipes,
+          day.heading,
+          `${day.recipes.length} meal${day.recipes.length === 1 ? '' : 's'} · ${day.caption}`,
+        );
+        return section ? { offset: day.offset, heading: day.heading, section } : null;
+      })
+      .filter((entry): entry is PantryPlanDaySection => entry !== null);
+  }, [eligiblePlanRecipes]);
+
+  const { preferenceSummary } = useMemo(
     () =>
       getPantryEssentialSections({
         dietChoice,
@@ -45,20 +88,36 @@ export function usePantryScreenData() {
     [dietChoice, favoriteCuisines, kitchenStyles],
   );
 
-  const personalSection = useMemo(
-    () => buildPersonalPantrySection(contextRecipes, meal, savedRecipes.length),
-    [contextRecipes, meal, savedRecipes.length],
+  const homeSection = useMemo(
+    () =>
+      buildPantryRecipeSection(
+        homeRecipes,
+        'From home picks',
+        topPick ? `Tonight's ${topPick.title}` : 'Open Home to see picks',
+      ),
+    [homeRecipes, topPick],
   );
 
-  const stockStats = useMemo(
-    () =>
-      countStockedPantryItems(
-        essentialSections,
-        personalSection?.items ?? [],
-        pantryIngredients,
-      ),
-    [essentialSections, personalSection, pantryIngredients],
+  const contextRecipes = useMemo(
+    () => {
+      const seen = new Set<string>();
+      const combined = [...homeRecipes, ...planRecipes].filter((recipe) => {
+        if (seen.has(recipe.id)) return false;
+        seen.add(recipe.id);
+        return true;
+      });
+      return combined;
+    },
+    [homeRecipes, planRecipes],
   );
+
+  const stockStats = useMemo(() => {
+    const personalItems = [
+      ...(homeSection?.items ?? []),
+      ...planDaySections.flatMap((entry) => entry.section.items),
+    ];
+    return countStockedPantryItems([], personalItems, pantryIngredients);
+  }, [homeSection, planDaySections, pantryIngredients]);
 
   const restockItems = useMemo(
     () => getMissingPantryLabels(contextRecipes, pantryIngredients),
@@ -66,13 +125,12 @@ export function usePantryScreenData() {
   );
 
   return {
-    meal,
-    essentialSections,
-    preferenceSummary,
-    personalSection,
+    homeSection,
+    planDaySections,
     stockStats,
     restockItems,
     matchCount: readyToCookCount,
     contextRecipes,
+    preferenceSummary,
   };
 }

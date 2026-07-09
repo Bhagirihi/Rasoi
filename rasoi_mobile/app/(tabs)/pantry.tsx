@@ -3,7 +3,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ArrowRight } from "lucide-react-native";
-import { useMemo, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -12,7 +12,6 @@ import { AppTabHeader } from "@/components/AppTabHeader";
 import GroceryPromoStrip from "@/components/GroceryPromoStrip";
 import { PantryHeroCard } from "@/components/pantry/PantryHeroCard";
 import { PantrySectionCard } from "@/components/pantry/PantrySectionCard";
-import { PANTRY_BASE_SECTION_TITLES } from "@/components/pantry/pantrySectionMeta";
 import PartnerUpsellCard from "@/components/PartnerUpsellCard";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import ViewportLazyAdSlot from "@/components/ViewportLazyAdSlot";
@@ -95,12 +94,12 @@ export default function PantryScreen() {
     dietChoice,
   } = useAppContext();
   const {
-    essentialSections,
-    preferenceSummary,
-    personalSection,
+    homeSection,
+    planDaySections,
     stockStats,
     restockItems,
     matchCount,
+    preferenceSummary,
   } = usePantryScreenData();
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -108,16 +107,6 @@ export default function PantryScreen() {
   const [adScrollGeneration, setAdScrollGeneration] = useState(0);
   const { sponsor: pantrySponsor, loading: pantrySponsorLoading } =
     usePlacementSponsor("pantry");
-
-  const { baseSections, cuisineSections } = useMemo(() => {
-    const base = essentialSections.filter((section) =>
-      PANTRY_BASE_SECTION_TITLES.has(section.title),
-    );
-    const cuisine = essentialSections.filter(
-      (section) => !PANTRY_BASE_SECTION_TITLES.has(section.title),
-    );
-    return { baseSections: base, cuisineSections: cuisine };
-  }, [essentialSections]);
 
   useDismissOnBlur(useCallback(() => setModalVisible(false), []));
 
@@ -173,8 +162,8 @@ export default function PantryScreen() {
             title="What's at home"
             subtitle={
               pendingPantrySetup
-                ? "Tap what you keep at home."
-                : "Tap staples — we match recipes to your diet and kitchen styles."
+                ? "Tap ingredients from your plan and home picks."
+                : "Ingredients from your 3-day plan and tonight's picks."
             }
           />
 
@@ -223,8 +212,8 @@ export default function PantryScreen() {
           ) : null} */}
 
           <InsightBanner
-            title="Select your staples"
-            subtitle="Tap what you keep at home then press continue on bottom."
+            title="Tap what you have at home"
+            subtitle="We only show ingredients from your plan and home recipe picks."
           />
           {pendingPantrySetup ? (
             <PantryHeroCard
@@ -237,91 +226,61 @@ export default function PantryScreen() {
             />
           ) : null}
 
-          <PantrySectionLabel
-            title="Kitchen basics"
-            hint="Everyday staples"
-            inline
-          />
-
-          <View
-            style={[
-              styles.groupedPanel,
-              {
-                backgroundColor: themeColors.white,
-                borderColor: themeColors.border,
-              },
-            ]}
-          >
-            {baseSections.map((section, index) => (
-              <PantrySectionCard
-                key={section.title}
-                section={section}
-                pantryIngredients={pantryIngredients}
-                onToggle={handleToggle}
-                onAddAll={handleAddAll}
-                setupMode={pendingPantrySetup}
-                embedded
-                dense
-                showDivider={index > 0}
-              />
-            ))}
-          </View>
-
-          {cuisineSections.length > 0 ? (
+          {planDaySections.length > 0 ? (
             <>
               <PantrySectionLabel
-                title="For your kitchen styles"
-                hint={
-                  preferenceSummary.cuisineLabels.length > 0
-                    ? preferenceSummary.cuisineLabels.join(" · ")
-                    : "Extra staples for your selected styles"
-                }
+                title="3-day plan"
+                hint="By day"
                 inline
               />
-              <View style={styles.sectionStack}>
-                {cuisineSections.map((section, index) => (
-                  <PantrySectionCard
-                    key={section.title}
-                    section={section}
-                    pantryIngredients={pantryIngredients}
-                    onToggle={handleToggle}
-                    onAddAll={handleAddAll}
-                    collapsible
-                    defaultCollapsed={index > 0}
-                    setupMode={pendingPantrySetup}
-                    dense
-                  />
-                ))}
-              </View>
+              {planDaySections.map((entry) => (
+                <PantrySectionCard
+                  key={entry.offset}
+                  section={{
+                    title: entry.heading,
+                    items: entry.section.items,
+                  }}
+                  pantryIngredients={pantryIngredients}
+                  onToggle={handleToggle}
+                  onAddAll={handleAddAll}
+                  accent
+                  subtitle={entry.section.subtitle}
+                  setupMode={pendingPantrySetup}
+                  dense
+                />
+              ))}
             </>
           ) : null}
 
-          <PantrySectionLabel
-            title="From your recipes"
-            hint="Tonight's pick & saved"
-            inline
-          />
+          {homeSection ? (
+            <>
+              <PantrySectionLabel
+                title="Home picks"
+                hint="Tonight's suggestions"
+                inline
+              />
+              <PantrySectionCard
+                section={{
+                  title: homeSection.title,
+                  items: homeSection.items,
+                }}
+                pantryIngredients={pantryIngredients}
+                onToggle={handleToggle}
+                onAddAll={handleAddAll}
+                accent
+                subtitle={homeSection.subtitle}
+                setupMode={pendingPantrySetup}
+                dense
+              />
+            </>
+          ) : null}
 
-          {personalSection ? (
-            <PantrySectionCard
-              section={{
-                title: personalSection.title,
-                items: personalSection.items,
-              }}
-              pantryIngredients={pantryIngredients}
-              onToggle={handleToggle}
-              onAddAll={handleAddAll}
-              accent
-              subtitle={personalSection.subtitle}
-              setupMode={pendingPantrySetup}
-              dense
-            />
-          ) : (
+          {planDaySections.length === 0 && !homeSection ? (
             <InsightBanner
-              title="Recipe picks show up here"
-              subtitle="Save recipes or open Home — extra ingredients appear here."
+              title="No recipe picks yet"
+              subtitle="Open Home or Plan — ingredients from those recipes appear here."
             />
-          )}
+          ) : null}
 
           <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
             <SponsorOrAd
@@ -331,6 +290,41 @@ export default function PantryScreen() {
               compact
             />
           </ViewportLazyAdSlot>
+
+          {restockItems.length > 0 ? (
+            <>
+              <PantrySectionLabel
+                title="Grocery list"
+                hint={`${restockItems.length} to buy`}
+                inline
+              />
+              <View
+                style={[
+                  styles.groceryList,
+                  {
+                    backgroundColor: themeColors.white,
+                    borderColor: themeColors.border,
+                  },
+                ]}
+              >
+                {restockItems.map((item) => (
+                  <View
+                    key={item}
+                    style={[
+                      styles.groceryChip,
+                      { borderColor: "rgba(255,107,53,0.28)" },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.groceryChipText, { color: colors.primary }]}
+                    >
+                      {item}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : null}
 
           {restockItems.length > 0 &&
             (showPartners ? (
@@ -342,10 +336,11 @@ export default function PantryScreen() {
                     setModalVisible(true);
                   }}
                   missingCount={restockItems.length}
-                  title="Still missing"
-                  subtitle={`Order ${restockItems.join(", ")} in minutes`}
+                  title="Order missing items"
+                  subtitle={`${restockItems.length} ingredient${restockItems.length === 1 ? "" : "s"} to buy — delivered in minutes`}
                   hidePartnerBranding
                   ctaText="Restock now →"
+                  compact
                 />
               </>
             ) : (
@@ -450,6 +445,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
     ...shadows.card,
+  },
+  groceryList: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.sm + 2,
+    ...shadows.card,
+  },
+  groceryChip: {
+    borderWidth: 1,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+    backgroundColor: "rgba(255,107,53,0.06)",
+  },
+  groceryChipText: {
+    fontSize: 12,
+    fontWeight: "700",
   },
   sectionStack: {
     gap: spacing.sm,

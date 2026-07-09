@@ -8,6 +8,7 @@ import {
 } from '@/lib/seo-content-pages';
 import { SEO_RECIPE_BLOGS_GENERATED_AT } from '@/lib/seo-recipe-blogs-data';
 import { buildRecipeBlogMetadata, recipeBlogJsonLd } from '@/lib/seo';
+import { enrichRecipeRelatedLinks } from '@/lib/seo-taxonomy';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -65,7 +66,7 @@ export default async function SeoRecipeRoute({ params }: PageProps) {
         intro={page.intro}
         sections={page.sections}
         faqs={page.faqs}
-        relatedLinks={page.relatedLinks}
+        relatedLinks={enrichRecipeRelatedLinks(page, page.relatedLinks)}
         showIndiaAppLinks
         meta={{ cuisine: page.cuisine, diet: page.diet, time: page.time }}
         imageUrl={page.imageUrl}
@@ -78,6 +79,7 @@ export default async function SeoRecipeRoute({ params }: PageProps) {
           { href: '/recipes', label: 'Recipe guides' },
           { href: `/recipes/${page.slug}`, label: page.h1 },
         ]}
+        playStoreCtaDishName={page.h1.replace(/\s+recipe$/i, '')}
       />
     </>
   );

@@ -1,15 +1,29 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Check } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import { colors, radius, spacing } from '@/constants/theme';
-import { useTheme } from '@/context/ThemeContext';
-import type { RecipeIngredient } from '@/data/mockRecipes';
-import { ingredientKey } from '@/utils/recipeIngredients';
+import { appFonts } from "@/constants/fonts";
+import { colors, radius, spacing } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import type { RecipeIngredient } from "@/data/mockRecipes";
+import { ingredientKey } from "@/utils/recipeIngredients";
 
 type RecipeIngredientsGuideProps = {
   ingredients: RecipeIngredient[];
   available: string[];
   missing: string[];
 };
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  const { colors: themeColors } = useTheme();
+  return (
+    <View style={styles.legendItem}>
+      <View style={[styles.legendDot, { backgroundColor: color }]} />
+      <Text style={[styles.legendText, { color: themeColors.muted }]}>
+        {label}
+      </Text>
+    </View>
+  );
+}
 
 export default function RecipeIngredientsGuide({
   ingredients,
@@ -21,95 +35,147 @@ export default function RecipeIngredientsGuide({
   const missingSet = new Set(missing.map((item) => ingredientKey(item)));
 
   return (
-    <View
-      style={[
-        styles.card,
-        {
-          backgroundColor: themeColors.white,
-          borderColor: themeColors.border,
-        },
-      ]}
-    >
-      {ingredients.map((ingredient, index) => {
-        const key = ingredientKey(ingredient.name);
-        const inPantry = availableSet.has(key);
-        const isMissing = missingSet.has(key);
+    <View style={styles.wrap}>
+      <View style={styles.legend}>
+        <LegendDot color={colors.green} label="In pantry" />
+        <LegendDot color={colors.primary} label="Missing" />
+        <LegendDot
+          color={isDark ? themeColors.border : colors.border}
+          label="Other"
+        />
+      </View>
 
-        return (
-          <View
-            key={`${ingredient.name}-${index}`}
-            style={[
-              styles.row,
-              index < ingredients.length - 1 && styles.rowBorder,
-              { borderBottomColor: themeColors.border },
-            ]}
-          >
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: themeColors.white,
+            borderColor: themeColors.border,
+          },
+        ]}
+      >
+        {ingredients.map((ingredient, index) => {
+          const key = ingredientKey(ingredient.name);
+          const inPantry = availableSet.has(key);
+          const isMissing = missingSet.has(key);
+
+          return (
             <View
+              key={`${ingredient.name}-${index}`}
               style={[
-                styles.bullet,
-                inPantry && styles.bulletInPantry,
-                isMissing && styles.bulletMissing,
-                !inPantry && !isMissing && {
-                  backgroundColor: isDark ? themeColors.border : colors.border,
-                },
+                styles.row,
+                index < ingredients.length - 1 && styles.rowBorder,
+                { borderBottomColor: themeColors.border },
+                inPantry && styles.rowInPantry,
+                isMissing && styles.rowMissing,
               ]}
-            />
-            <Text style={[styles.text, { color: themeColors.charcoal }]}>
-              <Text style={styles.ingredientName}>{ingredient.name}</Text>
-              {ingredient.isStaple ? (
-                <Text style={[styles.stapleHint, { color: themeColors.muted }]}>
-                  {' '}
-                  (staple)
-                </Text>
-              ) : null}
-            </Text>
-          </View>
-        );
-      })}
+            >
+              <View
+                style={[
+                  styles.statusIcon,
+                  inPantry && styles.statusIconPantry,
+                  isMissing && styles.statusIconMissing,
+                  !inPantry &&
+                    !isMissing && {
+                      backgroundColor: isDark
+                        ? themeColors.border
+                        : colors.border,
+                    },
+                ]}
+              >
+                {inPantry ? (
+                  <Check size={11} color={colors.white} strokeWidth={3} />
+                ) : null}
+              </View>
+              <Text style={[styles.text, { color: themeColors.charcoal }]}>
+                <Text style={styles.ingredientName}>{ingredient.name}</Text>
+                {ingredient.isStaple ? (
+                  <Text
+                    style={[styles.stapleHint, { color: themeColors.muted }]}
+                  >
+                    {" "}
+                    · staple
+                  </Text>
+                ) : null}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrap: {
+    gap: spacing.sm,
+  },
+  legend: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.md,
+    paddingHorizontal: 2,
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    fontFamily: appFonts.body,
+    fontSize: 11,
+  },
   card: {
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: spacing.md,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
   },
   rowBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  bullet: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 7,
-    backgroundColor: colors.border,
+  rowInPantry: {
+    backgroundColor: "rgba(0,168,107,0.04)",
   },
-  bulletInPantry: {
+  rowMissing: {
+    backgroundColor: "rgba(255,107,53,0.05)",
+  },
+  statusIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    marginTop: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statusIconPantry: {
     backgroundColor: colors.green,
   },
-  bulletMissing: {
+  statusIconMissing: {
     backgroundColor: colors.primary,
   },
   text: {
     flex: 1,
+    fontFamily: appFonts.body,
     fontSize: 15,
-    lineHeight: 24,
-    color: colors.charcoal,
+    lineHeight: 22,
   },
   ingredientName: {
-    fontWeight: '700',
+    fontFamily: appFonts.bodyBold,
   },
   stapleHint: {
-    fontWeight: '500',
+    fontFamily: appFonts.body,
     fontSize: 13,
   },
 });

@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import { Bookmark, BookOpen, CalendarDays, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import PantryNudgeBridge from '@/components/pantry/PantryNudgeBridge';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
@@ -78,7 +79,8 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs screenOptions={screenOptions}>
+    <>
+      <Tabs screenOptions={screenOptions}>
       <Tabs.Screen
         name="index"
         options={{
@@ -122,11 +124,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
+          href: null,
           title: 'Settings',
           tabBarButtonTestID: testIds.tabSettings,
           tabBarIcon: ({ color, size }) => <Settings color={color} size={size - 2} />,
         }}
       />
     </Tabs>
+      <PantryNudgeBridge />
+    </>
   );
 }

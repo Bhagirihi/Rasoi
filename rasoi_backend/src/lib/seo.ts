@@ -174,6 +174,24 @@ export function playStoreHreflangLanguages(): Record<string, string> {
 
 export const TWITTER_HANDLE = '@rasoiapp';
 
+/** Use on all /admin routes — defense in depth alongside robots.txt disallow. */
+export const ADMIN_NOINDEX_METADATA: Metadata = {
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
+
+/** hreflang for recipe blogs — same diaspora-inclusive content, regional English variants. */
+export function recipeBlogHreflangLanguages(path: string): Record<string, string> {
+  const url = absoluteUrl(path);
+  return {
+    'en-IN': url,
+    'en-US': url,
+    'en-CA': url,
+    'en-AU': url,
+    'en-NZ': url,
+    'x-default': url,
+  };
+}
+
 export const FAQ_ITEMS = [
   {
     question: 'What is Rasoi App: Aaj Kya Banaye?',
@@ -875,6 +893,11 @@ export function buildRecipeBlogMetadata(options: {
 
   return {
     ...base,
+    alternates: {
+      ...base.alternates,
+      canonical: absoluteUrl(path),
+      languages: recipeBlogHreflangLanguages(path),
+    },
     openGraph: {
       ...base.openGraph,
       type: 'article',
@@ -1069,4 +1092,67 @@ export function recipeIndexJsonLd(
       ],
     },
   ]);
+}
+
+export function buildTaxonomyMetadata(options: {
+  title: string;
+  description: string;
+  path: string;
+  keywords: string[];
+}): Metadata {
+  return buildContentPageMetadata({
+    title: options.title,
+    description: options.description,
+    path: options.path,
+    keywords: options.keywords,
+  });
+}
+
+export function taxonomyHubJsonLd(options: {
+  title: string;
+  description: string;
+  path: string;
+  faqs: ReadonlyArray<{ question: string; answer: string }>;
+  recipes: ReadonlyArray<{ name: string; slug: string }>;
+}) {
+  const pageUrl = absoluteUrl(options.path);
+  const nodes: Record<string, unknown>[] = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': pageUrl,
+      name: options.title,
+      description: options.description,
+      url: pageUrl,
+      inLanguage: 'en',
+      isPartOf: { '@type': 'WebSite', name: APP_NAME, url: SITE_URL },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: options.title,
+      numberOfItems: options.recipes.length,
+      itemListElement: options.recipes.map((recipe, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: recipe.name,
+        url: absoluteUrl(`/recipes/${recipe.slug}`),
+      })),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Rasoi', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Guides', item: absoluteUrl('/indian-recipe-app') },
+        { '@type': 'ListItem', position: 3, name: options.title, item: pageUrl },
+      ],
+    },
+  ];
+
+  if (options.faqs.length) {
+    nodes.push(faqJsonLd(options.faqs));
+  }
+
+  return jsonLdGraph(nodes);
 }

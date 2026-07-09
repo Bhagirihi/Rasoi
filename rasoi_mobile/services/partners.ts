@@ -1,6 +1,10 @@
 import { apiFetch } from '@/utils/api';
 import { getRasoiDb, isDirectSupabaseCatalogEnabled } from '@/utils/rasoiDb';
-import { buildPartnerUrl } from '@/constants/partners';
+import {
+  buildDeliveryPartnerSearchUrls,
+  buildPartnerUrl,
+  DEFAULT_PARTNER_LINKS,
+} from '@/constants/partners';
 
 export type PartnerLinkResponse = {
   partnerId: string;
@@ -83,7 +87,15 @@ export function buildPartnerUrls(
   query: string,
   links: PartnerLinkResponse[],
 ) {
-  const link = links.find((item) => item.partnerId === partnerId && item.active);
+  const deliveryUrls = buildDeliveryPartnerSearchUrls(partnerId, query);
+  if (deliveryUrls) {
+    return deliveryUrls;
+  }
+
+  const link =
+    links.find((item) => item.partnerId === partnerId && item.active) ??
+    DEFAULT_PARTNER_LINKS.find((item) => item.partnerId === partnerId);
+
   if (!link) return null;
 
   return {

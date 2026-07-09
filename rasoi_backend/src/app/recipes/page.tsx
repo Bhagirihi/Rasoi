@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import JsonLd from '@/app/_components/JsonLd';
@@ -9,6 +10,13 @@ import {
   buildContentPageMetadata,
   recipeIndexJsonLd,
 } from '@/lib/seo';
+import {
+  CUISINE_HUBS,
+  FESTIVAL_HUBS,
+  INGREDIENT_HUBS,
+  MEAL_HUBS,
+  getTaxonomyPath,
+} from '@/lib/seo-taxonomy';
 
 const SORTED_RECIPES = [...SEO_RECIPE_PAGES].sort(
   (a, b) => (a.searchVolumeRank ?? 999) - (b.searchVolumeRank ?? 999),
@@ -98,26 +106,110 @@ export default function RecipeBlogsIndexPage() {
           </p>
 
           <section className="mt-14">
+            <h2 className="font-display text-2xl font-semibold">Browse by topic</h2>
+            <div className="mt-8 grid gap-8 lg:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Cuisines
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {CUISINE_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1.replace(/ for.*/, '')}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Ingredients
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {INGREDIENT_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.slug}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Meals
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {MEAL_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Festivals
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {FESTIVAL_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-14">
             <h2 className="font-display text-2xl font-semibold">All recipe blogs</h2>
-            <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {SORTED_RECIPES.map((page) => (
                 <li key={page.slug}>
                   <Link
                     href={`/recipes/${page.slug}`}
                     className="group block overflow-hidden rounded-[1.25rem] border border-[#e8dfd3] bg-white transition hover:border-[#c9a227]/40 hover:shadow-md"
                   >
-                    <div className="border-b border-[#e8dfd3] bg-[#fcf9f4] px-5 py-4">
+                    {page.imageUrl ? (
+                      <div className="relative aspect-[3/2] overflow-hidden bg-[#f4efe6]">
+                        <Image
+                          src={page.imageUrl}
+                          alt={`${page.h1} — Indian home cooking`}
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          className="object-cover transition duration-300 group-hover:scale-[1.02]"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="px-5 py-4">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-[#c9a227]">
                         #{page.searchVolumeRank ?? '—'} · {page.cuisine} · {page.diet}
+                        {page.time ? ` · ${page.time}` : ''}
                       </p>
                       <p className="font-display mt-1 text-xl font-semibold group-hover:text-[#c45c2a]">
                         {page.h1}
                       </p>
                       <p className="mt-2 line-clamp-2 text-sm text-[#6b6560]">{page.description}</p>
+                      <p className="mt-3 text-sm font-semibold text-[#c45c2a]">Read guide →</p>
                     </div>
-                    <p className="px-5 py-3 text-sm font-semibold text-[#c45c2a]">
-                      Read guide →
-                    </p>
                   </Link>
                 </li>
               ))}

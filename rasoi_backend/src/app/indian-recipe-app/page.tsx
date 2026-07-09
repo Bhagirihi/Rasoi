@@ -10,6 +10,13 @@ import {
   SEO_RECIPE_PAGES,
 } from '@/lib/seo-content-pages';
 import { articlePageJsonLd, buildContentPageMetadata } from '@/lib/seo';
+import {
+  CUISINE_HUBS,
+  FESTIVAL_HUBS,
+  INGREDIENT_HUBS,
+  MEAL_HUBS,
+  getTaxonomyPath,
+} from '@/lib/seo-taxonomy';
 
 export const metadata = buildContentPageMetadata({
   title: INDIAN_RECIPE_APP_HUB.title,
@@ -123,6 +130,80 @@ export default function IndianRecipeAppHubPage() {
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section className="mt-14">
+            <h2 className="font-display text-2xl font-semibold">Browse by topic</h2>
+            <div className="mt-8 grid gap-10 lg:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Cuisines
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {CUISINE_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1.replace(/ for.*/, '')}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Ingredients
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {INGREDIENT_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.slug}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Meals
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {MEAL_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Festivals
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {FESTIVAL_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </section>
 
           <section className="mt-14">

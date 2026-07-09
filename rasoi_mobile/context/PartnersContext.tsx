@@ -15,7 +15,7 @@ import {
   getGroceryPartnerUi,
 } from '@/constants/monetization';
 import type { AffiliatePartner, FoodDeliveryPartner } from '@/constants/partners';
-import { resolveGroceryPartnerId } from '@/constants/partners';
+import { buildDeliverySearchQuery, resolveGroceryPartnerId } from '@/constants/partners';
 import { useAppContext } from '@/context/AppContext';
 import { useShoppingSession } from '@/context/ShoppingSessionContext';
 import { useAppDialog } from '@/context/AppDialogContext';
@@ -267,7 +267,7 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
       query: string,
       options?: { context?: string; recipeId?: string },
     ) => {
-      const trimmed = query.trim();
+      const trimmed = buildDeliverySearchQuery(query);
       if (!trimmed || !ensurePartnerAccess() || !ensureDeliveryPhone()) return;
       const urls = buildPartnerUrls(partnerId, trimmed, partnerLinks);
       if (!urls) return;

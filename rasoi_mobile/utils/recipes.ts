@@ -251,23 +251,7 @@ export function getRecipePickReason(
     mealSlot?: MealSlot;
   },
 ): string {
-  const pantryPct = getPantryMatchPercent(recipe, options.pantryIngredients);
-  const regionalPct = getRegionalMatchPercent(recipe.region, options.regionalCuisine);
   const parts: string[] = [];
-
-  if (pantryPct >= 80) {
-    parts.push(`${pantryPct}% pantry match`);
-  } else if (pantryPct >= 50) {
-    parts.push(`${pantryPct}% ingredients at home`);
-  } else if (options.pantryIngredients.length > 0) {
-    parts.push(`uses ${pantryPct}% of your pantry`);
-  }
-
-  if (regionalPct >= 100 && options.regionalCuisine !== 'All India') {
-    parts.push(`fits your ${options.regionalCuisine} preference`);
-  } else if (regionalPct >= 72) {
-    parts.push('close to your regional taste');
-  }
 
   if (recipe.prepTime <= 20) {
     parts.push(getMealQuickReasonSuffix(options.mealSlot ?? 'dinner'));

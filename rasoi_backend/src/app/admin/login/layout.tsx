@@ -1,3 +1,12 @@
+import type { Metadata } from 'next';
+
+import { ADMIN_NOINDEX_METADATA } from '@/lib/seo';
+
+export const metadata: Metadata = {
+  ...ADMIN_NOINDEX_METADATA,
+  title: 'Rasoi Admin Login',
+};
+
 export default function AdminLoginLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="admin-sidebar-grain relative min-h-screen overflow-hidden">

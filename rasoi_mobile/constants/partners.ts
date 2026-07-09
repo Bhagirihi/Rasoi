@@ -15,6 +15,43 @@ export function resolveGroceryPartnerId(
   return partners[0]?.id;
 }
 
+export const PARTNER_UTM = 'utm_source=rasoi&utm_medium=affiliate';
+
+/** Recipe title cleaned for Zomato / Swiggy dish search. */
+export function buildDeliverySearchQuery(recipeTitle: string): string {
+  return recipeTitle
+    .trim()
+    .replace(/\s*\([^)]*\)\s*/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Reliable HTTPS search URLs for food delivery partners.
+ * Custom schemes (zomato://, swiggy://) often open the app home screen without the query.
+ */
+export function buildDeliveryPartnerSearchUrls(
+  partnerId: string,
+  recipeTitle: string,
+): { deepLink: string; webUrl: string } | null {
+  const query = buildDeliverySearchQuery(recipeTitle);
+  if (!query) return null;
+
+  const encoded = encodeURIComponent(query);
+
+  if (partnerId === 'zomato') {
+    const url = `https://www.zomato.com/search?query=${encoded}&${PARTNER_UTM}`;
+    return { deepLink: url, webUrl: url };
+  }
+
+  if (partnerId === 'swiggy') {
+    const url = `https://www.swiggy.com/search?query=${encoded}&${PARTNER_UTM}`;
+    return { deepLink: url, webUrl: url };
+  }
+
+  return null;
+}
+
 export const DEFAULT_PARTNER_LINKS: Array<{
   partnerId: PartnerId;
   label: string;
@@ -52,15 +89,15 @@ export const DEFAULT_PARTNER_LINKS: Array<{
     partnerId: 'zomato',
     label: 'Zomato',
     category: 'delivery',
-    deepLinkUrl: 'zomato://search?q={query}&utm_source=rasoi&utm_medium=affiliate',
-    webUrl: 'https://www.zomato.com/search?q={query}&utm_source=rasoi&utm_medium=affiliate',
+    deepLinkUrl: `https://www.zomato.com/search?query={query}&${PARTNER_UTM}`,
+    webUrl: `https://www.zomato.com/search?query={query}&${PARTNER_UTM}`,
   },
   {
     partnerId: 'swiggy',
     label: 'Swiggy',
     category: 'delivery',
-    deepLinkUrl: 'swiggy://explore?query={query}&utm_source=rasoi&utm_medium=affiliate',
-    webUrl: 'https://www.swiggy.com/search?q={query}&utm_source=rasoi&utm_medium=affiliate',
+    deepLinkUrl: `https://www.swiggy.com/search?query={query}&${PARTNER_UTM}`,
+    webUrl: `https://www.swiggy.com/search?query={query}&${PARTNER_UTM}`,
   },
 ];
 

@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import MarketFooter from '@/app/_components/MarketFooter';
+import RecipeBlogPlayStoreCta from '@/app/_components/RecipeBlogPlayStoreCta';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import type { MarketId } from '@/lib/markets';
 import { MARKET_PATHS } from '@/lib/markets';
@@ -31,6 +32,8 @@ type SeoArticlePageProps = {
   marketNotes?: Partial<Record<MarketId, string>>;
   breadcrumbs?: { href: string; label: string }[];
   imageAlt?: string;
+  /** When set, shows Google Play CTA between Ingredients and Method (recipe blogs). */
+  playStoreCtaDishName?: string;
 };
 
 export default function SeoArticlePage({
@@ -49,6 +52,7 @@ export default function SeoArticlePage({
   marketNotes,
   breadcrumbs,
   imageAlt,
+  playStoreCtaDishName,
 }: SeoArticlePageProps) {
   return (
     <div className="landing-grain min-h-screen text-[#1a1a2e]">
@@ -64,6 +68,9 @@ export default function SeoArticlePage({
             </div>
           </Link>
           <nav className="flex items-center gap-6 text-sm font-medium text-[#6b6560]">
+            <Link href="/recipes" className="hover:text-[#c45c2a]">
+              Recipes
+            </Link>
             <Link href="/indian-recipe-app" className="hover:text-[#c45c2a]">
               Guides
             </Link>
@@ -136,6 +143,10 @@ export default function SeoArticlePage({
                 ))}
               </ul>
             </section>
+          ) : null}
+
+          {playStoreCtaDishName ? (
+            <RecipeBlogPlayStoreCta dishName={playStoreCtaDishName} />
           ) : null}
 
           {steps && steps.length > 0 ? (

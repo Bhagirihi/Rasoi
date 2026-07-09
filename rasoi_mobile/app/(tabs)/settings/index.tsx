@@ -40,6 +40,7 @@ import {
   SettingsQuickTile,
 } from "@/components/settings/SettingsBlocks";
 import { AppTabHeader } from "@/components/AppTabHeader";
+import AppHeaderBackButton from "@/components/AppHeaderBackButton";
 import {
   PAID_PLAN_MONTHLY_PRICE,
   PAID_PLAN_YEARLY_SAVINGS_LABEL,
@@ -418,6 +419,8 @@ export default function SettingsScreen() {
         <AppTabHeader
           title="Settings"
           subtitle="Profile, cooking preferences, and account."
+          showSettingsButton={false}
+          leading={<AppHeaderBackButton />}
         />
 
         <SettingsProfileHero
