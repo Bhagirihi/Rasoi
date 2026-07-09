@@ -76,3 +76,7 @@ export function buildSitemapPartition(id: SitemapPartitionId): MetadataRoute.Sit
       return [];
   }
 }
+
+export function buildFullSitemap(): MetadataRoute.Sitemap {
+  return SITEMAP_PARTITIONS.flatMap((id) => buildSitemapPartition(id));
+}
