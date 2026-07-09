@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 
+import { SITEMAP_PARTITIONS } from '@/lib/seo-sitemaps';
 import { SITE_URL } from '@/lib/seo';
 
 export default function robots(): MetadataRoute.Robots {
@@ -11,7 +12,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/admin/', '/api/'],
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: SITEMAP_PARTITIONS.map((id) => `${SITE_URL}/sitemap/${id}.xml`),
     host: SITE_URL,
   };
 }
