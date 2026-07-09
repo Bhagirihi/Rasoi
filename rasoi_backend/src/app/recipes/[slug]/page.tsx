@@ -6,7 +6,8 @@ import {
   getAllRecipeSlugs,
   getSeoRecipePage,
 } from '@/lib/seo-content-pages';
-import { articlePageJsonLd, buildContentPageMetadata } from '@/lib/seo';
+import { SEO_RECIPE_BLOGS_GENERATED_AT } from '@/lib/seo-recipe-blogs-data';
+import { buildRecipeBlogMetadata, recipeBlogJsonLd } from '@/lib/seo';
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -23,11 +24,15 @@ export async function generateMetadata({ params }: PageProps) {
   const page = getSeoRecipePage(slug);
   if (!page) return {};
 
-  return buildContentPageMetadata({
+  return buildRecipeBlogMetadata({
     title: page.title,
     description: page.description,
-    path: `/recipes/${page.slug}`,
+    slug: page.slug,
     keywords: [...page.keywords],
+    imageUrl: page.imageUrl,
+    h1: page.h1,
+    publishedTime: SEO_RECIPE_BLOGS_GENERATED_AT,
+    modifiedTime: SEO_RECIPE_BLOGS_GENERATED_AT,
   });
 }
 
@@ -39,11 +44,20 @@ export default async function SeoRecipeRoute({ params }: PageProps) {
   return (
     <>
       <JsonLd
-        data={articlePageJsonLd({
+        data={recipeBlogJsonLd({
           title: page.title,
           description: page.description,
           path: `/recipes/${page.slug}`,
+          imageUrl: page.imageUrl,
+          cuisine: page.cuisine,
+          diet: page.diet,
+          time: page.time,
+          keywords: page.keywords,
+          ingredients: page.ingredients,
+          steps: page.steps,
           faqs: page.faqs,
+          publishedTime: SEO_RECIPE_BLOGS_GENERATED_AT,
+          modifiedTime: SEO_RECIPE_BLOGS_GENERATED_AT,
         })}
       />
       <SeoArticlePage
@@ -54,6 +68,16 @@ export default async function SeoRecipeRoute({ params }: PageProps) {
         relatedLinks={page.relatedLinks}
         showIndiaAppLinks
         meta={{ cuisine: page.cuisine, diet: page.diet, time: page.time }}
+        imageUrl={page.imageUrl}
+        imageAlt={`${page.h1} recipe — ingredients and method for Indian home cooking`}
+        ingredients={page.ingredients}
+        steps={page.steps}
+        marketNotes={page.marketNotes}
+        breadcrumbs={[
+          { href: '/', label: 'Rasoi' },
+          { href: '/recipes', label: 'Recipe guides' },
+          { href: `/recipes/${page.slug}`, label: page.h1 },
+        ]}
       />
     </>
   );

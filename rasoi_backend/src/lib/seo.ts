@@ -7,6 +7,7 @@ import {
   APP_SHORT_NAME,
   PLAY_STORE_LISTING_URL,
   PLAY_STORE_SEO_PATH,
+  RECIPE_LIBRARY_LABEL,
 } from '@/lib/app-download';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 import {
@@ -21,11 +22,13 @@ export const SITE_URL =
 
 export const SITE_NAME = APP_SHORT_NAME;
 
+export { RECIPE_LIBRARY_LABEL } from '@/lib/app-download';
+
 export const DEFAULT_TITLE =
   `${APP_NAME} | Indian Recipe App — Pantry Match & Regional Dishes`;
 
 export const DEFAULT_DESCRIPTION =
-  `${APP_NAME} is a free Indian home-cooking app for Android. Match recipes to your pantry, browse 1,200+ regional dishes, and shop missing ingredients via Blinkit, Zepto, Instamart, Zomato, or Swiggy.`;
+  `${APP_NAME} is a free Indian home-cooking app for Android. Match recipes to your pantry, browse ${RECIPE_LIBRARY_LABEL} regional dishes, and shop missing ingredients via Blinkit, Zepto, Instamart, Zomato, or Swiggy.`;
 
 export const DEFAULT_KEYWORDS = [
   APP_NAME,
@@ -46,6 +49,9 @@ export const DEFAULT_KEYWORDS = [
   'South Indian recipes app',
   'quick dinner recipes India',
   'what to cook tonight',
+  'cook from pantry app',
+  'meal reminder app',
+  'jamvanu recipe app',
   'kitchen companion app',
   'Rasoi Google Play',
   'Rasoi Android app',
@@ -98,14 +104,15 @@ export const PLAY_STORE_TAGS = [
   'Food & drink',
   'Meal planning',
   'Lifestyle',
+  'Health & fitness',
 ] as const;
 
 export const PLAY_STORE_HIGHLIGHTS = [
   'Aaj kya banaye? — smart dinner picks from your pantry',
-  '8,000+ Indian recipes across 15 regional cuisines',
+  `${RECIPE_LIBRARY_LABEL} Indian recipes across 15 regional cuisines`,
   'Veg, Jain, Egg & Non-Veg filters for every home',
   'Pantry match % — cook with what you already have',
-  'Gujarati, Marathi, Tamil, Telugu & Bengali Play Store listings',
+  'Play Store listings in Hindi, Marathi, Tamil & Telugu',
   'Blinkit, Zepto & Instamart for missing groceries',
   'Zomato & Swiggy when you want delivery instead',
   'Free to install · Rasoi Plus from ₹49/month',
@@ -171,7 +178,7 @@ export const FAQ_ITEMS = [
   {
     question: 'What is Rasoi App: Aaj Kya Banaye?',
     answer:
-      'Rasoi App: Aaj Kya Banaye? is a free Indian home-cooking app on Google Play. It answers "Aaj kya banaye?" by recommending dinners from ingredients in your pantry, with 15 regional cuisines and Veg, Jain, Egg, and Non-Veg filters.',
+      `Rasoi App: Aaj Kya Banaye? is a free Indian home-cooking app on Google Play. It answers "Aaj kya banaye?" by recommending dinners from ingredients in your pantry, with ${RECIPE_LIBRARY_LABEL} recipes, 15 regional cuisines, and Veg, Jain, Egg, and Non-Veg filters.`,
   },
   {
     question: 'What is Rasoi app?',
@@ -276,7 +283,7 @@ export const downloadMetadata: Metadata = {
   ...buildPageMetadata({
     title: 'Download Rasoi App: Aaj Kya Banaye? on Google Play | Android Recipe App',
     description:
-      'Download Rasoi App: Aaj Kya Banaye? free on Google Play for Android. Indian recipe app with pantry match, 1,200+ regional dishes, meal reminders, and partner checkout — available in India, USA, Canada & Australia.',
+      `Download Rasoi App: Aaj Kya Banaye? free on Google Play for Android. Indian recipe app with pantry match, ${RECIPE_LIBRARY_LABEL} regional dishes, meal reminders, and partner checkout — available in India, USA, Canada & Australia.`,
     path: '/download',
     keywords: [
       'download Rasoi Aaj Kya Banaye',
@@ -295,7 +302,7 @@ export const downloadMetadata: Metadata = {
 };
 
 export const PLAY_STORE_PAGE_DESCRIPTION =
-  'Install Rasoi App: Aaj Kya Banaye? from Google Play — free Indian home-cooking app by Karbh It Solutions. 8,000+ Gujarati, Marathi, Tamil, Telugu & Bengali recipes, pantry match %, Veg & Jain filters, meal planning & Blinkit/Zepto checkout.';
+  `Install Rasoi App: Aaj Kya Banaye? from Google Play — free Indian home-cooking app by Karbh It Solutions. ${RECIPE_LIBRARY_LABEL} Gujarati, Marathi, Tamil, Telugu & Bengali recipes, pantry match %, Veg & Jain filters, meal planning & Blinkit/Zepto checkout.`;
 
 export const playStoreMetadata: Metadata = {
   ...buildPageMetadata({
@@ -344,12 +351,12 @@ export const PLAY_STORE_FAQ_ITEMS = [
   {
     question: 'What does Rasoi App: Aaj Kya Banaye? do?',
     answer:
-      'Rasoi helps Indian home cooks decide dinner from ingredients already in the kitchen — with smart meal picks, pantry matching, 15 regional cuisines, and filters for Veg, Jain, Egg, and Non-Veg.',
+      `Rasoi helps Indian home cooks decide dinner from ingredients already in the kitchen — with smart meal picks, pantry matching, ${RECIPE_LIBRARY_LABEL} recipes, 15 regional cuisines, and filters for Veg, Jain, Egg, and Non-Veg.`,
   },
   {
     question: 'Does Rasoi have Gujarati, Marathi, Tamil, Telugu, or Bengali recipes?',
     answer:
-      'Yes. Rasoi includes regional Indian cuisines and the Play Store listing is localized in Gujarati, Marathi, Tamil, Telugu, Bengali, and Hindi for easier discovery in your language.',
+      'Yes. Rasoi includes regional Indian cuisines. Play Store listings are live in Hindi, Marathi, Tamil, and Telugu; Gujarati and Bengali copy is ready as those languages are enabled in Play Console.',
   },
   {
     question: 'Should I install from Google Play or download an APK?',
@@ -359,7 +366,7 @@ export const PLAY_STORE_FAQ_ITEMS = [
   {
     question: 'What Play Store category and tags does Rasoi use?',
     answer:
-      'Rasoi is in Food & Drink on Google Play with tags: Recipes, Cooking, Food & drink, Meal planning, and Lifestyle.',
+      'Rasoi is in Food & Drink on Google Play with tags: Recipes, Cooking, Food & drink, Meal planning, Lifestyle, and Health & fitness.',
   },
 ] as const;
 
@@ -473,7 +480,7 @@ export function mobileAppJsonLd(pageUrl: string = SITE_URL) {
     featureList: [
       'Aaj kya banaye — tonight\'s meal picks',
       'Pantry-to-recipe matching',
-      '1,200+ recipes across 15 regional Indian cuisines',
+      `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
       'Veg, Jain, Egg, Non-Veg filters',
       'Partner grocery checkout via Blinkit, Zepto, Instamart',
       'Food delivery via Zomato and Swiggy',
@@ -543,16 +550,20 @@ export function jsonLdGraph(nodes: Record<string, unknown>[]) {
   };
 }
 
+function ogLocaleForHreflang(hreflang: string): string {
+  const map: Record<string, string> = {
+    'en-IN': 'en_IN',
+    'en-US': 'en_US',
+    'en-CA': 'en_CA',
+    'en-AU': 'en_AU',
+    'en-NZ': 'en_NZ',
+  };
+  return map[hreflang] ?? 'en_US';
+}
+
 export function buildMarketMetadata(market: MarketConfig): Metadata {
   const canonical = absoluteUrl(market.path);
-  const ogLocale =
-    market.hreflang === 'en-IN'
-      ? 'en_IN'
-      : market.hreflang === 'en-US'
-        ? 'en_US'
-        : market.hreflang === 'en-CA'
-          ? 'en_CA'
-          : 'en_AU';
+  const ogLocale = ogLocaleForHreflang(market.hreflang);
 
   const keywords =
     market.id === 'IN'
@@ -584,15 +595,7 @@ export function buildMarketMetadata(market: MarketConfig): Metadata {
       locale: ogLocale,
       alternateLocale: getAllMarkets()
         .filter((m) => m.id !== market.id)
-        .map((m) =>
-          m.hreflang === 'en-IN'
-            ? 'en_IN'
-            : m.hreflang === 'en-US'
-              ? 'en_US'
-              : m.hreflang === 'en-CA'
-                ? 'en_CA'
-                : 'en_AU',
-        ),
+        .map((m) => ogLocaleForHreflang(m.hreflang)),
       url: canonical,
       siteName: APP_NAME,
       title: market.title,
@@ -658,7 +661,7 @@ export function marketSoftwareJsonLd(market: MarketConfig) {
   const featureList = [
     'Aaj kya banaye — tonight\'s meal picks',
     'Pantry-to-recipe matching',
-    '1,200+ recipes across 15 regional Indian cuisines',
+    `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
     'Veg, Jain, Egg, Non-Veg filters',
     market.partnersStatus === 'live'
       ? `Partner checkout: ${partnerNames}`
@@ -719,7 +722,7 @@ export function marketMobileAppJsonLd(market: MarketConfig) {
     featureList: [
       'Aaj kya banaye — tonight\'s meal picks',
       'Pantry-to-recipe matching',
-      '1,200+ recipes across 15 regional Indian cuisines',
+      `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
       'Veg, Jain, Egg, Non-Veg filters',
       `Partner checkout: ${partnerNames}`,
       'Daily meal reminders',
@@ -784,7 +787,14 @@ export function buildContentPageMetadata(options: {
   description: string;
   path: string;
   keywords?: string[];
+  imageUrl?: string;
+  publishedTime?: string;
+  modifiedTime?: string;
 }): Metadata {
+  const ogImage = options.imageUrl
+    ? absoluteUrl(options.imageUrl)
+    : absoluteUrl('/download-hero.png');
+
   return {
     title: options.title,
     description: options.description,
@@ -799,9 +809,11 @@ export function buildContentPageMetadata(options: {
       siteName: APP_NAME,
       title: options.title,
       description: options.description,
+      ...(options.publishedTime ? { publishedTime: options.publishedTime } : {}),
+      ...(options.modifiedTime ? { modifiedTime: options.modifiedTime } : {}),
       images: [
         {
-          url: absoluteUrl('/download-hero.png'),
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: options.title,
@@ -813,9 +825,66 @@ export function buildContentPageMetadata(options: {
       site: TWITTER_HANDLE,
       title: options.title,
       description: options.description,
-      images: [absoluteUrl('/download-hero.png')],
+      images: [ogImage],
     },
     category: 'food',
+  };
+}
+
+function parseRecipeDurationIso(timeLabel?: string): string | undefined {
+  if (!timeLabel) return undefined;
+  const match = timeLabel.match(/(\d+)\s*min/i);
+  if (!match) return undefined;
+  const minutes = Number.parseInt(match[1], 10);
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return remainder > 0 ? `PT${hours}H${remainder}M` : `PT${hours}H`;
+  }
+  return `PT${minutes}M`;
+}
+
+function dietToSchemaRestriction(diet?: string): string | undefined {
+  const normalized = diet?.toLowerCase() ?? '';
+  if (normalized.includes('veg') && !normalized.includes('non')) {
+    return 'https://schema.org/VegetarianDiet';
+  }
+  return undefined;
+}
+
+export function buildRecipeBlogMetadata(options: {
+  title: string;
+  description: string;
+  slug: string;
+  keywords: string[];
+  imageUrl?: string;
+  h1: string;
+  publishedTime?: string;
+  modifiedTime?: string;
+}): Metadata {
+  const path = `/recipes/${options.slug}`;
+  const base = buildContentPageMetadata({
+    title: options.title,
+    description: options.description,
+    path,
+    keywords: options.keywords,
+    imageUrl: options.imageUrl,
+    publishedTime: options.publishedTime,
+    modifiedTime: options.modifiedTime,
+  });
+
+  return {
+    ...base,
+    openGraph: {
+      ...base.openGraph,
+      type: 'article',
+      section: 'Indian home cooking',
+      tags: options.keywords.slice(0, 8),
+    },
+    other: {
+      'article:section': 'Recipes',
+      'article:tag': options.keywords.slice(0, 5).join(', '),
+    },
   };
 }
 
@@ -853,4 +922,151 @@ export function articlePageJsonLd(options: {
     nodes.push(faqJsonLd(options.faqs));
   }
   return jsonLdGraph(nodes);
+}
+
+export function recipeBlogJsonLd(options: {
+  title: string;
+  description: string;
+  path: string;
+  imageUrl?: string;
+  cuisine?: string;
+  diet?: string;
+  time?: string;
+  keywords?: string[];
+  ingredients?: string[];
+  steps?: string[];
+  faqs?: ReadonlyArray<{ question: string; answer: string }>;
+  publishedTime?: string;
+  modifiedTime?: string;
+}) {
+  const pageUrl = absoluteUrl(options.path);
+  const image = options.imageUrl
+    ? absoluteUrl(options.imageUrl)
+    : absoluteUrl('/download-hero.png');
+  const recipeName = options.title
+    .replace(/ \| Rasoi$/, '')
+    .replace(/ — Indian Home Cooking Guide$/, '')
+    .replace(/ — .*$/, '');
+  const totalTime = parseRecipeDurationIso(options.time);
+
+  const recipe: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Recipe',
+    '@id': `${pageUrl}#recipe`,
+    name: recipeName,
+    headline: recipeName,
+    description: options.description,
+    url: pageUrl,
+    image: [image],
+    author: { '@type': 'Organization', name: APP_DEVELOPER, url: SITE_URL },
+    publisher: {
+      '@type': 'Organization',
+      name: APP_DEVELOPER,
+      logo: { '@type': 'ImageObject', url: absoluteUrl('/rasoi-logo.png') },
+    },
+    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
+    recipeCuisine: options.cuisine ?? 'Indian',
+    recipeCategory: options.diet ?? 'Indian',
+    recipeYield: '4 servings',
+    inLanguage: 'en',
+    isAccessibleForFree: true,
+    ...(options.publishedTime ? { datePublished: options.publishedTime } : {}),
+    ...(options.modifiedTime ? { dateModified: options.modifiedTime } : {}),
+    ...(totalTime ? { totalTime } : {}),
+    ...(options.keywords?.length ? { keywords: options.keywords.slice(0, 12).join(', ') } : {}),
+  };
+
+  const dietRestriction = dietToSchemaRestriction(options.diet);
+  if (dietRestriction) {
+    recipe.suitableForDiet = dietRestriction;
+  }
+
+  if (options.ingredients?.length) {
+    recipe.recipeIngredient = options.ingredients;
+  }
+  if (options.steps?.length) {
+    recipe.recipeInstructions = options.steps.map((text, index) => ({
+      '@type': 'HowToStep',
+      position: index + 1,
+      text,
+      url: `${pageUrl}#step-${index + 1}`,
+    }));
+  }
+
+  const nodes: Record<string, unknown>[] = [
+    recipe,
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      '@id': pageUrl,
+      url: pageUrl,
+      name: options.title,
+      description: options.description,
+      inLanguage: 'en',
+      isPartOf: { '@type': 'WebSite', name: APP_NAME, url: SITE_URL },
+      breadcrumb: { '@id': `${pageUrl}#breadcrumb` },
+      primaryImageOfPage: { '@type': 'ImageObject', url: image },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      '@id': `${pageUrl}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Rasoi', item: SITE_URL },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Recipe guides',
+          item: absoluteUrl('/recipes'),
+        },
+        { '@type': 'ListItem', position: 3, name: recipeName, item: pageUrl },
+      ],
+    },
+  ];
+
+  if (options.faqs?.length) {
+    nodes.push(faqJsonLd(options.faqs));
+  }
+
+  return jsonLdGraph(nodes);
+}
+
+export function recipeIndexJsonLd(
+  recipes: ReadonlyArray<{ name: string; slug: string; description: string; imageUrl?: string }>,
+) {
+  return jsonLdGraph([
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      '@id': absoluteUrl('/recipes'),
+      name: 'Top Indian Recipe Guides — Rasoi',
+      description:
+        '55 high-search Indian recipe blogs with ingredients, method, and diaspora tips for India, USA, Canada, Australia, and New Zealand.',
+      url: absoluteUrl('/recipes'),
+      inLanguage: 'en',
+      isPartOf: { '@type': 'WebSite', name: APP_NAME, url: SITE_URL },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      name: 'Top 55 Indian recipe guides',
+      numberOfItems: recipes.length,
+      itemListElement: recipes.map((recipe, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: recipe.name,
+        url: absoluteUrl(`/recipes/${recipe.slug}`),
+        description: recipe.description,
+        ...(recipe.imageUrl ? { image: absoluteUrl(recipe.imageUrl) } : {}),
+      })),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Rasoi', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Recipe guides', item: absoluteUrl('/recipes') },
+      ],
+    },
+  ]);
 }

@@ -32,7 +32,8 @@
     "cron:keep-alive": "tsx scripts/cron-keep-alive.ts",
     "cron:db-cleanup": "tsx scripts/cron-db-cleanup.ts",
     "cron:meal-notifications": "tsx scripts/cron-meal-notifications.ts",
-    "sync:apk": "bash scripts/sync-apk.sh"
+    "sync:apk": "bash scripts/sync-apk.sh",
+    "seo:recipe-blogs": "tsx scripts/generate-seo-recipe-blogs.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

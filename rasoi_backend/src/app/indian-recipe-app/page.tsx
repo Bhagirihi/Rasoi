@@ -19,9 +19,16 @@ export const metadata = buildContentPageMetadata({
 });
 
 const DIASPORA_GUIDES = SEO_GUIDE_PAGES.filter((page) =>
-  ['indian-cooking-in-usa', 'indian-cooking-in-canada', 'indian-cooking-in-australia'].includes(
-    page.slug,
-  ),
+  [
+    'indian-cooking-in-usa',
+    'indian-cooking-in-canada',
+    'indian-cooking-in-australia',
+    'indian-cooking-in-new-zealand',
+  ].includes(page.slug),
+);
+
+const TOP_RECIPE_BLOGS = [...SEO_RECIPE_PAGES].sort(
+  (a, b) => (a.searchVolumeRank ?? 999) - (b.searchVolumeRank ?? 999),
 );
 
 const DINNER_GUIDES = SEO_GUIDE_PAGES.filter(
@@ -119,9 +126,16 @@ export default function IndianRecipeAppHubPage() {
           </section>
 
           <section className="mt-14">
-            <h2 className="font-display text-2xl font-semibold">Dish guides</h2>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {SEO_RECIPE_PAGES.map((page) => (
+            <h2 className="font-display text-2xl font-semibold">Top recipe blogs</h2>
+            <p className="mt-2 max-w-2xl text-sm text-[#6b6560]">
+              {TOP_RECIPE_BLOGS.length} high-search Indian dishes with ingredients, method, and
+              diaspora tips for India, USA, Canada, Australia, and New Zealand.{' '}
+              <Link href="/recipes" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+                View all recipe guides →
+              </Link>
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {TOP_RECIPE_BLOGS.map((page) => (
                 <li key={page.slug}>
                   <Link
                     href={`/recipes/${page.slug}`}

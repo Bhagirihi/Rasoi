@@ -74,16 +74,16 @@ export const DEFAULT_PARTNER_LINKS: PartnerDefinition[] = [
     label: 'Zomato',
     category: 'delivery',
     region: 'IN',
-    deepLinkUrl: `zomato://search?q={query}&${UTM}`,
-    webUrl: `https://www.zomato.com/search?q={query}&${UTM}`,
+    deepLinkUrl: `https://www.zomato.com/search?query={query}&${UTM}`,
+    webUrl: `https://www.zomato.com/search?query={query}&${UTM}`,
   },
   {
     partnerId: 'swiggy',
     label: 'Swiggy',
     category: 'delivery',
     region: 'IN',
-    deepLinkUrl: `swiggy://explore?query={query}&${UTM}`,
-    webUrl: `https://www.swiggy.com/search?q={query}&${UTM}`,
+    deepLinkUrl: `https://www.swiggy.com/search?query={query}&${UTM}`,
+    webUrl: `https://www.swiggy.com/search?query={query}&${UTM}`,
   },
   // United States
   {

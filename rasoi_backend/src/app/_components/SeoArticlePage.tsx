@@ -1,8 +1,19 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import MarketFooter from '@/app/_components/MarketFooter';
 import RasoiLogo from '@/app/_components/RasoiLogo';
+import type { MarketId } from '@/lib/markets';
+import { MARKET_PATHS } from '@/lib/markets';
 import type { SeoContentFaq } from '@/lib/seo-content-pages';
+
+const MARKET_LABELS: Record<MarketId, string> = {
+  IN: 'India',
+  US: 'United States',
+  CA: 'Canada',
+  AU: 'Australia',
+  NZ: 'New Zealand',
+};
 
 type SeoArticlePageProps = {
   h1: string;
@@ -14,6 +25,12 @@ type SeoArticlePageProps = {
   marketHomeLabel?: string;
   showIndiaAppLinks?: boolean;
   meta?: { cuisine?: string; diet?: string; time?: string };
+  imageUrl?: string;
+  ingredients?: string[];
+  steps?: string[];
+  marketNotes?: Partial<Record<MarketId, string>>;
+  breadcrumbs?: { href: string; label: string }[];
+  imageAlt?: string;
 };
 
 export default function SeoArticlePage({
@@ -26,6 +43,12 @@ export default function SeoArticlePage({
   marketHomeLabel = 'Rasoi India',
   showIndiaAppLinks = false,
   meta,
+  imageUrl,
+  ingredients,
+  steps,
+  marketNotes,
+  breadcrumbs,
+  imageAlt,
 }: SeoArticlePageProps) {
   return (
     <div className="landing-grain min-h-screen text-[#1a1a2e]">
@@ -52,19 +75,81 @@ export default function SeoArticlePage({
       </header>
 
       <main className="mx-auto max-w-3xl px-5 py-12 lg:px-8 lg:py-16">
-        <article>
+        {breadcrumbs && breadcrumbs.length > 0 ? (
+          <nav aria-label="Breadcrumb" className="mb-8 text-sm text-[#6b6560]">
+            <ol className="flex flex-wrap items-center gap-2">
+              {breadcrumbs.map((crumb, index) => (
+                <li key={crumb.href} className="flex items-center gap-2">
+                  {index > 0 ? <span aria-hidden="true">/</span> : null}
+                  {index === breadcrumbs.length - 1 ? (
+                    <span className="font-semibold text-[#1a1a2e]">{crumb.label}</span>
+                  ) : (
+                    <Link href={crumb.href} className="hover:text-[#c45c2a]">
+                      {crumb.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </nav>
+        ) : null}
+        <article itemScope itemType="https://schema.org/Recipe">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
             Rasoi guide
           </p>
-          <h1 className="font-display mt-3 text-4xl font-semibold leading-tight tracking-tight lg:text-5xl">
+          <h1 className="font-display mt-3 text-4xl font-semibold leading-tight tracking-tight lg:text-5xl" itemProp="name">
             {h1}
           </h1>
           {meta ? (
             <p className="mt-4 text-sm font-medium text-[#6b6560]">
-              {[meta.cuisine, meta.diet, meta.time].filter(Boolean).join(' · ')}
+              <span itemProp="recipeCuisine">{meta.cuisine}</span>
+              {meta.diet ? <> · {meta.diet}</> : null}
+              {meta.time ? <> · <time>{meta.time}</time></> : null}
             </p>
           ) : null}
-          <p className="mt-6 text-lg leading-relaxed text-[#6b6560]">{intro}</p>
+          <p className="mt-6 text-lg leading-relaxed text-[#6b6560]" itemProp="description">
+            {intro}
+          </p>
+
+          {imageUrl ? (
+            <div className="mt-8 overflow-hidden rounded-[1.5rem] border border-[#e8dfd3] bg-white shadow-sm">
+              <Image
+                src={imageUrl}
+                alt={imageAlt ?? `${h1} — Indian home cooking guide`}
+                width={1200}
+                height={800}
+                className="h-auto w-full object-cover"
+                priority
+                itemProp="image"
+              />
+            </div>
+          ) : null}
+
+          {ingredients && ingredients.length > 0 ? (
+            <section className="mt-10">
+              <h2 className="font-display text-2xl font-semibold">Ingredients</h2>
+              <ul className="mt-4 list-disc space-y-2 pl-5 text-[#6b6560]">
+                {ingredients.map((item) => (
+                  <li key={item} itemProp="recipeIngredient">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {steps && steps.length > 0 ? (
+            <section className="mt-10">
+              <h2 className="font-display text-2xl font-semibold">Method</h2>
+              <ol className="mt-4 list-decimal space-y-3 pl-5 text-[#6b6560]">
+                {steps.map((step, index) => (
+                  <li key={step} id={`step-${index + 1}`} itemProp="recipeInstructions">
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
 
           <div className="mt-10 space-y-10">
             {sections.map((section) => (
@@ -74,6 +159,33 @@ export default function SeoArticlePage({
               </section>
             ))}
           </div>
+
+          {marketNotes && Object.keys(marketNotes).length > 0 ? (
+            <section className="mt-14 border-t border-[#e8dfd3] pt-12">
+              <h2 className="font-display text-3xl font-semibold">Cooking abroad</h2>
+              <div className="mt-8 space-y-4">
+                {(Object.entries(marketNotes) as [MarketId, string][]).map(([id, note]) => (
+                  <div
+                    key={id}
+                    className="rounded-[1.25rem] border border-[#e8dfd3] bg-[#fcf9f4] p-5"
+                  >
+                    <p className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                      {MARKET_LABELS[id]}
+                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-[#6b6560]">{note}</p>
+                    {id !== 'IN' ? (
+                      <Link
+                        href={MARKET_PATHS[id]}
+                        className="mt-3 inline-block text-sm font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+                      >
+                        Rasoi for {MARKET_LABELS[id]} →
+                      </Link>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {faqs.length > 0 ? (
             <section className="mt-14 border-t border-[#e8dfd3] pt-12">
