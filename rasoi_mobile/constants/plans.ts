@@ -54,7 +54,7 @@ export const PAID_PLAN_FEATURES = [
 export const TRIAL_WELCOME_FEATURES = [
   'All Rasoi Plus partner checkouts unlocked',
   `Try grocery & delivery links free for ${TRIAL_DURATION_DAYS} days`,
-  'Subscribe anytime to remove ads and keep access',
+  'Ads still show during trial — subscribe to remove ads and keep access',
 ] as const;
 
 export const PLAN_FEATURES = {
@@ -75,8 +75,7 @@ export const PLAN_FEATURES = {
   },
 } as const;
 
-export const PARTNER_TRIAL_NOTE =
-  'Included in Rasoi Plus — enjoy during your free trial';
+export const PARTNER_TRIAL_NOTE = 'Unlocked during your free trial — ads still show until you subscribe';
 
 export const PARTNER_PAID_NOTE = 'Included with Rasoi Plus';
 
@@ -84,6 +83,11 @@ export const FREE_PARTNER_SHOPS_PER_MONTH = 2;
 
 export const FREE_PARTNER_FREEMIUM_NOTE =
   'Free plan includes 2 partner shops per month after your trial ends.';
+
+export const FREE_PARTNER_COMPARE_LABEL = '2/mo';
+
+export const FREE_PARTNER_COMPARE_FOOTNOTE =
+  'After trial ends — 2 Blinkit, Zepto, Instamart, Zomato or Swiggy checkouts per calendar month.';
 
 export const FREE_PARTNER_UPSELL =
   'Upgrade to Rasoi Plus for unlimited Blinkit, Zepto, Instamart, Zomato & Swiggy checkout.';

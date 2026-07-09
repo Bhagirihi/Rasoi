@@ -6,6 +6,11 @@ import RasoiLogo from '@/app/_components/RasoiLogo';
 import SponsorApplyForm from '@/app/_components/SponsorApplyForm';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
 import { MARKET_FEATURES, type MarketConfig } from '@/lib/markets';
+import { SEO_RECIPE_PAGES } from '@/lib/seo-content-pages';
+
+const TOP_RECIPE_LINKS = [...SEO_RECIPE_PAGES]
+  .sort((a, b) => (a.searchVolumeRank ?? 999) - (b.searchVolumeRank ?? 999))
+  .slice(0, 6);
 
 type MarketLandingProps = {
   market: MarketConfig;
@@ -154,6 +159,57 @@ export default function MarketLanding({ market, recipeCount }: MarketLandingProp
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="border-b border-[#e8dfd3] bg-white">
+          <div className="mx-auto max-w-6xl px-5 py-14 lg:px-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
+                  Recipe guides
+                </p>
+                <h2 className="font-display mt-2 text-3xl font-semibold tracking-tight">
+                  Popular Indian recipes
+                </h2>
+              </div>
+              <Link
+                href="/recipes"
+                className="text-sm font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
+              >
+                All 55 guides →
+              </Link>
+            </div>
+            <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {TOP_RECIPE_LINKS.map((recipe) => (
+                <li key={recipe.slug}>
+                  <Link
+                    href={`/recipes/${recipe.slug}`}
+                    className="block rounded-xl border border-[#e8dfd3] bg-[#fcf9f4] px-5 py-4 font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                  >
+                    {recipe.h1}
+                    <span className="mt-1 block text-xs font-normal text-[#6b6560]">
+                      {recipe.cuisine} · {recipe.time}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-6 text-sm text-[#6b6560]">
+              Browse by{' '}
+              <Link href="/cuisine/punjabi" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+                cuisine
+              </Link>
+              ,{' '}
+              <Link href="/ingredient/paneer" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+                ingredient
+              </Link>
+              , or{' '}
+              <Link href="/meal/dinner" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+                meal type
+              </Link>
+              .
+            </p>
           </div>
         </section>
 

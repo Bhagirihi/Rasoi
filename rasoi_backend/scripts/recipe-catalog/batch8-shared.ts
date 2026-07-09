@@ -4,6 +4,7 @@ import {
   BATCH8_STYLE_PREFIXES,
 } from './batch8-dish-pools';
 import type { RecipeCatalogEntry } from './types';
+import { inferHeroIngredientFromTitle } from '../../src/lib/infer-hero-ingredient';
 
 type DietType = RecipeCatalogEntry['dietType'];
 type Difficulty = RecipeCatalogEntry['difficulty'];
@@ -64,27 +65,7 @@ function inferTags(idNumber: number, prepTime: number): RecipeCatalogEntry['tags
 }
 
 function inferProtein(title: string, fallback: string): string {
-  const lower = title.toLowerCase();
-  if (lower.includes('fish') || lower.includes('meen') || lower.includes('maach') || lower.includes('bhetki') || lower.includes('rui')) return 'Fish';
-  if (lower.includes('prawn') || lower.includes('chemmeen') || lower.includes('kolmi') || lower.includes('jhinga')) return 'Prawns';
-  if (lower.includes('crab')) return 'Crab';
-  if (lower.includes('mutton') || lower.includes('gosht') || lower.includes('lamb') || lower.includes('aattu')) return 'Mutton';
-  if (lower.includes('chicken') || lower.includes('murgh') || lower.includes('kozhi')) return 'Chicken';
-  if (lower.includes('pork') || lower.includes('vindaloo')) return 'Pork';
-  if (lower.includes('duck')) return 'Duck';
-  if (lower.includes('keema')) return 'Keema';
-  if (lower.includes('egg') || lower.includes('anda') || lower.includes('dim ')) return 'Anda';
-  if (lower.includes('paneer') || lower.includes('tschaman') || lower.includes('chaman')) return 'Paneer';
-  if (lower.includes('chana') || lower.includes('chole') || lower.includes('cholar')) return 'Chana';
-  if (lower.includes('dal') || lower.includes('lentil') || lower.includes('rajma') || lower.includes('kadhi')) return 'Dal';
-  if (lower.includes('mushroom')) return 'Mushroom';
-  if (lower.includes('soya') || lower.includes('chaap')) return 'Soya chaap';
-  if (lower.includes('bajra') || lower.includes('bajri')) return 'Bajra atta';
-  if (lower.includes('besan') || lower.includes('gatta') || lower.includes('muthia')) return 'Besan';
-  if (lower.includes('rice') || lower.includes('chawal') || lower.includes('biryani') || lower.includes('pulao')) return 'Basmati chawal';
-  if (lower.includes('dosa') || lower.includes('idli') || lower.includes('appam') || lower.includes('uttapam')) return 'Rice batter';
-  if (lower.includes('paratha') || lower.includes('roti') || lower.includes('thepla') || lower.includes('rotla')) return 'Atta';
-  return fallback;
+  return inferHeroIngredientFromTitle(title, fallback);
 }
 
 function ingredientsFor(

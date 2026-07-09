@@ -80,6 +80,8 @@ export const supabaseSyncSchema = z.object({
   linkGuestUserId: z.string().trim().min(1).optional(),
   /** Apply onboarding in the same request to avoid a second round trip after OTP verify. */
   onboarding: onboardingSchema.optional(),
+  /** Set after Firebase SMS OTP verification during signup. */
+  phoneVerified: z.literal(true).optional(),
 });
 
 export const kitchenPreferencesSchema = z.object({

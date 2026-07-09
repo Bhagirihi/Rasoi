@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Check } from 'lucide-react-native';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radius, type CuisineId } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
@@ -39,7 +39,6 @@ export default function CuisinePreferenceList({
               isSelected && (isDark ? styles.rowDarkSelected : styles.rowLightSelected),
             ]}
           >
-            <Image source={{ uri: cuisine.heroImage }} style={styles.hero} />
             <View style={styles.body}>
               <View style={styles.topRow}>
                 <Text style={[styles.label, isDark ? styles.labelDark : styles.labelLight]}>
@@ -103,11 +102,6 @@ const styles = StyleSheet.create({
   rowLightSelected: {
     borderColor: colors.primary,
     backgroundColor: 'rgba(255,107,53,0.06)',
-  },
-  hero: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.md,
   },
   body: {
     flex: 1,

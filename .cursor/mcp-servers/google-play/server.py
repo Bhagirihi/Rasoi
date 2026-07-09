@@ -22,6 +22,8 @@ from play_client import (
     list_subscriptions,
     load_manifest,
     package_name,
+    push_aso_bundle,
+    push_store_graphics,
     push_store_listing,
     rasoi_codebase_config,
     upload_and_rollout_open_testing,
@@ -153,6 +155,30 @@ def play_push_listing(package_name: str = '', language: str = 'all') -> str:
     """Push store title + descriptions from manifest.json via Play edits API. Use language=all for en-US + localizedListings."""
     try:
         return _json(push_store_listing(pkg=package_name or None, language=language))
+    except PlayError as exc:
+        return _json({'error': str(exc)})
+
+
+@mcp.tool()
+def play_push_graphics(package_name: str = '', language: str = 'en-US', replace_existing: bool = True) -> str:
+    """Upload feature graphic + phone screenshots from manifest.assets to Play Store listing."""
+    try:
+        return _json(
+            push_store_graphics(
+                pkg=package_name or None,
+                language=language or None,
+                replace_existing=replace_existing,
+            ),
+        )
+    except PlayError as exc:
+        return _json({'error': str(exc)})
+
+
+@mcp.tool()
+def play_push_aso(package_name: str = '', include_graphics: bool = True) -> str:
+    """Push full ASO bundle: all listing locales (skip unsupported) + feature graphic + screenshots."""
+    try:
+        return _json(push_aso_bundle(pkg=package_name or None, include_graphics=include_graphics))
     except PlayError as exc:
         return _json({'error': str(exc)})
 

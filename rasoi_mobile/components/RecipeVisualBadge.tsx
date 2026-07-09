@@ -1,12 +1,26 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Clock, Gauge } from 'lucide-react-native';
-import { StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import { colors, radius, spacing } from '@/constants/theme';
 import type { Recipe } from '@/data/mockRecipes';
+import { getRecipeImageUrl } from '@/utils/recipeImage';
 import { getRecipeVisualIdentity } from '@/utils/recipeVisualIdentity';
 
-export type RecipeVisualBadgeVariant = 'strip' | 'banner' | 'tile' | 'backdrop';
+export type RecipeVisualBadgeVariant =
+  | 'strip'
+  | 'banner'
+  | 'hero'
+  | 'tile'
+  | 'backdrop';
 
 type RecipeVisualBadgeProps = {
   recipe: Recipe;
@@ -14,75 +28,226 @@ type RecipeVisualBadgeProps = {
   style?: StyleProp<ViewStyle>;
   /** Dark text on banner (default false = light text on gradient). */
   onLight?: boolean;
+  /** Backdrop only: add a light top scrim for nav buttons over photos. */
+  topScrim?: boolean;
 };
+
+function RecipePhoto({
+  uri,
+  onError,
+  resizeMode = 'cover',
+}: {
+  uri: string;
+  onError: () => void;
+  resizeMode?: 'cover' | 'contain';
+}) {
+  return (
+    <Image
+      source={{ uri }}
+      style={StyleSheet.absoluteFillObject}
+      resizeMode={resizeMode}
+      onError={onError}
+      accessibilityIgnoresInvertColors
+    />
+  );
+}
+
+function DietChip({
+  label,
+  color,
+  style,
+}: {
+  label: string;
+  color: string;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={[styles.dietChip, { borderColor: color }, style]}>
+      <View style={[styles.dietChipDot, { backgroundColor: color }]} />
+      <Text style={styles.dietChipText}>{label}</Text>
+    </View>
+  );
+}
 
 export default function RecipeVisualBadge({
   recipe,
   variant = 'banner',
   style,
   onLight = false,
+  topScrim = false,
 }: RecipeVisualBadgeProps) {
   const visual = getRecipeVisualIdentity(recipe);
+  const imageUrl = getRecipeImageUrl(recipe);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [recipe.id, recipe.imageUrl]);
+
+  const showImage = Boolean(imageUrl) && !imageFailed;
   const textColor = onLight ? colors.charcoal : colors.white;
   const subColor = onLight ? colors.muted : 'rgba(255,255,255,0.82)';
 
   if (variant === 'strip') {
     return (
-      <LinearGradient
-        colors={visual.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={[styles.strip, style]}
-      >
-        <View style={[styles.dietDot, { backgroundColor: visual.dietColor }]} />
-        <Text style={styles.stripEmoji}>{visual.emoji}</Text>
-        <Text style={styles.stripLabel} numberOfLines={2}>
-          {visual.shortCaption}
-        </Text>
-      </LinearGradient>
+      <View style={[styles.strip, style]}>
+        {showImage ? (
+          <>
+            <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.35)']}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <DietChip
+              label={visual.dietLabel}
+              color={visual.dietColor}
+              style={styles.dietChipStrip}
+            />
+          </>
+        ) : (
+          <LinearGradient
+            colors={visual.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          >
+            <DietChip
+              label={visual.dietLabel}
+              color={visual.dietColor}
+              style={styles.dietChipStrip}
+            />
+            <Text style={styles.stripEmoji}>{visual.emoji}</Text>
+            <Text style={styles.stripLabel} numberOfLines={2}>
+              {visual.shortCaption}
+            </Text>
+          </LinearGradient>
+        )}
+      </View>
+    );
+  }
+
+  if (variant === 'hero') {
+    return (
+      <View style={[styles.hero, style]}>
+        {showImage ? (
+          <>
+            <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
+            <LinearGradient
+              colors={['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.42)']}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <DietChip
+              label={visual.dietLabel}
+              color={visual.dietColor}
+              style={styles.dietChipHero}
+            />
+          </>
+        ) : (
+          <LinearGradient
+            colors={visual.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          >
+            <DietChip
+              label={visual.dietLabel}
+              color={visual.dietColor}
+              style={styles.dietChipHero}
+            />
+            <Text style={styles.heroEmoji}>{visual.emoji}</Text>
+            <Text style={styles.heroFallbackCaption} numberOfLines={1}>
+              {visual.kitchenLabel}
+            </Text>
+          </LinearGradient>
+        )}
+      </View>
     );
   }
 
   if (variant === 'tile') {
     return (
-      <LinearGradient
-        colors={visual.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.tile, style]}
-      >
-        <View style={[styles.dietDot, styles.dietDotTile, { backgroundColor: visual.dietColor }]} />
-        <Text style={styles.tileEmoji}>{visual.emoji}</Text>
-        <Text style={styles.tileCaption} numberOfLines={1}>
-          {visual.shortCaption}
-        </Text>
-      </LinearGradient>
+      <View style={[styles.tile, style]}>
+        {showImage ? (
+          <>
+            <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.65)']}
+              style={StyleSheet.absoluteFillObject}
+            />
+            <View style={[styles.dietDot, styles.dietDotTile, { backgroundColor: visual.dietColor }]} />
+            <Text style={styles.tileCaption} numberOfLines={1}>
+              {visual.shortCaption}
+            </Text>
+          </>
+        ) : (
+          <LinearGradient
+            colors={visual.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          >
+            <View style={[styles.dietDot, styles.dietDotTile, { backgroundColor: visual.dietColor }]} />
+            <Text style={styles.tileEmoji}>{visual.emoji}</Text>
+            <Text style={styles.tileCaption} numberOfLines={1}>
+              {visual.shortCaption}
+            </Text>
+          </LinearGradient>
+        )}
+      </View>
     );
   }
 
   if (variant === 'backdrop') {
     return (
-      <LinearGradient
-        colors={visual.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.backdrop, style]}
-      >
-        <Text style={styles.backdropEmoji}>{visual.emoji}</Text>
-        <View style={[styles.dietDot, styles.backdropDiet, { backgroundColor: visual.dietColor }]} />
-      </LinearGradient>
+      <View style={[styles.backdrop, style]}>
+        {showImage ? (
+          <>
+            <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
+            {topScrim ? (
+              <LinearGradient
+                colors={['rgba(0,0,0,0.55)', 'transparent']}
+                style={styles.backdropTopScrim}
+              />
+            ) : null}
+          </>
+        ) : (
+          <LinearGradient
+            colors={visual.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFillObject}
+          >
+            <Text style={styles.backdropEmoji}>{visual.emoji}</Text>
+          </LinearGradient>
+        )}
+      </View>
     );
   }
 
   if (variant === 'banner') {
     return (
-      <LinearGradient
-        colors={visual.gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.banner, style]}
-      >
-        <Text style={styles.bannerEmoji}>{visual.emoji}</Text>
+      <View style={[styles.banner, style]}>
+        {showImage ? (
+          <>
+            <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
+            <LinearGradient
+              colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.78)']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFillObject}
+            />
+          </>
+        ) : (
+          <LinearGradient
+            colors={visual.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFillObject}
+          />
+        )}
+        {!showImage ? (
+          <Text style={styles.bannerEmoji}>{visual.emoji}</Text>
+        ) : null}
         <View style={styles.bannerCopy}>
           <Text style={[styles.bannerKitchen, { color: textColor }]} numberOfLines={1}>
             {visual.kitchenLabel}
@@ -105,7 +270,7 @@ export default function RecipeVisualBadge({
             <Text style={[styles.pillText, { color: subColor }]}>{recipe.difficulty}</Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
@@ -133,15 +298,14 @@ export function RecipeTagChips({ recipe }: RecipeTagChipsProps) {
 
 const styles = StyleSheet.create({
   strip: {
-    width: 92,
+    width: 104,
     alignSelf: 'stretch',
-    minHeight: 108,
+    minHeight: 112,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     paddingHorizontal: spacing.xs,
     paddingVertical: spacing.sm,
-    borderTopLeftRadius: radius.lg - 1,
-    borderBottomLeftRadius: radius.lg - 1,
+    overflow: 'hidden',
   },
   stripEmoji: {
     fontSize: 32,
@@ -153,14 +317,33 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.2,
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.95)',
+  },
+  hero: {
+    minHeight: 136,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  heroEmoji: {
+    fontSize: 52,
+    lineHeight: 58,
+    opacity: 0.9,
+  },
+  heroFallbackCaption: {
+    marginTop: spacing.xs,
+    fontSize: 13,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.92)',
+    letterSpacing: 0.2,
   },
   tile: {
     width: 80,
     height: 80,
     borderRadius: radius.sm,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
+    paddingBottom: 6,
     overflow: 'hidden',
   },
   tileEmoji: {
@@ -176,21 +359,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   banner: {
-    minHeight: 76,
+    minHeight: 88,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     gap: spacing.md,
+    overflow: 'hidden',
   },
   bannerEmoji: {
     fontSize: 36,
     lineHeight: 42,
+    zIndex: 1,
   },
   bannerCopy: {
     flex: 1,
     minWidth: 0,
     gap: 2,
+    zIndex: 1,
   },
   bannerKitchen: {
     fontSize: 14,
@@ -204,6 +390,7 @@ const styles = StyleSheet.create({
   bannerPills: {
     alignItems: 'flex-end',
     gap: 4,
+    zIndex: 1,
   },
   pill: {
     flexDirection: 'row',
@@ -238,10 +425,46 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.65)',
+    zIndex: 2,
   },
   dietDotTile: {
     top: 6,
     right: 6,
+  },
+  dietChip: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    zIndex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(0,0,0,0.42)',
+  },
+  dietChipDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  dietChipText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.white,
+    letterSpacing: 0.2,
+  },
+  dietChipStrip: {
+    top: 6,
+    left: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  dietChipHero: {
+    top: spacing.md,
+    left: spacing.md,
   },
   tagRow: {
     flexDirection: 'row',
@@ -265,14 +488,18 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  backdropTopScrim: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 120,
   },
   backdropEmoji: {
     fontSize: 88,
     lineHeight: 96,
     opacity: 0.28,
-  },
-  backdropDiet: {
-    top: spacing.lg,
-    right: spacing.lg,
   },
 });

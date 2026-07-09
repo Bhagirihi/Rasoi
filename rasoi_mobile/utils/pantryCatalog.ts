@@ -2,6 +2,7 @@ import type { Recipe } from '@/data/mockRecipes';
 import type { PantrySection } from '@/services/reference';
 import type { DietChoice } from '@/constants/theme';
 import type { MealContext } from '@/utils/mealTime';
+import { isPantryMatchExcluded } from '@/utils/assumedAtHomeIngredients';
 import {
   isEssentialIngredient,
   pantryHasIngredient,
@@ -107,6 +108,15 @@ export function buildPersonalPantrySection(
   };
 }
 
+export function collectPantryHomeRecipes(input: {
+  topPick?: Recipe | null;
+  alsoFor: Recipe[];
+  lateNightPick?: Recipe | null;
+}): Recipe[] {
+  return uniqueRecipes([input.topPick, ...input.alsoFor, input.lateNightPick]);
+}
+
+/** @deprecated Use collectPantryHomeRecipes for home-only context. */
 export function collectPantryContextRecipes(input: {
   topPick?: Recipe | null;
   alsoFor: Recipe[];
@@ -115,7 +125,50 @@ export function collectPantryContextRecipes(input: {
   return uniqueRecipes([input.topPick, ...input.alsoFor, ...input.saved]);
 }
 
-export function getMissingPantryLabels(recipes: Recipe[], pantryIngredients: string[]): string[] {
+/** Ingredient chips for pantry — all named, non-assumed-at-home items from recipes. */
+export function buildPantryItemsFromRecipes(recipes: Recipe[]): string[] {
+  const seenChipKeys = new Set<string>();
+  const items: string[] = [];
+
+  for (const recipe of recipes) {
+    for (const ingredient of recipe.ingredients) {
+      const rawName = ingredient.name?.trim();
+      if (!rawName || isPantryMatchExcluded(rawName)) continue;
+
+      const label = chipLabelForIngredient(rawName);
+      const chipKey = ingredientKey(label);
+      if (!chipKey || seenChipKeys.has(chipKey)) continue;
+
+      seenChipKeys.add(chipKey);
+      items.push(label);
+    }
+  }
+
+  items.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  return items;
+}
+
+export function buildPantryRecipeSection(
+  recipes: Recipe[],
+  title: string,
+  subtitle: string,
+): PantryPersonalSection | null {
+  const items = buildPantryItemsFromRecipes(recipes);
+  if (items.length === 0) return null;
+
+  return {
+    title,
+    subtitle,
+    items,
+    recipeCount: recipes.length,
+  };
+}
+
+export function getMissingPantryLabels(
+  recipes: Recipe[],
+  pantryIngredients: string[],
+  limit?: number,
+): string[] {
   const seen = new Set<string>();
   const missing: string[] = [];
 
@@ -133,7 +186,8 @@ export function getMissingPantryLabels(recipes: Recipe[], pantryIngredients: str
     }
   }
 
-  return missing.slice(0, 6);
+  missing.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  return typeof limit === 'number' ? missing.slice(0, limit) : missing;
 }
 
 export function countStockedPantryItems(

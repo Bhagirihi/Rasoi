@@ -138,10 +138,9 @@ export const HOUSEHOLD_STAPLES_RECIPES: RecipeCatalogEntry[] = [
       'Fluffy steamed basmati rice with a light ghee drizzle — the neutral base for dal, rajma, and sabzi.',
     tags: ['under20', 'quick', 'kids'],
     ingredients: [
-      { name: 'Basmati chawal', isStaple: true },
+      { name: 'Basmati chawal', isStaple: false },
       { name: 'Namak', isStaple: true },
       { name: 'Ghee', isStaple: true },
-      { name: 'Pani', isStaple: true },
     ],
     steps: [
       'Wash basmati chawal until water runs clear and soak 15 minutes.',

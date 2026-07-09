@@ -1,5 +1,6 @@
 import type { RecipeIngredient } from '@/lib/types';
 
+import { localizeRecipeTitleToHindi } from '@/lib/recipe-content-hi';
 import { detectDishKind, type RecipeStepInput } from '@/lib/recipe-steps';
 
 function heroName(ingredients: RecipeIngredient[]): string {
@@ -9,7 +10,7 @@ function heroName(ingredients: RecipeIngredient[]): string {
 export function buildRecipeDescriptionHi(input: RecipeStepInput): string {
   const kind = detectDishKind(input.title, input.ingredients);
   const hero = heroName(input.ingredients);
-  const title = input.title;
+  const title = localizeRecipeTitleToHindi(input.title);
 
   const templates: Record<string, string> = {
     'bread-snack': `${title} — बची हुई ब्रेड को प्याज़, मूंगफली के तड़के और हल्दी के साथ तलकर बनाया जाने वाला त्वरित नाश्ता।`,

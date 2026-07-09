@@ -1,6 +1,6 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
-import { Moon, Timer } from "lucide-react-native";
+import { Timer } from "lucide-react-native";
 import { useMemo, useState, useCallback, useEffect } from "react";
 import {
   Pressable,
@@ -16,18 +16,18 @@ import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
 import CookTonightSheet from "@/components/CookTonightSheet";
 import OfflineBanner from "@/components/OfflineBanner";
 import HomeRecentCooks from "@/components/home/HomeRecentCooks";
-import HomePlanTomorrow from "@/components/home/HomePlanTomorrow";
 import GuestRegisterBanner from "@/components/home/GuestRegisterBanner";
 import HomeSeasonalRail from "@/components/home/HomeSeasonalRail";
 import { AppTabHeader } from "@/components/AppTabHeader";
-import HomeBrowseLink from "@/components/home/HomeBrowseLink";
-import HomeRecipeRow, { HomePickShuffleButton } from "@/components/home/HomeRecipeRow";
-import HomeSectionHeader from "@/components/home/HomeSectionHeader";
+import HomeScreenLinks from "@/components/home/HomeScreenLinks";
+import HomePickCard, {
+  HomePickShuffleButton,
+} from "@/components/home/HomePickCard";
+import HomeRecipeRowSkeleton from "@/components/home/HomeRecipeRowSkeleton";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import SponsorOrAd from "@/components/SponsorOrAd";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import HomeAnnouncementBridge from "@/components/home/HomeAnnouncementBridge";
-import TonightCardsSkeleton from "@/components/TonightCardsSkeleton";
 import HomeHeroLoadingBox from "@/components/HomeHeroLoadingBox";
 import { EmptyState } from "@/components/ui/Primitives";
 import { useRecipeDiscovery } from "@/hooks/useRecipeDiscovery";
@@ -63,8 +63,8 @@ import {
 
 const HOME_HERO_SEEN_KEY = "@rasoi/home_hero_intro_seen";
 
-const HOME_SECTION_GAP = spacing.xl;
-const RECIPES_CLUSTER_GAP = spacing.md;
+const HOME_SECTION_GAP = spacing.lg;
+const PICK_SECTION_GAP = spacing.md;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -83,7 +83,6 @@ export default function HomeScreen() {
     refreshRecipes,
     refreshHomePicks,
     topPick,
-    tonightCards,
     lateNightPick,
     seasonalRail,
     pantryFilterActive,
@@ -144,34 +143,16 @@ export default function HomeScreen() {
   const showHeroIntro = !heroIntroFinished;
   const showLateNightPick =
     heroIntroFinished && meal.isOvernightDual && !!lateNightPick;
-  const fallbackTonightCards =
-    heroIntroFinished &&
-    discoveryReady &&
-    !topPick &&
-    tonightCards.length === 0 &&
-    rankedRecipes.length > 0
-      ? rankedRecipes.slice(0, 3)
-      : [];
-  const displayTopPick =
-    topPick ?? (fallbackTonightCards.length > 0 ? fallbackTonightCards[0] : undefined);
-  const displayAlsoCards =
-    tonightCards.length > 0
-      ? tonightCards
-      : fallbackTonightCards.length > 1
-        ? fallbackTonightCards.slice(1)
-        : [];
+  const fallbackTopPick =
+    heroIntroFinished && discoveryReady && !topPick && rankedRecipes.length > 0
+      ? rankedRecipes[0]
+      : undefined;
+  const displayTopPick = topPick ?? fallbackTopPick;
   const showPickCard = heroIntroFinished && !!displayTopPick;
   const showTonightSkeleton =
-    heroIntroFinished &&
-    !discoveryReady &&
-    tonightCards.length === 0 &&
-    !showLateNightPick;
-  const moreRecipeCount = Math.max(rankedRecipes.length - 4, 0);
+    heroIntroFinished && !discoveryReady && !showLateNightPick;
   const showRecipesCluster =
-    showLateNightPick ||
-    !!displayTopPick ||
-    showTonightSkeleton ||
-    displayAlsoCards.length > 0;
+    showLateNightPick || showPickCard || showTonightSkeleton;
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -191,6 +172,34 @@ export default function HomeScreen() {
     if (!lateNightPick) return 0;
     return getPantryMatchPercent(lateNightPick, pantryIngredients);
   }, [lateNightPick, pantryIngredients]);
+
+  const topPickPickReason = useMemo(() => {
+    if (!displayTopPick) return "";
+    return getRecipePickReason(displayTopPick, {
+      regionalCuisine,
+      pantryIngredients,
+      dietChoice,
+      mealSlot: meal.slot,
+    });
+  }, [
+    displayTopPick,
+    regionalCuisine,
+    pantryIngredients,
+    dietChoice,
+    meal.slot,
+  ]);
+
+  const lateNightPickReason = useMemo(() => {
+    if (!lateNightPick) return "";
+    return getRecipePickReason(lateNightPick, {
+      regionalCuisine,
+      pantryIngredients,
+      dietChoice,
+      mealSlot: "lateNight",
+    });
+  }, [lateNightPick, regionalCuisine, pantryIngredients, dietChoice]);
+
+  const moreRecipeCount = Math.max(rankedRecipes.length - 1, 0);
 
   const sheetRecipe = cookTonightTarget ?? displayTopPick ?? null;
   const sheetMissing = useMemo(() => {
@@ -313,6 +322,64 @@ export default function HomeScreen() {
             />
           ) : null}
 
+          {showRecipesCluster ? (
+            <View style={styles.pickSection}>
+              <View style={styles.recipesCluster}>
+                {showLateNightPick && lateNightPick ? (
+                  <HomePickCard
+                    key={lateNightPick.id}
+                    eyebrow={meal.lateNightPickEyebrow ?? "Late night pick"}
+                    pickReason={lateNightPickReason}
+                    recipe={lateNightPick}
+                    pantryMatchPercent={lateNightPantryMatch}
+                    cookCtaLabel="Cook now"
+                    onPress={() =>
+                      openRecipeSuggestion(lateNightPick, "home_late_night")
+                    }
+                    onCookTonight={() => openCookTonight(lateNightPick)}
+                    onShopMissing={(missing, partner) =>
+                      openShopModal(lateNightPick, missing, partner)
+                    }
+                    onNotInterested={() => handleNotInterested(lateNightPick)}
+                  />
+                ) : null}
+
+                {showPickCard && displayTopPick ? (
+                  <HomePickCard
+                    key={displayTopPick.id}
+                    eyebrow={
+                      meal.isOvernightDual
+                        ? (meal.tomorrowTopPickEyebrow ?? meal.topPickEyebrow)
+                        : meal.topPickEyebrow
+                    }
+                    pickReason={topPickPickReason}
+                    headerTrailing={
+                      <HomePickShuffleButton
+                        onDark
+                        onPress={() => void refreshHomePicks(true)}
+                      />
+                    }
+                    recipe={displayTopPick}
+                    pantryMatchPercent={topPickPantryMatch}
+                    cookCtaLabel={
+                      meal.isOvernightDual ? "Plan breakfast" : meal.cookCta
+                    }
+                    onPress={() =>
+                      openRecipeSuggestion(displayTopPick, "home_top_pick")
+                    }
+                    onCookTonight={() => openCookTonight(displayTopPick)}
+                    onShopMissing={(missing, partner) =>
+                      openShopModal(displayTopPick, missing, partner)
+                    }
+                    onNotInterested={() => handleNotInterested(displayTopPick)}
+                  />
+                ) : null}
+
+                {showTonightSkeleton ? <HomeRecipeRowSkeleton /> : null}
+              </View>
+            </View>
+          ) : null}
+
           {heroIntroFinished && seasonalRail ? (
             <HomeSeasonalRail
               title={seasonalRail.title}
@@ -322,110 +389,6 @@ export default function HomeScreen() {
           ) : null}
 
           {heroIntroFinished ? <HomeRecentCooks /> : null}
-
-          {heroIntroFinished && meal.isOvernightDual ? (
-            <HomePlanTomorrow
-              lateNightPick={lateNightPick}
-              tomorrowPick={topPick}
-              onRecipePress={(recipe) => openRecipeSuggestion(recipe, 'home_plan_tomorrow')}
-            />
-          ) : null}
-
-          {showRecipesCluster ? (
-            <View style={styles.recipesCluster}>
-              {showLateNightPick && lateNightPick ? (
-                <View style={styles.tonightBlock}>
-                  <HomeRecipeRow
-                    key={lateNightPick.id}
-                    section="pick"
-                    sectionLabel={meal.lateNightPickEyebrow ?? "🌙 Late night pick"}
-                    recipe={lateNightPick}
-                    pantryMatchPercent={lateNightPantryMatch}
-                    cookCtaLabel="Cook now"
-                    onPress={() => openRecipeSuggestion(lateNightPick, 'home_late_night')}
-                    onCookTonight={() => openCookTonight(lateNightPick)}
-                    onShopMissing={(missing, partner) =>
-                      openShopModal(lateNightPick, missing, partner)
-                    }
-                    onNotInterested={() => handleNotInterested(lateNightPick)}
-                  />
-                </View>
-              ) : null}
-
-              {showPickCard && displayTopPick ? (
-                <View style={styles.tonightBlock}>
-                  <HomeRecipeRow
-                    key={displayTopPick.id}
-                    section="pick"
-                    sectionLabel={
-                      meal.isOvernightDual
-                        ? (meal.tomorrowTopPickEyebrow ?? meal.topPickEyebrow)
-                        : meal.topPickEyebrow
-                    }
-                    headerTrailing={
-                      <HomePickShuffleButton onPress={() => void refreshHomePicks(true)} />
-                    }
-                    recipe={displayTopPick}
-                    pantryMatchPercent={topPickPantryMatch}
-                    cookCtaLabel={
-                      meal.isOvernightDual ? "Plan breakfast" : meal.cookCta
-                    }
-                    onPress={() => openRecipeSuggestion(displayTopPick, 'home_top_pick')}
-                    onCookTonight={() => openCookTonight(displayTopPick)}
-                    onShopMissing={(missing, partner) =>
-                      openShopModal(displayTopPick, missing, partner)
-                    }
-                    onNotInterested={() => handleNotInterested(displayTopPick)}
-                  />
-                </View>
-              ) : null}
-
-              {showTonightSkeleton ? (
-                <View style={styles.tonightBlock}>
-                  <HomeSectionHeader title={meal.alsoLabel} />
-                  <TonightCardsSkeleton
-                    label=""
-                    isLateNight={isLateNight}
-                    count={3}
-                  />
-                </View>
-              ) : null}
-
-              {displayAlsoCards.length > 0 ? (
-                <View style={styles.tonightBlock}>
-                  <HomeSectionHeader
-                    title={meal.alsoLabel}
-                    subtitle="Tap a dish for ingredients and steps"
-                    icon={isLateNight ? Moon : undefined}
-                    iconColor={themeColors.muted}
-                  />
-                  <View style={styles.tonightList}>
-                    {displayAlsoCards.map((recipe) => {
-                      return (
-                        <View key={recipe.id}>
-                          <HomeRecipeRow
-                            section="pick"
-                            recipe={recipe}
-                            pantryMatchPercent={getPantryMatchPercent(
-                              recipe,
-                              pantryIngredients,
-                            )}
-                            cookCtaLabel={meal.cookCta}
-                            onPress={() => openRecipeSuggestion(recipe, 'home_also_tonight')}
-                            onCookTonight={() => openCookTonight(recipe)}
-                            onShopMissing={(missing, partner) =>
-                              openShopModal(recipe, missing, partner)
-                            }
-                            onNotInterested={() => handleNotInterested(recipe)}
-                          />
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
 
           {heroIntroFinished &&
           discoveryReady &&
@@ -473,9 +436,10 @@ export default function HomeScreen() {
           ) : null}
 
           {discoveryReady && heroIntroFinished ? (
-            <HomeBrowseLink
-              count={moreRecipeCount}
-              onPress={() => router.push("/(tabs)/recipes")}
+            <HomeScreenLinks
+              recipeCount={moreRecipeCount}
+              onPlanPress={() => router.push("/(tabs)/plan")}
+              onRecipesPress={() => router.push("/(tabs)/recipes")}
             />
           ) : null}
         </View>
@@ -521,14 +485,11 @@ const styles = StyleSheet.create({
     gap: HOME_SECTION_GAP,
     marginTop: spacing.sm,
   },
+  pickSection: {
+    gap: PICK_SECTION_GAP,
+  },
   recipesCluster: {
-    gap: RECIPES_CLUSTER_GAP,
-  },
-  tonightBlock: {
-    gap: spacing.sm,
-  },
-  tonightList: {
-    gap: spacing.md,
+    gap: PICK_SECTION_GAP,
   },
   adInset: {
     marginBottom: spacing.md,

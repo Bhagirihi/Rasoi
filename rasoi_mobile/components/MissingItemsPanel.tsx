@@ -13,6 +13,7 @@ interface MissingItemsPanelProps {
   onShopAll?: () => void;
   onPartnerPress?: (partner: AffiliatePartner) => void;
   title?: string;
+  shoppingProgress?: { shopped: number; total: number } | null;
 }
 
 export default function MissingItemsPanel({
@@ -21,6 +22,7 @@ export default function MissingItemsPanel({
   onShopAll,
   onPartnerPress,
   title = 'Need to buy',
+  shoppingProgress = null,
 }: MissingItemsPanelProps) {
   const { colors: themeColors } = useTheme();
   const { groceryPartners } = usePartners();
@@ -33,7 +35,9 @@ export default function MissingItemsPanel({
         </View>
         <View style={styles.allSetText}>
           <Text style={styles.allSetTitle}>Pantry complete</Text>
-          <Text style={[styles.allSetSub, { color: themeColors.muted }]}>You have every ingredient — happy cooking!</Text>
+          <Text style={[styles.allSetSub, { color: themeColors.muted }]}>
+            All listed ingredients are in your pantry — happy cooking!
+          </Text>
         </View>
       </View>
     );
@@ -61,7 +65,9 @@ export default function MissingItemsPanel({
           <View>
             <Text style={[styles.title, { color: themeColors.charcoal }]}>{title}</Text>
             <Text style={[styles.subtitle, { color: themeColors.muted }]}>
-              {missing.length} item{missing.length !== 1 ? 's' : ''} to order
+              {shoppingProgress
+                ? `${shoppingProgress.shopped} of ${shoppingProgress.total} shopped this trip`
+                : `${missing.length} item${missing.length !== 1 ? 's' : ''} to order`}
             </Text>
           </View>
         </View>
@@ -95,9 +101,15 @@ export default function MissingItemsPanel({
           style={({ pressed }) => [styles.shopBtn, pressed && { opacity: 0.9 }]}
         >
           <ShoppingCart size={18} color={colors.white} />
-          <Text style={styles.shopBtnText}>Order all missing items</Text>
+          <Text style={styles.shopBtnText}>Shop missing items</Text>
         </Pressable>
       )}
+
+      {missing.length > 1 ? (
+        <Text style={[styles.partnerHint, { color: themeColors.muted, marginTop: spacing.sm }]}>
+          Partners search one item at a time — open the list above to pick each ingredient.
+        </Text>
+      ) : null}
 
       {onPartnerPress && groceryPartners.length > 0 ? (
         <View style={styles.partnerRow}>

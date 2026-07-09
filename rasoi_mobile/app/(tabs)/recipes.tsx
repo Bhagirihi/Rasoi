@@ -2,7 +2,14 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { Search, Timer } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, Keyboard } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  Keyboard,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
@@ -267,7 +274,9 @@ export default function RecipesTabScreen() {
           recipesLoadingMore ? (
             <View style={styles.listFooter}>
               <ActivityIndicator color={themeColors.saffron} />
-              <Text style={[styles.listFooterText, { color: themeColors.muted }]}>
+              <Text
+                style={[styles.listFooterText, { color: themeColors.muted }]}
+              >
                 Loading more recipes…
               </Text>
             </View>
@@ -292,13 +301,17 @@ export default function RecipesTabScreen() {
               pantryFilterActive={pantryFilterActive}
               pantryIngredientCount={pantryIngredients.length}
               hasQuickFilters={
-                hasQuickFilters || searchQuery.trim().length > 0 || !pantryMatchSortActive
+                hasQuickFilters ||
+                searchQuery.trim().length > 0 ||
+                !pantryMatchSortActive
               }
               activeFilterLabels={activeFilterLabels}
               onFilterToggle={handleFilterToggle}
               onClearPantryFilter={() => setPantryFilterActive(false)}
               pantryMatchSortActive={pantryMatchSortActive}
-              onPantryMatchSortToggle={() => setPantryMatchSortActive((current) => !current)}
+              onPantryMatchSortToggle={() =>
+                setPantryMatchSortActive((current) => !current)
+              }
               pantryMatchSortTestId={testIds.recipesPantryMatchSort}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -321,7 +334,12 @@ export default function RecipesTabScreen() {
                   },
                 ]}
               >
-                <Text style={[styles.searchFallbackText, { color: themeColors.muted }]}>
+                <Text
+                  style={[
+                    styles.searchFallbackText,
+                    { color: themeColors.muted },
+                  ]}
+                >
                   {searchFallbackMessage}
                 </Text>
               </View>
@@ -466,7 +484,7 @@ const styles = StyleSheet.create({
   },
   searchFallbackText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     lineHeight: 18,
   },
   listSponsorInset: {

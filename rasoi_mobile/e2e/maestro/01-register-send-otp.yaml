@@ -1,5 +1,5 @@
-# TC-002: Register — fill details and send OTP (OTP entered in 02-register-verify.yaml)
-# Env: QA_NAME, QA_PHONE, QA_EMAIL
+# TC-002: Register — fill details and send OTP (phone then email in 02-register-verify.yaml)
+# Env: QA_NAME, QA_PHONE, QA_EMAIL, QA_PHONE_OTP (Firebase test number code)
 appId: com.bhagihiri.rasoiapp
 ---
 - runFlow:
@@ -45,9 +45,29 @@ appId: com.bhagihiri.rasoiapp
       - inputText: ${QA_PHONE}
       - tapOn: "you@example.com"
       - inputText: ${QA_EMAIL}
+- scroll
+- runFlow:
+    when:
+      visible:
+        id: onboarding-diet-veg
+    commands:
+      - tapOn:
+          id: onboarding-diet-veg
+- runFlow:
+    when:
+      visible: "Gujarati"
+    commands:
+      - tapOn: "Gujarati"
+- runFlow:
+    when:
+      visible:
+        id: onboarding-cuisine-first
+    commands:
+      - tapOn:
+          id: onboarding-cuisine-first
 - hideKeyboard
 - tapOn:
-    text: "Send verification code"
+    text: "Verify mobile number"
 - runFlow:
     when:
       visible:
@@ -63,6 +83,30 @@ appId: com.bhagihiri.rasoiapp
     commands:
       - tapOn: "I have read and agree"
       - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      text: "Verify your mobile"
+    timeout: 90000
+- runFlow:
+    when:
+      visible:
+        id: register-phone-otp-input
+    commands:
+      - tapOn:
+          id: register-phone-otp-input
+      - eraseText
+      - inputText: ${QA_PHONE_OTP}
+- runFlow:
+    when:
+      notVisible:
+        id: register-phone-otp-input
+    commands:
+      - tapOn: "123456"
+      - eraseText
+      - inputText: ${QA_PHONE_OTP}
+- hideKeyboard
+- tapOn:
+    id: register-verify-phone-otp
 - extendedWaitUntil:
     visible:
       text: "Verify your email"

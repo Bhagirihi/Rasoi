@@ -10,6 +10,13 @@ import {
   SEO_RECIPE_PAGES,
 } from '@/lib/seo-content-pages';
 import { articlePageJsonLd, buildContentPageMetadata } from '@/lib/seo';
+import {
+  CUISINE_HUBS,
+  FESTIVAL_HUBS,
+  INGREDIENT_HUBS,
+  MEAL_HUBS,
+  getTaxonomyPath,
+} from '@/lib/seo-taxonomy';
 
 export const metadata = buildContentPageMetadata({
   title: INDIAN_RECIPE_APP_HUB.title,
@@ -19,9 +26,16 @@ export const metadata = buildContentPageMetadata({
 });
 
 const DIASPORA_GUIDES = SEO_GUIDE_PAGES.filter((page) =>
-  ['indian-cooking-in-usa', 'indian-cooking-in-canada', 'indian-cooking-in-australia'].includes(
-    page.slug,
-  ),
+  [
+    'indian-cooking-in-usa',
+    'indian-cooking-in-canada',
+    'indian-cooking-in-australia',
+    'indian-cooking-in-new-zealand',
+  ].includes(page.slug),
+);
+
+const TOP_RECIPE_BLOGS = [...SEO_RECIPE_PAGES].sort(
+  (a, b) => (a.searchVolumeRank ?? 999) - (b.searchVolumeRank ?? 999),
 );
 
 const DINNER_GUIDES = SEO_GUIDE_PAGES.filter(
@@ -119,9 +133,90 @@ export default function IndianRecipeAppHubPage() {
           </section>
 
           <section className="mt-14">
-            <h2 className="font-display text-2xl font-semibold">Dish guides</h2>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {SEO_RECIPE_PAGES.map((page) => (
+            <h2 className="font-display text-2xl font-semibold">Browse by topic</h2>
+            <div className="mt-8 grid gap-10 lg:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Cuisines
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {CUISINE_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1.replace(/ for.*/, '')}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Ingredients
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {INGREDIENT_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.slug}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Meals
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {MEAL_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold uppercase tracking-wide text-[#c9a227]">
+                  Festivals
+                </h3>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {FESTIVAL_HUBS.map((hub) => (
+                    <li key={hub.slug}>
+                      <Link
+                        href={getTaxonomyPath(hub)}
+                        className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                      >
+                        {hub.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-14">
+            <h2 className="font-display text-2xl font-semibold">Top recipe blogs</h2>
+            <p className="mt-2 max-w-2xl text-sm text-[#6b6560]">
+              {TOP_RECIPE_BLOGS.length} high-search Indian dishes with ingredients, method, and
+              diaspora tips for India, USA, Canada, Australia, and New Zealand.{' '}
+              <Link href="/recipes" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+                View all recipe guides →
+              </Link>
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {TOP_RECIPE_BLOGS.map((page) => (
                 <li key={page.slug}>
                   <Link
                     href={`/recipes/${page.slug}`}

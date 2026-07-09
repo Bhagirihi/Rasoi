@@ -15,7 +15,7 @@ import { CuisineId, DietChoice } from '@/constants/theme';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { useRecipes } from '@/context/RecipesContext';
 import { DietType, Recipe } from '@/data/mockRecipes';
-import { loginAsGuestUser, logoutSession, syncSupabaseAccount } from '@/services/auth';
+import { logoutSession, syncSupabaseAccount } from '@/services/auth';
 import { purchaseRasoiPlusDefault, restoreRasoiPlus } from '@/services/payments';
 import type { PurchaseFlowResult } from '@/services/payments/types';
 import { getSupabaseSession, sendEmailOtp, sendLoginEmailOtp, verifyEmailOtp, ensureValidSupabaseSession } from '@/services/supabaseAuth';
@@ -68,7 +68,9 @@ import {
 import {
   DEFAULT_PANTRY,
   OnboardingPayload,
+  SignupPreferences,
   clearAuthState,
+  clearSignupPreferences,
   dietChoiceToFilter,
   loadLocalOnboardingState,
   localStateToOnboardingPayload,
@@ -76,6 +78,7 @@ import {
   loadPendingPantrySetup,
   clearLocalOnboardingCompleteFlag,
   saveOnboardingComplete,
+  saveSignupPreferences as persistSignupPreferences,
   savePendingTrialWelcome,
   savePendingPantrySetup,
 } from '@/utils/storage';
@@ -141,6 +144,7 @@ interface AppContextValue extends ResolvedPlan {
   savedRecipeIds: string[];
   pantryFilterActive: boolean;
   completeOnboarding: (payload: OnboardingPayload) => Promise<boolean>;
+  saveSignupPreferences: (prefs: SignupPreferences) => Promise<void>;
   sendEmailOtp: (name: string, phone: string, email: string) => Promise<void>;
   sendLoginEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtpAndLogin: (
@@ -148,10 +152,9 @@ interface AppContextValue extends ResolvedPlan {
     otp: string,
     name: string,
     phone: string,
-    options?: { acceptedTerms?: boolean },
+    options?: { acceptedTerms?: boolean; phoneVerified?: boolean },
   ) => Promise<AuthNavigationResult>;
   verifyLoginEmailOtp: (email: string, otp: string) => Promise<AuthNavigationResult>;
-  loginAsGuest: (options?: { name?: string }) => Promise<AuthNavigationResult>;
   updateProfile: (name: string, phone: string) => Promise<void>;
   syncUserLocation: (snapshot: UserLocationSnapshot) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -318,8 +321,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const partnerAccess = useMemo(
-    () => resolvePartnerAccess(resolvedPlan.effectiveTier, kitchenPreferences),
-    [resolvedPlan.effectiveTier, kitchenPreferences],
+    () =>
+      resolvePartnerAccess(
+        paymentsEnabled ? resolvedPlan.effectiveTier : 'paid',
+        kitchenPreferences,
+      ),
+    [paymentsEnabled, resolvedPlan.effectiveTier, kitchenPreferences],
   );
 
   const planWithPartnerAccess = useMemo(
@@ -744,6 +751,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         dietChoice: payload.dietChoice,
       });
       await saveOnboardingComplete(payload);
+      await clearSignupPreferences();
       pendingOnboardingRef.current = payload;
       setHasCompletedOnboarding(true);
       setDietChoiceState(payload.dietChoice);
@@ -780,6 +788,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [isGuestUser, syncPendingOnboarding, syncPushTokenToServer],
   );
 
+  const saveSignupPreferences = useCallback(async (prefs: SignupPreferences) => {
+    await persistSignupPreferences(prefs);
+    setDietChoiceState(prefs.dietChoice);
+    setRegionalCuisine(prefs.regionalCuisine);
+    setFavoriteCuisines(prefs.favoriteCuisines);
+  }, []);
+
   const sendEmailOtpCode = useCallback(async (name: string, phone: string, email: string) => {
     authLog('sendEmailOtp:context_start');
     try {
@@ -806,7 +821,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       otp: string,
       name: string,
       phone: string,
-      options?: { acceptedTerms?: boolean },
+      options?: { acceptedTerms?: boolean; phoneVerified?: boolean },
     ) => {
       authLog('verifyEmailOtpAndLogin:start', { upgradingGuest: isGuestUser });
       try {
@@ -881,17 +896,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [finishAuthAfterSync],
   );
 
-  const loginAsGuest = useCallback(async (options?: { name?: string }) => {
-    authLog('loginAsGuest:context_start');
-    const { user } = await loginAsGuestUser(options);
-    const nav = await finishAuthAfterSync(user);
-    if (user.isGuest && !user.hasCompletedOnboarding) {
-      setPendingPantrySetup(true);
-    }
-    void logFirebaseEvent('guest_login');
-    return nav;
-  }, [finishAuthAfterSync, setPendingPantrySetup]);
-
   const openEmailVerificationModal = useCallback(() => {
     setEmailVerificationModalVisible(true);
   }, []);
@@ -915,13 +919,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       await savePendingEmailVerification(payload);
       setPendingEmailVerificationState(payload);
-
-      if (!isLoggedIn) {
-        return loginAsGuest(pending.name?.trim().length ? { name: pending.name.trim() } : undefined);
-      }
       return null;
     },
-    [isLoggedIn, loginAsGuest],
+    [],
   );
 
   const resendPendingEmailVerificationOtp = useCallback(async () => {
@@ -1255,7 +1255,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [applyUserProfile, isLoggedIn, kitchenPreferences]);
 
-  const isGuest = isGuestUser || ((userName === 'Guest' || userName.length === 0) && userPhone.length === 0);
+  const isGuest = isGuestUser;
 
   const togglePantryIngredient = useCallback(
     (ingredient: string) => {
@@ -1332,11 +1332,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       savedRecipeIds,
       pantryFilterActive,
       completeOnboarding,
+      saveSignupPreferences,
       sendEmailOtp: sendEmailOtpCode,
       sendLoginEmailOtp: sendLoginEmailOtpCode,
       verifyEmailOtpAndLogin,
       verifyLoginEmailOtp,
-      loginAsGuest,
       updateProfile,
       syncUserLocation,
       logout,
@@ -1400,11 +1400,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       savedRecipeIds,
       pantryFilterActive,
       completeOnboarding,
+      saveSignupPreferences,
       sendEmailOtpCode,
       sendLoginEmailOtpCode,
       verifyEmailOtpAndLogin,
       verifyLoginEmailOtp,
-      loginAsGuest,
       updateProfile,
       syncUserLocation,
       logout,

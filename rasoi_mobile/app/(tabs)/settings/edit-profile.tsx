@@ -30,7 +30,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const { colors: themeColors } = useTheme();
-  const { userName, userPhone, userEmail, isGuest, isLoggedIn, updateProfile, loginAsGuest } =
+  const { userName, userPhone, userEmail, isGuest, updateProfile } =
     useAppContext();
 
   const [name, setName] = useState('');
@@ -89,34 +89,12 @@ export default function EditProfileScreen() {
     }
   };
 
-  const handleContinueAsGuest = async () => {
-    if (!isGuest) return;
-    if (isLoggedIn) {
-      router.back();
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      void Haptics.selectionAsync();
-      await loginAsGuest();
-      router.back();
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
       <AppSavingOverlay
         visible={isSubmitting}
-        steps={
-          isGuest
-            ? [
-                { message: 'Starting guest mode…', subtitle: 'Setting up your kitchen' },
-                { message: 'Almost ready…', subtitle: 'Opening Rasoi' },
-              ]
-            : [{ message: 'Saving your profile…', subtitle: 'Updating your account' }]
-        }
+        message="Saving your profile…"
+        subtitle="Updating your account"
       />
       <SettingsSubHeader
         title={isGuest ? 'Sign up' : 'Edit profile'}
@@ -229,18 +207,6 @@ export default function EditProfileScreen() {
             style={styles.cta}
           />
 
-          {isGuest && (
-            <Pressable
-              onPress={handleContinueAsGuest}
-              disabled={isSubmitting}
-              style={[
-                styles.secondaryBtn,
-                { backgroundColor: themeColors.white, borderColor: themeColors.border },
-              ]}
-            >
-              <Text style={[styles.secondaryBtnText, { color: themeColors.charcoal }]}>Continue as Guest</Text>
-            </Pressable>
-          )}
         </ScrollViewWithFloatingIndicator>
       </KeyboardAvoidingView>
     </SafeAreaView>

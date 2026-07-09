@@ -14,17 +14,18 @@ export default function HomeRecipeRowSkeleton() {
         { backgroundColor: themeColors.white, borderColor: themeColors.border },
       ]}
     >
+      <Shimmer style={styles.hero} borderRadius={0} />
       <View style={styles.body}>
         <Shimmer style={styles.titleLine} borderRadius={radius.sm} />
         <Shimmer style={styles.titleLineShort} borderRadius={radius.sm} />
+        <Shimmer style={styles.reasonLine} borderRadius={radius.sm} />
         <View style={styles.metaRow}>
           <Shimmer style={styles.pill} borderRadius={radius.pill} />
           <Shimmer style={styles.pill} borderRadius={radius.pill} />
           <Shimmer style={styles.pillWide} borderRadius={radius.pill} />
         </View>
         <View style={styles.actions}>
-          <Shimmer style={styles.actionBtn} borderRadius={10} />
-          <Shimmer style={styles.actionBtnWide} borderRadius={10} />
+          <Shimmer style={styles.actionBtnWide} borderRadius={12} />
         </View>
       </View>
     </View>
@@ -33,24 +34,31 @@ export default function HomeRecipeRowSkeleton() {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: radius.lg,
+    borderRadius: radius.lg + 2,
     borderWidth: 1,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
     overflow: 'hidden',
     ...shadows.card,
   },
+  hero: {
+    height: 152,
+    width: '100%',
+  },
   body: {
-    padding: spacing.md,
+    padding: spacing.lg,
+    paddingTop: spacing.md,
     gap: spacing.sm,
   },
   titleLine: {
-    height: 16,
+    height: 22,
     width: '88%',
   },
   titleLineShort: {
-    height: 12,
-    width: '62%',
+    height: 14,
+    width: '48%',
+  },
+  reasonLine: {
+    height: 14,
+    width: '72%',
   },
   metaRow: {
     flexDirection: 'row',
@@ -67,19 +75,13 @@ const styles = StyleSheet.create({
     width: 72,
   },
   actions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,107,53,0.14)',
   },
-  actionBtn: {
-    flex: 0.42,
-    height: 40,
-  },
   actionBtnWide: {
-    flex: 0.58,
-    height: 40,
+    height: 44,
+    width: '100%',
   },
 });

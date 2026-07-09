@@ -146,7 +146,7 @@ def flow_dev_reset_to_login() -> bool:
 
 
 def flow_legal_to_login() -> bool:
-    """Reach login after fresh install (legal consent is post-register only; auto-guest is common)."""
+    """Reach login after fresh install (legal consent is register-only; cold start shows Login)."""
     dismiss_system_dialogs()
     if wait_for(r"Welcome back", 8):
         return True
@@ -161,8 +161,7 @@ def flow_legal_to_login() -> bool:
         r"What is your dietary|Tell us what you cook|dietary preference|screen-onboarding",
         25,
     ):
-        if flow_guest_to_home():
-            return flow_dev_reset_to_login()
+        return flow_dev_reset_to_login()
     if wait_for(r"Good Morning|Good Afternoon|Good Evening|Good Night|LATE-NIGHT|screen-home", 12):
         return flow_dev_reset_to_login()
     return wait_for(r"Welcome back", 15)
@@ -349,7 +348,7 @@ def check_ui_standards(context: str) -> list[UiCheck]:
 
     if context == "login":
         checks.append(UiCheck("Login heading visible", bool(re.search(r"Welcome back", text))))
-        checks.append(UiCheck("Guest option visible", bool(re.search(r"Explore as Guest|Guest", text))))
+        checks.append(UiCheck("Guest login removed", not re.search(r"Explore as Guest|Continue as guest", text)))
 
     if context == "legal":
         checks.append(UiCheck("Legal consent visible", bool(re.search(r"Terms & Privacy", text))))
@@ -475,10 +474,7 @@ def run_guest_module_tests() -> dict[str, tuple[bool, list[UiCheck], str]]:
     return out
 
 
-GUEST_TCS = [
-    "TC-004", "TC-005", "TC-006", "TC-007", "TC-008", "TC-009",
-    "TC-010", "TC-011", "TC-012", "TC-013",
-]
+GUEST_TCS: list[str] = []
 ISOLATED_TCS = ["TC-001", "TC-002", "TC-016", "TC-017"]
 OTP_TCS = ["TC-003", "TC-014", "TC-015"]
 

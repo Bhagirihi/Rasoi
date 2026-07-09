@@ -69,6 +69,7 @@ Run `meta_list_connected_accounts` and optionally set `META_PAGE_ID` / `META_IG_
 ## Scheduling notes
 
 - **Facebook**: native scheduling via [Pages API](https://developers.facebook.com/docs/pages-api/posts/) — same queue Business Suite shows.
+- **Photo + link**: Do not attach a `link` on photo posts. Facebook shows the link's Open Graph image (`/download-hero.png`) instead of your uploaded creative. Put the download URL in the caption (campaign scheduler already does).
 - **Instagram**: tries native `scheduled_publish_time` on the media container; if unsupported, queues locally in `local-schedule.json`. Run due posts:
   ```bash
   .cursor/mcp-servers/meta-business/run.sh run-due

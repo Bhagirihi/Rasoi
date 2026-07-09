@@ -1,4 +1,4 @@
-# Complete onboarding when shown; guests with payments may skip straight to home/trial.
+# Complete onboarding when shown.
 appId: com.bhagihiri.rasoiapp
 ---
 - extendedWaitUntil:

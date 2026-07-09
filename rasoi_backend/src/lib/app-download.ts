@@ -6,6 +6,9 @@ export const APP_NAME = 'Rasoi App: Aaj Kya Banaye?';
 
 export const APP_SHORT_NAME = 'Rasoi';
 
+/** Marketing-safe recipe library size — keep in sync with Play Store manifest. */
+export const RECIPE_LIBRARY_LABEL = '5,000+' as const;
+
 export const APP_DEVELOPER = 'Karbh It Solutions';
 
 export const ANDROID_PACKAGE = 'com.bhagihiri.rasoiapp';

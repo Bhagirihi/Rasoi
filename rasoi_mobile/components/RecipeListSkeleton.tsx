@@ -19,6 +19,6 @@ export default function RecipeListSkeleton({ count = 5 }: RecipeListSkeletonProp
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: spacing.md,
+    gap: spacing.lg,
   },
 });

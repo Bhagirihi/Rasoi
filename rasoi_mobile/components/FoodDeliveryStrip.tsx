@@ -52,9 +52,9 @@ export default function FoodDeliveryStrip({
           <View style={styles.copy}>
             <Text style={styles.title}>Skip cooking?</Text>
             <Text style={styles.sub} numberOfLines={2}>
-              Order {recipeTitle} on Zomato or Swiggy — delivered hot.
+              Search Zomato or Swiggy for dishes inspired by {recipeTitle}.
             </Text>
-            <Text style={styles.cta}>Order ready-made →</Text>
+            <Text style={styles.cta}>Browse delivery →</Text>
           </View>
           <View style={styles.arrowWrap}>
             <ChevronRight size={22} color={colors.white} />

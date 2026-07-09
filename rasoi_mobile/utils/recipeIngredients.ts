@@ -6,11 +6,16 @@ export function normalizeRecipeIngredients(raw: unknown): RecipeIngredient[] {
   if (!Array.isArray(raw)) return [];
 
   const normalized: RecipeIngredient[] = [];
+  const seen = new Map<string, number>();
 
   for (const item of raw) {
     if (typeof item === 'string') {
       const name = canonicalizeIngredientName(item.trim());
-      if (name) normalized.push({ name, isStaple: false });
+      if (!name) continue;
+      const key = name.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.set(key, normalized.length);
+      normalized.push({ name, isStaple: false });
       continue;
     }
 
@@ -22,6 +27,15 @@ export function normalizeRecipeIngredients(raw: unknown): RecipeIngredient[] {
       };
       const name = canonicalizeIngredientName(String(record.name ?? '').trim());
       if (!name) continue;
+
+      const key = name.trim().toLowerCase();
+      const existingIndex = seen.get(key);
+      if (existingIndex !== undefined) {
+        if (!Boolean(record.isStaple)) {
+          normalized[existingIndex].isStaple = false;
+        }
+        continue;
+      }
 
       const ingredient: RecipeIngredient = {
         name,
@@ -37,6 +51,7 @@ export function normalizeRecipeIngredients(raw: unknown): RecipeIngredient[] {
         };
       }
 
+      seen.set(key, normalized.length);
       normalized.push(ingredient);
     }
   }

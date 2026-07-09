@@ -9,7 +9,6 @@ import {
   recipeCatalogFilterKey,
   saveCachedRecipePage,
 } from '@/utils/recipeCatalogCache';
-import { resolveStepsForRecipe } from '@/utils/generateRecipeSteps';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
 import {
   RECIPE_PAGE_SIZE,
@@ -28,9 +27,12 @@ type DbRecipeRow = {
   dietType: DietType;
   difficulty: Recipe['difficulty'];
   description: string;
+  descriptionHi?: string | null;
   imageUrl: string;
   tags: string;
   ingredients: string;
+  steps?: string | null;
+  stepsHi?: string | null;
   published: boolean;
 };
 
@@ -51,6 +53,8 @@ function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean })
     kitchenStyleIds.length > 0 ? kitchenStyleIds : [recipe.kitchenStyleId as CuisineId];
 
   const normalizedIngredients = normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, []));
+  const dbSteps = parseJson<string[]>(recipe.steps ?? null, []);
+  const dbStepsHi = parseJson<string[]>(recipe.stepsHi ?? null, []);
 
   return {
     id: recipe.id,
@@ -63,20 +67,12 @@ function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean })
     dietType: recipe.dietType,
     difficulty: recipe.difficulty,
     description: recipe.description,
+    descriptionHi: recipe.descriptionHi ?? undefined,
     imageUrl: recipe.imageUrl,
     tags: parseJson<Recipe['tags']>(recipe.tags, []),
     ingredients: normalizedIngredients,
-    steps: options?.includeSteps
-      ? resolveStepsForRecipe({
-        title: recipe.title,
-        kitchenStyleId: recipe.kitchenStyleId,
-        dietType: recipe.dietType,
-        ingredients: recipe.ingredients,
-        prepTime: recipe.prepTime,
-        difficulty: recipe.difficulty,
-        description: recipe.description,
-      })
-      : [],
+    steps: options?.includeSteps ? dbSteps : undefined,
+    stepsHi: options?.includeSteps && dbStepsHi.length > 0 ? dbStepsHi : undefined,
   };
 }
 

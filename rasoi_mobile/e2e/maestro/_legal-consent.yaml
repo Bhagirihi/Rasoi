@@ -1,4 +1,4 @@
-# Accept Terms & Privacy — auto-guest lands on Home.
+# Accept Terms & Privacy during register onboarding.
 appId: com.bhagihiri.rasoiapp
 ---
 - extendedWaitUntil:

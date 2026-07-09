@@ -53,7 +53,7 @@ ok() {
 
 case "$SUITE" in
   smoke)
-    run_flow e2e/maestro/01-guest-smoke.yaml
+    run_flow e2e/maestro/01-login-smoke.yaml
     ;;
   auth)
     unset QA_OTP
@@ -95,7 +95,7 @@ case "$SUITE" in
     run_flow e2e/maestro/08-settings.yaml
     ;;
   all)
-    run_flow e2e/maestro/01-guest-smoke.yaml
+    run_flow e2e/maestro/01-login-smoke.yaml
     run_flow e2e/maestro/03-home.yaml
     run_flow e2e/maestro/04-recipes-tab.yaml
     run_flow e2e/maestro/05-recipe-detail.yaml

@@ -16,7 +16,7 @@ export const DIET_PREFERENCE_OPTIONS: DietPreferenceOption[] = [
   {
     value: 'Veg',
     label: 'Veg',
-    subtitle: 'PLANT-BASED GOODNESS',
+    subtitle: 'NO MEAT OR EGGS',
     icon: Leaf,
     iconBg: colors.dark.accentGreen,
     iconColor: colors.green,
@@ -32,7 +32,7 @@ export const DIET_PREFERENCE_OPTIONS: DietPreferenceOption[] = [
   {
     value: 'Non-Veg',
     label: 'Non-Veg',
-    subtitle: 'RICH PROTEIN VARIETY',
+    subtitle: 'MEAT, POULTRY & SEAFOOD',
     icon: Drumstick,
     iconBg: colors.dark.accentRed,
     iconColor: '#FF6B6B',
@@ -40,7 +40,7 @@ export const DIET_PREFERENCE_OPTIONS: DietPreferenceOption[] = [
   {
     value: 'Jain',
     label: 'Jain',
-    subtitle: 'TRADITIONAL PURITY',
+    subtitle: 'NO ONION, GARLIC OR ROOT VEG',
     icon: Hand,
     iconBg: colors.dark.accentOrange,
     iconColor: colors.saffron,

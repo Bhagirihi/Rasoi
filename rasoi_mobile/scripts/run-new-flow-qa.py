@@ -161,16 +161,14 @@ def main() -> int:
     state = screen_state(s)
     snapshot(s, "cold-launch")
     cold_login = state["login"]
-    cold_auto_guest = state["home"] or (state["onboarding"] and not state["login"])
     report["cold_launch"] = {
         "login_first": cold_login,
-        "auto_guest_or_home": cold_auto_guest,
         "state": state,
     }
-    print(f"  Login first: {cold_login} | Auto-guest/home: {cold_auto_guest}")
+    print(f"  Login first: {cold_login}")
 
-    # --- Path 3: Guest ---
-    print("\n=== Path 3: Guest ===")
+    # --- Path 3: Login screen (guest entry removed) ---
+    print("\n=== Path 3: Login (no guest) ===")
     p3 = {"steps": [], "passed": False}
     s.clear_app()
     s.launch_app()
@@ -185,27 +183,17 @@ def main() -> int:
         p3["steps"].append({"step": "Launch → Login", "ok": True})
 
     if steps_ok:
-        s.tap_text_contains("Explore as Guest")
+        text = s.ui_text()
+        no_guest = "Explore as Guest" not in text and "Continue as guest" not in text
+        p3["steps"].append({"step": "Guest buttons absent on Login", "ok": no_guest})
+        s.tap_text_contains("Create account") or s.tap_test_id("login-go-register")
         time.sleep(2)
-        if s.wait_for(r"Continue as guest", 8):
-            s.tap_text_contains("Continue as guest")
-            time.sleep(3)
-        legal_ok = wait_state(s, "legal", 25)
-        p3["steps"].append({"step": "Login → Guest → T&C", "ok": legal_ok})
-        if legal_ok:
-            accept_legal(s)
-        onboard = complete_onboarding(s)
-        p3["steps"].append({
-            "step": "T&C → Onboarding",
-            "ok": len(onboard) > 0 or wait_state(s, "pantry", 10) or wait_state(s, "home", 10),
-            "note": " → ".join(onboard) if onboard else "skipped or merged",
-        })
-        skip_pantry_and_trial(s)
-        home_ok = wait_state(s, "home", 45)
-        p3["steps"].append({"step": "Onboarding → Pantry → Dashboard", "ok": home_ok})
+        reg_text = s.ui_text()
+        no_guest_register = "Explore as Guest" not in reg_text
+        p3["steps"].append({"step": "Guest buttons absent on Register", "ok": no_guest_register})
         p3["passed"] = all(x["ok"] for x in p3["steps"])
-    snapshot(s, "path3-guest")
-    report["paths"]["guest"] = p3
+    snapshot(s, "path3-login-no-guest")
+    report["paths"]["login_no_guest"] = p3
 
     # --- Path 1: Register ---
     print("\n=== Path 1: Register ===")

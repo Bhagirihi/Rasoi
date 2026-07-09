@@ -122,7 +122,6 @@ def run_fb_campaign(
 
         image_path = resolve_repo_path(row["image_path"])
         caption = row["caption"]
-        link = "https://rasoiapplication.in/download"
 
         try:
             campaign_target = _campaign_slot(pid, campaign_start)
@@ -156,7 +155,6 @@ def run_fb_campaign(
                 scheduled_at=sched_dt.isoformat(),
                 page_id=page_id,
                 image_path=str(image_path),
-                link=link,
             )
             scheduled_map[key] = {
                 "scheduled_at": sched_dt.isoformat(),
