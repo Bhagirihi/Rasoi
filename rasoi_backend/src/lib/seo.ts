@@ -112,7 +112,7 @@ export const PLAY_STORE_HIGHLIGHTS = [
   `${RECIPE_LIBRARY_LABEL} Indian recipes across 15 regional cuisines`,
   'Veg, Jain, Egg & Non-Veg filters for every home',
   'Pantry match % — cook with what you already have',
-  'Play Store listings in Hindi, Marathi, Tamil & Telugu',
+  'Play Store listings in Hindi, Marathi, Tamil & Telugu (Gujarati & Bengali copy ready)',
   'Blinkit, Zepto & Instamart for missing groceries',
   'Zomato & Swiggy when you want delivery instead',
   'Free to install · Rasoi Plus from ₹49/month',
@@ -194,19 +194,19 @@ export function recipeBlogHreflangLanguages(path: string): Record<string, string
 
 export const FAQ_ITEMS = [
   {
-    question: 'What is Rasoi App: Aaj Kya Banaye?',
+    question: `What is ${APP_NAME}?`,
     answer:
-      `Rasoi App: Aaj Kya Banaye? is a free Indian home-cooking app on Google Play. It answers "Aaj kya banaye?" by recommending dinners from ingredients in your pantry, with ${RECIPE_LIBRARY_LABEL} recipes, 15 regional cuisines, and Veg, Jain, Egg, and Non-Veg filters.`,
+      `${APP_NAME} is a free Indian home-cooking app on Google Play. It answers "Aaj kya banaye?" by recommending dinners from ingredients in your pantry, with ${RECIPE_LIBRARY_LABEL} recipes, 15 regional cuisines, and Veg, Jain, Egg, and Non-Veg filters.`,
   },
   {
     question: 'What is Rasoi app?',
     answer:
-      'Rasoi is the short name for Rasoi App: Aaj Kya Banaye? — an Android recipe app that helps Indian home cooks decide dinner from what is already in the kitchen.',
+      `Rasoi is the short name for ${APP_NAME} — an Android recipe app that helps Indian home cooks decide dinner from what is already in the kitchen.`,
   },
   {
     question: 'Is Rasoi free to download?',
     answer:
-      `Yes. Rasoi App: Aaj Kya Banaye? is free on Google Play at rasoiapplication.in${PLAY_STORE_SEO_PATH} or rasoiapplication.in/download. Rasoi Plus adds partner checkout (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a 3-day trial.`,
+      `Yes. ${APP_NAME} is free on Google Play at rasoiapplication.in${PLAY_STORE_SEO_PATH} or rasoiapplication.in/download. Rasoi Plus adds partner checkout (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a 3-day trial.`,
   },
   {
     question: 'Which Indian cuisines does Rasoi support?',
@@ -299,9 +299,9 @@ export const rootMetadata = buildPageMetadata({});
 
 export const downloadMetadata: Metadata = {
   ...buildPageMetadata({
-    title: 'Download Rasoi App: Aaj Kya Banaye? on Google Play | Android Recipe App',
+    title: `Download ${APP_NAME} on Google Play | Android Recipe App`,
     description:
-      `Download Rasoi App: Aaj Kya Banaye? free on Google Play for Android. Indian recipe app with pantry match, ${RECIPE_LIBRARY_LABEL} regional dishes, meal reminders, and partner checkout — available in India, USA, Canada & Australia.`,
+      `Download ${APP_NAME} free on Google Play for Android. Indian recipe app with pantry match, ${RECIPE_LIBRARY_LABEL} regional dishes, meal reminders, and partner checkout — available in India, USA, Canada & Australia.`,
     path: '/download',
     keywords: [
       'download Rasoi Aaj Kya Banaye',
@@ -320,12 +320,12 @@ export const downloadMetadata: Metadata = {
 };
 
 export const PLAY_STORE_PAGE_DESCRIPTION =
-  `Install Rasoi App: Aaj Kya Banaye? from Google Play — free Indian home-cooking app by Karbh It Solutions. ${RECIPE_LIBRARY_LABEL} Gujarati, Marathi, Tamil, Telugu & Bengali recipes, pantry match %, Veg & Jain filters, meal planning & Blinkit/Zepto checkout.`;
+  `Install ${APP_NAME} from Google Play — free Indian home-cooking app by Karbh It Solutions. ${RECIPE_LIBRARY_LABEL} Gujarati, Marathi, Tamil, Telugu & Bengali recipes, pantry match %, Veg & Jain filters, meal planning & Blinkit/Zepto checkout.`;
 
 export const playStoreMetadata: Metadata = {
   ...buildPageMetadata({
     title:
-      'Rasoi App: Aaj Kya Banaye? — Apps on Google Play | Indian Recipe App for Android',
+      'Rasoi - Indian Recipe App — Apps on Google Play | Aaj Kya Banaye for Android',
     description: PLAY_STORE_PAGE_DESCRIPTION,
     path: PLAY_STORE_SEO_PATH,
     keywords: [...PLAY_STORE_KEYWORDS],
@@ -336,7 +336,7 @@ export const playStoreMetadata: Metadata = {
     alternateLocale: ['hi_IN', 'gu_IN', 'mr_IN', 'ta_IN', 'te_IN', 'bn_IN'],
     url: absoluteUrl(PLAY_STORE_SEO_PATH),
     siteName: APP_NAME,
-    title: 'Rasoi App: Aaj Kya Banaye? — Apps on Google Play',
+    title: `${APP_NAME} — Apps on Google Play`,
     description:
       'Install Rasoi from Google Play — Indian recipe app with pantry match, regional cuisines & meal planning.',
     images: [
@@ -352,29 +352,29 @@ export const playStoreMetadata: Metadata = {
 
 export const PLAY_STORE_FAQ_ITEMS = [
   {
-    question: 'Where can I download Rasoi App: Aaj Kya Banaye? on Google Play?',
+    question: `Where can I download ${APP_NAME} on Google Play?`,
     answer:
       `Install Rasoi from Google Play at play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp or visit rasoiapplication.in${PLAY_STORE_SEO_PATH} for the official listing page.`,
   },
   {
     question: 'Who publishes Rasoi on Google Play?',
     answer:
-      'Rasoi App: Aaj Kya Banaye? is published on Google Play by Karbh It Solutions (package com.bhagihiri.rasoiapp). The app title on Play is Rasoi App: Aaj Kya Banaye?',
+      `${APP_NAME} is published on Google Play by Karbh It Solutions (package com.bhagihiri.rasoiapp).`,
   },
   {
-    question: 'Is Rasoi App: Aaj Kya Banaye? free on the Play Store?',
+    question: `Is ${APP_NAME} free on the Play Store?`,
     answer:
       'Yes. Rasoi is free to install on Android via Google Play. Rasoi Plus (₹49/month or ₹499/year) adds ad-free browsing and partner grocery or delivery checkout.',
   },
   {
-    question: 'What does Rasoi App: Aaj Kya Banaye? do?',
+    question: `What does ${APP_NAME} do?`,
     answer:
       `Rasoi helps Indian home cooks decide dinner from ingredients already in the kitchen — with smart meal picks, pantry matching, ${RECIPE_LIBRARY_LABEL} recipes, 15 regional cuisines, and filters for Veg, Jain, Egg, and Non-Veg.`,
   },
   {
     question: 'Does Rasoi have Gujarati, Marathi, Tamil, Telugu, or Bengali recipes?',
     answer:
-      'Yes. Rasoi includes regional Indian cuisines. Play Store listings are live in Hindi, Marathi, Tamil, and Telugu; Gujarati and Bengali copy is ready as those languages are enabled in Play Console.',
+      'Yes. Rasoi includes regional Indian cuisines. Play Store listings are live in Hindi, Marathi, Tamil, and Telugu; enable Gujarati and Bengali under Main store listing → Manage translations, then re-push listings.',
   },
   {
     question: 'Should I install from Google Play or download an APK?',
@@ -414,26 +414,49 @@ export function playStoreWebPageJsonLd(pageUrl: string) {
   };
 }
 
+export function softwareApplicationJsonLd(pageUrl: string = PLAY_STORE_LISTING_URL) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: APP_NAME,
+    alternateName: [
+      APP_SHORT_NAME,
+      'Rasoi app',
+      'Indian recipe app',
+      'Rasoi App Aaj Kya Banaye',
+      'Rasoi Aaj Kya Banaye',
+    ],
+    operatingSystem: 'Android',
+    applicationCategory: 'LifestyleApplication',
+    applicationSubCategory: 'RecipeApplication',
+    identifier: ANDROID_PACKAGE,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+    downloadUrl: PLAY_STORE_LISTING_URL,
+    installUrl: PLAY_STORE_LISTING_URL,
+    keywords: PLAY_STORE_TAGS.join(', '),
+    description: PLAY_STORE_PAGE_DESCRIPTION,
+    image: absoluteUrl('/download-hero.png'),
+    screenshot: absoluteUrl('/download-hero.png'),
+    sameAs: [PLAY_STORE_LISTING_URL, absoluteUrl(PLAY_STORE_SEO_PATH), SITE_URL],
+    url: pageUrl,
+    author: { '@type': 'Organization', name: APP_DEVELOPER },
+    publisher: { '@type': 'Organization', name: APP_DEVELOPER },
+    inLanguage: ['en-IN', 'hi-IN', 'gu-IN', 'mr-IN', 'ta-IN', 'te-IN', 'bn-IN'],
+    featureList: [
+      'Aaj kya banaye — tonight\'s meal picks',
+      'Pantry-to-recipe matching',
+      `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
+      'Veg, Jain, Egg, Non-Veg filters',
+      'Partner grocery checkout via Blinkit, Zepto, Instamart',
+    ],
+  };
+}
+
 export function playStoreJsonLdBundle(pageUrl: string) {
   return jsonLdGraph([
     organizationJsonLd(),
     playStoreWebPageJsonLd(pageUrl),
-    {
-      '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
-      name: APP_NAME,
-      operatingSystem: 'Android',
-      applicationCategory: 'LifestyleApplication',
-      applicationSubCategory: 'RecipeApplication',
-      offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
-      downloadUrl: PLAY_STORE_LISTING_URL,
-      installUrl: PLAY_STORE_LISTING_URL,
-      keywords: PLAY_STORE_TAGS.join(', '),
-      author: { '@type': 'Organization', name: APP_DEVELOPER },
-      publisher: { '@type': 'Organization', name: APP_DEVELOPER },
-      inLanguage: ['en-IN', 'hi-IN', 'gu-IN', 'mr-IN', 'ta-IN', 'te-IN', 'bn-IN'],
-      url: PLAY_STORE_LISTING_URL,
-    },
+    softwareApplicationJsonLd(PLAY_STORE_LISTING_URL),
   ]);
 }
 
@@ -448,7 +471,7 @@ export function organizationJsonLd() {
     description: DEFAULT_DESCRIPTION,
     email: LEGAL_CONTACT_EMAIL,
     areaServed: { '@type': 'Country', name: 'India' },
-    sameAs: [PLAY_STORE_LISTING_URL, absoluteUrl(PLAY_STORE_SEO_PATH)],
+    sameAs: [PLAY_STORE_LISTING_URL, absoluteUrl(PLAY_STORE_SEO_PATH), SITE_URL],
   };
 }
 
@@ -473,7 +496,7 @@ export function mobileAppJsonLd(pageUrl: string = SITE_URL) {
     '@context': 'https://schema.org',
     '@type': 'MobileApplication',
     name: APP_NAME,
-    alternateName: [APP_SHORT_NAME, 'Rasoi app', 'Rasoi App Aaj Kya Banaye', 'Rasoi Aaj Kya Banaye'],
+    alternateName: [APP_SHORT_NAME, 'Rasoi app', 'Indian recipe app', 'Rasoi App Aaj Kya Banaye', 'Rasoi Aaj Kya Banaye'],
     operatingSystem: 'Android',
     applicationCategory: 'FoodApplication',
     applicationSubCategory: 'RecipeApplication',
@@ -483,7 +506,7 @@ export function mobileAppJsonLd(pageUrl: string = SITE_URL) {
     installUrl: PLAY_STORE_LISTING_URL,
     screenshot: absoluteUrl('/download-hero.png'),
     image: absoluteUrl('/download-hero.png'),
-    sameAs: [PLAY_STORE_LISTING_URL, absoluteUrl(PLAY_STORE_SEO_PATH)],
+    sameAs: [PLAY_STORE_LISTING_URL, absoluteUrl(PLAY_STORE_SEO_PATH), SITE_URL],
     url: pageUrl,
     author: {
       '@type': 'Organization',
@@ -691,9 +714,11 @@ export function marketSoftwareJsonLd(market: MarketConfig) {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
     name: APP_NAME,
-    alternateName: [APP_SHORT_NAME, `Indian home cooking ${market.countryName}`],
+    alternateName: [APP_SHORT_NAME, `Indian home cooking ${market.countryName}`, 'Indian recipe app'],
     applicationCategory: 'LifestyleApplication',
-    operatingSystem: 'Web',
+    applicationSubCategory: 'RecipeApplication',
+    operatingSystem: 'Android',
+    identifier: ANDROID_PACKAGE,
     offers: {
       '@type': 'Offer',
       price: '0',
@@ -701,7 +726,10 @@ export function marketSoftwareJsonLd(market: MarketConfig) {
     },
     description: market.description,
     url: absoluteUrl(market.path),
+    downloadUrl: PLAY_STORE_LISTING_URL,
+    installUrl: PLAY_STORE_LISTING_URL,
     image: absoluteUrl('/download-hero.png'),
+    sameAs: [PLAY_STORE_LISTING_URL, absoluteUrl(PLAY_STORE_SEO_PATH), SITE_URL],
     author: { '@type': 'Organization', name: APP_DEVELOPER },
     publisher: { '@type': 'Organization', name: APP_DEVELOPER },
     countriesSupported: market.id,

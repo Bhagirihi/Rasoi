@@ -10,7 +10,7 @@ import {
   PLAY_STORE_LISTING_URL,
   PLAY_STORE_SEO_PATH,
 } from '@/lib/app-download';
-import { absoluteUrl, downloadMetadata, mobileAppJsonLd } from '@/lib/seo';
+import { absoluteUrl, downloadMetadata, mobileAppJsonLd, softwareApplicationJsonLd } from '@/lib/seo';
 
 export const metadata = downloadMetadata;
 
@@ -18,6 +18,7 @@ export default function DownloadPage() {
   return (
     <div className="landing-grain min-h-screen text-landing-ink">
       <JsonLd data={mobileAppJsonLd(absoluteUrl('/download'))} />
+      <JsonLd data={softwareApplicationJsonLd(absoluteUrl('/download'))} />
       <header className="border-b border-landing-border bg-landing-cream/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 lg:px-8">
           <Link href="/" className="flex items-center gap-3">

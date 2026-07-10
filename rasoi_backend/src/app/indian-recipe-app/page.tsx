@@ -9,6 +9,7 @@ import {
   SEO_GUIDE_PAGES,
   SEO_RECIPE_PAGES,
 } from '@/lib/seo-content-pages';
+import { SEO_CITY_GUIDE_PAGES, SEO_CITY_GUIDE_SLUGS } from '@/lib/seo-city-guides';
 import { articlePageJsonLd, buildContentPageMetadata } from '@/lib/seo';
 import {
   CUISINE_HUBS,
@@ -40,7 +41,9 @@ const TOP_RECIPE_BLOGS = [...SEO_RECIPE_PAGES].sort(
 
 const DINNER_GUIDES = SEO_GUIDE_PAGES.filter(
   (page) =>
-    !DIASPORA_GUIDES.includes(page) && !page.slug.startsWith('indian-cooking-in'),
+    !DIASPORA_GUIDES.includes(page) &&
+    !SEO_CITY_GUIDE_SLUGS.has(page.slug) &&
+    !page.slug.startsWith('indian-cooking-in'),
 );
 
 export default function IndianRecipeAppHubPage() {
@@ -120,6 +123,26 @@ export default function IndianRecipeAppHubPage() {
             <h2 className="font-display text-2xl font-semibold">Cooking abroad</h2>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {DIASPORA_GUIDES.map((page) => (
+                <li key={page.slug}>
+                  <Link
+                    href={`/${page.slug}`}
+                    className="block rounded-xl border border-landing-border bg-white px-5 py-4 font-semibold hover:border-landing-gold/40 hover:text-landing-saffron"
+                  >
+                    {page.h1}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <section className="mt-14">
+            <h2 className="font-display text-2xl font-semibold">City guides — USA, Canada & Australia</h2>
+            <p className="mt-3 max-w-2xl text-sm text-landing-muted">
+              Practical weeknight cooking for large Indian diaspora cities — pantry staples, local grocery patterns, and
+              links to your country Rasoi page.
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {SEO_CITY_GUIDE_PAGES.map((page) => (
                 <li key={page.slug}>
                   <Link
                     href={`/${page.slug}`}

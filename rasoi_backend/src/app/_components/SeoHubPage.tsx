@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import MarketFooter from '@/app/_components/MarketFooter';
 import RasoiLogo from '@/app/_components/RasoiLogo';
+import { PLAY_STORE_LISTING_URL, PLAY_STORE_SEO_PATH } from '@/lib/app-download';
 import type { SeoContentFaq } from '@/lib/seo-content-pages';
 import type { SeoRecipePage } from '@/lib/seo-content-pages';
 
@@ -46,8 +47,15 @@ export default function SeoHubPage({
             <Link href="/indian-recipe-app" className="hover:text-landing-saffron">
               Guides
             </Link>
-            <Link href="/download" className="font-semibold text-landing-saffron hover:text-landing-ink">
-              Download app
+            <a
+              href={PLAY_STORE_LISTING_URL}
+              className="font-semibold text-landing-saffron hover:text-landing-ink"
+              rel="noopener noreferrer"
+            >
+              Get on Google Play
+            </a>
+            <Link href={PLAY_STORE_SEO_PATH} className="hover:text-landing-saffron">
+              Play listing
             </Link>
           </nav>
         </div>

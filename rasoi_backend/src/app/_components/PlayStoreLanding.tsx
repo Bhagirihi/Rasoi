@@ -9,6 +9,7 @@ import {
   APP_FEATURES,
   APP_NAME,
   PLAY_STORE_LISTING_URL,
+  PLAY_STORE_SEO_PATH,
 } from '@/lib/app-download';
 import { PLAY_STORE_FAQ_ITEMS, PLAY_STORE_HIGHLIGHTS, PLAY_STORE_LOCALE_BLURBS, PLAY_STORE_TAGS } from '@/lib/seo';
 
@@ -200,8 +201,8 @@ export default function PlayStoreLanding() {
             <ContactEmailLink className="font-semibold hover:text-landing-saffron" />
           </p>
           <div className="flex flex-wrap items-center gap-6">
-            <Link href="/download" className="font-semibold hover:text-landing-saffron">
-              Download page
+            <Link href={PLAY_STORE_SEO_PATH} className="font-semibold hover:text-landing-saffron">
+              Google Play page
             </Link>
             <Link href="/privacy" className="font-semibold hover:text-landing-saffron">
               Privacy

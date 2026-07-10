@@ -1,6 +1,7 @@
 import type { MarketId } from '@/lib/markets';
 import { MARKET_PATHS } from '@/lib/markets';
 import { GENERATED_SEO_RECIPE_BLOGS } from '@/lib/seo-recipe-blogs-data';
+import { SEO_CITY_GUIDE_PAGES } from '@/lib/seo-city-guides';
 import { getAllTaxonomyPaths } from '@/lib/seo-taxonomy';
 
 export type SeoContentFaq = {
@@ -42,7 +43,7 @@ export type SeoRecipePage = {
   sourceFile?: string;
 };
 
-export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
+const CORE_SEO_GUIDE_PAGES: SeoGuidePage[] = [
   {
     slug: 'what-to-cook-tonight-indian',
     title: 'What to Cook Tonight — Indian Home Cooking Ideas | Rasoi',
@@ -192,6 +193,8 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
     relatedLinks: [
       { href: MARKET_PATHS.US, label: 'Rasoi USA' },
       { href: '/indian-recipe-app', label: 'All guides' },
+      { href: '/indian-recipes-new-york-city', label: 'New York City' },
+      { href: '/indian-cooking-houston-texas', label: 'Houston, Texas' },
     ],
   },
   {
@@ -216,7 +219,11 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
       },
     ],
     marketId: 'CA',
-    relatedLinks: [{ href: MARKET_PATHS.CA, label: 'Rasoi Canada' }],
+    relatedLinks: [
+      { href: MARKET_PATHS.CA, label: 'Rasoi Canada' },
+      { href: '/indian-weeknight-dinners-toronto', label: 'Toronto weeknights' },
+      { href: '/indian-home-cooking-vancouver', label: 'Vancouver home cooking' },
+    ],
   },
   {
     slug: 'indian-cooking-in-australia',
@@ -240,7 +247,11 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
       },
     ],
     marketId: 'AU',
-    relatedLinks: [{ href: MARKET_PATHS.AU, label: 'Rasoi Australia' }],
+    relatedLinks: [
+      { href: MARKET_PATHS.AU, label: 'Rasoi Australia' },
+      { href: '/indian-recipes-sydney', label: 'Sydney recipes' },
+      { href: '/indian-cooking-melbourne', label: 'Melbourne cooking' },
+    ],
   },
   {
     slug: 'indian-cooking-in-new-zealand',
@@ -352,6 +363,8 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
   },
 ];
 
+export const SEO_GUIDE_PAGES: SeoGuidePage[] = [...CORE_SEO_GUIDE_PAGES, ...SEO_CITY_GUIDE_PAGES];
+
 /** Top 55 high-search recipe blogs — generated from Rasoi Scalper via `npm run seo:recipe-blogs`. */
 export const SEO_RECIPE_PAGES: SeoRecipePage[] = GENERATED_SEO_RECIPE_BLOGS;
 
@@ -388,7 +401,7 @@ export const INDIAN_RECIPE_APP_HUB = {
   path: '/indian-recipe-app',
   title: 'Indian Recipe Guides & Home Cooking | Rasoi',
   description:
-    'Indian home cooking guides on rasoiapplication.in — 55 recipe blogs, cuisine & ingredient hubs, dinner ideas, Jain & veg recipes, and diaspora pages for India, USA, Canada, Australia & New Zealand.',
+    'Indian home cooking guides on rasoiapplication.in — 55 recipe blogs, city diaspora guides for Toronto, NYC, Sydney, and more, plus cuisine hubs for India, USA, Canada, Australia & New Zealand.',
   keywords: [
     'indian recipe guides',
     'indian home cooking',
