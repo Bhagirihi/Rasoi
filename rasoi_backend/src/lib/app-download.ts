@@ -2,7 +2,7 @@ const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
 
 /** Matches Google Play listing title — use in SEO titles and JSON-LD. */
-export const APP_NAME = 'Rasoi App: Aaj Kya Banaye?';
+export const APP_NAME = 'Rasoi - Indian Recipe App';
 
 export const APP_SHORT_NAME = 'Rasoi';
 

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import JsonLd from '@/app/_components/JsonLd';
 import MarketFooter from '@/app/_components/MarketFooter';
 import RasoiLogo from '@/app/_components/RasoiLogo';
+import { PLAY_STORE_LISTING_URL, PLAY_STORE_SEO_PATH } from '@/lib/app-download';
 import { SEO_RECIPE_PAGES } from '@/lib/seo-content-pages';
 import { SEO_RECIPE_BLOGS_GENERATED_AT } from '@/lib/seo-recipe-blogs-data';
 import {
@@ -73,8 +74,15 @@ export default function RecipeBlogsIndexPage() {
               <Link href="/indian-recipe-app" className="hover:text-landing-saffron">
                 All guides
               </Link>
-              <Link href="/download" className="font-semibold text-landing-saffron hover:text-landing-ink">
-                Get the app
+              <a
+                href={PLAY_STORE_LISTING_URL}
+                className="font-semibold text-landing-saffron hover:text-landing-ink"
+                rel="noopener noreferrer"
+              >
+                Get on Google Play
+              </a>
+              <Link href={PLAY_STORE_SEO_PATH} className="hover:text-landing-saffron">
+                Play listing
               </Link>
             </nav>
           </div>
@@ -220,14 +228,15 @@ export default function RecipeBlogsIndexPage() {
             <h2 className="font-display text-2xl font-semibold">Cook from your pantry</h2>
             <p className="mt-3 max-w-2xl text-landing-muted">
               Rasoi matches recipes to what you already have — regional filters, Veg & Jain options,
-              and tonight&apos;s picks. Download free on Android.
+              and tonight&apos;s picks. Install free on Google Play.
             </p>
-            <Link
-              href="/download"
+            <a
+              href={PLAY_STORE_LISTING_URL}
               className="mt-6 inline-flex rounded-full bg-landing-saffron px-6 py-3 text-sm font-semibold text-white hover:bg-landing-ink"
+              rel="noopener noreferrer"
             >
-              Download Rasoi
-            </Link>
+              Get Rasoi on Google Play
+            </a>
           </section>
         </main>
 

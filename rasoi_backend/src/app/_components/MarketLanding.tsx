@@ -7,6 +7,7 @@ import { PLAY_STORE_LISTING_URL, PLAY_STORE_SEO_PATH } from '@/lib/app-download'
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import SponsorApplyForm from '@/app/_components/SponsorApplyForm';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
+import { getCityGuidesForMarket } from '@/lib/seo-city-guides';
 import { MARKET_FEATURES, type MarketConfig } from '@/lib/markets';
 import { SEO_RECIPE_PAGES } from '@/lib/seo-content-pages';
 
@@ -21,6 +22,7 @@ type MarketLandingProps = {
 export default function MarketLanding({ market }: MarketLandingProps) {
   const homeHref = market.path === '/' ? '/' : market.path;
   const isIndia = market.id === 'IN';
+  const cityGuides = getCityGuidesForMarket(market.id);
 
   return (
     <div className="landing-grain min-h-screen text-landing-ink">
@@ -206,6 +208,28 @@ export default function MarketLanding({ market }: MarketLandingProps) {
               </Link>
               .
             </p>
+            {cityGuides.length > 0 ? (
+              <div className="mt-8 border-t border-landing-border pt-8">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
+                  City guides
+                </p>
+                <h3 className="font-display mt-2 text-2xl font-semibold tracking-tight">
+                  Indian home cooking in {market.countryName}
+                </h3>
+                <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {cityGuides.map((guide) => (
+                    <li key={guide.slug}>
+                      <Link
+                        href={`/${guide.slug}`}
+                        className="block rounded-xl border border-landing-border bg-landing-cream px-5 py-4 font-semibold hover:border-landing-gold/40 hover:text-landing-saffron"
+                      >
+                        {guide.h1}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </section>
 
