@@ -27,26 +27,26 @@ export default function SeoHubPage({
   breadcrumbs,
 }: SeoHubPageProps) {
   return (
-    <div className="landing-grain min-h-screen text-[#1a1a2e]">
-      <header className="border-b border-[#e8dfd3] bg-[#fcf9f4]/90 backdrop-blur-md">
+    <div className="landing-grain min-h-screen text-landing-ink">
+      <header className="border-b border-landing-border bg-landing-cream/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
             <RasoiLogo size="sm" />
             <div>
               <p className="font-display text-2xl font-semibold tracking-tight">Rasoi</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6b6560]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-landing-muted">
                 Indian home cooking
               </p>
             </div>
           </Link>
-          <nav className="flex items-center gap-6 text-sm font-medium text-[#6b6560]">
-            <Link href="/recipes" className="hover:text-[#c45c2a]">
+          <nav className="flex items-center gap-6 text-sm font-medium text-landing-muted">
+            <Link href="/recipes" className="hover:text-landing-saffron">
               Recipes
             </Link>
-            <Link href="/indian-recipe-app" className="hover:text-[#c45c2a]">
+            <Link href="/indian-recipe-app" className="hover:text-landing-saffron">
               Guides
             </Link>
-            <Link href="/download" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+            <Link href="/download" className="font-semibold text-landing-saffron hover:text-landing-ink">
               Download app
             </Link>
           </nav>
@@ -54,15 +54,15 @@ export default function SeoHubPage({
       </header>
 
       <main className="mx-auto max-w-6xl px-5 py-12 lg:px-8 lg:py-16">
-        <nav aria-label="Breadcrumb" className="mb-8 text-sm text-[#6b6560]">
+        <nav aria-label="Breadcrumb" className="mb-8 text-sm text-landing-muted">
           <ol className="flex flex-wrap items-center gap-2">
             {breadcrumbs.map((crumb, index) => (
               <li key={crumb.href} className="flex items-center gap-2">
                 {index > 0 ? <span aria-hidden="true">/</span> : null}
                 {index === breadcrumbs.length - 1 ? (
-                  <span className="font-semibold text-[#1a1a2e]">{crumb.label}</span>
+                  <span className="font-semibold text-landing-ink">{crumb.label}</span>
                 ) : (
-                  <Link href={crumb.href} className="hover:text-[#c45c2a]">
+                  <Link href={crumb.href} className="hover:text-landing-saffron">
                     {crumb.label}
                   </Link>
                 )}
@@ -71,19 +71,19 @@ export default function SeoHubPage({
           </ol>
         </nav>
 
-        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
           {eyebrow}
         </p>
         <h1 className="font-display mt-3 max-w-3xl text-4xl font-semibold tracking-tight lg:text-5xl">
           {h1}
         </h1>
-        <p className="mt-6 max-w-3xl text-lg leading-relaxed text-[#6b6560]">{intro}</p>
+        <p className="mt-6 max-w-3xl text-lg leading-relaxed text-landing-muted">{intro}</p>
 
         <div className="mt-10 space-y-8">
           {sections.map((section) => (
             <section key={section.heading}>
               <h2 className="font-display text-2xl font-semibold">{section.heading}</h2>
-              <p className="mt-3 max-w-3xl leading-relaxed text-[#6b6560]">{section.body}</p>
+              <p className="mt-3 max-w-3xl leading-relaxed text-landing-muted">{section.body}</p>
             </section>
           ))}
         </div>
@@ -91,9 +91,9 @@ export default function SeoHubPage({
         {recipes.length > 0 ? (
           <section className="mt-14">
             <h2 className="font-display text-2xl font-semibold">Recipe guides</h2>
-            <p className="mt-2 text-sm text-[#6b6560]">
+            <p className="mt-2 text-sm text-landing-muted">
               Ingredients, method, and diaspora tips —{' '}
-              <Link href="/recipes" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+              <Link href="/recipes" className="font-semibold text-landing-saffron hover:text-landing-ink">
                 browse all 55 guides →
               </Link>
             </p>
@@ -102,10 +102,10 @@ export default function SeoHubPage({
                 <li key={recipe.slug}>
                   <Link
                     href={`/recipes/${recipe.slug}`}
-                    className="block rounded-xl border border-[#e8dfd3] bg-white px-5 py-4 font-semibold hover:border-[#c9a227]/40 hover:text-[#c45c2a]"
+                    className="block rounded-xl border border-landing-border bg-white px-5 py-4 font-semibold hover:border-landing-gold/40 hover:text-landing-saffron"
                   >
                     {recipe.h1}
-                    <span className="mt-1 block text-xs font-normal text-[#6b6560]">
+                    <span className="mt-1 block text-xs font-normal text-landing-muted">
                       {recipe.cuisine} · {recipe.time}
                     </span>
                   </Link>
@@ -116,16 +116,16 @@ export default function SeoHubPage({
         ) : null}
 
         {faqs.length > 0 ? (
-          <section className="mt-14 border-t border-[#e8dfd3] pt-12">
+          <section className="mt-14 border-t border-landing-border pt-12">
             <h2 className="font-display text-3xl font-semibold">FAQ</h2>
             <div className="mt-8 grid gap-4 lg:grid-cols-2">
               {faqs.map((item) => (
                 <div
                   key={item.question}
-                  className="rounded-[1.25rem] border border-[#e8dfd3] bg-white p-6"
+                  className="rounded-[1.25rem] border border-landing-border bg-white p-6"
                 >
                   <h3 className="font-display text-xl font-semibold">{item.question}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[#6b6560]">{item.answer}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-landing-muted">{item.answer}</p>
                 </div>
               ))}
             </div>
@@ -140,7 +140,7 @@ export default function SeoHubPage({
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="rounded-full border border-[#e8dfd3] bg-white px-4 py-2 text-sm font-semibold text-[#c45c2a] hover:border-[#c9a227]/50 hover:text-[#1a1a2e]"
+                    className="rounded-full border border-landing-border bg-white px-4 py-2 text-sm font-semibold text-landing-saffron hover:border-landing-gold/50 hover:text-landing-ink"
                   >
                     {link.label}
                   </Link>

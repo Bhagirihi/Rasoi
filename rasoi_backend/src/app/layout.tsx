@@ -8,13 +8,19 @@ import { rootMetadata, SITE_URL } from '@/lib/seo';
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '600'],
+  display: 'swap',
+  adjustFontFallback: true,
+  preload: true,
 });
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['600', '700'],
+  display: 'swap',
+  adjustFontFallback: true,
+  preload: false,
 });
 
 export const metadata: Metadata = rootMetadata;
