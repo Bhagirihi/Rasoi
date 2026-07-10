@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
-
+import ContactEmailLink from '@/app/_components/ContactEmailLink';
 import RasoiLogo from '@/app/_components/RasoiLogo';
 import JsonLd from '@/app/_components/JsonLd';
 import {
@@ -17,15 +16,15 @@ export const metadata = downloadMetadata;
 
 export default function DownloadPage() {
   return (
-    <div className="landing-grain min-h-screen text-[#1a1a2e]">
+    <div className="landing-grain min-h-screen text-landing-ink">
       <JsonLd data={mobileAppJsonLd(absoluteUrl('/download'))} />
-      <header className="border-b border-[#e8dfd3] bg-[#fcf9f4]/90 backdrop-blur-md">
+      <header className="border-b border-landing-border bg-landing-cream/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 lg:px-8">
           <Link href="/" className="flex items-center gap-3">
             <RasoiLogo size="sm" />
             <div>
               <p className="font-display text-2xl font-semibold tracking-tight">Rasoi</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6b6560]">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-landing-muted">
                 Indian home cooking
               </p>
             </div>
@@ -41,7 +40,7 @@ export default function DownloadPage() {
 
       <main>
         <section className="mx-auto max-w-6xl px-5 py-12 lg:px-8 lg:py-16">
-          <div className="overflow-hidden rounded-[1.75rem] border border-[#e8dfd3] bg-white shadow-[0_24px_60px_rgba(26,26,46,0.08)]">
+          <div className="overflow-hidden rounded-[1.75rem] border border-landing-border bg-white shadow-[0_24px_60px_rgba(26,26,46,0.08)]">
             <Image
               src="/download-hero.png"
               alt="Rasoi app preview — Indian home cooking on your phone"
@@ -53,28 +52,28 @@ export default function DownloadPage() {
           </div>
 
           <div className="mx-auto mt-12 max-w-3xl text-center">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
               Available on Google Play
             </p>
             <h1 className="font-display mt-4 text-4xl font-semibold leading-tight tracking-tight lg:text-5xl">
               Download {APP_NAME} on Google Play
             </h1>
-            <p className="mt-6 text-lg leading-relaxed text-[#6b6560]">
+            <p className="mt-6 text-lg leading-relaxed text-landing-muted">
               {APP_NAME} is live on Google Play. Install in one tap for regional recipes, smart
               pantry matching, saved favourites, and automatic updates.
             </p>
           </div>
 
-          <div className="mx-auto mt-10 max-w-xl rounded-[1.5rem] border border-[#e8dfd3] bg-[#fcf9f4] p-8 text-center">
+          <div className="mx-auto mt-10 max-w-xl rounded-[1.5rem] border border-landing-border bg-landing-cream p-8 text-center">
             <a
               href={PLAY_STORE_LISTING_URL}
               className="inline-flex rounded-full bg-[#14110f] px-8 py-3.5 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
             >
               Get it on Google Play
             </a>
-            <p className="mt-4 text-sm leading-relaxed text-[#6b6560]">
+            <p className="mt-4 text-sm leading-relaxed text-landing-muted">
               Free to install.{' '}
-              <Link href={PLAY_STORE_SEO_PATH} className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+              <Link href={PLAY_STORE_SEO_PATH} className="font-semibold text-landing-saffron hover:text-landing-ink">
                 Official Google Play page
               </Link>{' '}
               · Open Google Play on your Android phone and tap Install.
@@ -82,13 +81,13 @@ export default function DownloadPage() {
           </div>
         </section>
 
-        <section className="border-y border-[#e8dfd3] bg-[#fcf9f4]">
+        <section className="border-y border-landing-border bg-landing-cream">
           <div className="mx-auto max-w-6xl px-5 py-16 lg:px-8">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#c9a227]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
               App features
             </p>
             <h2 className="font-display mt-3 text-4xl font-semibold">What you get with Rasoi</h2>
-            <p className="mt-4 max-w-2xl text-[#6b6560]">
+            <p className="mt-4 max-w-2xl text-landing-muted">
               A beautifully simple Indian recipe app built for real home kitchens — discover
               dishes, match your pantry, and shop missing ingredients in one flow.
             </p>
@@ -96,10 +95,10 @@ export default function DownloadPage() {
               {APP_FEATURES.map((feature) => (
                 <article
                   key={feature.title}
-                  className="rounded-[1.25rem] border border-[#e8dfd3] bg-white p-6 shadow-sm"
+                  className="rounded-[1.25rem] border border-landing-border bg-white p-6 shadow-sm"
                 >
                   <h3 className="font-display text-xl font-semibold">{feature.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[#6b6560]">{feature.body}</p>
+                  <p className="mt-3 text-sm leading-relaxed text-landing-muted">{feature.body}</p>
                 </article>
               ))}
             </div>
@@ -107,35 +106,28 @@ export default function DownloadPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-5 py-12 text-center lg:px-8">
-          <p className="text-sm text-[#6b6560]">
+          <p className="text-sm text-landing-muted">
             Questions or feedback?{' '}
-            <a
-              href={`mailto:${LEGAL_CONTACT_EMAIL}`}
-              className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]"
-            >
-              {LEGAL_CONTACT_EMAIL}
-            </a>
+            <ContactEmailLink className="font-semibold text-landing-saffron hover:text-landing-ink" />
             .
           </p>
         </section>
       </main>
 
-      <footer className="border-t border-[#e8dfd3] bg-[#fcf9f4]">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-[#6b6560] lg:px-8">
+      <footer className="border-t border-landing-border bg-landing-cream">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-landing-muted lg:px-8">
           <p>
             Rasoi — Indian recipes for modern home cooks ·{' '}
-            <a href={`mailto:${LEGAL_CONTACT_EMAIL}`} className="font-semibold hover:text-[#c45c2a]">
-              {LEGAL_CONTACT_EMAIL}
-            </a>
+            <ContactEmailLink className="font-semibold hover:text-landing-saffron" />
           </p>
           <div className="flex flex-wrap items-center gap-6">
-            <Link href="/privacy" className="font-semibold hover:text-[#c45c2a]">
+            <Link href="/privacy" className="font-semibold hover:text-landing-saffron">
               Privacy
             </Link>
-            <Link href="/terms" className="font-semibold hover:text-[#c45c2a]">
+            <Link href="/terms" className="font-semibold hover:text-landing-saffron">
               Terms
             </Link>
-            <Link href="/" className="font-semibold text-[#c45c2a] hover:text-[#1a1a2e]">
+            <Link href="/" className="font-semibold text-landing-saffron hover:text-landing-ink">
               Back to home
             </Link>
           </div>
