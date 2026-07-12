@@ -14,9 +14,9 @@ type HomeHeroLoadingBoxProps = {
   onFinished: () => void;
 };
 
-const INTRO_MS = __DEV__ ? 2000 : 650;
-const CHECKING_MS = __DEV__ ? 1000 : 450;
-const RASOI_HOLD_MS = __DEV__ ? 2000 : 280;
+const INTRO_MS = __DEV__ ? 2000 : 380;
+const CHECKING_MS = __DEV__ ? 1000 : 280;
+const RASOI_HOLD_MS = __DEV__ ? 2000 : 160;
 
 const INTRO_LINES = [
   "Are aap aa gaye....",
@@ -308,7 +308,7 @@ export default function HomeHeroLoadingBox({
     }
 
     const enteredAt = rasoiEnteredAtRef.current;
-    const holdTarget = dataReadyRef.current && !__DEV__ ? 180 : RASOI_HOLD_MS;
+    const holdTarget = dataReadyRef.current && !__DEV__ ? 120 : RASOI_HOLD_MS;
     const waitMs = Math.max(0, holdTarget - (Date.now() - enteredAt));
 
     const holdTimer = setTimeout(() => {

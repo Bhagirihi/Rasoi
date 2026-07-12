@@ -34,6 +34,8 @@ import {
 import { testIds } from "@/constants/testIds";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
+import { useSaveRecipeGate } from '@/hooks/useSaveRecipeGate';
+import { useOfflineRecipeGate } from '@/hooks/useOfflineRecipeGate';
 import { useRecipes } from "@/context/RecipesContext";
 import { useShoppingSession } from "@/context/ShoppingSessionContext";
 import { fetchRecipeSponsor, type SponsorCardData } from "@/services/sponsors";
@@ -44,7 +46,6 @@ import {
   partitionIngredients,
   countMatchableIngredients,
 } from "@/utils/recipes";
-import { getRecipeStepsHi } from "@/utils/recipeStepsHi";
 import {
   scaleIngredientLabel,
   servingMultiplierLabel,
@@ -52,12 +53,16 @@ import {
 import { shareRecipeOnWhatsApp } from "@/utils/shareRecipe";
 import { logRecipeView, logRecipeCooked } from "@/services/recommendations";
 import { PAYWALL_HREF } from "@/utils/routes";
+import { getOfflineRecipe } from "@/utils/offlineRecipeStorage";
 import type { AffiliatePartner } from "@/utils/affiliate";
 
 function normalizeRecipeId(id: string | string[] | undefined): string {
   if (Array.isArray(id)) return id[0] ?? "";
   return id ?? "";
 }
+
+const STEPS_PLACEHOLDER_EN = ["Steps coming soon — we are updating this recipe."];
+const STEPS_PLACEHOLDER_HI = ["विधि जल्द ही उपलब्ध होगी।"];
 
 export default function RecipeDetailScreen() {
   const params = useLocalSearchParams<{
@@ -70,11 +75,13 @@ export default function RecipeDetailScreen() {
   const {
     pantryIngredients,
     isRecipeSaved,
-    toggleSavedRecipe,
+    isRecipeOffline,
     showPartners,
     partnersInTrialMode,
     householdSize,
   } = useAppContext();
+  const { trySaveRecipe } = useSaveRecipeGate();
+  const { tryToggleOfflineRecipe } = useOfflineRecipeGate();
   const { getRecipeById, loadRecipeById } = useRecipes();
   const { getSessionProgress, getNextShoppingItem } = useShoppingSession();
   const loadRecipeByIdRef = useRef(loadRecipeById);
@@ -118,30 +125,28 @@ export default function RecipeDetailScreen() {
 
     let cancelled = false;
 
-    const cached = getRecipeById(recipeId);
-    if (cached) {
-      setRecipe(cached);
-      setRecipeLoading(false);
-    } else {
-      setRecipe(null);
-      setRecipeLoading(true);
-    }
+    void (async () => {
+      const cached = getRecipeById(recipeId);
+      const offline = cached ? null : await getOfflineRecipe(recipeId);
+      if (cancelled) return;
 
-    void loadRecipeByIdRef
-      .current(recipeId)
-      .then((loaded) => {
-        if (cancelled) return;
-        setRecipe(loaded);
+      const initial = cached ?? offline;
+      if (initial) {
+        setRecipe(initial);
         setRecipeLoading(false);
-        if (loaded) {
-          void logRecipeView(loaded.id);
-        }
-      })
-      .catch(() => {
-        if (cancelled) return;
+      } else {
         setRecipe(null);
-        setRecipeLoading(false);
-      });
+        setRecipeLoading(true);
+      }
+
+      const loaded = await loadRecipeByIdRef.current(recipeId);
+      if (cancelled) return;
+      setRecipe(loaded);
+      setRecipeLoading(false);
+      if (loaded) {
+        void logRecipeView(loaded.id);
+      }
+    })();
 
     return () => {
       cancelled = true;
@@ -188,9 +193,10 @@ export default function RecipeDetailScreen() {
     if (!recipe) return [];
     if (stepsLang === "hi") {
       if (recipe.stepsHi?.length) return recipe.stepsHi;
-      return getRecipeStepsHi(recipe.id, recipe.title, recipe);
+      return STEPS_PLACEHOLDER_HI;
     }
-    return recipe.steps ?? [];
+    if (recipe.steps?.length) return recipe.steps;
+    return STEPS_PLACEHOLDER_EN;
   }, [recipe, stepsLang]);
 
   const displayDescription = useMemo(() => {
@@ -253,12 +259,25 @@ export default function RecipeDetailScreen() {
 
   const pantryMatchPercent = getPantryMatchPercent(recipe, pantryIngredients);
   const saved = isRecipeSaved(recipe.id);
+  const offlineDownloaded = isRecipeOffline(recipe.id);
   const shoppingProgress = getSessionProgress(recipe.id);
   const nextShopItem = getNextShoppingItem(recipe.id);
 
   const handleSavePress = () => {
     void Haptics.selectionAsync();
-    toggleSavedRecipe(recipe.id);
+    trySaveRecipe(recipe.id);
+  };
+
+  const handleOfflinePress = () => {
+    void Haptics.selectionAsync();
+    void (async () => {
+      let fullRecipe = recipe;
+      if (!recipe.steps?.length) {
+        const loaded = await loadRecipeById(recipe.id);
+        if (loaded) fullRecipe = loaded;
+      }
+      tryToggleOfflineRecipe(fullRecipe);
+    })();
   };
 
   const openCheckout = (
@@ -357,10 +376,13 @@ export default function RecipeDetailScreen() {
         <RecipeDetailHero
           recipe={recipe}
           saved={saved}
+          offlineDownloaded={offlineDownloaded}
           onBack={() => router.back()}
           onShare={handleShare}
           onSave={handleSavePress}
+          onOfflineToggle={handleOfflinePress}
           saveTestId={testIds.recipeSaveButton}
+          offlineTestId={testIds.recipeOfflineButton}
         />
 
         <View

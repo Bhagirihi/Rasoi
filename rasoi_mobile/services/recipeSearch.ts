@@ -19,6 +19,7 @@ type ApiRecipeRow = {
   imageUrl: string;
   tags: Recipe['tags'];
   ingredients: unknown;
+  mainIngredients?: string[];
 };
 
 function mapApiRecipe(row: ApiRecipeRow): Recipe {
@@ -41,6 +42,7 @@ function mapApiRecipe(row: ApiRecipeRow): Recipe {
     ingredients: normalizeRecipeIngredients(
       parseJson<unknown[]>(typeof row.ingredients === 'string' ? row.ingredients : null, []),
     ),
+    mainIngredients: row.mainIngredients,
     steps: [],
   };
 }

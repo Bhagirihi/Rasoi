@@ -85,21 +85,29 @@ function pickForSlot(pool: Recipe[], slot: MealSlot, seed: number): Recipe | nul
   return ranked[seed % topCount] ?? ranked[0];
 }
 
+type BuildMenuOptions = {
+  /** Recipe ids already used in earlier plan days or reserved for home picks. */
+  used?: Set<string>;
+};
+
 export function buildMenuForDate(
   eligibleRecipes: Recipe[],
   date: Date,
   shuffleSalt = 0,
+  options?: BuildMenuOptions,
 ): PlanMenuEntry[] {
   if (eligibleRecipes.length === 0) return [];
 
+  const used = options?.used ?? new Set<string>();
   const seed = dayKey(date) + shuffleSalt * 13;
-  const used = new Set<string>();
   const result: PlanMenuEntry[] = [];
 
   PLAN_SLOTS.forEach((entry, index) => {
-    const available = eligibleRecipes.filter((recipe) => !used.has(recipe.id));
-    const pool = available.length > 0 ? available : eligibleRecipes;
-    const recipe = pickForSlot(pool, entry.slot, seed + index * 7);
+    let available = eligibleRecipes.filter((recipe) => !used.has(recipe.id));
+    if (available.length === 0) {
+      available = eligibleRecipes;
+    }
+    const recipe = pickForSlot(available, entry.slot, seed + index * 7);
     if (recipe) {
       used.add(recipe.id);
       result.push({ ...entry, recipe });
@@ -107,6 +115,27 @@ export function buildMenuForDate(
   });
 
   return result;
+}
+
+export function buildAllPlanMenus(
+  eligibleRecipes: Recipe[],
+  shuffleSaltByOffset: Record<PlanDayOffset, number> = { 0: 0, 1: 0, 2: 0 },
+  excludeRecipeIds: string[] = [],
+): Record<PlanDayOffset, PlanMenuEntry[]> {
+  const used = new Set(excludeRecipeIds);
+  const planDays = buildPlanDayOptions();
+  const menus: Partial<Record<PlanDayOffset, PlanMenuEntry[]>> = {};
+
+  for (const day of planDays) {
+    menus[day.offset] = buildMenuForDate(
+      eligibleRecipes,
+      day.date,
+      shuffleSaltByOffset[day.offset],
+      { used },
+    );
+  }
+
+  return menus as Record<PlanDayOffset, PlanMenuEntry[]>;
 }
 
 function uniqueRecipes(recipes: Array<Recipe | null | undefined>): Recipe[] {
@@ -124,16 +153,35 @@ function uniqueRecipes(recipes: Array<Recipe | null | undefined>): Recipe[] {
 export function collectPlanMenuRecipes(
   eligibleRecipes: Recipe[],
   shuffleSaltByOffset: Record<PlanDayOffset, number> = { 0: 0, 1: 0, 2: 0 },
+  excludeRecipeIds: string[] = [],
 ): Recipe[] {
-  const planDays = buildPlanDayOptions();
-  const menuRecipes = planDays.flatMap((day) =>
-    buildMenuForDate(
-      eligibleRecipes,
-      day.date,
-      shuffleSaltByOffset[day.offset],
-    ).map((entry) => entry.recipe),
+  const menus = buildAllPlanMenus(eligibleRecipes, shuffleSaltByOffset, excludeRecipeIds);
+  return uniqueRecipes(Object.values(menus).flatMap((entries) => entries.map((entry) => entry.recipe)));
+}
+
+/** Recipe ids on today's plan menu — lighter than full 3-day set for home-pick exclusion. */
+export function getPlanRecipeIdsForHomeExclusion(
+  eligibleRecipes: Recipe[],
+  shuffleSalt = 0,
+  excludeRecipeIds: string[] = [],
+): string[] {
+  if (eligibleRecipes.length === 0) return [];
+  const today = buildPlanDayOptions()[0];
+  const menu = buildMenuForDate(eligibleRecipes, today.date, shuffleSalt, {
+    used: new Set(excludeRecipeIds),
+  });
+  return menu.map((entry) => entry.recipe.id);
+}
+
+/** Recipe ids reserved by the 3-day plan — use to keep home picks distinct. */
+export function getPlanRecipeIds(
+  eligibleRecipes: Recipe[],
+  shuffleSaltByOffset: Record<PlanDayOffset, number> = { 0: 0, 1: 0, 2: 0 },
+  excludeRecipeIds: string[] = [],
+): string[] {
+  return collectPlanMenuRecipes(eligibleRecipes, shuffleSaltByOffset, excludeRecipeIds).map(
+    (recipe) => recipe.id,
   );
-  return uniqueRecipes(menuRecipes);
 }
 
 export type PlanDayRecipes = {
@@ -148,17 +196,15 @@ export type PlanDayRecipes = {
 export function collectPlanMenuRecipesByDay(
   eligibleRecipes: Recipe[],
   shuffleSaltByOffset: Record<PlanDayOffset, number> = { 0: 0, 1: 0, 2: 0 },
+  excludeRecipeIds: string[] = [],
 ): PlanDayRecipes[] {
   const planDays = buildPlanDayOptions();
+  const menus = buildAllPlanMenus(eligibleRecipes, shuffleSaltByOffset, excludeRecipeIds);
   return planDays.map((day) => ({
     offset: day.offset,
     heading: day.heading,
     segmentLabel: day.segmentLabel,
     caption: day.caption,
-    recipes: buildMenuForDate(
-      eligibleRecipes,
-      day.date,
-      shuffleSaltByOffset[day.offset],
-    ).map((entry) => entry.recipe),
+    recipes: (menus[day.offset] ?? []).map((entry) => entry.recipe),
   }));
 }

@@ -33,6 +33,7 @@ import { layout, scrollIndicator, spacing, colors } from "@/constants/theme";
 import { testIds } from "@/constants/testIds";
 import { useAppContext } from "@/context/AppContext";
 import { useRecipes } from "@/context/RecipesContext";
+import { useTonightRecipes } from "@/context/TonightRecipesContext";
 import { useTheme } from "@/context/ThemeContext";
 import type { Recipe } from "@/data/mockRecipes";
 import type { MealSlot } from "@/utils/mealTime";
@@ -41,12 +42,17 @@ import {
   buildPlanDayOptions,
   type PlanDayOffset,
 } from "@/utils/planMenu";
+import { collectPantryHomeRecipes } from "@/utils/pantryCatalog";
 import { ingredientKey } from "@/utils/recipeIngredients";
 import {
   filterRecipes,
   getPantryMatchPercent,
   partitionIngredients,
 } from "@/utils/recipes";
+import { usePlanLimitDialog } from "@/hooks/usePlanLimitDialog";
+import { useSaveRecipeGate } from "@/hooks/useSaveRecipeGate";
+import { useShuffleGate } from "@/hooks/useShuffleGate";
+import { useTabWarmRender } from "@/hooks/useTabWarmRender";
 import { dietChoiceToFilter } from "@/utils/storage";
 
 const PLAN_SLOTS: Array<{
@@ -99,17 +105,39 @@ type PlanMenuEntry = (typeof PLAN_SLOTS)[number] & { recipe: Recipe };
 
 function buildStyledMenu(
   eligibleRecipes: Recipe[],
-  date: Date,
-  shuffleSalt: number,
+  selectedDayOffset: PlanDayOffset,
+  shuffleSaltByOffset: Record<PlanDayOffset, number>,
+  excludeRecipeIds: string[],
 ): PlanMenuEntry[] {
-  const menu = buildMenuForDate(eligibleRecipes, date, shuffleSalt);
-  return menu.map((entry) => {
+  const planDays = buildPlanDayOptions();
+  const day = planDays.find((entry) => entry.offset === selectedDayOffset) ?? planDays[0];
+  const entries = buildMenuForDate(
+    eligibleRecipes,
+    day.date,
+    shuffleSaltByOffset[selectedDayOffset],
+    { used: new Set(excludeRecipeIds) },
+  );
+  return entries.map((entry) => {
     const slotMeta = PLAN_SLOTS.find((slot) => slot.slot === entry.slot)!;
     return { ...slotMeta, recipe: entry.recipe };
   });
 }
 
 export default function PlanScreen() {
+  const shouldRender = useTabWarmRender();
+  const { colors: themeColors } = useTheme();
+  if (!shouldRender) {
+    return (
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: themeColors.cream }}
+        edges={["top"]}
+      />
+    );
+  }
+  return <PlanTabContent />;
+}
+
+function PlanTabContent() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const { colors: themeColors } = useTheme();
@@ -118,16 +146,21 @@ export default function PlanScreen() {
     regionalCuisine,
     favoriteCuisines,
     pantryIngredients,
-    allergyExclusions,
+    effectiveAllergyExclusions,
     isRecipeSaved,
     toggleSavedRecipe,
+    planLimits,
   } = useAppContext();
+  const { showLockedPlanDay } = usePlanLimitDialog();
+  const { trySaveRecipe } = useSaveRecipeGate();
+  const { tryShuffle: tryPlanShuffle } = useShuffleGate("plan");
   const {
     recipes,
     loading: recipesLoading,
     error: recipesError,
     refreshRecipes,
   } = useRecipes();
+  const { topPick, alsoFor, lateNightPick } = useTonightRecipes();
 
   const [selectedDayOffset, setSelectedDayOffset] = useState<PlanDayOffset>(0);
   const [shuffleSaltByOffset, setShuffleSaltByOffset] = useState<
@@ -157,24 +190,40 @@ export default function PlanScreen() {
       favoriteCuisines,
       pantryIngredients: [],
       fastFilters: [],
-      allergyExclusions,
+      allergyExclusions: effectiveAllergyExclusions,
     });
   }, [
     recipes,
     dietChoice,
     regionalCuisine,
     favoriteCuisines,
-    allergyExclusions,
+    effectiveAllergyExclusions,
   ]);
+
+  const homeRecipeIds = useMemo(
+    () =>
+      collectPantryHomeRecipes({
+        topPick,
+        alsoFor,
+        lateNightPick,
+      }).map((recipe) => recipe.id),
+    [topPick, alsoFor, lateNightPick],
+  );
 
   const menu = useMemo(
     () =>
       buildStyledMenu(
         eligibleRecipes,
-        selectedDay.date,
-        shuffleSaltByOffset[selectedDayOffset],
+        selectedDayOffset,
+        shuffleSaltByOffset,
+        homeRecipeIds,
       ),
-    [eligibleRecipes, selectedDay.date, selectedDayOffset, shuffleSaltByOffset],
+    [
+      eligibleRecipes,
+      selectedDayOffset,
+      shuffleSaltByOffset,
+      homeRecipeIds,
+    ],
   );
 
   const dayStats = useMemo(() => {
@@ -211,16 +260,25 @@ export default function PlanScreen() {
   );
 
   const shuffleMenu = () => {
-    void Haptics.selectionAsync();
-    setShuffleSaltByOffset((current) => ({
-      ...current,
-      [selectedDayOffset]: current[selectedDayOffset] + 1,
-    }));
+    void tryPlanShuffle(() => {
+      setShuffleSaltByOffset((current) => ({
+        ...current,
+        [selectedDayOffset]: current[selectedDayOffset] + 1,
+      }));
+    });
+  };
+
+  const handleLockedPlanDay = () => {
+    showLockedPlanDay();
   };
 
   const handleSaveAll = () => {
     if (unsavedMenuRecipes.length === 0) return;
-    unsavedMenuRecipes.forEach(({ recipe }) => toggleSavedRecipe(recipe.id));
+    for (const { recipe } of unsavedMenuRecipes) {
+      if (!trySaveRecipe(recipe.id)) {
+        return;
+      }
+    }
   };
 
   const openPantry = useCallback(() => {
@@ -272,6 +330,8 @@ export default function PlanScreen() {
           days={planDays}
           selectedOffset={selectedDayOffset}
           onSelect={setSelectedDayOffset}
+          maxDayOffset={planLimits.maxPlanDayOffset}
+          onLockedDay={handleLockedPlanDay}
         />
 
         {!recipesLoading && recipesError && menu.length === 0 ? (

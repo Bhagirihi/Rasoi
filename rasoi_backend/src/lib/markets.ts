@@ -1,4 +1,5 @@
 import { APP_NAME, RECIPE_LIBRARY_LABEL } from '@/lib/app-download';
+import { TRIAL_DURATION_DAYS } from '@/lib/plan-pricing';
 
 export const MARKET_COOKIE = 'rasoi_market';
 
@@ -172,7 +173,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Rasoi Plus unlocks grocery and food delivery checkout. Missing paneer? Open Blinkit. Want delivery instead? Jump to Zomato or Swiggy with affiliate tracking built in.',
     partnersStatus: 'live',
     plusIntro:
-      'Start with a 3-day trial of partner checkout, then subscribe to keep Blinkit, Zepto, Instamart, Zomato, and Swiggy links — and remove ads across the app.',
+      `Start with a ${TRIAL_DURATION_DAYS}-day trial of partner checkout, then subscribe to keep Blinkit, Zepto, Instamart, Zomato, and Swiggy links — and remove ads across the app.`,
     plusFeatures: [
       'No ads on Free, Trial, or Plus journeys',
       'Blinkit, Zepto & Instamart grocery cart deep links',

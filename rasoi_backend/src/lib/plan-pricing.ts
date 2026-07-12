@@ -6,7 +6,7 @@ import {
 } from '@/lib/billing-products';
 
 /** In-app free trial length before optional promo extensions. */
-export const TRIAL_DURATION_DAYS = 3;
+export const TRIAL_DURATION_DAYS = 15;
 
 export const PAID_PLAN_MONTHLY_AMOUNT_INR = 49;
 

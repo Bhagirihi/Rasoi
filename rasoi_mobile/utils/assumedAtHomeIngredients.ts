@@ -1,5 +1,6 @@
 import type { Recipe } from '@/data/mockRecipes';
 import { canonicalizeIngredientName } from '@/constants/ingredientCanonical';
+import { getRecipeMainIngredients } from '@/utils/recipeMainIngredients';
 
 /** Free utilities — belong in steps, not pantry match or grocery cart. */
 const TRACKED_LIQUID_KEYS = new Set(['pani', 'water', 'ice', 'free tap water']);
@@ -53,8 +54,8 @@ export function isPantryMatchExcluded(name: string | undefined | null): boolean 
 }
 
 export function getMatchableIngredients(recipe: Recipe) {
-  return recipe.ingredients.filter(
-    (ingredient) => ingredient.name?.trim() && !isPantryMatchExcluded(ingredient.name),
+  return getRecipeMainIngredients(recipe).filter(
+    (name) => name.trim() && !isPantryMatchExcluded(name),
   );
 }
 

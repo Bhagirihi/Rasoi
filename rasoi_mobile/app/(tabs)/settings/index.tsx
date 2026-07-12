@@ -45,6 +45,7 @@ import {
   PAID_PLAN_MONTHLY_PRICE,
   PAID_PLAN_YEARLY_SAVINGS_LABEL,
   PLAN_LABELS,
+  TRIAL_DURATION_DAYS,
 } from "@/constants/plans";
 import {
   DIET_CHOICE_LABELS,
@@ -155,6 +156,16 @@ export default function SettingsScreen() {
   const openEditPreferences = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push("/(tabs)/settings/edit-preferences");
+  };
+
+  const openEditDiet = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/(tabs)/settings/edit-diet");
+  };
+
+  const openEditKitchen = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/(tabs)/settings/edit-kitchen-styles");
   };
 
   const openFeedback = () => {
@@ -612,6 +623,8 @@ export default function SettingsScreen() {
           cuisineLabels={formatCuisineLabels(favoriteCuisines, kitchenStyles)}
           notificationsEnabled={notificationsEnabled}
           onEdit={openEditPreferences}
+          onEditDiet={openEditDiet}
+          onEditKitchen={openEditKitchen}
           onNotificationsChange={handleNotificationsToggle}
         />
 
@@ -633,7 +646,7 @@ export default function SettingsScreen() {
                   ? "Full access to all grocery and food delivery partners with no ads."
                   : partnerAccess.remainingFreeShops > 0
                     ? `${partnerAccess.remainingFreeShops} free partner shop${partnerAccess.remainingFreeShops === 1 ? "" : "s"} left this month. Start a trial or subscribe for unlimited checkout.`
-                    : "Monthly free partner limit used — upgrade for unlimited checkout, or start a 3-day trial from Manage plan."}
+                    : `Monthly free partner limit used — upgrade for unlimited checkout, or start a ${TRIAL_DURATION_DAYS}-day trial from Manage plan.`}
           </Text>
           {hasPlusPartners ? <PartnerStrip /> : null}
         </SettingsCard>

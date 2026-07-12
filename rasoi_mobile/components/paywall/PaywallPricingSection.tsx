@@ -86,14 +86,14 @@ export default function PaywallPricingSection({
           style={[styles.trialBtn, isBusy && styles.btnDisabled]}
         >
           <Text style={styles.trialBtnText}>Start {TRIAL_DURATION_DAYS}-day free trial</Text>
-          <Text style={styles.trialBtnSub}>All partners unlocked · No card needed</Text>
+          <Text style={styles.trialBtnSub}>3-day plan · unlimited partners · no card needed</Text>
         </Pressable>
       )}
 
       {paymentsEnabled && trialExpired && effectiveTier === 'free' && (
         <View style={styles.alertCard}>
           <Text style={styles.alertText}>
-            Trial ended. Pick monthly or yearly below to unlock partners again.
+            Trial ended. Subscribe to keep your 3-day plan, unlimited saves, shuffles, and partner checkout.
           </Text>
         </View>
       )}

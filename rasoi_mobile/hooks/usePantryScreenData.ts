@@ -1,9 +1,11 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { InteractionManager } from 'react-native';
 
 import { useAppContext } from '@/context/AppContext';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { useRecipes } from '@/context/RecipesContext';
+import type { Recipe } from '@/data/mockRecipes';
 import {
   buildPantryRecipeSection,
   collectPantryHomeRecipes,
@@ -25,13 +27,15 @@ export type PantryPlanDaySection = {
   section: NonNullable<ReturnType<typeof buildPantryRecipeSection>>;
 };
 
+const DEFAULT_SHUFFLE = { 0: 0, 1: 0, 2: 0 } as const;
+
 export function usePantryScreenData() {
   const {
     pantryIngredients,
     dietChoice,
     regionalCuisine,
     favoriteCuisines,
-    allergyExclusions,
+    effectiveAllergyExclusions,
   } = useAppContext();
   const { kitchenStyles } = useReferenceData();
   const { recipes } = useRecipes();
@@ -47,6 +51,11 @@ export function usePantryScreenData() {
     [topPick, alsoFor, lateNightPick],
   );
 
+  const homeRecipeIds = useMemo(
+    () => homeRecipes.map((recipe) => recipe.id),
+    [homeRecipes],
+  );
+
   const eligiblePlanRecipes = useMemo(() => {
     if (recipes.length === 0) return [];
     return filterRecipes(recipes, {
@@ -56,27 +65,53 @@ export function usePantryScreenData() {
       favoriteCuisines,
       pantryIngredients: [],
       fastFilters: [],
-      allergyExclusions,
+      allergyExclusions: effectiveAllergyExclusions,
     });
-  }, [recipes, dietChoice, regionalCuisine, favoriteCuisines, allergyExclusions]);
+  }, [recipes, dietChoice, regionalCuisine, favoriteCuisines, effectiveAllergyExclusions]);
 
-  const planRecipes = useMemo(
-    () => collectPlanMenuRecipes(eligiblePlanRecipes),
-    [eligiblePlanRecipes],
-  );
+  const [planRecipes, setPlanRecipes] = useState<Recipe[]>([]);
+  const [planDaySections, setPlanDaySections] = useState<PantryPlanDaySection[]>([]);
 
-  const planDaySections = useMemo<PantryPlanDaySection[]>(() => {
-    return collectPlanMenuRecipesByDay(eligiblePlanRecipes)
-      .map((day) => {
-        const section = buildPantryRecipeSection(
-          day.recipes,
-          day.heading,
-          `${day.recipes.length} meal${day.recipes.length === 1 ? '' : 's'} · ${day.caption}`,
-        );
-        return section ? { offset: day.offset, heading: day.heading, section } : null;
-      })
-      .filter((entry): entry is PantryPlanDaySection => entry !== null);
-  }, [eligiblePlanRecipes]);
+  useEffect(() => {
+    if (eligiblePlanRecipes.length === 0) {
+      setPlanRecipes([]);
+      setPlanDaySections([]);
+      return;
+    }
+
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      const collected = collectPlanMenuRecipes(
+        eligiblePlanRecipes,
+        DEFAULT_SHUFFLE,
+        homeRecipeIds,
+      );
+      const sections = collectPlanMenuRecipesByDay(
+        eligiblePlanRecipes,
+        DEFAULT_SHUFFLE,
+        homeRecipeIds,
+      )
+        .map((day) => {
+          const section = buildPantryRecipeSection(
+            day.recipes,
+            day.heading,
+            `${day.recipes.length} meal${day.recipes.length === 1 ? '' : 's'} · ${day.caption}`,
+          );
+          return section ? { offset: day.offset, heading: day.heading, section } : null;
+        })
+        .filter((entry): entry is PantryPlanDaySection => entry !== null);
+
+      if (!cancelled) {
+        setPlanRecipes(collected);
+        setPlanDaySections(sections);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
+  }, [eligiblePlanRecipes, homeRecipeIds]);
 
   const { preferenceSummary } = useMemo(
     () =>
@@ -98,18 +133,14 @@ export function usePantryScreenData() {
     [homeRecipes, topPick],
   );
 
-  const contextRecipes = useMemo(
-    () => {
-      const seen = new Set<string>();
-      const combined = [...homeRecipes, ...planRecipes].filter((recipe) => {
-        if (seen.has(recipe.id)) return false;
-        seen.add(recipe.id);
-        return true;
-      });
-      return combined;
-    },
-    [homeRecipes, planRecipes],
-  );
+  const contextRecipes = useMemo(() => {
+    const seen = new Set<string>();
+    return [...homeRecipes, ...planRecipes].filter((recipe) => {
+      if (seen.has(recipe.id)) return false;
+      seen.add(recipe.id);
+      return true;
+    });
+  }, [homeRecipes, planRecipes]);
 
   const stockStats = useMemo(() => {
     const personalItems = [

@@ -12,6 +12,7 @@ import { AppState } from 'react-native';
 
 import { PlanTier, type BillingInterval } from '@/constants/plans';
 import { CuisineId, DietChoice } from '@/constants/theme';
+import type { Gender } from '@/constants/genderOptions';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { useRecipes } from '@/context/RecipesContext';
 import { DietType, Recipe } from '@/data/mockRecipes';
@@ -47,6 +48,11 @@ import {
   recordPartnerCheckout,
   type KitchenPreferences,
 } from '@/utils/kitchenPreferences';
+import type { PlanFeatureLimits } from '@/constants/planFeatureLimits';
+import {
+  getEffectiveAllergyExclusions,
+  resolvePlanFeatureLimits,
+} from '@/utils/planFeatureLimits';
 import { resolvePartnerAccess, type PartnerAccess } from '@/utils/partnerQuota';
 import {
   syncDailyReminder,
@@ -98,6 +104,12 @@ import {
   loadCachedUserProfile,
   saveCachedUserProfile,
 } from '@/utils/userProfileCache';
+import {
+  clearOfflineRecipes,
+  listOfflineRecipeIds,
+  removeOfflineRecipe,
+  saveOfflineRecipe,
+} from '@/utils/offlineRecipeStorage';
 
 export type FoodPreferencesPayload = {
   dietChoice: DietChoice;
@@ -119,6 +131,8 @@ export type AuthNavigationResult = {
 };
 
 interface AppContextValue extends ResolvedPlan {
+  planLimits: PlanFeatureLimits;
+  effectiveAllergyExclusions: string[];
   paymentsEnabled: boolean;
   isHydrated: boolean;
   hasCompletedOnboarding: boolean;
@@ -152,7 +166,7 @@ interface AppContextValue extends ResolvedPlan {
     otp: string,
     name: string,
     phone: string,
-    options?: { acceptedTerms?: boolean; phoneVerified?: boolean },
+    options?: { acceptedTerms?: boolean; phoneVerified?: boolean; gender?: Gender },
   ) => Promise<AuthNavigationResult>;
   verifyLoginEmailOtp: (email: string, otp: string) => Promise<AuthNavigationResult>;
   updateProfile: (name: string, phone: string) => Promise<void>;
@@ -169,8 +183,13 @@ interface AppContextValue extends ResolvedPlan {
   saveFoodPreferences: (payload: FoodPreferencesPayload) => Promise<void>;
   recordPartnerShop: () => Promise<void>;
   refreshSyncedProfile: () => Promise<void>;
-  toggleSavedRecipe: (recipeId: string) => void;
+  toggleSavedRecipe: (recipeId: string) => boolean;
+  canSaveRecipe: (recipeId: string) => boolean;
   isRecipeSaved: (recipeId: string) => boolean;
+  offlineRecipeIds: string[];
+  toggleOfflineRecipe: (recipe: Recipe) => boolean;
+  canDownloadOffline: (recipeId: string) => boolean;
+  isRecipeOffline: (recipeId: string) => boolean;
   setPantryFilterActive: (active: boolean) => void;
   getSavedRecipes: () => Recipe[];
   startTrial: (options?: { showWelcome?: boolean }) => Promise<boolean>;
@@ -237,6 +256,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [kitchenPreferences, setKitchenPreferences] = useState<KitchenPreferences>({});
   const [lastProfileSyncedAt, setLastProfileSyncedAt] = useState<string | null>(null);
   const [savedRecipeIds, setSavedRecipeIds] = useState<string[]>([]);
+  const [offlineRecipeIds, setOfflineRecipeIds] = useState<string[]>([]);
   const [pantryFilterActive, setPantryFilterActive] = useState(false);
   const [pendingTrialWelcome, setPendingTrialWelcomeState] = useState(false);
   const [pendingPantrySetup, setPendingPantrySetupState] = useState(false);
@@ -329,6 +349,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [paymentsEnabled, resolvedPlan.effectiveTier, kitchenPreferences],
   );
 
+  const planLimits = useMemo(
+    () =>
+      resolvePlanFeatureLimits(
+        paymentsEnabled ? resolvedPlan.effectiveTier : 'paid',
+        paymentsEnabled,
+      ),
+    [paymentsEnabled, resolvedPlan.effectiveTier],
+  );
+
+  const effectiveAllergyExclusions = useMemo(
+    () => getEffectiveAllergyExclusions(planLimits, allergyExclusions),
+    [planLimits, allergyExclusions],
+  );
+
   const planWithPartnerAccess = useMemo(
     () => ({
       ...resolvedPlan,
@@ -399,7 +433,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       void saveCachedUserProfile(user);
       void clearUserLoggedOut();
       if (user.plan.planTier === 'trial' && user.plan.trialStartedAt) {
-        void setPendingTrialWelcome(false);
         void scheduleTrialDayTwoReminder(user.plan.trialStartedAt);
       }
       setSentryUser({
@@ -613,17 +646,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   ]);
 
   useEffect(() => {
+    void listOfflineRecipeIds().then(setOfflineRecipeIds);
+  }, []);
+
+  useEffect(() => {
     if (!isHydrated) return;
     syncRecipeFilters(dietChoice, regionalCuisine);
   }, [isHydrated, dietChoice, regionalCuisine, syncRecipeFilters]);
 
   useEffect(() => {
     if (!isHydrated) return;
-    void syncDailyReminder(notificationsEnabled);
+    void syncDailyReminder(notificationsEnabled, planLimits.notificationSlotIds);
     if (isLoggedIn && hasCompletedOnboarding) {
       void syncPushTokenToServer(notificationsEnabled);
     }
-  }, [isHydrated, isLoggedIn, hasCompletedOnboarding, notificationsEnabled, syncPushTokenToServer]);
+  }, [
+    isHydrated,
+    isLoggedIn,
+    hasCompletedOnboarding,
+    notificationsEnabled,
+    planLimits.notificationSlotIds,
+    syncPushTokenToServer,
+  ]);
 
   useEffect(() => {
     if (!isHydrated || !isLoggedIn) return;
@@ -821,7 +865,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       otp: string,
       name: string,
       phone: string,
-      options?: { acceptedTerms?: boolean; phoneVerified?: boolean },
+      options?: { acceptedTerms?: boolean; phoneVerified?: boolean; gender?: Gender },
     ) => {
       authLog('verifyEmailOtpAndLogin:start', { upgradingGuest: isGuestUser });
       try {
@@ -842,6 +886,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setPendingPantrySetup(true);
         }
         const nav = await finishAuthAfterSync(user);
+        if (isNewSignup && paymentsEnabled && user.plan.planTier === 'trial') {
+          await setPendingTrialWelcome(true);
+        }
         if (isNewSignup) {
           setPantryIngredients([]);
           void updatePantryIngredients([]).then(applyUserProfile).catch((error) => {
@@ -862,7 +909,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    [finishAuthAfterSync, isGuestUser, userId, setPendingPantrySetup, updatePantryIngredients, applyUserProfile],
+    [finishAuthAfterSync, isGuestUser, userId, paymentsEnabled, setPendingPantrySetup, setPendingTrialWelcome, updatePantryIngredients, applyUserProfile],
   );
 
   const verifyLoginEmailOtp = useCallback(
@@ -1016,6 +1063,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUserState(null);
     setPantryIngredients([...DEFAULT_PANTRY]);
     setSavedRecipeIds([]);
+    setOfflineRecipeIds([]);
+    void clearOfflineRecipes();
     applyPlanState(DEFAULT_PLAN);
     clearSentryUser();
     void setFirebaseUserId(null);
@@ -1045,6 +1094,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUserState(null);
       setPantryIngredients([...DEFAULT_PANTRY]);
       setSavedRecipeIds([]);
+      setOfflineRecipeIds([]);
+      void clearOfflineRecipes();
       applyPlanState(DEFAULT_PLAN);
       clearSentryUser();
       void setFirebaseUserId(null);
@@ -1081,6 +1132,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPendingPantrySetup(false);
     setPantryIngredients([...DEFAULT_PANTRY]);
     setSavedRecipeIds([]);
+    setOfflineRecipeIds([]);
+    void clearOfflineRecipes();
     setPlanState(DEFAULT_PLAN);
     await syncDailyReminder(false);
     clearSentryUser();
@@ -1272,10 +1325,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyUserProfile, isLoggedIn],
   );
 
-  const toggleSavedRecipe = useCallback(
+  const canSaveRecipe = useCallback(
     (recipeId: string) => {
+      if (savedRecipeIds.includes(recipeId)) return true;
+      const limit = planLimits.savedRecipeLimit;
+      if (limit === null) return true;
+      return savedRecipeIds.length < limit;
+    },
+    [planLimits.savedRecipeLimit, savedRecipeIds],
+  );
+
+  const toggleSavedRecipe = useCallback(
+    (recipeId: string): boolean => {
+      let ok = false;
       setSavedRecipeIds((current) => {
         const isSaving = !current.includes(recipeId);
+        if (isSaving) {
+          const limit = planLimits.savedRecipeLimit;
+          if (limit !== null && current.length >= limit) {
+            ok = false;
+            return current;
+          }
+        }
+        ok = true;
         const next = isSaving
           ? [...current, recipeId]
           : current.filter((id) => id !== recipeId);
@@ -1290,13 +1362,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
         }
         return next;
       });
+      return ok;
     },
-    [applyUserProfile, getRecipeById, isLoggedIn],
+    [applyUserProfile, getRecipeById, isLoggedIn, planLimits.savedRecipeLimit],
   );
 
   const isRecipeSaved = useCallback(
     (recipeId: string) => savedRecipeIds.includes(recipeId),
     [savedRecipeIds],
+  );
+
+  const isRecipeOffline = useCallback(
+    (recipeId: string) => offlineRecipeIds.includes(recipeId),
+    [offlineRecipeIds],
+  );
+
+  const canDownloadOffline = useCallback(
+    (recipeId: string) => {
+      if (offlineRecipeIds.includes(recipeId)) return true;
+      const limit = planLimits.offlineRecipeLimit;
+      if (limit === 0) return false;
+      return offlineRecipeIds.length < limit;
+    },
+    [offlineRecipeIds, planLimits.offlineRecipeLimit],
+  );
+
+  const toggleOfflineRecipe = useCallback(
+    (recipe: Recipe): boolean => {
+      const recipeId = recipe.id;
+      if (offlineRecipeIds.includes(recipeId)) {
+        void removeOfflineRecipe(recipeId);
+        setOfflineRecipeIds((current) => current.filter((id) => id !== recipeId));
+        return true;
+      }
+
+      const limit = planLimits.offlineRecipeLimit;
+      if (limit === 0 || offlineRecipeIds.length >= limit) {
+        return false;
+      }
+
+      void saveOfflineRecipe(recipe);
+      setOfflineRecipeIds((current) => [...current, recipeId]);
+      return true;
+    },
+    [offlineRecipeIds, planLimits.offlineRecipeLimit],
   );
 
   const getSavedRecipes = useCallback(
@@ -1307,6 +1416,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppContextValue>(
     () => ({
       ...planWithPartnerAccess,
+      planLimits,
+      effectiveAllergyExclusions,
       paymentsEnabled,
       isHydrated,
       hasCompletedOnboarding,
@@ -1330,6 +1441,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       favoriteCuisines,
       notificationsEnabled,
       savedRecipeIds,
+      offlineRecipeIds,
       pantryFilterActive,
       completeOnboarding,
       saveSignupPreferences,
@@ -1352,7 +1464,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       recordPartnerShop,
       refreshSyncedProfile: refreshUserProfileFromServer,
       toggleSavedRecipe,
+      canSaveRecipe,
       isRecipeSaved,
+      toggleOfflineRecipe,
+      canDownloadOffline,
+      isRecipeOffline,
       setPantryFilterActive,
       getSavedRecipes,
       startTrial,
@@ -1375,6 +1491,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }),
     [
       planWithPartnerAccess,
+      planLimits,
+      effectiveAllergyExclusions,
       paymentsEnabled,
       isHydrated,
       hasCompletedOnboarding,
@@ -1398,6 +1516,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       favoriteCuisines,
       notificationsEnabled,
       savedRecipeIds,
+      offlineRecipeIds,
       pantryFilterActive,
       completeOnboarding,
       saveSignupPreferences,
@@ -1420,7 +1539,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       recordPartnerShop,
       refreshUserProfileFromServer,
       toggleSavedRecipe,
+      canSaveRecipe,
       isRecipeSaved,
+      toggleOfflineRecipe,
+      canDownloadOffline,
+      isRecipeOffline,
       getSavedRecipes,
       startTrial,
       upgradeToPaid,

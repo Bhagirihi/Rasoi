@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { useSaveRecipeGate } from '@/hooks/useSaveRecipeGate';
 import { LinearGradient } from "expo-linear-gradient";
 import { ChevronRight, Info, Leaf, Bookmark, RefreshCw } from "lucide-react-native";
 import type { ReactNode } from "react";
@@ -203,13 +204,13 @@ export default function HomeRecipeRow({
   hideMissingOrder = false,
 }: HomeRecipeRowProps) {
   const { colors: themeColors, isDark } = useTheme();
-  const { isRecipeSaved, toggleSavedRecipe, pantryIngredients } =
-    useAppContext();
+  const { isRecipeSaved, pantryIngredients } = useAppContext();
+  const { trySaveRecipe } = useSaveRecipeGate();
   const { showDialog } = useAppDialog();
   const hasDescription = Boolean(recipe.description?.trim());
   const missing = useMemo(
     () => partitionIngredients(recipe, pantryIngredients).missing,
-    [recipe.id, recipe.ingredients, pantryIngredients],
+    [recipe.id, recipe.mainIngredients, recipe.ingredients, pantryIngredients],
   );
   const hasMissing = missing.length > 0;
   const showOrderUi = hasMissing && !hideMissingOrder;
@@ -307,7 +308,7 @@ export default function HomeRecipeRow({
               onPress={(event) => {
                 event.stopPropagation?.();
                 void Haptics.selectionAsync();
-                toggleSavedRecipe(recipe.id);
+                trySaveRecipe(recipe.id);
               }}
               hitSlop={10}
               style={styles.bookmarkBtn}

@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Mail } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   Platform,
@@ -49,6 +49,8 @@ export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
+  const emailInputRef = useRef<TextInput>(null);
+  const otpInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -67,6 +69,14 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (step === "otp") warmApiConnection();
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== "otp") return;
+    const timer = setTimeout(() => {
+      otpInputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
   }, [step]);
 
   const navigateAfterAuth = async (nav: AuthNavigationResult) => {
@@ -279,6 +289,7 @@ export default function LoginScreen() {
                   >
                     <Mail size={18} color={colors.dark.textMuted} />
                     <TextInput
+                      ref={emailInputRef}
                       value={email}
                       onChangeText={(value) => {
                         setEmail(value);
@@ -290,6 +301,7 @@ export default function LoginScreen() {
                       autoCapitalize="none"
                       autoCorrect={false}
                       returnKeyType="done"
+                      submitBehavior="submit"
                       onSubmitEditing={handleSendOtp}
                       style={styles.input}
                       testID={testIds.loginEmailInput}
@@ -309,6 +321,7 @@ export default function LoginScreen() {
                   >
                     <Mail size={18} color={colors.dark.textMuted} />
                     <TextInput
+                      ref={otpInputRef}
                       value={otp}
                       onChangeText={(value) => {
                         setOtp(value.replace(/\D/g, "").slice(0, 8));
@@ -316,12 +329,12 @@ export default function LoginScreen() {
                       }}
                       placeholder="123456"
                       placeholderTextColor={colors.dark.buttonDisabledText}
-                      keyboardType="number-pad"
+                      keyboardType={Platform.OS === "android" ? "numeric" : "number-pad"}
                       maxLength={8}
                       returnKeyType="done"
+                      submitBehavior="submit"
                       onSubmitEditing={handleVerifyOtp}
                       style={[styles.input, styles.otpInput]}
-                      autoFocus
                       testID={testIds.loginOtpInput}
                     />
                   </View>

@@ -39,7 +39,7 @@ Used during **Create account** to verify the user's mobile via Firebase Authenti
 1. [Firebase Console → Authentication → Sign-in method](https://console.firebase.google.com/u/0/project/rasoi-app-prod/authentication/providers) → enable **Phone**
 2. Ensure **Play App Signing SHA-1** and **debug SHA-1** are in [Project settings → Your apps → Android](https://console.firebase.google.com/u/0/project/rasoi-app-prod/settings/general) (same as FCM)
 3. **Blaze plan** recommended for production SMS volume
-4. **QA / Maestro:** add a [test phone number](https://console.firebase.google.com/u/0/project/rasoi-app-prod/authentication/providers) (e.g. `+91 9820174653` → code `123456`) and set `QA_PHONE_OTP=123456` in device QA env
+4. **QA / Maestro:** optional [test phone number](https://console.firebase.google.com/u/0/project/rasoi-app-prod/authentication/providers) if re-enabling SMS later. Device QA defaults: `QA_PHONE=9374766500`, `QA_EMAIL=dvesp1901+{timestamp}@gmail.com` (plus-addressing lands in dvesp1901@gmail.com).
 5. **Local skip (no SMS):** `EXPO_PUBLIC_SKIP_PHONE_VERIFY=1` in `.env.development` — skips SMS and goes straight to email OTP
 
 Requires a **native rebuild** after adding `@react-native-firebase/auth` (`npm run android:release-apk`).

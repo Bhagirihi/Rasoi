@@ -3,7 +3,7 @@
     "name": "Rasoi",
     "slug": "rasoi",
     "owner": "takeyshi",
-    "version": "1.0.12",
+    "version": "1.0.13",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rasoi",
@@ -22,7 +22,7 @@
     },
     "android": {
       "package": "com.bhagihiri.rasoiapp",
-      "versionCode": 13,
+      "versionCode": 14,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",

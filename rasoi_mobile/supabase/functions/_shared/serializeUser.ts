@@ -15,6 +15,7 @@ export function serializeUser(row: DbUserRow) {
     email: (row.email as string | null) ?? null,
     phone: (row.phone as string | null) ?? null,
     name: String(row.name),
+    gender: (row.gender as string | null) ?? null,
     isGuest: Boolean(row.isGuest),
     isActive: row.isActive !== false,
     hasCompletedOnboarding: Boolean(row.hasCompletedOnboarding),

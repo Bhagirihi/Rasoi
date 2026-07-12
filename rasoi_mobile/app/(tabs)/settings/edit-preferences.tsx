@@ -1,7 +1,7 @@
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { Bell } from 'lucide-react-native';
+import { Bell, ChefHat, Leaf } from 'lucide-react-native';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Linking,
@@ -14,29 +14,37 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import CuisinePreferenceList from '@/components/CuisinePreferenceList';
-import DietPreferenceList from '@/components/DietPreferenceList';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   SettingsCard,
   SettingsGroupLabel,
+  SettingsNavRow,
   SettingsSubHeader,
 } from '@/components/settings/SettingsBlocks';
 import { PrimaryButton } from '@/components/ui/Primitives';
-import { CuisineId, DietChoice, colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
+import {
+  DIET_CHOICE_LABELS,
+  colors,
+  layout,
+  radius,
+  scrollIndicator,
+  spacing,
+} from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { COMMON_ALLERGY_OPTIONS } from '@/utils/kitchenPreferences';
+import { useSaveRecipeGate } from '@/hooks/useSaveRecipeGate';
+import { usePlanLimitDialog } from '@/hooks/usePlanLimitDialog';
+import { getKitchenStyleLabel } from '@/utils/kitchenStyles';
 import { DAILY_REMINDER_MEAL_SUMMARY, DAILY_REMINDER_TIME_LABEL, ensureNotificationPermissions } from '@/utils/notifications';
 
 export default function EditPreferencesScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const { colors: themeColors, colorScheme } = useTheme();
-  const prefVariant = colorScheme === 'dark' ? 'dark' : 'light';
   const { showDialog } = useAppDialog();
   const {
     dietChoice,
@@ -45,8 +53,10 @@ export default function EditPreferencesScreen() {
     notificationsEnabled,
     allergyExclusions,
     householdSize,
+    planLimits,
     saveFoodPreferences,
   } = useAppContext();
+  const { showAllergyFilterUpsell } = usePlanLimitDialog();
   const { regionalCuisines, kitchenStyles, refreshReference } = useReferenceData();
 
   useFocusEffect(
@@ -55,34 +65,26 @@ export default function EditPreferencesScreen() {
     }, [refreshReference]),
   );
 
-  const [draftDiet, setDraftDiet] = useState<DietChoice>(dietChoice);
   const [draftRegion, setDraftRegion] = useState(regionalCuisine);
-  const [draftCuisines, setDraftCuisines] = useState<CuisineId[]>(favoriteCuisines);
   const [draftNotifications, setDraftNotifications] = useState(notificationsEnabled);
   const [draftAllergies, setDraftAllergies] = useState<string[]>(allergyExclusions);
   const [draftHouseholdSize, setDraftHouseholdSize] = useState(householdSize);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    setDraftDiet(dietChoice);
     setDraftRegion(regionalCuisine);
-    setDraftCuisines(favoriteCuisines);
     setDraftNotifications(notificationsEnabled);
     setDraftAllergies(allergyExclusions);
     setDraftHouseholdSize(householdSize);
-  }, [dietChoice, regionalCuisine, favoriteCuisines, notificationsEnabled, allergyExclusions, householdSize]);
+  }, [regionalCuisine, notificationsEnabled, allergyExclusions, householdSize]);
 
-  useEffect(() => {
-    const activeIds = new Set(kitchenStyles.map((style) => style.id));
-    setDraftCuisines((current) => current.filter((id) => activeIds.has(id)));
-  }, [kitchenStyles]);
-
-  const toggleCuisine = (id: CuisineId) => {
-    void Haptics.selectionAsync();
-    setDraftCuisines((current) =>
-      current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
-    );
-  };
+  const cuisineSummary =
+    favoriteCuisines.length === 0
+      ? 'Not set'
+      : favoriteCuisines
+          .slice(0, 2)
+          .map((id) => getKitchenStyleLabel(id, kitchenStyles))
+          .join(', ') + (favoriteCuisines.length > 2 ? ` +${favoriteCuisines.length - 2}` : '');
 
   const handleNotificationsToggle = async (next: boolean) => {
     void Haptics.selectionAsync();
@@ -111,11 +113,11 @@ export default function EditPreferencesScreen() {
     setIsSaving(true);
     try {
       await saveFoodPreferences({
-        dietChoice: draftDiet,
+        dietChoice,
         regionalCuisine: draftRegion,
-        favoriteCuisines: draftCuisines,
+        favoriteCuisines,
         notificationsEnabled: draftNotifications,
-        allergyExclusions: draftAllergies,
+        allergyExclusions: planLimits.allergyFilter ? draftAllergies : allergyExclusions,
         householdSize: draftHouseholdSize,
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -150,16 +152,30 @@ export default function EditPreferencesScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={[styles.intro, { color: themeColors.muted }]}>
-          Diet and kitchen styles are set during onboarding — update them here anytime. Region
-          adjusts recipe picks; override it below if you cook across India.
+          Region, household, allergies, and notifications. Diet and kitchen styles have their own
+          screens.
         </Text>
 
-        <SettingsGroupLabel label="Diet" />
-        <DietPreferenceList
-          selected={draftDiet}
-          onSelect={setDraftDiet}
-          variant={prefVariant}
-        />
+        <SettingsGroupLabel label="Food profile" />
+        <SettingsCard>
+          <SettingsNavRow
+            icon={Leaf}
+            iconBg="rgba(0,168,107,0.12)"
+            iconColor={colors.green}
+            label="Diet"
+            value={DIET_CHOICE_LABELS[dietChoice]}
+            onPress={() => router.push('/(tabs)/settings/edit-diet')}
+          />
+          <SettingsNavRow
+            icon={ChefHat}
+            iconBg="rgba(255,107,53,0.12)"
+            iconColor={colors.primary}
+            label="Kitchen styles"
+            value={cuisineSummary}
+            onPress={() => router.push('/(tabs)/settings/edit-kitchen-styles')}
+            isLast
+          />
+        </SettingsCard>
 
         <SettingsGroupLabel label="Region" />
         <ScrollView
@@ -189,16 +205,6 @@ export default function EditPreferencesScreen() {
             );
           })}
         </ScrollView>
-
-        <SettingsGroupLabel label="Kitchen styles" />
-        <Text style={[styles.sectionHint, { color: themeColors.muted }]}>
-          Pick one or more — regional & special collections, same as onboarding
-        </Text>
-        <CuisinePreferenceList
-          selected={draftCuisines}
-          onToggle={toggleCuisine}
-          variant={prefVariant}
-        />
 
         <SettingsGroupLabel label="Household" />
         <Text style={[styles.sectionHint, { color: themeColors.muted }]}>
@@ -230,8 +236,9 @@ export default function EditPreferencesScreen() {
 
         <SettingsGroupLabel label="Allergies & intolerances" />
         <Text style={[styles.sectionHint, { color: themeColors.muted }]}>
-          Recipes with these ingredients will be hidden. Always read the full ingredient list —
-          not a substitute for medical advice.
+          {planLimits.allergyFilter
+            ? 'Recipes with these ingredients will be hidden. Always read the full ingredient list — not a substitute for medical advice.'
+            : 'Allergy filtering is a Rasoi Plus feature. Upgrade to hide recipes with ingredients you avoid.'}
         </Text>
         <ScrollView horizontal {...scrollIndicator} contentContainerStyle={styles.chipRow}>
           {COMMON_ALLERGY_OPTIONS.map((item) => {
@@ -241,6 +248,10 @@ export default function EditPreferencesScreen() {
                 key={item}
                 onPress={() => {
                   void Haptics.selectionAsync();
+                  if (!planLimits.allergyFilter) {
+                    showAllergyFilterUpsell();
+                    return;
+                  }
                   setDraftAllergies((current) =>
                     active ? current.filter((entry) => entry !== item) : [...current, item],
                   );

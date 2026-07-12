@@ -5,6 +5,7 @@ import type {
   CuisineId,
   DietChoice,
   DietType,
+  Gender,
   RecipeDifficulty,
   RecipeIngredient,
   RecipeResponse,
@@ -14,9 +15,8 @@ import type {
   UserProfileResponse,
 } from '@/lib/types';
 import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
+import { parseMainIngredients } from '@/lib/recipe-main-ingredients';
 import { buildRecipeDescription, buildRecipeDescriptionHi } from '@/lib/recipe-description';
-import { buildDetailedStepsHi } from '@/lib/recipe-content-hi';
-import { resolveStepsForRecipe } from '@/lib/recipe-steps';
 
 export function parseJson<T>(value: string, fallback: T): T {
   try {
@@ -32,7 +32,8 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
     kitchenStyleIds.length > 0 ? kitchenStyleIds : [recipe.kitchenStyleId];
 
   const ingredients = normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, []));
-  const steps = resolveStepsForRecipe(recipe);
+  const mainIngredients = parseMainIngredients(recipe.main_ingredients);
+  const steps = parseJson<string[]>(recipe.steps ?? '[]', []);
   const storedStepsHi = parseJson<string[]>(recipe.stepsHi ?? '[]', []);
   const storedDescHi = recipe.descriptionHi?.trim() ?? '';
 
@@ -70,18 +71,9 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
     imageUrl: recipe.imageUrl,
     tags: parseJson<RecipeTag[]>(recipe.tags, []),
     ingredients,
+    mainIngredients: mainIngredients.length > 0 ? mainIngredients : undefined,
     steps,
-    stepsHi:
-      storedStepsHi.length > 0 ? storedStepsHi : buildDetailedStepsHi({
-        title: recipe.title,
-        kitchenStyleId: recipe.kitchenStyleId,
-        dietType: recipe.dietType,
-        ingredients,
-        prepTime: recipe.prepTime,
-        difficulty: recipe.difficulty,
-        description: recipe.description,
-        steps,
-      }),
+    stepsHi: storedStepsHi.length > 0 ? storedStepsHi : undefined,
     published: recipe.published,
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
@@ -116,6 +108,7 @@ export function serializeUser(user: User): UserProfileResponse {
     email: user.email,
     phone: user.phone,
     name: user.name,
+    gender: (user.gender as Gender | null) ?? null,
     isGuest: user.isGuest,
     isActive: user.isActive ?? true,
     hasCompletedOnboarding: user.hasCompletedOnboarding,

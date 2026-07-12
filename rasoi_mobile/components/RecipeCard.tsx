@@ -10,6 +10,7 @@ import RecipeVisualBadge, {
   RecipeTagChips,
 } from "@/components/RecipeVisualBadge";
 import { useAppContext } from "@/context/AppContext";
+import { useSaveRecipeGate } from "@/hooks/useSaveRecipeGate";
 import { useTheme } from "@/context/ThemeContext";
 import { colors, radius, shadows, spacing } from "@/constants/theme";
 import { Recipe } from "@/data/mockRecipes";
@@ -55,12 +56,13 @@ export default function RecipeCard({
     variant ?? (compact ? "tonight" : "list");
   const router = useRouter();
   const { colors: themeColors, isDark } = useTheme();
-  const { pantryIngredients, isRecipeSaved, toggleSavedRecipe } =
-    useAppContext();
+  const { pantryIngredients, isRecipeSaved, isRecipeOffline } = useAppContext();
+  const { trySaveRecipe } = useSaveRecipeGate();
   const matchPercent =
     pantryMatchPercent ?? getPantryMatchPercent(recipe, pantryIngredients);
   const { missing } = partitionIngredients(recipe, pantryIngredients);
   const saved = isRecipeSaved(recipe.id);
+  const offlineReady = isRecipeOffline(recipe.id);
   const isTonight = resolvedVariant === "tonight";
   const visual = getRecipeVisualIdentity(recipe);
   const recipeHasPhoto = hasRecipeImage(recipe);
@@ -78,7 +80,7 @@ export default function RecipeCard({
 
   const handleSavePress = () => {
     void Haptics.selectionAsync();
-    toggleSavedRecipe(recipe.id);
+    trySaveRecipe(recipe.id);
   };
 
   const handleShopPress = (partner?: AffiliatePartner) => {
@@ -208,6 +210,7 @@ export default function RecipeCard({
 
             <Text style={[styles.tonightMeta, { color: themeColors.muted }]}>
               {recipe.prepTime} min · {matchPercent}% pantry · {recipe.dietType}
+              {offlineReady ? ' · Offline' : ''}
             </Text>
 
             <RecipeTagChips recipe={recipe} />
@@ -278,6 +281,7 @@ export default function RecipeCard({
           <View style={styles.listMetaRow}>
             <Text style={[styles.listMeta, { color: themeColors.muted }]}>
               {recipe.prepTime} min · {recipe.dietType}
+              {offlineReady ? ' · Offline' : ''}
             </Text>
             <View
               style={[

@@ -8,6 +8,7 @@ export type User = {
   email: string | null;
   phone: string | null;
   name: string;
+  gender: string | null;
   isGuest: boolean;
   role: UserRole;
   isActive: boolean;
@@ -111,6 +112,7 @@ export type Recipe = {
   imageUrl: string;
   tags: string;
   ingredients: string;
+  main_ingredients?: string | null;
   steps: string | null;
   stepsHi?: string | null;
   primaryIngredient: string | null;

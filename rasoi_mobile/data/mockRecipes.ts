@@ -26,6 +26,7 @@ export interface Recipe {
   imageUrl: string;
   tags: Array<'under20' | 'leftover' | 'kids' | 'quick' | 'festive'>;
   ingredients: RecipeIngredient[];
+  mainIngredients?: string[];
   steps?: string[];
   stepsHi?: string[];
 }

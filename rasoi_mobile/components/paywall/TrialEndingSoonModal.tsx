@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PaywallBenefitsStrip from '@/components/paywall/PaywallBenefitsStrip';
 import PaywallActions from '@/components/paywall/PaywallActions';
 import SmoothModal from '@/components/ui/SmoothModal';
-import { type BillingInterval } from '@/constants/plans';
+import { type BillingInterval, PAYWALL_PLUS_SUCCESS_MESSAGE } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
@@ -123,7 +123,7 @@ export default function TrialEndingSoonModal() {
     await refreshPlan();
     showDialog({
       title: 'Welcome to Rasoi Plus',
-      message: 'Ads removed and all partners unlocked.',
+      message: PAYWALL_PLUS_SUCCESS_MESSAGE,
       buttons: [{ text: 'Great', onPress: closeModal }],
     });
     closeModal();

@@ -5,6 +5,7 @@ import { Bookmark, BookOpen, CalendarDays, ChefHat, Refrigerator, Settings } fro
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PantryNudgeBridge from '@/components/pantry/PantryNudgeBridge';
+import TabIdleWarmup from '@/components/TabIdleWarmup';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
@@ -40,6 +41,7 @@ export default function TabLayout() {
       headerShown: false,
       lazy: true,
       freezeOnBlur: false,
+      detachInactiveScreens: true,
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.muted,
       tabBarStyle: {
@@ -85,6 +87,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
+          lazy: false,
           tabBarButtonTestID: testIds.tabHome,
           tabBarIcon: ({ color, size }) => <ChefHat color={color} size={size - 2} />,
         }}
@@ -93,6 +96,7 @@ export default function TabLayout() {
         name="recipes"
         options={{
           title: 'Recipes',
+          lazy: false,
           tabBarButtonTestID: testIds.tabRecipes,
           tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size - 2} />,
         }}
@@ -101,6 +105,7 @@ export default function TabLayout() {
         name="plan"
         options={{
           title: 'Plan',
+          lazy: false,
           tabBarButtonTestID: testIds.tabPlan,
           tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size - 2} />,
         }}
@@ -131,6 +136,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+      <TabIdleWarmup />
       <PantryNudgeBridge />
     </>
   );

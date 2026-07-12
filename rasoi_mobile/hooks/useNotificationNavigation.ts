@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { Platform } from 'react-native';
 
 import { useAppContext } from '@/context/AppContext';
+import { useSaveRecipeGate } from '@/hooks/useSaveRecipeGate';
 import {
   getLastNotificationResponse,
   getNavigationFromNotificationResponse,
@@ -20,9 +21,9 @@ export function useNotificationNavigation(): void {
     hasCompletedOnboarding,
     isLoggedIn,
     pendingTrialWelcome,
-    toggleSavedRecipe,
     isRecipeSaved,
   } = useAppContext();
+  const { trySaveRecipe } = useSaveRecipeGate();
 
   const appReady =
     isHydrated && hasCompletedOnboarding && isLoggedIn && !pendingTrialWelcome;
@@ -40,12 +41,12 @@ export function useNotificationNavigation(): void {
       }
 
       if (target.save && !isRecipeSaved(target.recipeId)) {
-        toggleSavedRecipe(target.recipeId);
+        trySaveRecipe(target.recipeId);
       }
 
       router.push(target.cook ? `/recipe/${target.recipeId}?cook=1` : `/recipe/${target.recipeId}`);
     },
-    [router, toggleSavedRecipe, isRecipeSaved],
+    [router, trySaveRecipe, isRecipeSaved],
   );
 
   const handleResponse = useCallback(

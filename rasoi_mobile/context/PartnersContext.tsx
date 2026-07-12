@@ -31,6 +31,7 @@ import {
   PHONE_REQUIRED_FOR_DELIVERY_MESSAGE,
 } from '@/utils/phoneGate';
 import { openPartnerUrls } from '@/utils/openPartnerUrl';
+import { partnerCheckoutLimitCopy } from '@/utils/planLimitCopy';
 import { PAYWALL_HREF } from '@/utils/routes';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
@@ -171,10 +172,10 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
 
   const ensurePartnerAccess = useCallback(() => {
     if (partnerAccess.canCheckout) return true;
+    const copy = partnerCheckoutLimitCopy();
     showDialog({
-      title: 'Partner checkout limit reached',
-      message:
-        'You have used your 2 free partner shops for this month. Upgrade to Rasoi Plus for unlimited grocery and delivery checkout.',
+      title: copy.title,
+      message: copy.message,
       buttons: [
         { text: 'Not now', style: 'cancel' },
         { text: 'View plans', onPress: () => router.push(PAYWALL_HREF) },

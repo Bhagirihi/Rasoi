@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,7 +12,7 @@ import PaywallBenefitsStrip from '@/components/paywall/PaywallBenefitsStrip';
 import PaywallCompareTable from '@/components/paywall/PaywallCompareTable';
 import PaywallPricingSection from '@/components/paywall/PaywallPricingSection';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
-import { PLAN_LABELS, TRIAL_DURATION_DAYS, type BillingInterval } from '@/constants/plans';
+import { PLAN_LABELS, PAYWALL_HERO_SUB, PAYWALL_HERO_TITLE, PAYWALL_PLUS_SUCCESS_MESSAGE, PAYWALL_TRIAL_STARTED_MESSAGE, TRIAL_DURATION_DAYS, type BillingInterval } from '@/constants/plans';
 import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
@@ -20,9 +20,12 @@ import { usePaywall } from '@/hooks/usePaywall';
 import { useRevenueCatPricing } from '@/hooks/useRevenueCatPricing';
 import { getEffectivePaymentProviderId } from '@/constants/payments';
 import { useTrialClock } from '@/hooks/useTrialClock';
+import { isQaMonetizationPreview } from '@/constants/qaMonetization';
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const { qa } = useLocalSearchParams<{ qa?: string }>();
+  const qaPreview = isQaMonetizationPreview(qa);
   const insets = useSafeAreaInsets();
   const {
     effectiveTier,
@@ -43,10 +46,10 @@ export default function PaywallScreen() {
   const { showDialog } = useAppDialog();
 
   useEffect(() => {
-    if (!showPaywall) {
+    if (!showPaywall && !qaPreview) {
       router.back();
     }
-  }, [router, showPaywall]);
+  }, [router, showPaywall, qaPreview]);
 
   const paywall = usePaywall({ upgradeToPaid, restorePurchases });
   const { pricing, storeReady } = useRevenueCatPricing(
@@ -59,7 +62,7 @@ export default function PaywallScreen() {
     await refreshPlan();
     showDialog({
       title: 'Trial started',
-      message: `Enjoy partner checkout for ${TRIAL_DURATION_DAYS} days. Subscribe anytime to keep access ad-free.`,
+      message: PAYWALL_TRIAL_STARTED_MESSAGE(TRIAL_DURATION_DAYS),
     });
   };
 
@@ -74,7 +77,7 @@ export default function PaywallScreen() {
     }
     showDialog({
       title: 'Welcome to Rasoi Plus',
-      message: 'Ads removed and all partners unlocked.',
+      message: PAYWALL_PLUS_SUCCESS_MESSAGE,
       buttons: [{ text: 'Great', onPress: () => router.back() }],
     });
   };
@@ -109,7 +112,7 @@ export default function PaywallScreen() {
         visible={paywall.isBusy}
         steps={[
           { message: 'Processing payment…', subtitle: 'Connecting to the store' },
-          { message: 'Activating Rasoi Plus…', subtitle: 'Unlocking partners and removing ads' },
+          { message: 'Activating Rasoi Plus…', subtitle: 'Unlocking meal plan, saves & partners' },
         ]}
       />
 
@@ -128,10 +131,8 @@ export default function PaywallScreen() {
       >
         <LinearGradient colors={['#FF6B35', '#FF9933']} style={styles.hero}>
           <Crown size={26} color={colors.white} />
-          <Text style={styles.heroTitle}>Cook without limits</Text>
-          <Text style={styles.heroSub}>
-            Partners, no ads, and checkout from your favourite apps.
-          </Text>
+          <Text style={styles.heroTitle}>{PAYWALL_HERO_TITLE}</Text>
+          <Text style={styles.heroSub}>{PAYWALL_HERO_SUB}</Text>
         </LinearGradient>
 
         <View style={styles.statusStrip}>

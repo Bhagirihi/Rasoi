@@ -94,7 +94,10 @@ export function getRevenueCatApiKey(platform: 'ios' | 'android' | 'web'): string
   return platform === 'ios' ? REVENUECAT_API_KEY_IOS : REVENUECAT_API_KEY_ANDROID;
 }
 
-export type PaywallCompareCell = boolean | 'limited';
+export type PaywallCompareCell = boolean | string;
+
+export const PAYWALL_COMPARE_FOOTNOTE =
+  'Free after trial: 2 partner shops/month · today-only plan · 10 saves · 1 home shuffle/day · dinner reminder. Trial: full 3-day plan, unlimited partners & 5 offline downloads for 15 days.';
 
 export const PAYWALL_COMPARE_ROWS: ReadonlyArray<{
   label: string;
@@ -103,6 +106,19 @@ export const PAYWALL_COMPARE_ROWS: ReadonlyArray<{
   paid: PaywallCompareCell;
 }> = [
   { label: 'Recipes & pantry', free: true, trial: true, paid: true },
-  { label: 'AdMob ads', free: true, trial: true, paid: false },
-  { label: 'Partner grocery & delivery checkout', free: 'limited', trial: true, paid: true },
+  { label: 'Ads', free: true, trial: true, paid: false },
+  {
+    label: 'Partner checkout',
+    free: '2/mo',
+    trial: 'Unlimited',
+    paid: true,
+  },
+  { label: 'Home picks', free: '2', trial: '4', paid: '4 + shuffle' },
+  { label: 'Home & plan shuffle', free: '1/day · plan locked', trial: '3/day', paid: 'Unlimited' },
+  { label: '3-day meal plan', free: 'Today only', trial: true, paid: true },
+  { label: 'Saved recipes', free: '10', trial: '25', paid: 'Unlimited' },
+  { label: 'Offline downloads', free: false, trial: '5', paid: '30' },
+  { label: 'Meal reminders', free: 'Dinner', trial: '2 slots', paid: 'All slots' },
+  { label: 'Allergy filter', free: false, trial: false, paid: true },
+  { label: 'Seasonal & smart rails', free: false, trial: 'Basic', paid: 'Full' },
 ];

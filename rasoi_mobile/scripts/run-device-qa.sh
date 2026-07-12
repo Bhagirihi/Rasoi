@@ -58,7 +58,7 @@ case "$SUITE" in
   auth)
     unset QA_OTP
     export QA_NAME="${QA_NAME:-QA Tester}"
-    export QA_PHONE="${QA_PHONE:-9820174653}"
+    export QA_PHONE="${QA_PHONE:-9374766500}"
     export QA_EMAIL="${QA_EMAIL:-dvesp1901+$(date +%s)@gmail.com}"
     run_flow e2e/maestro/01-register-send-otp.yaml
     unset QA_OTP

@@ -10,6 +10,7 @@ import {
   saveCachedRecipePage,
 } from '@/utils/recipeCatalogCache';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
+import { parseMainIngredients } from '@/utils/recipeMainIngredients';
 import {
   RECIPE_PAGE_SIZE,
   type PaginatedItems,
@@ -31,6 +32,7 @@ type DbRecipeRow = {
   imageUrl: string;
   tags: string;
   ingredients: string;
+  main_ingredients?: string | null;
   steps?: string | null;
   stepsHi?: string | null;
   published: boolean;
@@ -38,7 +40,7 @@ type DbRecipeRow = {
 
 /** List/bootstrap columns — omit steps + admin scores to shrink Supabase egress per page. */
 const RECIPE_LIST_COLUMNS =
-  'id, title, prepTime, calories, region, kitchenStyleId, kitchenStyleIds, dietType, difficulty, description, imageUrl, tags, ingredients, published';
+  'id, title, prepTime, calories, region, kitchenStyleId, kitchenStyleIds, dietType, difficulty, description, imageUrl, tags, ingredients, main_ingredients, published';
 
 export type RecipeFetchFilters = {
   region?: string;
@@ -53,6 +55,7 @@ function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean })
     kitchenStyleIds.length > 0 ? kitchenStyleIds : [recipe.kitchenStyleId as CuisineId];
 
   const normalizedIngredients = normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, []));
+  const mainIngredients = parseMainIngredients(recipe.main_ingredients);
   const dbSteps = parseJson<string[]>(recipe.steps ?? null, []);
   const dbStepsHi = parseJson<string[]>(recipe.stepsHi ?? null, []);
 
@@ -71,6 +74,7 @@ function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean })
     imageUrl: recipe.imageUrl,
     tags: parseJson<Recipe['tags']>(recipe.tags, []),
     ingredients: normalizedIngredients,
+    mainIngredients: mainIngredients.length > 0 ? mainIngredients : undefined,
     steps: options?.includeSteps ? dbSteps : undefined,
     stepsHi: options?.includeSteps && dbStepsHi.length > 0 ? dbStepsHi : undefined,
   };
@@ -203,6 +207,7 @@ type ApiRecipe = {
   imageUrl: string;
   tags: Recipe['tags'];
   ingredients: Recipe['ingredients'];
+  mainIngredients?: string[];
   steps?: string[];
   stepsHi?: string[];
   published: boolean;
@@ -236,6 +241,7 @@ function mapApiRecipe(recipe: ApiRecipe): Recipe {
     imageUrl: recipe.imageUrl,
     tags: recipe.tags ?? [],
     ingredients: normalizeRecipeIngredients(recipe.ingredients),
+    mainIngredients: recipe.mainIngredients,
     steps: recipe.steps,
     stepsHi: recipe.stepsHi,
   };

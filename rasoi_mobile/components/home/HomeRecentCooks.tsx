@@ -11,18 +11,19 @@ import { useAppContext } from '@/context/AppContext';
 
 export default function HomeRecentCooks() {
   const router = useRouter();
-  const { isLoggedIn } = useAppContext();
+  const { isLoggedIn, planLimits } = useAppContext();
   const [items, setItems] = useState<Recipe[]>([]);
+  const limit = planLimits.recentCooksLimit;
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn || limit <= 0) {
       setItems([]);
       return;
     }
-    void fetchRecentCooks(8)
+    void fetchRecentCooks(limit)
       .then((rows) => setItems(rows.map((row) => row.recipe)))
       .catch(() => setItems([]));
-  }, [isLoggedIn]);
+  }, [isLoggedIn, limit]);
 
   if (items.length === 0) return null;
 

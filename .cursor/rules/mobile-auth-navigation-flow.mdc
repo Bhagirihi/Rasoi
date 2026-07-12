@@ -10,13 +10,14 @@ alwaysApply: false
 
 ## Register path (new account)
 
-`Register (details + diet & kitchen styles)` → `Phone OTP (Firebase SMS)` → `Email OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` (notifications + location; diet/cuisines skipped if collected on Register) → `Pantry` → optional `Trial welcome` → `Dashboard (tabs)`
+`Register (contact details + gender)` → `Diet` → `Kitchen styles` → `Email OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` (notifications + location; diet/cuisines skipped if collected on Register) → `Pantry` → optional `Trial welcome` → `Dashboard (tabs)`
 
 Onboarding sub-steps (fixed order):
 
-1. Food preferences (diet + cuisines) — **skipped when already chosen on Register**
-2. Notifications permission
-3. Location permission
+1. Diet
+2. Kitchen styles — **skipped when already chosen on Register**
+3. Notifications permission
+4. Location permission
 
 Implementation anchors: `register.tsx` (OTP → legal-consent), `legal-consent.tsx`, `onboarding.tsx`, `authNavigation.ts` (`pendingPantrySetup` → pantry), `trial-welcome.tsx`.
 

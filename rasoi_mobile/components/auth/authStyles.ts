@@ -37,6 +37,14 @@ export const authStyles = StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
   },
+  stepEyebrow: {
+    marginTop: 12,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: colors.muted,
+  },
   title: {
     marginTop: 8,
     fontSize: 30,

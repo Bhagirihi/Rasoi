@@ -75,30 +75,67 @@ export async function trySignInAnonymously(): Promise<Session | null> {
   }
 }
 
-type OtpVerifyType = 'signup' | 'email' | 'email_change';
+type OtpVerifyType = 'email' | 'email_change';
 
+const OTP_TYPE_STORAGE_PREFIX = '@rasoi/otp_verify_type/';
 const otpTypeByKey = new Map<string, OtpVerifyType>();
 
 function otpCacheKey(email: string, flow: OtpFlow): string {
   return `${flow}:${email.trim().toLowerCase()}`;
 }
 
-function rememberOtpType(email: string, flow: OtpFlow, type: OtpVerifyType): void {
-  otpTypeByKey.set(otpCacheKey(email, flow), type);
+async function rememberOtpType(email: string, flow: OtpFlow, type: OtpVerifyType): Promise<void> {
+  const key = otpCacheKey(email, flow);
+  otpTypeByKey.set(key, type);
+  try {
+    await AsyncStorage.setItem(`${OTP_TYPE_STORAGE_PREFIX}${key}`, type);
+  } catch {
+    // Non-fatal — in-memory cache still works for the current session.
+  }
 }
 
-function getRememberedOtpType(email: string, flow: OtpFlow): OtpVerifyType | undefined {
-  return otpTypeByKey.get(otpCacheKey(email, flow));
+async function getRememberedOtpType(email: string, flow: OtpFlow): Promise<OtpVerifyType | undefined> {
+  const key = otpCacheKey(email, flow);
+  const cached = otpTypeByKey.get(key);
+  if (cached) return cached;
+
+  try {
+    const stored = await AsyncStorage.getItem(`${OTP_TYPE_STORAGE_PREFIX}${key}`);
+    if (stored === 'email' || stored === 'email_change') {
+      otpTypeByKey.set(key, stored);
+      return stored;
+    }
+  } catch {
+    // Fall back to flow default below.
+  }
+
+  return undefined;
 }
 
-function clearRememberedOtpType(email: string, flow: OtpFlow): void {
-  otpTypeByKey.delete(otpCacheKey(email, flow));
+async function clearRememberedOtpType(email: string, flow: OtpFlow): Promise<void> {
+  const key = otpCacheKey(email, flow);
+  otpTypeByKey.delete(key);
+  try {
+    await AsyncStorage.removeItem(`${OTP_TYPE_STORAGE_PREFIX}${key}`);
+  } catch {
+    // Non-fatal.
+  }
 }
 
-function defaultOtpTypes(flow: OtpFlow): readonly OtpVerifyType[] {
-  if (flow === 'guest_upgrade') return ['email_change', 'email', 'signup'];
-  if (flow === 'signup') return ['signup', 'email'];
-  return ['email', 'signup'];
+/** signInWithOtp codes always verify with `email`; guest email updates use `email_change`. */
+function defaultOtpType(flow: OtpFlow): OtpVerifyType {
+  return flow === 'guest_upgrade' ? 'email_change' : 'email';
+}
+
+function mapVerifyOtpError(error: AuthError): Error {
+  const lower = error.message.toLowerCase();
+  if (lower.includes('expired') && !lower.includes('invalid')) {
+    return new Error('Code expired. Tap Resend code and try again.');
+  }
+  if (lower.includes('expired') || lower.includes('invalid')) {
+    return new Error('Invalid verification code. Check the latest email and try again.');
+  }
+  return new Error(error.message || 'Invalid verification code. Please try again.');
 }
 
 async function getActiveSession(): Promise<Session | null> {
@@ -182,7 +219,7 @@ export async function sendEmailOtp(name: string, phone: string, email: string): 
     }
 
     authLog('sendEmailOtp:guest_upgrade_success', { email: maskEmail(normalizedEmail) });
-    rememberOtpType(normalizedEmail, 'guest_upgrade', 'email_change');
+    await rememberOtpType(normalizedEmail, 'guest_upgrade', 'email_change');
     return;
   }
 
@@ -216,7 +253,7 @@ export async function sendEmailOtp(name: string, phone: string, email: string): 
     email: maskEmail(normalizedEmail),
     hasSession: Boolean(data.session),
   });
-  rememberOtpType(normalizedEmail, 'signup', 'signup');
+  await rememberOtpType(normalizedEmail, 'signup', 'email');
 }
 
 export async function sendLoginEmailOtp(email: string): Promise<void> {
@@ -248,12 +285,7 @@ export async function sendLoginEmailOtp(email: string): Promise<void> {
   }
 
   authLog('sendLoginEmailOtp:success', { email: maskEmail(normalizedEmail) });
-  rememberOtpType(normalizedEmail, 'login', 'email');
-}
-
-function isOtpTypeMismatch(error: { message?: string } | null): boolean {
-  const lower = error?.message?.toLowerCase() ?? '';
-  return lower.includes('token') || lower.includes('otp') || lower.includes('type');
+  await rememberOtpType(normalizedEmail, 'login', 'email');
 }
 
 export async function verifyEmailOtp(
@@ -275,43 +307,27 @@ export async function verifyEmailOtp(
   }
 
   const supabase = requireSupabaseClient();
-  const remembered = getRememberedOtpType(normalizedEmail, flow);
-  const otpTypes = remembered
-    ? ([remembered, ...defaultOtpTypes(flow).filter((type) => type !== remembered)] as const)
-    : defaultOtpTypes(flow);
+  const remembered = await getRememberedOtpType(normalizedEmail, flow);
+  const type = remembered ?? defaultOtpType(flow);
 
-  let data: Awaited<ReturnType<typeof supabase.auth.verifyOtp>>['data'] | null = null;
-  let error: Awaited<ReturnType<typeof supabase.auth.verifyOtp>>['error'] | null = null;
-
-  for (const type of otpTypes) {
-    const attempt = await supabase.auth.verifyOtp({
-      email: normalizedEmail,
-      token,
-      type,
-    });
-    if (!attempt.error) {
-      data = attempt.data;
-      error = null;
-      authLog('verifyEmailOtp:type', { type, remembered: Boolean(remembered) });
-      break;
-    }
-    error = attempt.error;
-    if (!isOtpTypeMismatch(attempt.error)) {
-      break;
-    }
-  }
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: normalizedEmail,
+    token,
+    type,
+  });
 
   if (error) {
     authError('verifyEmailOtp:supabase_error', error, {
       email: maskEmail(normalizedEmail),
       status: error.status,
       code: error.code,
+      type,
+      remembered: Boolean(remembered),
     });
-    if (error.message.toLowerCase().includes('expired')) {
-      throw new Error('Code expired. Tap Resend code and try again.');
-    }
-    throw new Error(error.message || 'Invalid verification code. Please try again.');
+    throw mapVerifyOtpError(error);
   }
+
+  authLog('verifyEmailOtp:type', { type, remembered: Boolean(remembered) });
 
   const session = data?.session;
   if (!session?.access_token) {
@@ -322,7 +338,7 @@ export async function verifyEmailOtp(
   }
 
   setSupabaseSessionCache(session);
-  clearRememberedOtpType(normalizedEmail, flow);
+  await clearRememberedOtpType(normalizedEmail, flow);
 
   authLog('verifyEmailOtp:success', {
     email: maskEmail(normalizedEmail),

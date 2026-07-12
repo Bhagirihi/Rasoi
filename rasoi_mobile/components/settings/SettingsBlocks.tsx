@@ -87,6 +87,8 @@ export function KitchenPrefsCard({
   cuisineLabels,
   notificationsEnabled,
   onEdit,
+  onEditDiet,
+  onEditKitchen,
   onNotificationsChange,
 }: {
   dietLabel: string;
@@ -97,9 +99,13 @@ export function KitchenPrefsCard({
   cuisineLabels: string[];
   notificationsEnabled: boolean;
   onEdit: () => void;
+  onEditDiet?: () => void;
+  onEditKitchen?: () => void;
   onNotificationsChange: (next: boolean) => void;
 }) {
   const { colors: themeColors } = useTheme();
+  const openDiet = onEditDiet ?? onEdit;
+  const openKitchen = onEditKitchen ?? onEdit;
 
   return (
     <View
@@ -108,7 +114,7 @@ export function KitchenPrefsCard({
         { backgroundColor: themeColors.white, borderColor: themeColors.border },
       ]}
     >
-      <Pressable onPress={onEdit} style={({ pressed }) => [pressed && styles.rowPressed]}>
+      <Pressable onPress={openDiet} style={({ pressed }) => [pressed && styles.rowPressed]}>
         <View style={styles.kitchenTop}>
           <View style={[styles.kitchenDietBadge, { backgroundColor: dietBg }]}>
             <DietIcon size={16} color={dietTint} />
@@ -123,7 +129,9 @@ export function KitchenPrefsCard({
             <Text style={[styles.kitchenRegionText, { color: themeColors.charcoal }]}>{region}</Text>
           </View>
         </View>
+      </Pressable>
 
+      <Pressable onPress={openKitchen} style={({ pressed }) => [pressed && styles.rowPressed]}>
         <Text style={[styles.kitchenCuisineTitle, { color: themeColors.muted }]}>Kitchen styles</Text>
         <View style={styles.kitchenChipWrap}>
           {cuisineLabels.length > 0 ? (

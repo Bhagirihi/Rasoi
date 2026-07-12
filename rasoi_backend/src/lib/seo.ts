@@ -10,6 +10,7 @@ import {
   RECIPE_LIBRARY_LABEL,
 } from '@/lib/app-download';
 import { LEGAL_CONTACT_EMAIL } from '@/lib/legal-content';
+import { TRIAL_DURATION_DAYS } from '@/lib/plan-pricing';
 import {
   getAllMarkets,
   getMarketConfig,
@@ -206,7 +207,7 @@ export const FAQ_ITEMS = [
   {
     question: 'Is Rasoi free to download?',
     answer:
-      `Yes. ${APP_NAME} is free on Google Play at rasoiapplication.in${PLAY_STORE_SEO_PATH} or rasoiapplication.in/download. Rasoi Plus adds partner checkout (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a 3-day trial.`,
+      `Yes. ${APP_NAME} is free on Google Play at rasoiapplication.in${PLAY_STORE_SEO_PATH} or rasoiapplication.in/download. Rasoi Plus adds partner checkout (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a ${TRIAL_DURATION_DAYS}-day trial.`,
   },
   {
     question: 'Which Indian cuisines does Rasoi support?',

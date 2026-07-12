@@ -1,0 +1,10 @@
+{
+  "total_recipes": 8052,
+  "missing_main_ingredients": 61,
+  "missing_english_steps": 7765,
+  "missing_hindi_steps": 6203,
+  "missing_both_steps": 6203,
+  "missing_en_only_has_hi": 1562,
+  "missing_hi_only_has_en": 0,
+  "has_both_steps": 287
+}

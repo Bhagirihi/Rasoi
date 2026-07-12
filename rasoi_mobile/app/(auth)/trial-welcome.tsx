@@ -1,4 +1,4 @@
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,9 +8,12 @@ import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import { colors, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useAppContext } from '@/context/AppContext';
+import { isQaMonetizationPreview } from '@/constants/qaMonetization';
 
 export default function TrialWelcomeScreen() {
   const router = useRouter();
+  const { qa } = useLocalSearchParams<{ qa?: string }>();
+  const qaPreview = isQaMonetizationPreview(qa);
   const {
     isHydrated,
     isLoggedIn,
@@ -39,7 +42,7 @@ export default function TrialWelcomeScreen() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (!pendingTrialWelcome) {
+  if (!pendingTrialWelcome && !qaPreview) {
     return <Redirect href="/(tabs)" />;
   }
 
@@ -59,12 +62,20 @@ export default function TrialWelcomeScreen() {
         <TrialWelcomeContent
           trialStarted={trialStarted}
           onContinueTrial={async () => {
+            if (qaPreview) {
+              router.back();
+              return;
+            }
             if (!trialStarted) {
               await startTrial();
             }
             finishWelcome();
           }}
           onSubscribe={async (interval) => {
+            if (qaPreview) {
+              router.back();
+              return;
+            }
             const result = await upgradeToPaid(interval);
             if (result.ok) {
               finishWelcome();

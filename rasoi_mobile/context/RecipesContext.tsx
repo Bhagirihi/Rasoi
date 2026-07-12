@@ -19,6 +19,7 @@ import {
 } from "@/services/recipes";
 import { RECIPE_PAGE_SIZE } from "@/types/pagination";
 import { formatUserFacingApiError, warmApiConnection } from "@/utils/api";
+import { getOfflineRecipe } from "@/utils/offlineRecipeStorage";
 import { useRasoiRealtimeTables } from "@/utils/realtime";
 
 type RecipesContextValue = {
@@ -252,7 +253,14 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
         mergeRecipe(recipe);
         return recipe;
       } catch {
-        return recipesRef.current.find((item) => item.id === id) ?? null;
+        const cached = recipesRef.current.find((item) => item.id === id);
+        if (cached) return cached;
+        const offline = await getOfflineRecipe(id);
+        if (offline) {
+          mergeRecipe(offline);
+          return offline;
+        }
+        return null;
       }
     },
     [mergeRecipe],

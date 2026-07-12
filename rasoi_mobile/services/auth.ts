@@ -1,5 +1,6 @@
 import type { AuthResponse, UserProfileResponse } from '@/types/api';
 import { CURRENT_TERMS_VERSION } from '@/constants/legalHighlights';
+import type { Gender } from '@/constants/genderOptions';
 import { apiFetch, formatUserFacingApiError, getApiBaseUrl } from '@/utils/api';
 import { authError, authLog } from '@/utils/authLogger';
 import { clearAuthToken, clearRasoiUserId, saveRasoiUserId } from '@/utils/authToken';
@@ -88,6 +89,7 @@ export async function syncSupabaseAccount(
     linkGuestUserId?: string;
     onboarding?: OnboardingPayload;
     phoneVerified?: boolean;
+    gender?: Gender;
   },
 ): Promise<AuthResponse> {
   authLog('syncSupabaseAccount:start', {
@@ -108,6 +110,7 @@ export async function syncSupabaseAccount(
         ...(options?.linkGuestUserId ? { linkGuestUserId: options.linkGuestUserId } : {}),
         ...(options?.onboarding ? { onboarding: options.onboarding } : {}),
         ...(options?.phoneVerified ? { phoneVerified: true as const } : {}),
+        ...(options?.gender ? { gender: options.gender } : {}),
       }, supabaseAccessToken);
 
       authLog('syncSupabaseAccount:edge_success', {
@@ -136,6 +139,7 @@ export async function syncSupabaseAccount(
           ...(options?.linkGuestUserId ? { linkGuestUserId: options.linkGuestUserId } : {}),
           ...(options?.onboarding ? { onboarding: options.onboarding } : {}),
           ...(options?.phoneVerified ? { phoneVerified: true } : {}),
+          ...(options?.gender ? { gender: options.gender } : {}),
         }),
       },
       { timeoutMs: 20_000 },

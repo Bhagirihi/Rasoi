@@ -1,6 +1,7 @@
 import { DietType, Recipe } from '@/data/mockRecipes';
 import { isJainSafeRecipe } from '@/utils/jainSafe';
 import { ingredientKey, pantryHasIngredient } from '@/utils/recipeIngredients';
+import { getRecipeMainIngredients } from '@/utils/recipeMainIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
 import { recipeContainsAllergen } from '@/utils/allergyFilter';
@@ -21,13 +22,9 @@ export type PantryMatchMode = 'any' | 'full';
 
 export function isRecipeFullyStocked(recipe: Recipe, pantryIngredients: string[]): boolean {
   if (pantryIngredients.length === 0) return false;
-  const matchable = recipe.ingredients.filter(
-    (ingredient) => ingredient.name?.trim() && !isPantryMatchExcluded(ingredient.name),
-  );
+  const matchable = getRecipeMainIngredients(recipe);
   if (matchable.length === 0) return true;
-  return matchable.every((ingredient) =>
-    pantryHasIngredient(pantryIngredients, ingredient.name),
-  );
+  return matchable.every((name) => pantryHasIngredient(pantryIngredients, name));
 }
 
 export function countFullyStockedRecipes(
@@ -153,10 +150,10 @@ export function filterRecipes(
       if (pantryMatchMode === 'full') {
         if (!isRecipeFullyStocked(recipe, pantryIngredients)) return false;
       } else {
-        const hasMatch = recipe.ingredients.some(
-          (ingredient) =>
-            !isPantryMatchExcluded(ingredient.name) &&
-            pantryHasIngredient(pantryIngredients, ingredient.name),
+        const hasMatch = getRecipeMainIngredients(recipe).some(
+          (name) =>
+            !isPantryMatchExcluded(name) &&
+            pantryHasIngredient(pantryIngredients, name),
         );
         if (!hasMatch) return false;
       }
@@ -173,15 +170,14 @@ export function partitionIngredients(
   const available: string[] = [];
   const missing: string[] = [];
 
-  recipe.ingredients.forEach((ingredient) => {
-    const name = ingredient.name?.trim();
-    if (!name || isPantryMatchExcluded(name)) return;
+  for (const name of getRecipeMainIngredients(recipe)) {
+    if (!name || isPantryMatchExcluded(name)) continue;
     if (pantryHasIngredient(pantryIngredients, name)) {
       available.push(name);
     } else {
       missing.push(name);
     }
-  });
+  }
 
   return { available, missing };
 }

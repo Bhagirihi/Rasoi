@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { Lock } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { appFonts } from '@/constants/fonts';
@@ -10,9 +11,17 @@ type PlanDayPickerProps = {
   days: PlanDayOption[];
   selectedOffset: PlanDayOffset;
   onSelect: (offset: PlanDayOffset) => void;
+  maxDayOffset?: number;
+  onLockedDay?: () => void;
 };
 
-export default function PlanDayPicker({ days, selectedOffset, onSelect }: PlanDayPickerProps) {
+export default function PlanDayPicker({
+  days,
+  selectedOffset,
+  onSelect,
+  maxDayOffset = 2,
+  onLockedDay,
+}: PlanDayPickerProps) {
   const { colors: themeColors, isDark } = useTheme();
 
   return (
@@ -28,11 +37,16 @@ export default function PlanDayPicker({ days, selectedOffset, onSelect }: PlanDa
     >
       {days.map((day) => {
         const active = day.offset === selectedOffset;
+        const locked = day.offset > maxDayOffset;
         return (
           <Pressable
             key={day.offset}
             onPress={() => {
               void Haptics.selectionAsync();
+              if (locked) {
+                onLockedDay?.();
+                return;
+              }
               onSelect(day.offset);
             }}
             accessibilityRole="button"
@@ -50,21 +64,24 @@ export default function PlanDayPicker({ days, selectedOffset, onSelect }: PlanDa
             <Text
               style={[
                 styles.label,
-                { color: active ? colors.primary : themeColors.charcoal },
+                { color: active ? colors.primary : locked ? themeColors.muted : themeColors.charcoal },
               ]}
               numberOfLines={1}
             >
               {day.segmentLabel}
             </Text>
-            <Text
-              style={[
-                styles.caption,
-                { color: active ? colors.primary : themeColors.muted },
-              ]}
-              numberOfLines={1}
-            >
-              {day.caption}
-            </Text>
+            <View style={styles.captionRow}>
+              <Text
+                style={[
+                  styles.caption,
+                  { color: active ? colors.primary : themeColors.muted },
+                ]}
+                numberOfLines={1}
+              >
+                {locked ? "Rasoi Plus" : day.caption}
+              </Text>
+              {locked ? <Lock size={11} color={themeColors.muted} /> : null}
+            </View>
           </Pressable>
         );
       })}
@@ -106,5 +123,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
     textAlign: 'center',
+  },
+  captionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });

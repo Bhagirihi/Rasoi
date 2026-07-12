@@ -3,6 +3,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import {
   Bookmark,
   ChevronRight,
+  Download,
   Info,
   Leaf,
   Sparkles,
@@ -16,6 +17,9 @@ import { appFonts } from "@/constants/fonts";
 import { colors, radius, shadows, spacing } from "@/constants/theme";
 import type { Recipe } from "@/data/mockRecipes";
 import { useAppContext } from "@/context/AppContext";
+import { useRecipes } from "@/context/RecipesContext";
+import { useSaveRecipeGate } from "@/hooks/useSaveRecipeGate";
+import { useOfflineRecipeGate } from "@/hooks/useOfflineRecipeGate";
 import { useAppDialog } from "@/context/AppDialogContext";
 import { useTheme } from "@/context/ThemeContext";
 import type { AffiliatePartner } from "@/utils/affiliate";
@@ -62,17 +66,20 @@ export default function HomePickCard({
   onNotInterested,
 }: HomePickCardProps) {
   const { colors: themeColors, isDark } = useTheme();
-  const { isRecipeSaved, toggleSavedRecipe, pantryIngredients } =
-    useAppContext();
+  const { isRecipeSaved, isRecipeOffline, pantryIngredients } = useAppContext();
+  const { trySaveRecipe } = useSaveRecipeGate();
+  const { tryToggleOfflineRecipe } = useOfflineRecipeGate();
+  const { loadRecipeById } = useRecipes();
   const { showDialog } = useAppDialog();
 
   const visual = getRecipeVisualIdentity(recipe);
   const recipeHasPhoto = hasRecipeImage(recipe);
   const saved = isRecipeSaved(recipe.id);
+  const offlineReady = isRecipeOffline(recipe.id);
   const hasDescription = Boolean(recipe.description?.trim());
   const missing = useMemo(
     () => partitionIngredients(recipe, pantryIngredients).missing,
-    [recipe.id, recipe.ingredients, pantryIngredients],
+    [recipe.id, recipe.mainIngredients, recipe.ingredients, pantryIngredients],
   );
   const hasMissing = missing.length > 0;
   const matchStyle = getRecipeMatchStyle(pantryMatchPercent, themeColors.muted);
@@ -117,10 +124,39 @@ export default function HomePickCard({
                 onPress={(event) => {
                   event.stopPropagation?.();
                   void Haptics.selectionAsync();
-                  toggleSavedRecipe(recipe.id);
+                  void (async () => {
+                    let fullRecipe = recipe;
+                    if (!recipe.steps?.length) {
+                      const loaded = await loadRecipeById(recipe.id);
+                      if (loaded) fullRecipe = loaded;
+                    }
+                    tryToggleOfflineRecipe(fullRecipe);
+                  })();
                 }}
                 hitSlop={10}
-                style={styles.heroIconBtn}
+                style={[
+                  styles.heroIconBtn,
+                  offlineReady && styles.heroIconBtnActive,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  offlineReady ? "Remove offline download" : "Download for offline"
+                }
+              >
+                <Download
+                  size={18}
+                  color={colors.white}
+                  strokeWidth={2.4}
+                />
+              </Pressable>
+              <Pressable
+                onPress={(event) => {
+                  event.stopPropagation?.();
+                  void Haptics.selectionAsync();
+                  trySaveRecipe(recipe.id);
+                }}
+                hitSlop={10}
+                style={[styles.heroIconBtn, saved && styles.heroIconBtnActive]}
                 accessibilityRole="button"
                 accessibilityLabel={saved ? "Remove from saved" : "Save recipe"}
               >
@@ -396,6 +432,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.38)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.18)",
+  },
+  heroIconBtnActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   heroBottomRow: {
     position: "absolute",

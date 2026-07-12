@@ -1,5 +1,5 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { ArrowLeft, Bookmark, Share2 } from "lucide-react-native";
+import { ArrowLeft, Bookmark, Download, Share2 } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -13,19 +13,25 @@ import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
 type RecipeDetailHeroProps = {
   recipe: Recipe;
   saved: boolean;
+  offlineDownloaded: boolean;
   onBack: () => void;
   onShare: () => void;
   onSave: () => void;
+  onOfflineToggle: () => void;
   saveTestId?: string;
+  offlineTestId?: string;
 };
 
 export default function RecipeDetailHero({
   recipe,
   saved,
+  offlineDownloaded,
   onBack,
   onShare,
   onSave,
+  onOfflineToggle,
   saveTestId,
+  offlineTestId,
 }: RecipeDetailHeroProps) {
   const visual = getRecipeVisualIdentity(recipe);
   const recipeHasPhoto = hasRecipeImage(recipe);
@@ -72,8 +78,26 @@ export default function RecipeDetailHero({
             <Share2 size={20} color={colors.white} />
           </Pressable>
           <Pressable
+            onPress={onOfflineToggle}
+            style={[styles.actionBtn, offlineDownloaded && styles.actionBtnActive]}
+            testID={offlineTestId}
+            accessibilityRole="button"
+            accessibilityLabel={
+              offlineDownloaded ? "Remove offline download" : "Download for offline"
+            }
+          >
+            <Download
+              size={16}
+              color={colors.white}
+              strokeWidth={2.4}
+            />
+            <Text style={styles.actionBtnText}>
+              {offlineDownloaded ? "Offline" : "Download"}
+            </Text>
+          </Pressable>
+          <Pressable
             onPress={onSave}
-            style={[styles.saveBtn, saved && styles.saveBtnActive]}
+            style={[styles.actionBtn, saved && styles.actionBtnActive]}
             testID={saveTestId}
             accessibilityRole="button"
             accessibilityLabel={saved ? "Remove from saved" : "Save recipe"}
@@ -83,7 +107,7 @@ export default function RecipeDetailHero({
               color={colors.white}
               fill={saved ? colors.white : "transparent"}
             />
-            <Text style={styles.saveBtnText}>{saved ? "Saved" : "Save"}</Text>
+            <Text style={styles.actionBtnText}>{saved ? "Saved" : "Save"}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -135,24 +159,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.16)",
   },
-  saveBtn: {
+  actionBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
     borderRadius: radius.pill,
     backgroundColor: "rgba(0,0,0,0.38)",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.16)",
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 9,
   },
-  saveBtnActive: {
+  actionBtnActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  saveBtnText: {
+  actionBtnText: {
     fontFamily: appFonts.bodyBold,
-    fontSize: 13,
+    fontSize: 12,
     color: colors.white,
   },
   fallbackLabel: {

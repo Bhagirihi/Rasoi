@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, type CuisineId } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useReferenceData } from '@/context/ReferenceContext';
+import { getSelectableKitchenStyles } from '@/utils/kitchenStyles';
 
 type CuisinePreferenceListProps = {
   selected: CuisineId[];
@@ -18,11 +19,12 @@ export default function CuisinePreferenceList({
   variant = 'dark',
 }: CuisinePreferenceListProps) {
   const { kitchenStyles } = useReferenceData();
+  const selectableStyles = getSelectableKitchenStyles(kitchenStyles);
   const isDark = variant === 'dark';
 
   return (
     <View style={styles.list}>
-      {kitchenStyles.map((cuisine, index) => {
+      {selectableStyles.map((cuisine, index) => {
         const isSelected = selected.includes(cuisine.id);
 
         return (

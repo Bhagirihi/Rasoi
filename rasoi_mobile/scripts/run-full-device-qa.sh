@@ -18,7 +18,7 @@ EVIDENCE_DIR="${ROOT}/.qa/full-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$EVIDENCE_DIR"
 
 export QA_NAME="${QA_NAME:-QA Tester}"
-export QA_PHONE="${QA_PHONE:-9820174653}"
+export QA_PHONE="${QA_PHONE:-9374766500}"
 export QA_EMAIL="${QA_EMAIL:-dvesp1901+$(date +%s)@gmail.com}"
 
 bash scripts/qa-preflight.sh

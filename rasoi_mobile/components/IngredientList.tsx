@@ -7,7 +7,7 @@ import { colors, radius, spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Recipe, RecipeIngredient } from "@/data/mockRecipes";
 import type { AffiliatePartner } from "@/utils/affiliate";
-import { ingredientKey } from "@/utils/recipeIngredients";
+import { ingredientMatchesMainName } from "@/utils/recipeMainIngredients";
 import { countMatchableIngredients } from "@/utils/recipes";
 import { useShoppingSession } from "@/context/ShoppingSessionContext";
 
@@ -59,12 +59,10 @@ export default function IngredientList({
   const { colors: themeColors } = useTheme();
   const { getSessionProgress } = useShoppingSession();
   const shoppingProgress = getSessionProgress(recipe.id);
-  const availableSet = new Set(available.map((item) => ingredientKey(item)));
-
   const availableIngredients = recipe.ingredients.filter(
     (ingredient) =>
-      ingredientKey(ingredient.name) &&
-      availableSet.has(ingredientKey(ingredient.name)),
+      ingredient.name?.trim() &&
+      available.some((name) => ingredientMatchesMainName(ingredient.name, name)),
   );
 
   const sponsoredIngredient = recipe.ingredients.find(

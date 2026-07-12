@@ -2,7 +2,7 @@ export type PlanTier = 'free' | 'trial' | 'paid';
 
 export type BillingInterval = 'monthly' | 'yearly';
 
-export const TRIAL_DURATION_DAYS = 3;
+export const TRIAL_DURATION_DAYS = 15;
 
 export const PLAN_LABELS: Record<PlanTier, string> = {
   free: 'Free',
@@ -44,18 +44,69 @@ export const PAID_PLAN_YEARLY_PROMO_LABEL = `${formatInr(PAID_PLAN_YEARLY_PROMO_
 /** @deprecated Use PAID_PLAN_MONTHLY_PRICE */
 export const PAID_PLAN_PRICE = PAID_PLAN_MONTHLY_PRICE;
 
+export const PAYWALL_HERO_TITLE = 'Plan meals. Shop smarter. Cook ad-free.';
+
+export const PAYWALL_HERO_SUB =
+  'Full 3-day meal planner, unlimited saved recipes, and unlimited grocery & delivery checkout from Blinkit, Zepto, Instamart, Zomato & Swiggy.';
+
+export const PAYWALL_PLUS_SUCCESS_MESSAGE =
+  '3-day meal plan, unlimited saves, up to 30 offline downloads, unlimited partner checkout, and no ads are now active.';
+
+export const PAYWALL_TRIAL_STARTED_MESSAGE = (days: number) =>
+  `Full 3-day plan, unlimited partner checkout, and up to 25 saves for ${days} days. Subscribe anytime to keep everything ad-free.`;
+
+export const PAYWALL_BENEFIT_HIGHLIGHTS = [
+  {
+    icon: 'calendar' as const,
+    label: '3-day meal planner',
+    sub: 'Today, Tomorrow & day after · unlimited shuffle on Plus',
+  },
+  {
+    icon: 'bookmark' as const,
+    label: 'Unlimited saved recipes',
+    sub: 'Favourites sync across devices — separate from offline downloads',
+  },
+  {
+    icon: 'offline' as const,
+    label: 'Offline recipe downloads',
+    sub: 'Cook without internet — up to 30 recipes on Plus',
+  },
+  {
+    icon: 'partners' as const,
+    label: 'Unlimited partner checkout',
+    sub: 'Blinkit, Zepto, Instamart, Zomato & Swiggy',
+  },
+  {
+    icon: 'zap' as const,
+    label: 'No ads',
+    sub: 'Clean home, plan & recipe experience',
+  },
+] as const;
+
 export const PAID_PLAN_FEATURES = [
+  'Full 3-day meal plan — 5 meals/day for Today, Tomorrow & the day after',
+  'Unlimited plan & home shuffle — fresh picks whenever you want',
+  'Unlimited saved recipes — keep every favourite dish',
+  'Download up to 30 recipes for offline cooking (steps & ingredients)',
+  'Unlimited Blinkit, Zepto, Instamart, Zomato & Swiggy checkout',
+  '4 home picks with unlimited shuffle',
+  'Allergy filter, all meal reminders & full seasonal picks',
   'No ads anywhere in the app',
-  'Blinkit, Zepto & Instamart grocery checkout',
-  'Zomato & Swiggy food delivery links',
-  'Keep partner access after trial ends',
 ] as const;
 
 export const TRIAL_WELCOME_FEATURES = [
-  'All Rasoi Plus partner checkouts unlocked',
-  `Try grocery & delivery links free for ${TRIAL_DURATION_DAYS} days`,
-  'Ads still show during trial — subscribe to remove ads and keep access',
+  'Full 3-day meal plan with limited daily shuffles',
+  'Unlimited partner checkout — Blinkit, Zepto, Instamart, Zomato, Swiggy',
+  'Up to 25 saved recipes during your trial',
+  'Download up to 5 recipes for offline cooking',
+  'Ads still show — subscribe to keep everything ad-free after trial',
 ] as const;
+
+export const TRIAL_WELCOME_HERO_SUB_STARTED =
+  'Your trial includes the full 3-day plan and unlimited partner checkout. Upgrade to Plus to remove ads, unlock unlimited saves & shuffles, and keep access after trial.';
+
+export const TRIAL_WELCOME_HERO_SUB_NEW =
+  'Try the 3-day meal planner and unlimited grocery & delivery checkout free. No payment until you subscribe below.';
 
 export const PLAN_FEATURES = {
   free: {

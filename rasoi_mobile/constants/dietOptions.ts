@@ -32,7 +32,7 @@ export const DIET_PREFERENCE_OPTIONS: DietPreferenceOption[] = [
   {
     value: 'Non-Veg',
     label: 'Non-Veg',
-    subtitle: 'MEAT, POULTRY & SEAFOOD',
+    subtitle: 'VEG + EGG + MEAT, POULTRY & SEAFOOD',
     icon: Drumstick,
     iconBg: colors.dark.accentRed,
     iconColor: '#FF6B6B',

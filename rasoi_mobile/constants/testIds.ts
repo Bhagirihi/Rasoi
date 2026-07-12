@@ -27,6 +27,9 @@ export const testIds = {
 
   settingsTestCrash: 'settings-test-crash',
 
+  qaOpenPaywall: 'qa-open-paywall',
+  qaOpenTrialWelcome: 'qa-open-trial-welcome',
+
   legalConsentCheckbox: 'legal-consent-checkbox',
   legalConsentContinue: 'legal-consent-continue',
   screenRecipe: 'screen-recipe',
@@ -40,8 +43,13 @@ export const testIds = {
   registerVerifyPhoneOtp: 'register-verify-phone-otp',
   registerResendPhoneOtp: 'register-resend-phone-otp',
   registerSendOtp: 'register-send-otp',
+  registerContinueContact: 'register-continue-contact',
+  registerContinueDiet: 'register-continue-diet',
   registerVerifyOtp: 'register-verify-otp',
   registerNameInput: 'register-name-input',
+  registerGenderMale: 'register-gender-male',
+  registerGenderFemale: 'register-gender-female',
+  registerGenderOther: 'register-gender-other',
   registerPhoneInput: 'register-phone-input',
   registerEmailInput: 'register-email-input',
   registerOtpInput: 'register-otp-input',
@@ -70,6 +78,8 @@ export const testIds = {
   recipesSearchInput: 'recipes-search-input',
   recipesPantryMatchSort: 'recipes-pantry-match-sort',
   recipeSaveButton: 'recipe-save-button',
+  recipeOfflineButton: 'recipe-offline-button',
+  savedOfflineFilter: 'saved-offline-filter',
 
   settingsLogout: 'settings-logout',
   settingsLogoutConfirm: 'settings-logout-confirm',

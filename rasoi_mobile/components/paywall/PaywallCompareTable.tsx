@@ -1,8 +1,8 @@
 import { Check, X } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { PAYWALL_COMPARE_ROWS, type PaywallCompareCell } from '@/constants/payments';
-import { FREE_PARTNER_COMPARE_FOOTNOTE, FREE_PARTNER_COMPARE_LABEL, type PlanTier } from '@/constants/plans';
+import { PAYWALL_COMPARE_FOOTNOTE, PAYWALL_COMPARE_ROWS, type PaywallCompareCell } from '@/constants/payments';
+import type { PlanTier } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
 
 type PaywallCompareTableProps = {
@@ -40,16 +40,18 @@ export default function PaywallCompareTable({ highlightTier }: PaywallCompareTab
           <CellMark value={row.paid} accent />
         </View>
       ))}
-      <Text style={styles.footnote}>{FREE_PARTNER_COMPARE_FOOTNOTE}</Text>
+      <Text style={styles.footnote}>{PAYWALL_COMPARE_FOOTNOTE}</Text>
     </View>
   );
 }
 
 function CellMark({ value, accent }: { value: PaywallCompareCell; accent?: boolean }) {
-  if (value === 'limited') {
+  if (typeof value === 'string') {
     return (
       <View style={styles.cellIcon}>
-        <Text style={styles.cellLimited}>{FREE_PARTNER_COMPARE_LABEL}</Text>
+        <Text style={[styles.cellLimited, accent && styles.cellLimitedAccent]} numberOfLines={2}>
+          {value}
+        </Text>
       </View>
     );
   }
@@ -129,12 +131,17 @@ const styles = StyleSheet.create({
   cellIcon: {
     flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 2,
   },
   cellLimited: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: '800',
     color: colors.muted,
     textAlign: 'center',
+    lineHeight: 12,
+  },
+  cellLimitedAccent: {
+    color: colors.primary,
   },
   footnote: {
     paddingHorizontal: spacing.sm,

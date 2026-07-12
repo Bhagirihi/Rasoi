@@ -13,6 +13,7 @@ import {
 
 const dietType = z.enum(['Veg', 'Egg', 'Non-Veg']);
 const dietChoice = z.enum(['Veg', 'Egg', 'Non-Veg', 'Jain']);
+const genderChoice = z.enum(['Male', 'Female', 'Other']);
 const difficulty = z.enum(['Easy', 'Medium', 'Hard']);
 const recipeTag = z.enum(['under20', 'leftover', 'kids', 'quick', 'festive']);
 
@@ -60,6 +61,7 @@ export const onboardingSchema = z.object({
 
 export const supabaseSyncSchema = z.object({
   name: z.string().trim().min(2).max(80),
+  gender: genderChoice.optional(),
   phone: z
     .string()
     .optional()

@@ -12,6 +12,8 @@ import {
   PAID_PLAN_YEARLY_SAVINGS_LABEL,
   TRIAL_DURATION_DAYS,
   TRIAL_WELCOME_FEATURES,
+  TRIAL_WELCOME_HERO_SUB_NEW,
+  TRIAL_WELCOME_HERO_SUB_STARTED,
   type BillingInterval,
 } from '@/constants/plans';
 import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS } from '@/constants/payments';
@@ -64,7 +66,7 @@ export default function TrialWelcomeContent({
         style={styles.hero}
       >
         <View style={styles.heroBadge}>
-          <Sparkles size={14} color={colors.white} />
+          <Sparkles size={14} color={colors.primary} />
           <Text style={styles.heroBadgeText}>Welcome to Rasoi</Text>
         </View>
         <Crown size={36} color={colors.white} />
@@ -74,28 +76,30 @@ export default function TrialWelcomeContent({
             : `Start your ${TRIAL_DURATION_DAYS}-day free trial`}
         </Text>
         <Text style={styles.heroSub}>
-          {trialStarted
-            ? 'Enjoy partner checkout during your trial. Upgrade to Rasoi Plus to remove ads and keep access forever.'
-            : 'Try partner grocery and delivery checkout free. No payment required until you subscribe below.'}
+          {trialStarted ? TRIAL_WELCOME_HERO_SUB_STARTED : TRIAL_WELCOME_HERO_SUB_NEW}
         </Text>
       </LinearGradient>
 
       <View style={styles.body}>
-        <Text style={styles.sectionLabel}>During your trial</Text>
-        {TRIAL_WELCOME_FEATURES.map((feature) => (
-          <FeatureRow key={feature} text={feature} tone="trial" />
-        ))}
+        <View style={styles.featureBulletin}>
+          <Text style={styles.sectionLabel}>During your trial</Text>
+          {TRIAL_WELCOME_FEATURES.map((feature) => (
+            <FeatureRow key={feature} text={feature} tone="trial" />
+          ))}
+        </View>
 
-        <Text style={[styles.sectionLabel, styles.sectionGap]}>
-          Rasoi Plus · charged immediately via Google Play
-        </Text>
-        <Text style={styles.subscribeNote}>
-          Subscribe now for {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE} (
-          {PAID_PLAN_YEARLY_SAVINGS_LABEL}). Cancel anytime in Google Play → Subscriptions.
-        </Text>
-        {PAID_PLAN_FEATURES.map((feature) => (
-          <FeatureRow key={feature} text={feature} tone="paid" />
-        ))}
+        <View style={[styles.featureBulletin, styles.featureBulletinPlus]}>
+          <Text style={styles.sectionLabel}>
+            Rasoi Plus · charged immediately via Google Play
+          </Text>
+          <Text style={styles.subscribeNote}>
+            Subscribe now for {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE} (
+            {PAID_PLAN_YEARLY_SAVINGS_LABEL}). Cancel anytime in Google Play → Subscriptions.
+          </Text>
+          {PAID_PLAN_FEATURES.map((feature) => (
+            <FeatureRow key={feature} text={feature} tone="paid" />
+          ))}
+        </View>
 
         <Pressable
           onPress={() => void handleContinue()}
@@ -178,7 +182,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.22)',
+    backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     marginBottom: spacing.md,
@@ -188,7 +192,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
-    color: colors.white,
+    color: colors.primary,
   },
   heroTitle: {
     marginTop: spacing.sm,
@@ -208,14 +212,23 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     paddingBottom: spacing.xxxl,
   },
+  featureBulletin: {
+    borderRadius: radius.md,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+  },
+  featureBulletinPlus: {
+    backgroundColor: 'rgba(255,107,53,0.06)',
+    borderColor: 'rgba(255,107,53,0.18)',
+  },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '800',
     color: colors.charcoal,
     marginBottom: spacing.sm,
-  },
-  sectionGap: {
-    marginTop: spacing.lg,
   },
   featureRow: {
     flexDirection: 'row',

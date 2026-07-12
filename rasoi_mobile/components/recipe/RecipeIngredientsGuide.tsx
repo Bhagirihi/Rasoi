@@ -5,7 +5,7 @@ import { appFonts } from "@/constants/fonts";
 import { colors, radius, spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import type { RecipeIngredient } from "@/data/mockRecipes";
-import { ingredientKey } from "@/utils/recipeIngredients";
+import { ingredientMatchesMainName } from "@/utils/recipeMainIngredients";
 
 type RecipeIngredientsGuideProps = {
   ingredients: RecipeIngredient[];
@@ -31,8 +31,18 @@ export default function RecipeIngredientsGuide({
   missing,
 }: RecipeIngredientsGuideProps) {
   const { colors: themeColors, isDark } = useTheme();
-  const availableSet = new Set(available.map((item) => ingredientKey(item)));
-  const missingSet = new Set(missing.map((item) => ingredientKey(item)));
+  const availableSet = new Set(available);
+  const missingSet = new Set(missing);
+
+  const rowStatus = (ingredientName: string) => {
+    if ([...availableSet].some((name) => ingredientMatchesMainName(ingredientName, name))) {
+      return "pantry" as const;
+    }
+    if ([...missingSet].some((name) => ingredientMatchesMainName(ingredientName, name))) {
+      return "missing" as const;
+    }
+    return "other" as const;
+  };
 
   return (
     <View style={styles.wrap}>
@@ -55,9 +65,9 @@ export default function RecipeIngredientsGuide({
         ]}
       >
         {ingredients.map((ingredient, index) => {
-          const key = ingredientKey(ingredient.name);
-          const inPantry = availableSet.has(key);
-          const isMissing = missingSet.has(key);
+          const status = rowStatus(ingredient.name);
+          const inPantry = status === "pantry";
+          const isMissing = status === "missing";
 
           return (
             <View

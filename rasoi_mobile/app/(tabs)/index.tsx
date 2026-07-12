@@ -28,6 +28,7 @@ import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import SponsorOrAd from "@/components/SponsorOrAd";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import HomeAnnouncementBridge from "@/components/home/HomeAnnouncementBridge";
+import HomeQaMonetizationBar from "@/components/home/HomeQaMonetizationBar";
 import HomeHeroLoadingBox from "@/components/HomeHeroLoadingBox";
 import { EmptyState } from "@/components/ui/Primitives";
 import { useRecipeDiscovery } from "@/hooks/useRecipeDiscovery";
@@ -55,6 +56,7 @@ import {
   partitionIngredients,
 } from "@/utils/recipes";
 import { PAYWALL_HREF } from "@/utils/routes";
+import { useShuffleGate } from "@/hooks/useShuffleGate";
 import { dismissRecommendation } from "@/services/recommendations";
 import {
   trackRecipeSuggestionTap,
@@ -73,6 +75,7 @@ export default function HomeScreen() {
   const { showDialog } = useAppDialog();
   const { openBrandSearch } = usePartners();
   const { userName, showPartners, userCity, isGuest } = useAppContext();
+  const { tryShuffle: tryHomeShuffle } = useShuffleGate("home");
   const {
     meal,
     recipes,
@@ -118,9 +121,9 @@ export default function HomeScreen() {
   const handleNotInterested = useCallback(
     (recipe: Recipe) => {
       void dismissRecommendation(recipe.id).catch(() => undefined);
-      void refreshHomePicks(true);
+      void tryHomeShuffle(() => refreshHomePicks(true));
     },
-    [refreshHomePicks],
+    [refreshHomePicks, tryHomeShuffle],
   );
 
   const openRecipeSuggestion = useCallback(
@@ -157,11 +160,12 @@ export default function HomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refreshRecipes(), refreshHomePicks(true)]);
+      await refreshRecipes();
+      await tryHomeShuffle(() => refreshHomePicks(true));
     } finally {
       setRefreshing(false);
     }
-  }, [refreshRecipes, refreshHomePicks]);
+  }, [refreshRecipes, refreshHomePicks, tryHomeShuffle]);
 
   const topPickPantryMatch = useMemo(() => {
     if (!displayTopPick) return 0;
@@ -294,6 +298,7 @@ export default function HomeScreen() {
         />
 
         <View style={styles.sections}>
+          <HomeQaMonetizationBar />
           <TrialCountdownBanner />
           <HomeAnnouncementBridge />
           {isGuest ? <GuestRegisterBanner /> : null}
@@ -356,7 +361,9 @@ export default function HomeScreen() {
                     headerTrailing={
                       <HomePickShuffleButton
                         onDark
-                        onPress={() => void refreshHomePicks(true)}
+                        onPress={() =>
+                          void tryHomeShuffle(() => refreshHomePicks(true))
+                        }
                       />
                     }
                     recipe={displayTopPick}

@@ -1,8 +1,4 @@
-import { resolveRecipeSteps } from '@/utils/generateRecipeSteps';
-import { localizeStepsToHindi } from '@/utils/localizeStepsToHindi';
-import { getRecipeSteps } from '@/utils/recipeSteps';
-
-/** Hindi cooking steps keyed by recipe id — extend as content grows. */
+/** Hindi cooking steps keyed by recipe id — legacy mock content only. */
 export const RECIPE_STEPS_HI: Record<string, string[]> = {
   '1': [
     'चावल और उड़द दाल 4–6 घंटे भिगोएँ; पीसकर रात भर खमीर उठाएँ।',
@@ -26,16 +22,9 @@ export const RECIPE_STEPS_HI: Record<string, string[]> = {
 
 export function getRecipeStepsHi(
   recipeId: string,
-  title: string,
+  _title: string,
   recipe?: {
-    ingredients: { name: string; isStaple: boolean }[];
-    steps?: string[];
     stepsHi?: string[];
-    prepTime?: number;
-    dietType?: string;
-    difficulty?: string;
-    kitchenStyleId?: string;
-    description?: string;
   },
 ): string[] {
   if (recipe?.stepsHi && recipe.stepsHi.length > 0) {
@@ -46,21 +35,5 @@ export function getRecipeStepsHi(
     return RECIPE_STEPS_HI[recipeId];
   }
 
-  const englishSteps =
-    recipe?.steps && recipe.steps.length > 0
-      ? recipe.steps
-      : recipe
-        ? resolveRecipeSteps({
-            title,
-            kitchenStyleId: recipe.kitchenStyleId ?? 'north-indian',
-            dietType: recipe.dietType ?? 'Veg',
-            ingredients: recipe.ingredients,
-            description: recipe.description,
-            difficulty: recipe.difficulty,
-            prepTime: recipe.prepTime ?? 30,
-            steps: recipe.steps,
-          })
-        : getRecipeSteps(recipeId, title);
-
-  return localizeStepsToHindi(englishSteps, title);
+  return [];
 }

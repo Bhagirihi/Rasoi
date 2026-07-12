@@ -4,6 +4,7 @@ export type RecipeTag = 'under20' | 'leftover' | 'kids' | 'quick' | 'festive';
 export type SponsorPlacement = 'home' | 'recipes' | 'pantry' | 'saved' | 'recipe';
 export type PlanTier = 'free' | 'trial' | 'paid';
 export type DietChoice = 'Veg' | 'Egg' | 'Non-Veg' | 'Jain';
+export type Gender = 'Male' | 'Female' | 'Other';
 export type CuisineId = string;
 
 export interface AppConfigResponse {
@@ -45,6 +46,7 @@ export interface RecipeResponse {
   imageUrl: string;
   tags: RecipeTag[];
   ingredients: RecipeIngredient[];
+  mainIngredients?: string[];
   steps?: string[];
   stepsHi?: string[];
   published: boolean;
@@ -84,6 +86,7 @@ export interface UserProfileResponse {
   email: string | null;
   phone: string | null;
   name: string;
+  gender: Gender | null;
   isGuest: boolean;
   isActive: boolean;
   hasCompletedOnboarding: boolean;

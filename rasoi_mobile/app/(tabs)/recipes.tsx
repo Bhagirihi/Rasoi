@@ -42,6 +42,7 @@ import { useAppContext } from "@/context/AppContext";
 import { useAppDialog } from "@/context/AppDialogContext";
 import { Recipe } from "@/data/mockRecipes";
 import { useRecipeListSearch } from "@/hooks/useRecipeListSearch";
+import { useTabWarmRender } from "@/hooks/useTabWarmRender";
 import { logRecipeSearch } from "@/services/recipeSearch";
 import type { AffiliatePartner } from "@/utils/affiliate";
 import {
@@ -52,6 +53,20 @@ import {
 } from "@/utils/recipes";
 
 export default function RecipesTabScreen() {
+  const shouldRender = useTabWarmRender();
+  const { colors: themeColors } = useTheme();
+  if (!shouldRender) {
+    return (
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: themeColors.cream }}
+        edges={["top"]}
+      />
+    );
+  }
+  return <RecipesTabContent />;
+}
+
+function RecipesTabContent() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const { keyboardHeight, keyboardVisible } = useKeyboardInset();

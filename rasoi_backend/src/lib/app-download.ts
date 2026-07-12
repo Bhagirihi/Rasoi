@@ -1,3 +1,5 @@
+import { TRIAL_DURATION_DAYS } from '@/lib/plan-pricing';
+
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
 
@@ -67,6 +69,6 @@ export const APP_FEATURES = [
   },
   {
     title: 'Personalised for you',
-    body: 'Phone login, diet and cuisine preferences, meal reminders, and a 3-day Rasoi Plus trial.',
+    body: `Phone login, diet and cuisine preferences, meal reminders, and a ${TRIAL_DURATION_DAYS}-day Rasoi Plus trial.`,
   },
 ] as const;

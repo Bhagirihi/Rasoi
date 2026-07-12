@@ -17,7 +17,7 @@ import AppSavingOverlay from '@/components/AppSavingOverlay';
 import PaidPlanFeaturesList from '@/components/paywall/PaidPlanFeaturesList';
 import PaywallActions from '@/components/paywall/PaywallActions';
 import SmoothModal from '@/components/ui/SmoothModal';
-import { type BillingInterval } from '@/constants/plans';
+import { type BillingInterval, PAYWALL_PLUS_SUCCESS_MESSAGE } from '@/constants/plans';
 import { getEffectivePaymentProviderId } from '@/constants/payments';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
@@ -92,7 +92,7 @@ export default function TrialExpiredPaywallModal() {
     await refreshPlan();
     showDialog({
       title: 'Welcome to Rasoi Plus',
-      message: 'Ads removed and all partners unlocked.',
+      message: PAYWALL_PLUS_SUCCESS_MESSAGE,
       buttons: [{ text: 'Great', onPress: closeModal }],
     });
     closeModal();
@@ -130,7 +130,7 @@ export default function TrialExpiredPaywallModal() {
         <View style={styles.headerRow}>
           <View style={styles.headerTextWrap}>
             <Text style={styles.headerTitle}>Trial ended</Text>
-            <Text style={styles.headerSub}>Subscribe to keep partner checkout unlocked</Text>
+            <Text style={styles.headerSub}>Subscribe to keep your full meal plan, saves & partners</Text>
           </View>
           <Pressable onPress={closeModal} hitSlop={12} accessibilityLabel="Close paywall">
             <X size={22} color={colors.muted} />
@@ -151,10 +151,10 @@ export default function TrialExpiredPaywallModal() {
             <View style={styles.heroIconWrap}>
               <Crown size={22} color={colors.white} />
             </View>
-            <Text style={styles.heroTitle}>Partners are locked again</Text>
+            <Text style={styles.heroTitle}>Your Plus perks ended</Text>
             <Text style={styles.heroSub}>
-              Unlimited checkout needs Rasoi Plus. Free plan still includes 2 partner shops per
-              month after trial.
+              Free plan keeps recipes & pantry, but the 3-day planner, unlimited saves, shuffles, and
+              partner checkout need Rasoi Plus. You still get 2 partner shops per month on Free.
             </Text>
           </LinearGradient>
 

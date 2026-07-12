@@ -20,6 +20,7 @@ const CURRENT_TERMS_VERSION = Deno.env.get('RASOI_TERMS_VERSION') ?? '2025-06-01
 type SyncBody = {
   name?: string;
   phone?: string;
+  gender?: 'Male' | 'Female' | 'Other';
   acceptedTerms?: true;
   phoneVerified?: true;
   linkGuestUserId?: string;
@@ -217,6 +218,7 @@ Deno.serve(async (request) => {
       isGuest: false,
       supabaseUserId: authUser.id,
       updatedAt: now,
+      ...(body.gender ? { gender: body.gender } : {}),
       ...termsUpdate,
       ...(existing.hasCompletedOnboarding ? {} : onboardingData),
       ...trialUpdate,
@@ -243,6 +245,7 @@ Deno.serve(async (request) => {
         email: authUser.email,
         isGuest: false,
         supabaseUserId: authUser.id,
+        ...(body.gender ? { gender: body.gender } : {}),
         termsAcceptedAt: now,
         termsAcceptedVersion: CURRENT_TERMS_VERSION,
         ...onboardingData,
