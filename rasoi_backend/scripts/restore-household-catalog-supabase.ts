@@ -33,16 +33,14 @@ async function main() {
       await client.query(
         `
           UPDATE rasoi."Recipe"
-          SET description = $2,
-              steps = $3,
-              "descriptionHi" = $4,
-              "stepsHi" = $5,
+          SET steps = $2,
+              "descriptionHi" = $3,
+              "stepsHi" = $4,
               "updatedAt" = NOW()
           WHERE id = $1
         `,
         [
           recipe.id,
-          recipe.description,
           JSON.stringify(recipe.steps),
           descriptionHi,
           JSON.stringify(stepsHi),

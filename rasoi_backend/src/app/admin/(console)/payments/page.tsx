@@ -1,3 +1,4 @@
+import PaymentsMinVersionForm from '@/app/admin/_components/PaymentsMinVersionForm';
 import PaymentsToggle from '@/app/admin/_components/PaymentsToggle';
 import AdminPageHeader from '@/app/admin/_components/AdminPageHeader';
 import AdminPageLayout from '@/app/admin/_components/AdminPageLayout';
@@ -5,7 +6,7 @@ import AdminPanel from '@/app/admin/_components/AdminPanel';
 import { getAppConfig } from '@/lib/app-settings';
 
 export default async function AdminPaymentsPage() {
-  const { paymentsEnabled } = await getAppConfig();
+  const { paymentsEnabled, paymentsMinAppVersion } = await getAppConfig();
 
   return (
     <AdminPageLayout>
@@ -16,6 +17,13 @@ export default async function AdminPaymentsPage() {
         description="Control whether the mobile app shows Rasoi Plus paywall, trials, and partner locks. Ads and sponsors stay available when payments are off."
       >
         <PaymentsToggle paymentsEnabled={paymentsEnabled} />
+      </AdminPanel>
+
+      <AdminPanel
+        title="Version gate"
+        description="Optionally limit the paywall to newer app builds so older APKs remain early access while you roll out monetization."
+      >
+        <PaymentsMinVersionForm paymentsMinAppVersion={paymentsMinAppVersion} />
       </AdminPanel>
 
       <AdminPanel
@@ -48,6 +56,9 @@ export default async function AdminPaymentsPage() {
           <li>AdMob banners and sponsor placements remain visible</li>
           <li>Paywall, subscribe, and trial upsell screens hidden</li>
           <li>User plan tier in the database is unchanged</li>
+          <li>
+            If a min version is set while payments are ON, older apps behave as if payments are off
+          </li>
         </ul>
       </AdminPanel>
     </AdminPageLayout>

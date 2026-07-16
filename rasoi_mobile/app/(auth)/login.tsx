@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from "@/components/AuthAtmosphere";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import AppSavingOverlay from "@/components/AppSavingOverlay";
 import RasoiBrandIcon from "@/components/RasoiBrandIcon";
@@ -217,12 +218,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient
-        colors={["#0A0908", "#12100E", "#0A0908"]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.glowGreen} />
-      <View style={styles.glowOrange} />
+      <AuthAtmosphere />
 
       <SafeAreaView
         style={styles.flex}
@@ -414,28 +410,10 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.dark.bg,
+    backgroundColor: AUTH_ATMOSPHERE_BG,
   },
   flex: {
     flex: 1,
-  },
-  glowGreen: {
-    position: "absolute",
-    top: -80,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: "rgba(0,168,107,0.12)",
-  },
-  glowOrange: {
-    position: "absolute",
-    bottom: 120,
-    left: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: "rgba(255,107,53,0.1)",
   },
   scrollContent: {
     flexGrow: 1,

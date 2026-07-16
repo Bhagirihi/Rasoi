@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppSavingOverlay from '@/components/AppSavingOverlay';
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import { colors, gradients, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
@@ -47,8 +48,7 @@ export default function PermissionOnboardingStep({
   return (
     <View style={styles.darkRoot}>
       <AppSavingOverlay visible={isSubmitting} message={savingMessage} subtitle={savingSubtitle} />
-      <LinearGradient colors={['#0A0908', '#0F1210', '#0A0908']} style={StyleSheet.absoluteFillObject} />
-      <View style={styles.glowGreen} />
+      <AuthAtmosphere />
 
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={screenTestID}>
         <View style={styles.header}>
@@ -114,16 +114,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   darkRoot: {
     flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
-  glowGreen: {
-    position: 'absolute',
-    right: -80,
-    bottom: 120,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(0,168,107,0.12)',
+    backgroundColor: AUTH_ATMOSPHERE_BG,
   },
   header: {
     alignItems: 'center',

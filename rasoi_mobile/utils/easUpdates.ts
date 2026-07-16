@@ -1,5 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+
+const OTA_FIRST_SESSION_KEY = 'rasoi:ota_first_session_done';
 
 export type EasUpdateLaunchResult = 'reloaded' | 'none' | 'skipped';
 
@@ -22,6 +25,13 @@ export async function checkForEasUpdateOnLaunch(): Promise<EasUpdateLaunchResult
   if (!Updates.isEnabled) return 'skipped';
 
   try {
+    const firstSessionDone = await AsyncStorage.getItem(OTA_FIRST_SESSION_KEY);
+    if (!firstSessionDone) {
+      // Fresh install / Play review: show embedded bundle first; OTA can apply next launch.
+      await AsyncStorage.setItem(OTA_FIRST_SESSION_KEY, '1');
+      return 'skipped';
+    }
+
     const check = await Updates.checkForUpdateAsync();
     if (!check.isAvailable) return 'none';
 

@@ -1,6 +1,7 @@
-import Constants from 'expo-constants';
 import type { Href } from 'expo-router';
 import * as Linking from 'expo-linking';
+
+import { getAppVersionLabel } from '@/utils/appVersion';
 
 export type HomeAnnouncementPresentation = 'modal' | 'banner' | 'both';
 
@@ -14,9 +15,7 @@ export type HomeAnnouncement = {
   presentation: HomeAnnouncementPresentation;
 };
 
-export function getAppVersionLabel(): string {
-  return Constants.expoConfig?.version ?? '0.0.0';
-}
+export { getAppVersionLabel };
 
 export function announcementShowsModal(presentation: HomeAnnouncementPresentation): boolean {
   return presentation === 'modal' || presentation === 'both';

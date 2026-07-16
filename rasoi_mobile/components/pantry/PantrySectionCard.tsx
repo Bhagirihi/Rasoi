@@ -53,7 +53,6 @@ export function PantrySectionCard({
   const missingItems = section.items.filter((item) => !pantryHasIngredient(pantryIngredients, item));
   const SectionIcon = getPantrySectionIcon(section.title);
   const useDense = dense || embedded;
-  const columns = setupMode ? 2 : 3;
 
   const handleAddAll = () => {
     if (!onAddAll || missingItems.length === 0) return;
@@ -66,9 +65,6 @@ export function PantrySectionCard({
     void Haptics.selectionAsync();
     setCollapsed((value) => !value);
   };
-
-  const chipBasis = columns === 3 ? '31%' : '47%';
-  const chipMaxWidth = columns === 3 ? '32%' : '48%';
 
   return (
     <View
@@ -193,8 +189,6 @@ export function PantrySectionCard({
                     styles.chip,
                     useDense && styles.chipDense,
                     {
-                      flexBasis: chipBasis,
-                      maxWidth: chipMaxWidth,
                       backgroundColor: isSelected
                         ? isDark
                           ? 'rgba(0,168,107,0.16)'
@@ -224,7 +218,8 @@ export function PantrySectionCard({
                       useDense && styles.chipTextDense,
                       { color: isSelected ? colors.green : themeColors.charcoal },
                     ]}
-                    numberOfLines={2}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {item}
                   </Text>
@@ -372,13 +367,15 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
-    flexGrow: 1,
-    minHeight: 44,
+    flexGrow: 0,
+    flexShrink: 1,
+    maxWidth: '100%',
+    minHeight: 40,
   },
   chipDense: {
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: spacing.xs + 2,
-    minHeight: 34,
+    minHeight: 32,
     borderWidth: 1,
     gap: 4,
   },
@@ -419,12 +416,12 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: 12,
     fontWeight: '700',
-    flex: 1,
-    lineHeight: 15,
+    flexShrink: 1,
+    lineHeight: 16,
   },
   chipTextDense: {
     fontSize: 11,
-    lineHeight: 13,
+    lineHeight: 14,
     fontWeight: '600',
   },
 });

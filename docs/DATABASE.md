@@ -66,20 +66,22 @@
 | prepTime | INTEGER | minutes |
 | calories | INTEGER | |
 | region | TEXT | North/South/East/West/Central |
-| kitchenStyleId | TEXT | default north |
-| kitchenStyleIds | TEXT | JSON array |
+| kitchenStyleId | TEXT | default north (API synthesizes kitchenStyleIds as `[kitchenStyleId]`) |
 | dietType | TEXT | Veg/Egg/Non-Veg |
 | difficulty | TEXT | Easy/Medium/Hard |
-| description | TEXT | |
 | imageUrl | TEXT | external URL |
-| tags | TEXT | JSON: under20, leftover, kids, quick, festive |
 | ingredients | TEXT | JSON array |
+| main_ingredients | TEXT | nullable summary from scrape |
 | steps | TEXT | JSON array, nullable |
+| descriptionHi | TEXT | nullable Hindi blurb (EN description synthesized on read) |
+| stepsHi | TEXT | nullable JSON array of Hindi steps |
 | primaryIngredient | TEXT | |
 | popularityScore | INTEGER | default 50 |
 | qualityScore | INTEGER | default 50 |
 | published | BOOLEAN | default true |
 | createdAt, updatedAt | TIMESTAMP | |
+
+Dropped (do not write): `kitchenStyleIds`, `description`, `tags`, scrape twins (`cuisine`, `diet`, `method`, `image_url`, `sourceUrl`, `sourceSite`, `scrapedAt`).
 
 ---
 
@@ -93,7 +95,7 @@
 | PantrySection | id | Pantry UI sections + default items |
 | PartnerLink | partnerId | Affiliate deep links by region |
 | Sponsor | id | In-app sponsor cards |
-| AppSettings | id (default) | paymentsEnabled, defaultPantryIngredients |
+| AppSettings | id (default) | paymentsEnabled, paymentsMinAppVersion, defaultPantryIngredients |
 | PushToken | id | Expo push tokens per user |
 | AffiliateEvent | id | Partner click telemetry |
 | SponsorEvent | id | Sponsor impression/tap telemetry |

@@ -125,11 +125,11 @@ function buildStyledMenu(
 
 export default function PlanScreen() {
   const shouldRender = useTabWarmRender();
-  const { colors: themeColors } = useTheme();
+  const { screenBackground } = useTheme();
   if (!shouldRender) {
     return (
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: themeColors.cream }}
+        style={{ flex: 1, backgroundColor: screenBackground }}
         edges={["top"]}
       />
     );
@@ -140,7 +140,7 @@ export default function PlanScreen() {
 function PlanTabContent() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const {
     dietChoice,
     regionalCuisine,
@@ -298,7 +298,7 @@ function PlanTabContent() {
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      style={[styles.safe, { backgroundColor: screenBackground }]}
       edges={["top"]}
       testID={testIds.screenPlan}
     >
@@ -378,6 +378,7 @@ function PlanTabContent() {
             <View style={styles.mealsBlock}>
               <PlanSectionLabel
                 title={mealsSectionTitle}
+                note="Plan may differ from Home suggestions."
                 hint="Tap a card to open recipe"
               />
               <View style={styles.mealsList}>

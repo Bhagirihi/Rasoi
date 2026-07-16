@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Settings } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { colors, radius } from '@/constants/theme';
+import { radius } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -30,7 +30,7 @@ export default function AppHeaderSettingsButton() {
         },
       ]}
     >
-      <Settings size={18} color={colors.charcoal} strokeWidth={2.2} />
+      <Settings size={18} color={themeColors.charcoal} strokeWidth={2.2} />
     </Pressable>
   );
 }

@@ -54,11 +54,11 @@ import {
 
 export default function RecipesTabScreen() {
   const shouldRender = useTabWarmRender();
-  const { colors: themeColors } = useTheme();
+  const { screenBackground } = useTheme();
   if (!shouldRender) {
     return (
       <SafeAreaView
-        style={{ flex: 1, backgroundColor: themeColors.cream }}
+        style={{ flex: 1, backgroundColor: screenBackground }}
         edges={["top"]}
       />
     );
@@ -70,7 +70,7 @@ function RecipesTabContent() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const { keyboardHeight, keyboardVisible } = useKeyboardInset();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
   const { showPartners } = useAppContext();
   const {
@@ -266,7 +266,7 @@ function RecipesTabContent() {
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      style={[styles.safe, { backgroundColor: screenBackground }]}
       edges={["top"]}
       testID={testIds.screenRecipesTab}
     >

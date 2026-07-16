@@ -1,0 +1,578 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://rasoiapplication.in/schemas/play-console-manifest.schema.json",
+  "title": "Rasoi Play Console Manifest",
+  "description": "Schema v2 for rasoi_mobile/store/play-console/manifest.json — Play listing, data safety, monetization, and operator actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "developerAccount",
+    "application",
+    "localization",
+    "playConsole",
+    "operatorActions",
+    "titleExperimentVariants",
+    "storeListing",
+    "localizedListings",
+    "declarations",
+    "dataSafety",
+    "contentRatingSurvey",
+    "monetization",
+    "assets",
+    "build",
+    "sourceFiles"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "./manifest.schema.json"
+    },
+    "schemaVersion": {
+      "type": "integer",
+      "const": 2
+    },
+    "developerAccount": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["displayName"],
+      "properties": {
+        "displayName": { "type": "string", "minLength": 1 }
+      }
+    },
+    "application": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "playConsoleName",
+        "defaultLanguage",
+        "packageName",
+        "versionName",
+        "versionCode",
+        "category",
+        "contentRating",
+        "defaultCountry",
+        "pricing"
+      ],
+      "properties": {
+        "playConsoleName": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "defaultLanguage": { "type": "string", "pattern": "^[a-z]{2}-[A-Z]{2}$" },
+        "packageName": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$" },
+        "expoSlug": { "type": "string" },
+        "expoOwner": { "type": "string" },
+        "versionName": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+        "versionCode": { "type": "integer", "minimum": 1 },
+        "category": { "type": "string", "enum": ["FOOD_AND_DRINK"] },
+        "appType": { "type": "string", "enum": ["APPLICATION"] },
+        "contentRating": { "type": "string", "enum": ["Everyone"] },
+        "defaultCountry": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "pricing": { "type": "string", "enum": ["FREE"] }
+      }
+    },
+    "localization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["apiPushed"],
+      "properties": {
+        "apiPushed": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 2 },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "requiresManualConsoleEnable": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/playLocale" },
+          "uniqueItems": true
+        },
+        "skipApiPush": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/playLocale" },
+          "uniqueItems": true
+        },
+        "skipApiPushReason": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "playApiLocaleByManifestLocale": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 2 }
+        }
+      }
+    },
+    "playConsole": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tagsApiSupported", "tags"],
+      "properties": {
+        "tagsApiSupported": { "type": "boolean" },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true
+        },
+        "competitorTagReference": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/competitorTagEntry" },
+              {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "operatorActions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/operatorAction" },
+      "minItems": 1
+    },
+    "titleExperimentVariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active", "variants"],
+      "properties": {
+        "active": { "$ref": "#/$defs/playTitle" },
+        "variants": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "title", "rationale"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[A-Z]$" },
+              "title": { "$ref": "#/$defs/playTitle" },
+              "rationale": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "storeListing": { "$ref": "#/$defs/storeListing" },
+    "localizedListings": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/storeListing" }
+    },
+    "asoKeywordBank": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string", "minLength": 1 }
+      }
+    },
+    "declarations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ads",
+        "inAppPurchases",
+        "subscriptions",
+        "locationPermission",
+        "targetAudienceChildrenUnder13",
+        "playAppSigning"
+      ],
+      "properties": {
+        "ads": { "type": "boolean" },
+        "inAppPurchases": { "type": "boolean" },
+        "subscriptions": { "type": "boolean" },
+        "locationPermission": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["accessCoarseLocation", "accessFineLocation", "optional", "purpose"],
+          "properties": {
+            "accessCoarseLocation": { "type": "boolean" },
+            "accessFineLocation": { "type": "boolean" },
+            "optional": { "type": "boolean" },
+            "purpose": { "type": "string", "minLength": 1 }
+          }
+        },
+        "targetAudienceChildrenUnder13": { "type": "boolean" },
+        "playAppSigning": { "type": "boolean" }
+      }
+    },
+    "dataSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accountDeletion", "collection", "dataTypes"],
+      "properties": {
+        "accountDeletion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["deleteAccountUrl", "partialDeletionWithoutAccountDelete"],
+          "properties": {
+            "deleteAccountUrl": { "type": "string", "format": "uri" },
+            "partialDeletionWithoutAccountDelete": { "type": "boolean" }
+          }
+        },
+        "collection": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "collectsOrSharesData",
+            "encryptedInTransit",
+            "accountCreationMethods",
+            "notSold"
+          ],
+          "properties": {
+            "collectsOrSharesData": { "type": "boolean" },
+            "encryptedInTransit": { "type": "boolean" },
+            "accountCreationMethods": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "minItems": 1
+            },
+            "notSold": { "type": "boolean" }
+          }
+        },
+        "dataTypes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "approximateLocation",
+            "name",
+            "emailAddress",
+            "userIds",
+            "phoneNumber",
+            "otherInfo",
+            "purchaseHistory",
+            "appInteractions",
+            "inAppSearchHistory",
+            "otherUserGeneratedContent",
+            "crashLogs",
+            "diagnostics",
+            "deviceOrOtherIds"
+          ],
+          "properties": {
+            "approximateLocation": { "$ref": "#/$defs/dataSafetyType" },
+            "name": { "$ref": "#/$defs/dataSafetyType" },
+            "emailAddress": { "$ref": "#/$defs/dataSafetyType" },
+            "userIds": { "$ref": "#/$defs/dataSafetyType" },
+            "phoneNumber": { "$ref": "#/$defs/dataSafetyType" },
+            "otherInfo": { "$ref": "#/$defs/dataSafetyType" },
+            "purchaseHistory": { "$ref": "#/$defs/dataSafetyType" },
+            "appInteractions": { "$ref": "#/$defs/dataSafetyType" },
+            "inAppSearchHistory": { "$ref": "#/$defs/dataSafetyType" },
+            "otherUserGeneratedContent": { "$ref": "#/$defs/dataSafetyType" },
+            "crashLogs": { "$ref": "#/$defs/dataSafetyType" },
+            "diagnostics": { "$ref": "#/$defs/dataSafetyType" },
+            "deviceOrOtherIds": { "$ref": "#/$defs/dataSafetyType" }
+          }
+        }
+      }
+    },
+    "contentRatingSurvey": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "violence",
+        "sexuality",
+        "language",
+        "controlledSubstances",
+        "gambling",
+        "userGeneratedContent",
+        "locationSharing",
+        "locationSharingOptional",
+        "locationSharingScope",
+        "digitalPurchases"
+      ],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["REFERENCE_NEWS_EDUCATIONAL_OTHER"]
+        },
+        "violence": { "type": "boolean" },
+        "sexuality": { "type": "boolean" },
+        "language": { "type": "boolean" },
+        "controlledSubstances": { "type": "boolean" },
+        "gambling": { "type": "boolean" },
+        "userGeneratedContent": { "type": "boolean" },
+        "locationSharing": { "type": "boolean" },
+        "locationSharingOptional": { "type": "boolean" },
+        "locationSharingScope": {
+          "type": "string",
+          "enum": ["city_level", "none"]
+        },
+        "digitalPurchases": { "type": "boolean" }
+      }
+    },
+    "monetization": { "$ref": "#/$defs/monetization" },
+    "assets": { "$ref": "#/$defs/assets" },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["easProfile", "buildType", "easProjectId"],
+      "properties": {
+        "easProfile": { "type": "string", "enum": ["production", "preview", "development"] },
+        "buildType": { "type": "string", "enum": ["app-bundle", "apk"] },
+        "easProjectId": { "type": "string", "format": "uuid" }
+      }
+    },
+    "openTesting": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "firebaseIntegrations": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "sourceFiles": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "playLocale": {
+      "type": "string",
+      "pattern": "^[a-z]{2}-[A-Z]{2}$"
+    },
+    "playTitle": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 50
+    },
+    "storeListing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "shortDescription",
+        "fullDescription"
+      ],
+      "properties": {
+        "title": { "$ref": "#/$defs/playTitle" },
+        "shortDescription": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "fullDescription": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "website": { "type": "string", "format": "uri" },
+        "email": { "type": "string", "format": "email" },
+        "privacyPolicyUrl": { "type": "string", "format": "uri" }
+      }
+    },
+    "dataSafetyPurpose": {
+      "type": "string",
+      "enum": [
+        "APP_FUNCTIONALITY",
+        "ANALYTICS",
+        "ACCOUNT_MANAGEMENT",
+        "ADVERTISING",
+        "DEVELOPER_COMMUNICATIONS",
+        "FRAUD_PREVENTION_SECURITY_AND_COMPLIANCE",
+        "PERSONALIZATION"
+      ]
+    },
+    "dataSafetyType": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "playLabel",
+        "collected",
+        "shared",
+        "ephemeral",
+        "optional",
+        "purposes"
+      ],
+      "properties": {
+        "playLabel": { "type": "string", "minLength": 1 },
+        "collected": { "type": "boolean" },
+        "shared": { "type": "boolean" },
+        "ephemeral": { "type": "boolean" },
+        "optional": { "type": "boolean" },
+        "purposes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/dataSafetyPurpose" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "tierFeatures": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ads", "partners"],
+      "properties": {
+        "ads": { "type": "boolean" },
+        "partners": { "type": "boolean" }
+      }
+    },
+    "monetizationTier": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "billingSource", "durationDays", "isPlayFreeTrial", "features"],
+      "properties": {
+        "id": { "type": "string", "enum": ["free", "trial", "paid"] },
+        "label": { "type": "string", "minLength": 1 },
+        "billingSource": {
+          "type": ["string", "null"],
+          "enum": [null, "in_app_api", "play_subscription"]
+        },
+        "durationDays": { "type": ["integer", "null"], "minimum": 1 },
+        "isPlayFreeTrial": { "type": "boolean" },
+        "features": { "$ref": "#/$defs/tierFeatures" },
+        "productIds": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^rasoi_plus_" },
+          "minItems": 1
+        }
+      }
+    },
+    "monetizationProduct": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "productId",
+        "tierId",
+        "basePlanId",
+        "billingPeriod",
+        "priceInr",
+        "title",
+        "description",
+        "benefits"
+      ],
+      "properties": {
+        "productId": { "type": "string", "pattern": "^rasoi_plus_" },
+        "tierId": { "type": "string", "enum": ["paid"] },
+        "basePlanId": { "type": "string", "enum": ["monthly", "yearly"] },
+        "billingPeriod": { "type": "string", "enum": ["P1M", "P1Y"] },
+        "priceInr": { "type": "number", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "benefits": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "monetization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entitlementId", "revenueCat", "tiers", "products"],
+      "properties": {
+        "entitlementId": { "type": "string", "const": "rasoi_plus" },
+        "revenueCat": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["offering", "packages", "playProducts"],
+          "properties": {
+            "offering": { "type": "string", "minLength": 1 },
+            "packages": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["monthly", "annual"],
+              "properties": {
+                "monthly": { "type": "string", "const": "$rc_monthly" },
+                "annual": { "type": "string", "const": "$rc_annual" }
+              }
+            },
+            "playProducts": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["monthly", "yearly"],
+              "properties": {
+                "monthly": { "type": "string", "const": "rasoi_plus_monthly:monthly" },
+                "yearly": { "type": "string", "const": "rasoi_plus_yearly:yearly" }
+              }
+            }
+          }
+        },
+        "tiers": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["free", "trial", "paid"],
+          "properties": {
+            "free": { "$ref": "#/$defs/monetizationTier" },
+            "trial": { "$ref": "#/$defs/monetizationTier" },
+            "paid": { "$ref": "#/$defs/monetizationTier" }
+          }
+        },
+        "products": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/monetizationProduct" },
+          "minItems": 1
+        }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["icon", "featureGraphic", "phoneScreenshots", "screenshotOrder"],
+      "properties": {
+        "icon": { "type": "string", "minLength": 1 },
+        "adaptiveIconForeground": { "type": "string", "minLength": 1 },
+        "featureGraphic": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "width", "height"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 },
+            "width": { "type": "integer", "const": 1024 },
+            "height": { "type": "integer", "const": 500 }
+          }
+        },
+        "phoneScreenshots": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 4,
+          "maxItems": 8
+        },
+        "screenshotPipeline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sourceDir", "generateCommand", "outputDir"],
+          "properties": {
+            "sourceDir": { "type": "string", "minLength": 1 },
+            "generateCommand": { "type": "string", "minLength": 1 },
+            "outputDir": { "type": "string", "minLength": 1 }
+          }
+        },
+        "screenshotOrder": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "operatorAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "consolePath"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "type": { "type": "string", "enum": ["play_console_manual"] },
+        "consolePath": { "type": "string", "minLength": 1 },
+        "locales": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/playLocale" }
+        },
+        "thenRun": { "type": "string", "minLength": 1 },
+        "thenRunArgs": { "type": "object" },
+        "applyTagsFrom": { "type": "string", "minLength": 1 },
+        "experimentId": { "type": "string", "minLength": 1 },
+        "playApiLocale": { "type": "string", "minLength": 2 }
+      }
+    },
+    "competitorTagEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "inferredTags", "source"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "inferredTags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "source": { "type": "string", "minLength": 1 },
+        "skipForRasoi": { "type": "boolean" }
+      }
+    }
+  }
+}

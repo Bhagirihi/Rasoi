@@ -16,3 +16,13 @@ export function parseMainIngredients(raw: string | null | undefined): string[] {
 
   return names;
 }
+
+/** Normalize admin/API input into the DB column format (comma-separated) or null. */
+export function formatMainIngredientsColumn(
+  value: string | string[] | null | undefined,
+): string | null {
+  if (value == null) return null;
+  const raw = Array.isArray(value) ? value.join(', ') : value;
+  const names = parseMainIngredients(raw);
+  return names.length > 0 ? names.join(', ') : null;
+}

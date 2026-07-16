@@ -83,7 +83,7 @@ function PantrySectionLabel({
 export default function PantryScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const {
     pantryIngredients,
     togglePantryIngredient,
@@ -141,7 +141,7 @@ export default function PantryScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      style={[styles.safe, { backgroundColor: screenBackground }]}
       edges={["top"]}
       testID={testIds.screenPantry}
     >
@@ -385,7 +385,7 @@ export default function PantryScreen() {
                 ]}
               >
                 <Text style={styles.setupContinueText}>Continue</Text>
-                <ArrowRight size={16} color={colors.charcoal} />
+                <ArrowRight size={16} color={themeColors.charcoal} />
               </Pressable>
             </View>
           ) : null}

@@ -26,12 +26,13 @@ export async function resolvePostAuthHref(
     await markPermissionsOnboardingComplete();
   }
 
-  if (options.pendingPantrySetup) {
-    return '/(tabs)/pantry';
-  }
-
+  // Soft paywall (trial welcome) before pantry — higher intent while setup is still ahead.
   if (nav.showTrialWelcome) {
     return '/(auth)/trial-welcome';
+  }
+
+  if (options.pendingPantrySetup) {
+    return '/(tabs)/pantry';
   }
 
   return '/(tabs)';

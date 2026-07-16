@@ -19,20 +19,37 @@ import {
 import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS } from '@/constants/payments';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
+import type { RevenueCatStorePricing } from '@/services/payments/revenueCatClient';
+
+const darkUi = {
+  text: colors.dark.text,
+  muted: colors.dark.textMuted,
+  surface: colors.dark.card,
+  border: 'rgba(245, 240, 232, 0.12)',
+} as const;
 
 type TrialWelcomeContentProps = {
   trialStarted: boolean;
+  storePricing?: RevenueCatStorePricing | null;
   onContinueTrial: () => void | Promise<void>;
   onSubscribe: (interval: BillingInterval) => Promise<void>;
 };
 
 export default function TrialWelcomeContent({
   trialStarted,
+  storePricing = null,
   onContinueTrial,
   onSubscribe,
 }: TrialWelcomeContentProps) {
   const [loading, setLoading] = useState<BillingInterval | null>(null);
   const [continuingTrial, setContinuingTrial] = useState(false);
+
+  const monthlyLabel = storePricing?.monthly?.priceString ?? PAID_PLAN_MONTHLY_PRICE;
+  const yearlyLabel = storePricing?.yearly?.priceString ?? PAID_PLAN_YEARLY_PRICE;
+  const yearlySubline =
+    storePricing?.yearly?.subline ?? PAID_PLAN_YEARLY_DETAIL;
+  const yearlySavings =
+    storePricing?.yearly?.savingsLabel ?? PAID_PLAN_YEARLY_SAVINGS_LABEL;
 
   const handleSubscribe = async (interval: BillingInterval) => {
     setLoading(interval);
@@ -93,8 +110,9 @@ export default function TrialWelcomeContent({
             Rasoi Plus · charged immediately via Google Play
           </Text>
           <Text style={styles.subscribeNote}>
-            Subscribe now for {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE} (
-            {PAID_PLAN_YEARLY_SAVINGS_LABEL}). Cancel anytime in Google Play → Subscriptions.
+            Subscribe now for {monthlyLabel} or {yearlyLabel}
+            {yearlySavings ? ` (${yearlySavings})` : ''}. Cancel anytime in Google Play →
+            Subscriptions.
           </Text>
           {PAID_PLAN_FEATURES.map((feature) => (
             <FeatureRow key={feature} text={feature} tone="paid" />
@@ -111,7 +129,7 @@ export default function TrialWelcomeContent({
             {continuingTrial
               ? 'Starting trial…'
               : trialStarted
-                ? 'Continue with trial'
+                ? 'Continue — set up pantry'
                 : `Start free ${TRIAL_DURATION_DAYS}-day trial`}
           </Text>
         </Pressable>
@@ -129,11 +147,11 @@ export default function TrialWelcomeContent({
             end={{ x: 1, y: 0.5 }}
             style={styles.primaryBtnInner}
           >
-            <Text style={styles.savingsBadge}>{PAID_PLAN_YEARLY_SAVINGS_LABEL}</Text>
+            <Text style={styles.savingsBadge}>{yearlySavings}</Text>
             <Text style={styles.primaryBtnText}>
-              {loading === 'yearly' ? 'Processing…' : `Plus yearly · ${PAID_PLAN_YEARLY_PRICE}`}
+              {loading === 'yearly' ? 'Processing…' : `Plus yearly · ${yearlyLabel}`}
             </Text>
-            <Text style={styles.primaryBtnSub}>{PAID_PLAN_YEARLY_DETAIL}</Text>
+            <Text style={styles.primaryBtnSub}>{yearlySubline}</Text>
           </LinearGradient>
         </Pressable>
 
@@ -143,7 +161,7 @@ export default function TrialWelcomeContent({
           style={[styles.secondaryBtn, (continuingTrial || subscribeBusy) && styles.btnDisabled]}
         >
           <Text style={styles.secondaryBtnText}>
-            {loading === 'monthly' ? 'Processing…' : `Plus monthly · ${PAID_PLAN_MONTHLY_PRICE}`}
+            {loading === 'monthly' ? 'Processing…' : `Plus monthly · ${monthlyLabel}`}
           </Text>
         </Pressable>
 
@@ -169,7 +187,7 @@ function FeatureRow({ text, tone }: { text: string; tone: 'trial' | 'paid' }) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: 'transparent',
   },
   hero: {
     paddingHorizontal: spacing.xl,
@@ -214,20 +232,20 @@ const styles = StyleSheet.create({
   },
   featureBulletin: {
     borderRadius: radius.md,
-    backgroundColor: colors.white,
+    backgroundColor: darkUi.surface,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: darkUi.border,
     padding: spacing.lg,
     marginBottom: spacing.lg,
   },
   featureBulletinPlus: {
-    backgroundColor: 'rgba(255,107,53,0.06)',
-    borderColor: 'rgba(255,107,53,0.18)',
+    backgroundColor: 'rgba(255,107,53,0.12)',
+    borderColor: 'rgba(255,107,53,0.28)',
   },
   sectionLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: colors.charcoal,
+    color: darkUi.text,
     marginBottom: spacing.sm,
   },
   featureRow: {
@@ -240,7 +258,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: 'rgba(0,168,107,0.12)',
+    backgroundColor: 'rgba(0,168,107,0.18)',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 1,
@@ -252,7 +270,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     lineHeight: 20,
-    color: colors.charcoal,
+    color: darkUi.text,
   },
   primaryBtn: {
     marginTop: spacing.xl,
@@ -298,13 +316,13 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
+    borderColor: darkUi.border,
+    backgroundColor: darkUi.surface,
   },
   secondaryBtnText: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.charcoal,
+    color: darkUi.text,
   },
   primaryTrialBtn: {
     marginTop: spacing.lg,
@@ -314,7 +332,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 2,
     borderColor: colors.primary,
-    backgroundColor: 'rgba(255,107,53,0.08)',
+    backgroundColor: 'rgba(255,107,53,0.14)',
   },
   primaryTrialBtnText: {
     fontSize: 15,
@@ -325,7 +343,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 12,
     fontWeight: '700',
-    color: colors.muted,
+    color: darkUi.muted,
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
@@ -333,7 +351,7 @@ const styles = StyleSheet.create({
   subscribeNote: {
     fontSize: 12,
     lineHeight: 18,
-    color: colors.muted,
+    color: darkUi.muted,
     marginBottom: spacing.sm,
   },
   btnDisabled: {
@@ -343,7 +361,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 11,
     lineHeight: 16,
-    color: colors.muted,
+    color: darkUi.muted,
     textAlign: 'center',
   },
 });

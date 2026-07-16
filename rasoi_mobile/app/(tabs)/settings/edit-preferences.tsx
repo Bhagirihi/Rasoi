@@ -44,7 +44,7 @@ import { DAILY_REMINDER_MEAL_SUMMARY, DAILY_REMINDER_TIME_LABEL, ensureNotificat
 export default function EditPreferencesScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors, colorScheme } = useTheme();
+  const { colors: themeColors, colorScheme, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
   const {
     dietChoice,
@@ -142,7 +142,7 @@ export default function EditPreferencesScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: screenBackground }]} edges={['top']}>
       <AppSavingOverlay visible={isSaving} message="Saving your preferences…" />
       <SettingsSubHeader title="Food preferences" onBack={() => router.back()} />
 

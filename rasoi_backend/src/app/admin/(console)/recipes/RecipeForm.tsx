@@ -24,6 +24,7 @@ import {
 import { getAdminSectionLabel } from '@/app/admin/_components/admin-nav';
 import { createRecipeAction, updateRecipeAction } from '@/app/admin/recipe-actions';
 import { DEFAULT_KITCHEN_STYLES } from '@/lib/kitchen-style-data';
+import { buildRecipeDescription, buildRecipeDescriptionHi } from '@/lib/recipe-description';
 import {
   DIET_TYPES,
   RECIPE_DIFFICULTIES,
@@ -41,6 +42,15 @@ const TAG_LABELS: Record<RecipeTag, string> = {
   quick: 'Quick',
   festive: 'Festive',
 };
+
+function normalizeStepList(steps: string[] | undefined): string[] {
+  const cleaned = (steps ?? []).map((step) => step.trim()).filter(Boolean);
+  return cleaned.length > 0 ? cleaned : [''];
+}
+
+function cleanSteps(steps: string[]): string[] {
+  return steps.map((step) => step.trim()).filter(Boolean);
+}
 
 type RecipeFormProps = {
   recipe?: RecipeResponse;
@@ -69,18 +79,53 @@ export default function RecipeForm({
   const [dietType, setDietType] = useState(recipe?.dietType ?? 'Veg');
   const [difficulty, setDifficulty] = useState(recipe?.difficulty ?? 'Easy');
   const [description, setDescription] = useState(recipe?.description ?? '');
+  const [descriptionHi, setDescriptionHi] = useState(recipe?.descriptionHi ?? '');
   const [imageUrl, setImageUrl] = useState(recipe?.imageUrl ?? '');
   const [selectedTags, setSelectedTags] = useState<RecipeTag[]>(recipe?.tags ?? []);
   const [ingredientsJson, setIngredientsJson] = useState(
     JSON.stringify(recipe?.ingredients ?? [defaultIngredient], null, 2),
   );
-  const [steps, setSteps] = useState((recipe?.steps ?? []).join('\n'));
+  const [mainIngredientsText, setMainIngredientsText] = useState(
+    (recipe?.mainIngredients ?? []).join(', '),
+  );
+  const [steps, setSteps] = useState<string[]>(() => normalizeStepList(recipe?.steps));
+  const [stepsHi, setStepsHi] = useState<string[]>(() => normalizeStepList(recipe?.stepsHi));
   const [published, setPublished] = useState(recipe?.published ?? false);
 
   const toggleTag = (tag: RecipeTag) => {
     setSelectedTags((current) =>
       current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag],
     );
+  };
+
+  const updateStepAt = (index: number, value: string) => {
+    setSteps((current) => current.map((step, i) => (i === index ? value : step)));
+  };
+
+  const addStep = () => {
+    setSteps((current) => [...current, '']);
+  };
+
+  const removeStep = (index: number) => {
+    setSteps((current) => {
+      if (current.length <= 1) return [''];
+      return current.filter((_, i) => i !== index);
+    });
+  };
+
+  const updateStepHiAt = (index: number, value: string) => {
+    setStepsHi((current) => current.map((step, i) => (i === index ? value : step)));
+  };
+
+  const addStepHi = () => {
+    setStepsHi((current) => [...current, '']);
+  };
+
+  const removeStepHi = (index: number) => {
+    setStepsHi((current) => {
+      if (current.length <= 1) return [''];
+      return current.filter((_, i) => i !== index);
+    });
   };
 
   const buildPayload = (publish: boolean) => {
@@ -94,10 +139,13 @@ export default function RecipeForm({
       dietType,
       difficulty,
       description,
+      descriptionHi: descriptionHi.trim() || undefined,
       imageUrl,
       tags: selectedTags,
       ingredients,
-      steps: steps.split('\n').map((step) => step.trim()).filter(Boolean),
+      mainIngredients: mainIngredientsText.trim(),
+      steps: cleanSteps(steps),
+      stepsHi: cleanSteps(stepsHi),
       published: publish,
     };
   };
@@ -110,6 +158,30 @@ export default function RecipeForm({
       ingredients = [];
     }
 
+    const stepList = cleanSteps(steps);
+    const resolvedDescription =
+      description.trim() ||
+      buildRecipeDescription({
+        title,
+        kitchenStyleId,
+        dietType,
+        ingredients,
+        prepTime: Number(prepTime),
+        difficulty,
+        steps: stepList,
+      });
+    const resolvedDescriptionHi =
+      descriptionHi.trim() ||
+      buildRecipeDescriptionHi({
+        title,
+        kitchenStyleId,
+        dietType,
+        ingredients,
+        prepTime: Number(prepTime),
+        difficulty,
+        steps: stepList,
+      });
+
     return {
       title,
       prepTime: Number(prepTime),
@@ -118,11 +190,13 @@ export default function RecipeForm({
       kitchenStyleId,
       dietType,
       difficulty,
-      description,
+      description: resolvedDescription,
+      descriptionHi: resolvedDescriptionHi,
       imageUrl,
       tags: selectedTags,
       ingredients,
-      steps: steps.split('\n').map((step) => step.trim()).filter(Boolean),
+      steps: stepList,
+      stepsHi: cleanSteps(stepsHi),
       published,
     };
   };
@@ -130,10 +204,6 @@ export default function RecipeForm({
   const validateBeforePreview = (): boolean => {
     if (title.trim().length < 2) {
       toast.error('Add a title before previewing.');
-      return false;
-    }
-    if (description.trim().length < 10) {
-      toast.error('Add a description (min 10 characters) before previewing.');
       return false;
     }
     if (!imageUrl.trim()) {
@@ -204,7 +274,7 @@ export default function RecipeForm({
     setImageUrl(data.imageUrl);
     setSelectedTags(data.tags);
     setIngredientsJson(JSON.stringify(data.ingredients, null, 2));
-    setSteps(data.steps.join('\n'));
+    setSteps(normalizeStepList(data.steps));
     if (data.published !== undefined) {
       setPublished(data.published);
     }
@@ -275,8 +345,20 @@ export default function RecipeForm({
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 lg:grid-cols-2">
+            {isEdit && recipe?.id ? (
+              <div className="block lg:col-span-2">
+                <FieldLabel>Recipe ID (CSV `id`)</FieldLabel>
+                <p className="mt-2 rounded-xl border border-admin-border bg-[#f7f2ea]/80 px-4 py-3 font-mono text-sm text-admin-ink">
+                  {recipe.id}
+                </p>
+                <p className="mt-1 text-sm text-admin-muted">
+                  Immutable key used by the app and CSV exports. Create a new recipe to change it.
+                </p>
+              </div>
+            ) : null}
+
             <label className="block lg:col-span-2">
-              <FieldLabel>Title</FieldLabel>
+              <FieldLabel>Title (CSV `title`)</FieldLabel>
               <TextInput value={title} onChange={setTitle} required />
             </label>
 
@@ -357,9 +439,67 @@ export default function RecipeForm({
             </div>
 
             <label className="block lg:col-span-2">
-              <FieldLabel>Description</FieldLabel>
-              <TextArea value={description} onChange={setDescription} rows={4} required />
+              <FieldLabel>Description (optional preview override)</FieldLabel>
+              <p className="mb-2 text-sm text-admin-muted">
+                Not stored in Supabase — the app synthesizes English copy from title and ingredients
+                when this is empty.
+              </p>
+              <TextArea value={description} onChange={setDescription} rows={4} />
             </label>
+
+            <div className="block lg:col-span-2 rounded-xl border border-admin-border bg-[#f7f2ea]/60 p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-admin-muted">
+                Hindi content
+              </p>
+              <p className="mt-1 text-sm text-admin-muted">
+                Shown when users tap the Hindi toggle on recipe detail in the mobile app.
+              </p>
+
+              <label className="mt-4 block">
+                <FieldLabel>Description (Hindi)</FieldLabel>
+                <TextArea
+                  value={descriptionHi}
+                  onChange={setDescriptionHi}
+                  rows={4}
+                  placeholder="हिंदी में व्यंजन का संक्षिप्त विवरण…"
+                />
+              </label>
+
+              <div className="mt-4 block">
+                <FieldLabel>Steps (Hindi)</FieldLabel>
+                <p className="mb-2 text-sm text-admin-muted">Numbered cooking steps shown in Hindi.</p>
+                <div className="space-y-3">
+                  {stepsHi.map((step, index) => (
+                    <div key={`step-hi-${index}`} className="flex gap-3">
+                      <span className="mt-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-admin-border bg-white text-sm font-semibold text-admin-ink">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <TextArea
+                          value={step}
+                          onChange={(value) => updateStepHiAt(index, value)}
+                          rows={3}
+                          placeholder="पहला कदम…"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeStepHi(index)}
+                        disabled={stepsHi.length <= 1 && !step.trim()}
+                        className="mt-2 h-10 shrink-0 rounded-lg border border-admin-border bg-white px-3 text-sm font-medium text-admin-muted transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-3">
+                  <GhostButton type="button" onClick={addStepHi}>
+                    + Add Hindi step
+                  </GhostButton>
+                </div>
+              </div>
+            </div>
 
             <label className="block lg:col-span-2">
               <FieldLabel>Image URL</FieldLabel>
@@ -367,7 +507,12 @@ export default function RecipeForm({
             </label>
 
             <label className="block lg:col-span-2">
-              <FieldLabel>Ingredients (JSON)</FieldLabel>
+              <FieldLabel>Ingredients (CSV `ingredients`)</FieldLabel>
+              <p className="mb-2 text-sm text-admin-muted">
+                Stored on the recipe and shown in the app. Prefer JSON objects with{' '}
+                <code className="text-xs">name</code> and <code className="text-xs">isStaple</code>.
+                Plain comma-separated names from the CSV also work after save/reload.
+              </p>
               <TextArea
                 value={ingredientsJson}
                 onChange={setIngredientsJson}
@@ -377,9 +522,56 @@ export default function RecipeForm({
             </label>
 
             <label className="block lg:col-span-2">
-              <FieldLabel>Steps (one per line)</FieldLabel>
-              <TextArea value={steps} onChange={setSteps} rows={6} />
+              <FieldLabel>Main ingredients (CSV `main_ingredients`)</FieldLabel>
+              <p className="mb-2 text-sm text-admin-muted">
+                Comma-separated names used for pantry match. Paste from the CSV column as-is, then
+                save / publish to push to Supabase.
+              </p>
+              <TextArea
+                value={mainIngredientsText}
+                onChange={setMainIngredientsText}
+                rows={4}
+                placeholder="Paneer, Tomato, Onion, Ginger, Garlic, …"
+              />
             </label>
+
+            <div className="block lg:col-span-2">
+              <FieldLabel>Steps</FieldLabel>
+              <p className="mb-2 text-sm text-admin-muted">
+                Numbered cooking steps stored in Supabase and shown in the app. Add or remove rows as
+                needed.
+              </p>
+              <div className="space-y-3">
+                {steps.map((step, index) => (
+                  <div key={`step-${index}`} className="flex gap-3">
+                    <span className="mt-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-admin-border bg-[#f7f2ea] text-sm font-semibold text-admin-ink">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <TextArea
+                        value={step}
+                        onChange={(value) => updateStepAt(index, value)}
+                        rows={3}
+                        placeholder={`Step ${index + 1}…`}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeStep(index)}
+                      disabled={steps.length <= 1 && !step.trim()}
+                      className="mt-2 h-10 shrink-0 rounded-lg border border-admin-border bg-white px-3 text-sm font-medium text-admin-muted transition hover:border-red-300 hover:bg-red-50 hover:text-red-700 disabled:opacity-40"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3">
+                <GhostButton type="button" onClick={addStep}>
+                  + Add step
+                </GhostButton>
+              </div>
+            </div>
           </div>
 
           <div className="rounded-xl border border-admin-border bg-[#f7f2ea] px-4 py-3 text-sm text-admin-muted">

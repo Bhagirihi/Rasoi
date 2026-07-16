@@ -1,55 +1,101 @@
 {
+  "$schema": "./manifest.schema.json",
+  "schemaVersion": 2,
   "developerAccount": {
-    "displayName": "Karbh It Solutions",
-    "note": "Matches live Google Play developer name. Play Console registration name cannot be changed via API."
+    "displayName": "Karbh It Solutions"
   },
   "application": {
-    "playConsoleName": "Rasoi - Indian Recipe App",
+    "playConsoleName": "Rasoi App: Aaj Kya Banaye?",
     "defaultLanguage": "en-US",
     "packageName": "com.bhagihiri.rasoiapp",
     "expoSlug": "rasoi",
     "expoOwner": "takeyshi",
-    "versionName": "1.0.13",
-    "versionCode": 14,
+    "versionName": "1.0.14",
+    "versionCode": 15,
     "category": "FOOD_AND_DRINK",
     "appType": "APPLICATION",
     "contentRating": "Everyone",
     "defaultCountry": "IN",
     "pricing": "FREE"
   },
-  "localizationSetup": {
-    "note": "Run MCP play_push_listing language=all after manifest edits. Enable gu-IN and bn-IN in Play Console → Main store listing → Manage translations if push fails for those locales.",
-    "apiPushed": ["en-US", "hi-IN", "mr-IN", "ta-IN", "te-IN"],
-    "pendingConsoleEnable": ["gu-IN", "bn-IN"],
-    "pendingConsoleEnableNote": "Enable gu-IN and bn-IN in Play Console → Main store listing → Manage translations, then re-run play_push_listing language=all."
+  "localization": {
+    "apiPushed": ["en-US", "hi-IN", "mr-IN", "ta-IN", "te-IN", "gu-IN"],
+    "skipApiPush": ["bn-IN"],
+    "skipApiPushReason": {
+      "bn-IN": "Bengali not available in Play Console store listing translations"
+    },
+    "playApiLocaleByManifestLocale": {
+      "gu-IN": "gu"
+    }
   },
-  "playConsoleTagsNote": "Set tags manually in Play Console → Grow users → Store settings → App category and tags (API does not support tags). Target tags listed in playConsoleTags.",
-  "playConsoleTags": [
+  "playConsole": {
+    "tagsApiSupported": false,
+    "tags": [
     "Recipes",
     "Cooking",
     "Food & drink",
     "Meal planning",
     "Lifestyle",
     "Health & fitness"
+    ],
+    "competitorTagReference": {
+    "com.company.rasoiplan": {
+      "title": "Rasoi Plan",
+      "inferredTags": ["Meal planning", "Recipes", "Cooking", "Food & drink", "Lifestyle"],
+      "source": "Gujarati weekly meal planner; Jain/Swaminarayan diet"
+    },
+    "com.rasoiai.app": {
+      "title": "Rasoi AI - AI Powered Kitchen",
+      "inferredTags": ["Recipes", "Cooking", "Meal planning", "Food & drink", "Health & fitness", "Lifestyle"],
+      "source": "AI pantry recipes, weekly planner, nutrition/IFCT, Indian regional dishes"
+    },
+    "com.apnirasoi.customer.android": {
+      "title": "Apni Rasoi",
+      "inferredTags": ["Food delivery", "Restaurants"],
+      "source": "Restaurant food delivery — not applicable to Rasoi recipe app; do not add",
+      "skipForRasoi": true
+    },
+    "rasoiRecommendedTags": [
+      "Recipes",
+      "Cooking",
+      "Food & drink",
+      "Meal planning",
+      "Lifestyle",
+      "Health & fitness"
+    ]
+    }
+  },
+  "operatorActions": [
+    {
+      "id": "set-play-tags",
+      "type": "play_console_manual",
+      "consolePath": "Grow users → Store settings → App category and tags",
+      "applyTagsFrom": "playConsole.tags"
+    },
+    {
+      "id": "title-experiment",
+      "type": "play_console_manual",
+      "consolePath": "Grow users → Store listing experiments",
+      "experimentId": "titleExperimentVariants"
+    }
   ],
   "titleExperimentVariants": {
-    "active": "Rasoi - Indian Recipe App",
-    "playConsoleNote": "Play Console → Grow users → Store listing experiments → Custom store listing. Test variant B against the active title.",
+    "active": "Rasoi App: Aaj Kya Banaye?",
     "variants": [
       {
         "id": "A",
-        "title": "Rasoi - Indian Recipe App",
-        "rationale": "Keyword density — primary generic term Indian recipe app (25 chars)."
+        "title": "Rasoi App: Aaj Kya Banaye?",
+        "rationale": "Brand + intent hook — owns rasoi / aaj kya banaye search (22 chars)."
       },
       {
         "id": "B",
-        "title": "Rasoi: Aaj Kya Banaye?",
-        "rationale": "Brand hook — owns the aaj kya banaye search intent (22 chars)."
+        "title": "Rasoi - Indian Recipe App",
+        "rationale": "Generic keyword density — Indian recipe app for broad discovery (25 chars)."
       }
     ]
   },
   "storeListing": {
-    "title": "Rasoi - Indian Recipe App",
+    "title": "Rasoi App: Aaj Kya Banaye?",
     "shortDescription": "Indian recipe app — Aaj kya banaye? Pantry match %, Veg & Jain. 5,000+ dishes.",
     "fullDescription": "Rasoi — India's home cooking companion. Aaj kya banaye? Get dinner ideas from your pantry with recipe match %, Veg & Jain filters, and 5,000+ Gujarati & regional recipes.\n\nEvery evening, the same question: Aaj kya banaye? No more scrolling recipe blogs or staring at an empty fridge — whether you need a quick weeknight dinner, a Jain-safe thali, or something the kids will actually eat, Rasoi picks for you and reminds you before it's too late.\n\nWHY CHOOSE RASOI?\n\n• Tonight's picks — personalised suggestions for breakfast, lunch, dinner & late-night\n• Cook from your pantry — add ingredients at home and see recipe match % instantly\n• 5,000+ Indian recipes — Gujarati, Punjabi, South Indian, Bengali, Maharashtrian & more\n• Diet filters — Veg, Jain, Egg & Non-Veg so every household eats right\n• Regional cuisines — 15 kitchen styles including Kathiyawadi, Surti, North & South Indian\n• Quick filters — under 20 minutes, kid-friendly, leftover-friendly & budget picks\n• Daily meal reminders — gentle nudges so planning dinner becomes a habit, not a scramble\n• Save favourites — build your family's go-to rotation for busy weeks\n\nHOW IT WORKS\n\n1. Set your diet, region, and favourite cuisines during onboarding\n2. Add what's in your pantry — dal, rice, paneer, sabzi, masalas\n3. Get daily picks matched to your kitchen and preferences\n4. Cook tonight's dish or explore 5,000+ everyday Indian recipes\n\nPERFECT FOR\n\n• Homemakers tired of deciding what to cook every day\n• Working professionals who want quick, practical dinner ideas\n• New cooks learning regional family recipes\n• Jain & pure-veg households needing safe, filtered suggestions\n• Anyone who has ever opened the fridge and thought — aaj kya banaye?\n\nRASOI PLUS (OPTIONAL)\n\nUpgrade for an ad-free experience and one-tap grocery & food delivery links via Blinkit, Zepto, Instamart, Zomato & Swiggy. Core recipes, pantry matching, and daily picks are free to start.\n\nSEARCH & DISCOVER\n\nFind Rasoi when you search: aaj kya banaye app, what to cook today, dinner recipe app India, Indian recipe app, veg recipe app India, Jain recipe app, Gujarati recipe app, cook from pantry app, pantry recipe matcher, ingredients based recipes, Kathiyawadi recipes, Surti recipes, quick recipes under 20 minutes, meal reminder app, weeknight dinner ideas, and Indian home cooking app.\n\nRasoi may use your city (optional) for local recipe relevance.\n\nWebsite: https://rasoiapplication.in\nPrivacy: https://rasoiapplication.in/privacy\nTerms: https://rasoiapplication.in/terms\nSupport: cooking@rasoiapplication.in\n\nDownload the Rasoi app today — stop wondering what to cook. Start cooking.",
     "website": "https://rasoiapplication.in",
@@ -139,88 +185,201 @@
   },
   "declarations": {
     "ads": true,
-    "adsNote": "AdMob banner ads on free and trial tiers (react-native-google-mobile-ads)",
     "inAppPurchases": true,
     "subscriptions": true,
-    "locationPermission": "ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION — city for local recipes and sponsor reach",
-    "targetAudience": "General audience, not directed at children under 13",
+    "locationPermission": {
+      "accessCoarseLocation": true,
+      "accessFineLocation": true,
+      "optional": true,
+      "purpose": "city_for_local_recipes_and_sponsor_reach"
+    },
+    "targetAudienceChildrenUnder13": false,
     "playAppSigning": true
   },
-  "dataSafetyQuestionnaire": {
-    "step2": {
-      "collectsOrSharesData": true,
-      "encryptedInTransit": true,
-      "accountCreationMethods": ["usernameAndOtherAuthentication"],
+  "dataSafety": {
+    "accountDeletion": {
       "deleteAccountUrl": "https://rasoiapplication.in/delete-account",
       "partialDeletionWithoutAccountDelete": false
     },
-    "step3DataTypes": [
-      "Approximate location",
-      "Name",
-      "Email address",
-      "User IDs",
-      "Phone number",
-      "Other info",
-      "Purchase history",
-      "App interactions",
-      "In-app search history",
-      "Other user-generated content",
-      "Crash logs",
-      "Diagnostics",
-      "Device or other IDs"
-    ],
-    "step4Defaults": {
-      "collected": true,
-      "shared": false,
-      "ephemeral": false,
-      "requiredVsOptional": "Users can choose whether this data is collected (guest mode available; location and phone optional)",
-      "purposes": ["App functionality", "Analytics", "Account management"],
-      "notSold": true,
-      "overrides": {
-        "Device or other IDs": {
-          "shared": true,
-          "purposes": ["Advertising", "Analytics"]
-        },
-        "Purchase history": {
-          "purposes": ["App functionality", "Account management"]
-        },
-        "Crash logs": {
-          "purposes": ["Analytics", "App functionality"]
-        },
-        "Diagnostics": {
-          "purposes": ["Analytics", "App functionality"]
-        },
-        "Approximate location": {
-          "purposes": ["App functionality", "Analytics"]
-        }
+    "collection": {
+      "collectsOrSharesData": true,
+      "encryptedInTransit": true,
+      "accountCreationMethods": ["usernameAndOtherAuthentication"],
+      "notSold": true
+    },
+    "dataTypes": {
+      "approximateLocation": {
+        "playLabel": "Approximate location",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"]
+      },
+      "name": {
+        "playLabel": "Name",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+      },
+      "emailAddress": {
+        "playLabel": "Email address",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+      },
+      "userIds": {
+        "playLabel": "User IDs",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS", "ACCOUNT_MANAGEMENT"]
+      },
+      "phoneNumber": {
+        "playLabel": "Phone number",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+      },
+      "otherInfo": {
+        "playLabel": "Other info",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+      },
+      "purchaseHistory": {
+        "playLabel": "Purchase history",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": false,
+        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+      },
+      "appInteractions": {
+        "playLabel": "App interactions",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"]
+      },
+      "inAppSearchHistory": {
+        "playLabel": "In-app search history",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"]
+      },
+      "otherUserGeneratedContent": {
+        "playLabel": "Other user-generated content",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["APP_FUNCTIONALITY"]
+      },
+      "crashLogs": {
+        "playLabel": "Crash logs",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["ANALYTICS", "APP_FUNCTIONALITY"]
+      },
+      "diagnostics": {
+        "playLabel": "Diagnostics",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["ANALYTICS", "APP_FUNCTIONALITY"]
+      },
+      "deviceOrOtherIds": {
+        "playLabel": "Device or other IDs",
+        "collected": true,
+        "shared": true,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": ["ADVERTISING", "ANALYTICS"]
       }
     }
   },
-  "contentRatingQuestionnaire": {
-    "category": "Reference, News, or Educational / Other",
-    "violence": "No",
-    "sexuality": "No",
-    "language": "No",
-    "controlledSubstances": "No",
-    "gambling": "No",
-    "userGeneratedContent": "No",
-    "locationSharing": "Yes — optional city-level for personalization",
-    "digitalPurchases": "Yes — Rasoi Plus subscriptions"
+  "contentRatingSurvey": {
+    "category": "REFERENCE_NEWS_EDUCATIONAL_OTHER",
+    "violence": false,
+    "sexuality": false,
+    "language": false,
+    "controlledSubstances": false,
+    "gambling": false,
+    "userGeneratedContent": false,
+    "locationSharing": true,
+    "locationSharingOptional": true,
+    "locationSharingScope": "city_level",
+    "digitalPurchases": true
   },
-  "subscriptions": {
+  "monetization": {
     "entitlementId": "rasoi_plus",
-    "revenueCatOffering": "default",
-    "revenueCatPackages": {
-      "monthly": "$rc_monthly",
-      "annual": "$rc_annual"
+    "revenueCat": {
+      "offering": "default",
+      "packages": {
+        "monthly": "$rc_monthly",
+        "annual": "$rc_annual"
+      },
+      "playProducts": {
+        "monthly": "rasoi_plus_monthly:monthly",
+        "yearly": "rasoi_plus_yearly:yearly"
+      }
     },
-    "revenueCatPlayProducts": {
-      "monthly": "rasoi_plus_monthly:monthly",
-      "yearly": "rasoi_plus_yearly:yearly"
+    "tiers": {
+      "free": {
+        "id": "free",
+        "label": "Free",
+        "billingSource": null,
+        "durationDays": null,
+        "isPlayFreeTrial": false,
+        "features": {
+          "ads": true,
+          "partners": false
+        }
+      },
+      "trial": {
+        "id": "trial",
+        "label": "Trial",
+        "billingSource": "in_app_api",
+        "durationDays": 3,
+        "isPlayFreeTrial": false,
+        "features": {
+          "ads": true,
+          "partners": true
+        }
+      },
+      "paid": {
+        "id": "paid",
+        "label": "Rasoi Plus",
+        "billingSource": "play_subscription",
+        "durationDays": null,
+        "isPlayFreeTrial": false,
+        "features": {
+          "ads": false,
+          "partners": true
+        },
+        "productIds": ["rasoi_plus_monthly", "rasoi_plus_yearly"]
+      }
     },
     "products": [
       {
         "productId": "rasoi_plus_monthly",
+        "tierId": "paid",
         "basePlanId": "monthly",
         "billingPeriod": "P1M",
         "priceInr": 49,
@@ -234,6 +393,7 @@
       },
       {
         "productId": "rasoi_plus_yearly",
+        "tierId": "paid",
         "basePlanId": "yearly",
         "billingPeriod": "P1Y",
         "priceInr": 499,
@@ -248,28 +408,14 @@
       }
     ]
   },
-  "planTiers": {
-    "free": {
-      "ads": true,
-      "partners": false
-    },
-    "trial": {
-      "durationDays": 3,
-      "ads": true,
-      "partners": true,
-      "note": "In-app trial via API — not a Play subscription free trial"
-    },
-    "paid": {
-      "label": "Rasoi Plus",
-      "ads": false,
-      "partners": true
-    }
-  },
   "assets": {
     "icon": "rasoi_mobile/assets/images/icon.png",
     "adaptiveIconForeground": "rasoi_mobile/assets/images/android-icon-foreground.png",
-    "featureGraphicSpec": "1024x500 — Aaj Kya Banaye? + kadai + phone mockup",
-    "featureGraphic": "rasoi_mobile/store/play-console/marketing/rasoi-banner-aaj-kya-banaye.png",
+    "featureGraphic": {
+      "path": "rasoi_mobile/store/play-console/marketing/rasoi-banner-aaj-kya-banaye.png",
+      "width": 1024,
+      "height": 500
+    },
     "phoneScreenshots": [
       "docs/marketing/app-store-screenshots/play-store-upload/01-01-hook-never-wonder-what-to-cook.png",
       "docs/marketing/app-store-screenshots/play-store-upload/02-02-problem-confused-about-dinner.png",
@@ -280,7 +426,11 @@
       "docs/marketing/app-store-screenshots/play-store-upload/07-07-lifestyle-family-time.png",
       "docs/marketing/app-store-screenshots/play-store-upload/08-08-cta-download-today.png"
     ],
-    "screenshotsSpec": "rasoi_mobile/screenshots/ → npm run generate → app-store-assets/",
+    "screenshotPipeline": {
+      "sourceDir": "rasoi_mobile/screenshots",
+      "generateCommand": "npm run generate",
+      "outputDir": "rasoi_mobile/app-store-assets"
+    },
     "screenshotOrder": [
       "01-hero",
       "02-todays-picks",
@@ -318,28 +468,24 @@
       "publisherCode": "pub-4173581536398147",
       "androidAppId": "ca-app-pub-4173581536398147~9898362276",
       "googleAccount": "my.website.email2@gmail.com",
-      "linkInConsole": "AdMob → Settings → Linked services → Rasoi App → Firebase",
       "status": "pending_console_link",
       "verifiedAt": "2026-06-21",
-      "note": "Package com.bhagihiri.rasoiapp confirmed in AdMob; link did not complete — AdMob offered only create-new-Firebase-app (no existing rasoi-app-prod match). Play store search also failed for this account."
+      "requiresConsoleAction": true
     },
     "googlePlay": {
       "developerAccount": "Karbh It Solutions",
-      "linkInConsole": "Firebase → Project settings → Integrations → Google Play",
       "status": "linked",
-      "verifiedAt": "2026-06-21",
-      "note": "Firebase Integrations shows Project connected + 1 linked app"
+      "verifiedAt": "2026-06-21"
     },
     "googleAnalytics": {
-      "linkInConsole": "Firebase → Project settings → Integrations → Google Analytics",
       "status": "enabled",
       "verifiedAt": "2026-06-21"
     },
     "googleAds": {
-      "admobAccountLink": "not_linked",
+      "admobAccountLink": false,
       "firebaseLink": "via_google_analytics",
       "verifiedAt": "2026-06-21",
-      "note": "AdMob: no accessible Google Ads account for my.website.email2@gmail.com. Firebase: link Google Ads in GA property (Manage linking in Google Analytics)."
+      "requiresConsoleAction": true
     },
     "docsPath": "rasoi_mobile/docs/FIREBASE_INTEGRATIONS.md"
   },

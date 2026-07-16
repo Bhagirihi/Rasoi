@@ -1,7 +1,7 @@
 {
   "name": "rasoi",
   "main": "expo-router/entry",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/fraunces": "^0.4.1",
@@ -43,6 +43,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "babel-preset-expo": "~54.0.10",
     "typescript": "~5.9.2"
   },
@@ -73,7 +75,8 @@
     "qa:full": "bash scripts/run-full-device-qa.sh",
     "qa:stability": "python3 scripts/run-stability-3x.py",
     "qa:guest-delete": "python3 scripts/run-guest-delete-qa.py",
-    "qa:new": "python3 scripts/run-new-qa.py"
+    "qa:new": "python3 scripts/run-new-qa.py",
+    "validate:play-manifest": "node scripts/validate-play-manifest.mjs"
   },
   "private": true
 }

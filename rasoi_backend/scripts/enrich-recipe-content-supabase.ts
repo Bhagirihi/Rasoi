@@ -9,7 +9,7 @@ import 'dotenv/config';
 import { Pool } from 'pg';
 
 import { getDirectDatabaseUrl } from '../src/lib/database-url';
-import { localizeDescriptionToHindi, buildDetailedStepsHi } from '../src/lib/recipe-content-hi';
+import { buildDetailedStepsHi } from '../src/lib/recipe-content-hi';
 import { buildRecipeDescription, buildRecipeDescriptionHi } from '../src/lib/recipe-description';
 import type { RecipeIngredient } from '../src/lib/types';
 import { resolveRecipeSteps, stepsLookVague, stepsMismatchTitle, buildDetailedSteps, type RecipeStepInput } from '../src/lib/recipe-steps';
@@ -19,7 +19,7 @@ const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 type DbRecipe = {
   id: string;
   title: string;
-  description: string;
+  descriptionHi: string | null;
   steps: string | null;
   prepTime: number;
   kitchenStyleId: string;
@@ -38,12 +38,9 @@ function parseJson<T>(raw: string | null, fallback: T): T {
 
 function needsRefresh(recipe: DbRecipe): boolean {
   const steps = parseJson<string[]>(recipe.steps, []);
-  const desc = recipe.description?.trim() ?? '';
+  const descHi = recipe.descriptionHi?.trim() ?? '';
   if (steps.length === 0 || stepsLookVague(steps)) return true;
-  if (desc.length < 20) return true;
-  if (/— a quick snack using leftover bread/i.test(desc) && recipe.title.toLowerCase().includes('bread poha')) {
-    return true;
-  }
+  if (descHi.length < 20) return true;
   if (/Rinse and drain Bread/i.test(steps.join(' '))) return true;
   if (/the main grain/i.test(steps.join(' ')) && /bread/i.test(recipe.title)) return true;
   if (stepsMismatchTitle(recipe.title, steps)) return true;
@@ -60,12 +57,11 @@ function enrichRecipe(recipe: DbRecipe) {
     ingredients,
     prepTime: recipe.prepTime,
     difficulty: recipe.difficulty,
-    description: recipe.description,
     steps: storedSteps,
   };
 
   const steps = resolveRecipeSteps(input);
-  // Always refresh description/Hindi to match resolved steps; force-regenerate mismatched steps.
+  // Always refresh Hindi + steps to match resolved content; force-regenerate mismatched steps.
   const forceSteps =
     storedSteps.length > 0 &&
     (stepsLookVague(storedSteps) || stepsMismatchTitle(recipe.title, storedSteps))
@@ -95,7 +91,7 @@ async function main() {
   if (!dryRun) await ensureColumns();
 
   const { rows } = await pool.query<DbRecipe>(`
-    SELECT id, title, description, steps, "prepTime", "kitchenStyleId", "dietType", difficulty, ingredients
+    SELECT id, title, "descriptionHi", steps, "prepTime", "kitchenStyleId", "dietType", difficulty, ingredients
     FROM rasoi."Recipe"
     ORDER BY id
     ${limit ? `LIMIT ${limit}` : ''}
@@ -121,7 +117,6 @@ async function main() {
 
       if (dryRun && refreshed <= 5) {
         console.log('\n---', recipe.id, recipe.title, '---');
-        console.log('EN:', content.description.slice(0, 120));
         console.log('HI:', content.descriptionHi.slice(0, 120));
         console.log('Step 1:', content.steps[0]?.slice(0, 100));
       }
@@ -130,16 +125,14 @@ async function main() {
         await client.query(
           `
             UPDATE rasoi."Recipe"
-            SET description = $2,
-                steps = $3,
-                "descriptionHi" = $4,
-                "stepsHi" = $5,
+            SET steps = $2,
+                "descriptionHi" = $3,
+                "stepsHi" = $4,
                 "updatedAt" = NOW()
             WHERE id = $1
           `,
           [
             recipe.id,
-            content.description,
             JSON.stringify(content.steps),
             content.descriptionHi,
             JSON.stringify(content.stepsHi),

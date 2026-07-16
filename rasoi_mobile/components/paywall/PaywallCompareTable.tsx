@@ -4,9 +4,11 @@ import { StyleSheet, Text, View } from 'react-native';
 import { PAYWALL_COMPARE_FOOTNOTE, PAYWALL_COMPARE_ROWS, type PaywallCompareCell } from '@/constants/payments';
 import type { PlanTier } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type PaywallCompareTableProps = {
   highlightTier?: PlanTier;
+  forceDark?: boolean;
 };
 
 const TIER_LABELS: Record<PlanTier, string> = {
@@ -15,17 +17,34 @@ const TIER_LABELS: Record<PlanTier, string> = {
   paid: 'Plus',
 };
 
-export default function PaywallCompareTable({ highlightTier }: PaywallCompareTableProps) {
+export default function PaywallCompareTable({
+  highlightTier,
+  forceDark = false,
+}: PaywallCompareTableProps) {
+  const { colors: themeColors, isDark } = useTheme();
+  const dark = forceDark || isDark;
+  const text = dark ? colors.dark.text : themeColors.charcoal;
+  const muted = dark ? colors.dark.textMuted : themeColors.muted;
+  const surface = dark ? colors.dark.card : themeColors.white;
+  const headBg = dark ? colors.dark.surface : themeColors.cream;
+  const border = dark ? 'rgba(245, 240, 232, 0.12)' : themeColors.border;
+
   return (
-    <View style={styles.table}>
-      <View style={styles.tableHead}>
-        <Text style={[styles.cell, styles.cellFeature]}>What you get</Text>
+    <View style={[styles.table, { backgroundColor: surface, borderColor: border }]}>
+      <View style={[styles.tableHead, { backgroundColor: headBg }]}>
+        <Text style={[styles.cell, styles.cellFeature, { color: text }]}>What you get</Text>
         {(['free', 'trial', 'paid'] as const).map((tier) => (
           <View
             key={tier}
             style={[styles.headCell, highlightTier === tier && styles.headCellActive]}
           >
-            <Text style={[styles.cellHead, highlightTier === tier && styles.cellHeadActive]}>
+            <Text
+              style={[
+                styles.cellHead,
+                { color: muted },
+                highlightTier === tier && styles.cellHeadActive,
+              ]}
+            >
               {TIER_LABELS[tier]}
             </Text>
             {highlightTier === tier ? <Text style={styles.currentBadge}>You</Text> : null}
@@ -33,23 +52,33 @@ export default function PaywallCompareTable({ highlightTier }: PaywallCompareTab
         ))}
       </View>
       {PAYWALL_COMPARE_ROWS.map((row) => (
-        <View key={row.label} style={styles.tableRow}>
-          <Text style={[styles.cell, styles.cellFeature]}>{row.label}</Text>
-          <CellMark value={row.free} />
-          <CellMark value={row.trial} />
-          <CellMark value={row.paid} accent />
+        <View key={row.label} style={[styles.tableRow, { borderTopColor: border }]}>
+          <Text style={[styles.cell, styles.cellFeature, { color: text }]}>{row.label}</Text>
+          <CellMark value={row.free} muted={muted} />
+          <CellMark value={row.trial} muted={muted} />
+          <CellMark value={row.paid} accent muted={muted} />
         </View>
       ))}
-      <Text style={styles.footnote}>{PAYWALL_COMPARE_FOOTNOTE}</Text>
+      <Text style={[styles.footnote, { color: muted, borderTopColor: border }]}>
+        {PAYWALL_COMPARE_FOOTNOTE}
+      </Text>
     </View>
   );
 }
 
-function CellMark({ value, accent }: { value: PaywallCompareCell; accent?: boolean }) {
+function CellMark({
+  value,
+  accent,
+  muted,
+}: {
+  value: PaywallCompareCell;
+  accent?: boolean;
+  muted: string;
+}) {
   if (typeof value === 'string') {
     return (
       <View style={styles.cellIcon}>
-        <Text style={[styles.cellLimited, accent && styles.cellLimitedAccent]} numberOfLines={2}>
+        <Text style={[styles.cellLimited, { color: muted }, accent && styles.cellLimitedAccent]} numberOfLines={2}>
           {value}
         </Text>
       </View>
@@ -61,7 +90,7 @@ function CellMark({ value, accent }: { value: PaywallCompareCell; accent?: boole
       {value ? (
         <Check size={16} color={accent ? colors.primary : colors.green} />
       ) : (
-        <X size={16} color={colors.muted} />
+        <X size={16} color={muted} />
       )}
     </View>
   );
@@ -70,15 +99,12 @@ function CellMark({ value, accent }: { value: PaywallCompareCell; accent?: boole
 const styles = StyleSheet.create({
   table: {
     borderRadius: radius.md,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
   tableHead: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: colors.cream,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
   },
@@ -88,13 +114,11 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
   cell: {
     flex: 1,
     fontSize: 12,
     fontWeight: '600',
-    color: colors.charcoal,
     textAlign: 'center',
   },
   cellFeature: {
@@ -115,7 +139,6 @@ const styles = StyleSheet.create({
   cellHead: {
     fontSize: 11,
     fontWeight: '800',
-    color: colors.muted,
     textAlign: 'center',
   },
   cellHeadActive: {
@@ -136,7 +159,6 @@ const styles = StyleSheet.create({
   cellLimited: {
     fontSize: 9,
     fontWeight: '800',
-    color: colors.muted,
     textAlign: 'center',
     lineHeight: 12,
   },
@@ -148,8 +170,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     fontSize: 10,
     lineHeight: 14,
-    color: colors.muted,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
   },
 });

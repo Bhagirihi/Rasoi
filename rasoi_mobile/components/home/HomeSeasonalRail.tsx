@@ -4,7 +4,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import HomeSectionHeader from '@/components/home/HomeSectionHeader';
 import type { Recipe } from '@/data/mockRecipes';
 import { appFonts } from '@/constants/fonts';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type HomeSeasonalRailProps = {
   title: string;
@@ -14,6 +15,7 @@ type HomeSeasonalRailProps = {
 
 export default function HomeSeasonalRail({ title, subtitle, picks }: HomeSeasonalRailProps) {
   const router = useRouter();
+  const { colors: themeColors, isDark } = useTheme();
 
   if (picks.length === 0) return null;
 
@@ -25,12 +27,18 @@ export default function HomeSeasonalRail({ title, subtitle, picks }: HomeSeasona
           <Pressable
             key={recipe.id}
             onPress={() => router.push(`/recipe/${recipe.id}`)}
-            style={styles.card}
+            style={[
+              styles.card,
+              {
+                backgroundColor: isDark ? themeColors.white : '#FFF8F0',
+                borderColor: isDark ? themeColors.border : '#F0D4B8',
+              },
+            ]}
           >
-            <Text style={styles.title} numberOfLines={2}>
+            <Text style={[styles.title, { color: themeColors.charcoal }]} numberOfLines={2}>
               {recipe.title}
             </Text>
-            <Text style={styles.meta}>
+            <Text style={[styles.meta, { color: themeColors.muted }]}>
               {recipe.region} · {recipe.prepTime} min
             </Text>
           </Pressable>
@@ -47,20 +55,16 @@ const styles = StyleSheet.create({
     width: 160,
     padding: spacing.md,
     borderRadius: radius.lg,
-    backgroundColor: '#FFF8F0',
     borderWidth: 1,
-    borderColor: '#F0D4B8',
   },
   title: {
     fontFamily: appFonts.bodyBold,
     fontSize: 14,
     lineHeight: 18,
-    color: colors.charcoal,
   },
   meta: {
     marginTop: spacing.xs,
     fontFamily: appFonts.body,
     fontSize: 12,
-    color: colors.muted,
   },
 });

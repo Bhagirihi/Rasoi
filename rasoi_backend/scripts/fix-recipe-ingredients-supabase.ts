@@ -11,7 +11,7 @@ import { Pool } from 'pg';
 import { getDirectDatabaseUrl } from '../src/lib/database-url';
 import { heroIngredientMismatch, inferHeroIngredientFromTitle } from '../src/lib/infer-hero-ingredient';
 import { buildRecipeDescription, buildRecipeDescriptionHi } from '../src/lib/recipe-description';
-import { localizeDescriptionToHindi, buildDetailedStepsHi } from '../src/lib/recipe-content-hi';
+import { buildDetailedStepsHi } from '../src/lib/recipe-content-hi';
 import { normalizeRecipeIngredients } from '../src/lib/recipe-ingredients';
 import { resolveRecipeSteps, stepsLookVague, stepsMismatchTitle, type RecipeStepInput } from '../src/lib/recipe-steps';
 import type { RecipeIngredient } from '../src/lib/types';
@@ -21,7 +21,6 @@ const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 type DbRecipe = {
   id: string;
   title: string;
-  description: string;
   steps: string | null;
   prepTime: number;
   kitchenStyleId: string;
@@ -101,7 +100,6 @@ function buildContent(recipe: DbRecipe, ingredients: RecipeIngredient[]) {
     ingredients,
     prepTime: recipe.prepTime,
     difficulty: recipe.difficulty,
-    description: recipe.description,
     steps: needsStepRefresh(recipe.title, storedSteps, ingredients) ? undefined : storedSteps,
   };
 
@@ -110,7 +108,7 @@ function buildContent(recipe: DbRecipe, ingredients: RecipeIngredient[]) {
   const descriptionHi = buildRecipeDescriptionHi({ ...input, steps });
   const stepsHi = buildDetailedStepsHi({ ...input, steps, description });
 
-  return { steps, description, descriptionHi, stepsHi };
+  return { steps, descriptionHi, stepsHi };
 }
 
 async function main() {
@@ -119,7 +117,7 @@ async function main() {
   const limit = limitArg ? Number.parseInt(limitArg.split('=')[1] ?? '', 10) : undefined;
 
   const { rows } = await pool.query<DbRecipe>(`
-    SELECT id, title, description, steps, "prepTime", "kitchenStyleId", "dietType", difficulty, ingredients
+    SELECT id, title, steps, "prepTime", "kitchenStyleId", "dietType", difficulty, ingredients
     FROM rasoi."Recipe"
     ORDER BY id
     ${limit ? `LIMIT ${limit}` : ''}
@@ -167,17 +165,15 @@ async function main() {
           `
             UPDATE rasoi."Recipe"
             SET ingredients = $2,
-                description = COALESCE($3, description),
-                steps = COALESCE($4, steps),
-                "descriptionHi" = COALESCE($5, "descriptionHi"),
-                "stepsHi" = COALESCE($6, "stepsHi"),
+                steps = COALESCE($3, steps),
+                "descriptionHi" = COALESCE($4, "descriptionHi"),
+                "stepsHi" = COALESCE($5, "stepsHi"),
                 "updatedAt" = NOW()
             WHERE id = $1
           `,
           [
             recipe.id,
             ingredientsJson,
-            content?.description ?? null,
             content ? JSON.stringify(content.steps) : null,
             content?.descriptionHi ?? null,
             content ? JSON.stringify(content.stepsHi) : null,

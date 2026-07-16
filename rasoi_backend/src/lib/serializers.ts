@@ -27,15 +27,21 @@ export function parseJson<T>(value: string, fallback: T): T {
 }
 
 export function serializeRecipe(recipe: Recipe): RecipeResponse {
-  const kitchenStyleIds = parseJson<CuisineId[]>(recipe.kitchenStyleIds, []);
-  const resolvedKitchenStyleIds =
-    kitchenStyleIds.length > 0 ? kitchenStyleIds : [recipe.kitchenStyleId];
-
-  const ingredients = normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, []));
+  const ingredients = normalizeRecipeIngredients(recipe.ingredients);
   const mainIngredients = parseMainIngredients(recipe.main_ingredients);
   const steps = parseJson<string[]>(recipe.steps ?? '[]', []);
   const storedStepsHi = parseJson<string[]>(recipe.stepsHi ?? '[]', []);
   const storedDescHi = recipe.descriptionHi?.trim() ?? '';
+  const kitchenStyleId = recipe.kitchenStyleId as CuisineId;
+  const description = buildRecipeDescription({
+    title: recipe.title,
+    kitchenStyleId: recipe.kitchenStyleId,
+    dietType: recipe.dietType,
+    ingredients,
+    prepTime: recipe.prepTime,
+    difficulty: recipe.difficulty,
+    steps,
+  });
 
   return {
     id: recipe.id,
@@ -43,20 +49,11 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
     prepTime: recipe.prepTime,
     calories: recipe.calories,
     region: recipe.region,
-    kitchenStyleId: recipe.kitchenStyleId,
-    kitchenStyleIds: resolvedKitchenStyleIds,
+    kitchenStyleId,
+    kitchenStyleIds: [kitchenStyleId],
     dietType: recipe.dietType as DietType,
     difficulty: recipe.difficulty as RecipeDifficulty,
-    description: recipe.description?.trim() || buildRecipeDescription({
-      title: recipe.title,
-      kitchenStyleId: recipe.kitchenStyleId,
-      dietType: recipe.dietType,
-      ingredients,
-      prepTime: recipe.prepTime,
-      difficulty: recipe.difficulty,
-      description: recipe.description,
-      steps,
-    }),
+    description,
     descriptionHi:
       storedDescHi ||
       buildRecipeDescriptionHi({
@@ -69,7 +66,7 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
         steps,
       }),
     imageUrl: recipe.imageUrl,
-    tags: parseJson<RecipeTag[]>(recipe.tags, []),
+    tags: [] as RecipeTag[],
     ingredients,
     mainIngredients: mainIngredients.length > 0 ? mainIngredients : undefined,
     steps,

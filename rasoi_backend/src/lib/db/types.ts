@@ -104,13 +104,10 @@ export type Recipe = {
   calories: number;
   region: string;
   kitchenStyleId: string;
-  kitchenStyleIds: string;
   dietType: string;
   difficulty: string;
-  description: string;
   descriptionHi?: string | null;
   imageUrl: string;
-  tags: string;
   ingredients: string;
   main_ingredients?: string | null;
   steps: string | null;
@@ -215,6 +212,7 @@ export type PantrySection = {
 export type AppSettings = {
   id: string;
   paymentsEnabled: boolean;
+  paymentsMinAppVersion: string | null;
   defaultPantryIngredients: string;
   updatedAt: Date;
 };

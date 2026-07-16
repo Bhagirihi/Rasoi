@@ -817,6 +817,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await syncPushTokenToServer(payload.notificationsEnabled);
       }
 
+      // Honor soft-paywall flag set at signup (do not hardcode false).
+      showTrialWelcome = await loadPendingTrialWelcome();
+
       authLog('completeOnboarding:done', {
         syncedToServer: Boolean(session?.access_token || legacyToken),
         showTrialWelcome,
@@ -884,11 +887,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (isNewSignup) {
           pendingPantrySetupRef.current = true;
           setPendingPantrySetup(true);
-        }
-        const nav = await finishAuthAfterSync(user);
-        if (isNewSignup && paymentsEnabled && user.plan.planTier === 'trial') {
+          // Soft paywall before pantry for every new registered account.
           await setPendingTrialWelcome(true);
         }
+        const nav = await finishAuthAfterSync(user);
         if (isNewSignup) {
           setPantryIngredients([]);
           void updatePantryIngredients([]).then(applyUserProfile).catch((error) => {
@@ -909,7 +911,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     },
-    [finishAuthAfterSync, isGuestUser, userId, paymentsEnabled, setPendingPantrySetup, setPendingTrialWelcome, updatePantryIngredients, applyUserProfile],
+    [finishAuthAfterSync, isGuestUser, userId, setPendingPantrySetup, setPendingTrialWelcome, updatePantryIngredients, applyUserProfile],
   );
 
   const verifyLoginEmailOtp = useCallback(

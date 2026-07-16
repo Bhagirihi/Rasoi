@@ -16,9 +16,9 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import TermsAcceptanceModal from '@/components/auth/TermsAcceptanceModal';
 import CuisinePreferenceList from '@/components/CuisinePreferenceList';
 import DietPreferenceList from '@/components/DietPreferenceList';
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
 import RasoiBrandIcon from '@/components/RasoiBrandIcon';
 import {
   colors,
@@ -90,8 +90,6 @@ export default function RegisterScreen() {
   const [errorMessage, setErrorMessage] = useState('');
   const [busyAction, setBusyAction] = useState<BusyAction>(null);
   const isSubmitting = busyAction !== null;
-  const [showTermsModal, setShowTermsModal] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
     if (!isGuest && userName && userName !== 'Guest') {
@@ -298,11 +296,6 @@ export default function RegisterScreen() {
     const details = validateSignupComplete();
     if (!details) return;
 
-    if (!termsAccepted) {
-      setShowTermsModal(true);
-      return;
-    }
-
     await persistSignupPreferences();
     await sendOtpForDetails(details);
   };
@@ -418,7 +411,6 @@ export default function RegisterScreen() {
           subtitle: '',
           primaryLabel: 'Continue',
           primaryTestId: testIds.registerContinueContact,
-          primaryAction: handleContinueFromDetails,
           primaryDisabled: false,
           showLoginLink: true,
         };
@@ -428,7 +420,6 @@ export default function RegisterScreen() {
           subtitle: 'We filter recipes to match how you eat at home.',
           primaryLabel: 'Continue',
           primaryTestId: testIds.registerContinueDiet,
-          primaryAction: handleContinueFromDiet,
           primaryDisabled: !selectedDiet,
           showLoginLink: false,
         };
@@ -438,7 +429,6 @@ export default function RegisterScreen() {
           subtitle: 'Pick regional and special collections you cook most often.',
           primaryLabel: 'Send verification code',
           primaryTestId: testIds.registerSendOtp,
-          primaryAction: handleSendOtp,
           primaryDisabled: selectedCuisines.length === 0,
           showLoginLink: false,
         };
@@ -448,12 +438,28 @@ export default function RegisterScreen() {
           subtitle: `Enter the code sent to ${normalizeEmail(email)}`,
           primaryLabel: 'Create account',
           primaryTestId: testIds.registerVerifyOtp,
-          primaryAction: handleVerifyOtp,
           primaryDisabled: false,
           showLoginLink: false,
         };
     }
   }, [step, selectedDiet, selectedCuisines.length, email]);
+
+  const handlePrimaryAction = () => {
+    switch (step) {
+      case 'details':
+        handleContinueFromDetails();
+        return;
+      case 'diet':
+        handleContinueFromDiet();
+        return;
+      case 'kitchen':
+        void handleSendOtp();
+        return;
+      case 'email-otp':
+        void handleVerifyOtp();
+        return;
+    }
+  };
 
   const overlaySteps = useMemo(() => {
     switch (busyAction) {
@@ -470,29 +476,10 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient
-        colors={['#0A0908', '#12100E', '#0A0908']}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.glowGreen} />
-      <View style={styles.glowOrange} />
+      <AuthAtmosphere />
 
       <SafeAreaView style={styles.flex} edges={['top']} testID={testIds.screenRegister}>
       <AppSavingOverlay visible={isSubmitting} steps={overlaySteps} />
-      <TermsAcceptanceModal
-        visible={showTermsModal}
-        checked={termsAccepted}
-        onToggleChecked={() => setTermsAccepted((value) => !value)}
-        onCancel={() => setShowTermsModal(false)}
-        onContinue={() => {
-          if (!termsAccepted) return;
-          setShowTermsModal(false);
-          const details = validateSignupComplete();
-          if (details) {
-            void persistSignupPreferences().then(() => sendOtpForDetails(details));
-          }
-        }}
-      />
       {step === 'kitchen' ? (
         <View style={[styles.selectionHeader, isCompact && styles.selectionHeaderCompact]}>
           <Text style={styles.selectionHeaderLabel}>Kitchen styles selected</Text>
@@ -734,7 +721,7 @@ export default function RegisterScreen() {
           >
             <View style={[styles.actions, isCompact && styles.actionsCompact]}>
               <Pressable
-                onPress={stepMeta.primaryAction}
+                onPress={handlePrimaryAction}
                 disabled={isSubmitting || stepMeta.primaryDisabled}
                 testID={stepMeta.primaryTestId}
                 style={[
@@ -784,28 +771,10 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.dark.bg,
+    backgroundColor: AUTH_ATMOSPHERE_BG,
   },
   flex: {
     flex: 1,
-  },
-  glowGreen: {
-    position: 'absolute',
-    top: -80,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(0,168,107,0.12)',
-  },
-  glowOrange: {
-    position: 'absolute',
-    bottom: 120,
-    left: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: 'rgba(255,107,53,0.1)',
   },
   scrollContent: {
     flexGrow: 1,

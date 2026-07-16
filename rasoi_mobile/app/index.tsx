@@ -108,12 +108,12 @@ export default function Index() {
     return <Redirect href={permissionsRedirect} />;
   }
 
-  if (pendingPantrySetup) {
-    return <Redirect href="/(tabs)/pantry" />;
-  }
-
   if (pendingTrialWelcome) {
     return <Redirect href="/(auth)/trial-welcome" />;
+  }
+
+  if (pendingPantrySetup) {
+    return <Redirect href="/(tabs)/pantry" />;
   }
 
   return <Redirect href="/(tabs)" />;

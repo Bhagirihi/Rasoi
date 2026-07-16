@@ -79,15 +79,19 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   free: {
-    backgroundColor: 'rgba(107,114,128,0.12)',
+    backgroundColor: 'rgba(255,107,53,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,53,0.28)',
   },
   freeText: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.muted,
+    color: colors.primary,
   },
   trial: {
     backgroundColor: 'rgba(255,107,53,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,53,0.28)',
   },
   trialText: {
     fontSize: 11,

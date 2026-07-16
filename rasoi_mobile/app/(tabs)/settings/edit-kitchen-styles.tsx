@@ -20,7 +20,7 @@ import { cuisinesToRegion, getSelectableKitchenStyles } from '@/utils/kitchenSty
 export default function EditKitchenStylesScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors, colorScheme } = useTheme();
+  const { colors: themeColors, colorScheme, screenBackground } = useTheme();
   const prefVariant = colorScheme === 'dark' ? 'dark' : 'light';
   const { showDialog } = useAppDialog();
   const {
@@ -93,7 +93,7 @@ export default function EditKitchenStylesScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: screenBackground }]} edges={['top']}>
       <AppSavingOverlay visible={isSaving} message="Saving kitchen styles…" />
       <SettingsSubHeader title="Kitchen styles" onBack={() => router.back()} />
       <View

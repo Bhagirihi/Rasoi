@@ -21,7 +21,7 @@ import {
   type PantryStapleFixPhase,
 } from '@/lib/pantry-staple-audit';
 import { buildDetailedStepsHi, hindiContentNeedsRefresh } from '@/lib/recipe-content-hi';
-import { buildRecipeDescriptionHi } from '@/lib/recipe-description';
+import { buildRecipeDescription, buildRecipeDescriptionHi } from '@/lib/recipe-description';
 import { resolveRecipeSteps, type RecipeStepInput } from '@/lib/recipe-steps';
 import { syncPublicRecipe } from '@/lib/sync-public-recipe';
 import type { RecipeIngredient } from '@/lib/types';
@@ -31,7 +31,6 @@ const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 type DbRecipe = {
   id: string;
   title: string;
-  description: string;
   descriptionHi: string | null;
   steps: string | null;
   stepsHi: string | null;
@@ -39,11 +38,9 @@ type DbRecipe = {
   calories: number;
   region: string;
   kitchenStyleId: string;
-  kitchenStyleIds: string | null;
   dietType: string;
   difficulty: string;
   imageUrl: string;
-  tags: string;
   ingredients: string;
   published: boolean;
   createdAt: Date;
@@ -96,22 +93,22 @@ function buildHindiContent(
     ingredients,
     prepTime: recipe.prepTime,
     difficulty: recipe.difficulty,
-    description: recipe.description,
     steps,
   };
+  const description = buildRecipeDescription({ ...input, steps });
 
   return {
     descriptionHi: buildRecipeDescriptionHi({ ...input, steps }),
-    stepsHi: buildDetailedStepsHi({ ...input, steps, description: recipe.description }),
+    stepsHi: buildDetailedStepsHi({ ...input, steps, description }),
   };
 }
 
 async function loadRecipes(limit?: number): Promise<DbRecipe[]> {
   const { rows } = await pool.query<DbRecipe>(`
     SELECT
-      id, title, description, "descriptionHi", steps, "stepsHi",
-      "prepTime", calories, region, "kitchenStyleId", "kitchenStyleIds",
-      "dietType", difficulty, "imageUrl", tags, ingredients, published,
+      id, title, "descriptionHi", steps, "stepsHi",
+      "prepTime", calories, region, "kitchenStyleId",
+      "dietType", difficulty, "imageUrl", ingredients, published,
       "createdAt", "updatedAt"
     FROM rasoi."Recipe"
     WHERE published = true
@@ -175,7 +172,6 @@ async function main() {
               ingredients: fixed,
               prepTime: recipe.prepTime,
               difficulty: recipe.difficulty,
-              description: recipe.description,
             });
 
       const storedStepsHi = parseJson<string[]>(recipe.stepsHi, []);

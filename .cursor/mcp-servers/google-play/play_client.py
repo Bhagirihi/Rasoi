@@ -53,6 +53,42 @@ def load_manifest() -> dict[str, Any]:
     return json.loads(path.read_text(encoding='utf-8'))
 
 
+def monetization_config(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Unified monetization block (schema v2) with legacy subscriptions/planTiers fallback."""
+    m = manifest or load_manifest()
+    if 'monetization' in m:
+        return m['monetization']
+    legacy_subs = m.get('subscriptions', {})
+    return {
+        'entitlementId': legacy_subs.get('entitlementId'),
+        'revenueCat': {
+            'offering': legacy_subs.get('revenueCatOffering'),
+            'packages': legacy_subs.get('revenueCatPackages', {}),
+            'playProducts': legacy_subs.get('revenueCatPlayProducts', {}),
+        },
+        'tiers': m.get('planTiers', {}),
+        'products': legacy_subs.get('products', []),
+    }
+
+
+def play_console_tags(manifest: dict[str, Any] | None = None) -> list[str]:
+    m = manifest or load_manifest()
+    play_console = m.get('playConsole') or {}
+    if play_console.get('tags'):
+        return list(play_console['tags'])
+    return list(m.get('playConsoleTags', []))
+
+
+def feature_graphic_relative_path(manifest: dict[str, Any]) -> str | None:
+    assets = manifest.get('assets') or {}
+    feature_graphic = assets.get('featureGraphic')
+    if isinstance(feature_graphic, dict):
+        return str(feature_graphic.get('path', '')).strip() or None
+    if isinstance(feature_graphic, str):
+        return feature_graphic.strip() or None
+    return None
+
+
 def package_name() -> str:
     return os.environ.get('RASOI_PACKAGE_NAME', '').strip() or DEFAULT_PACKAGE
 
@@ -210,7 +246,7 @@ def setup_guide() -> dict[str, Any]:
             'Run MCP tool play_full_setup after app exists in console.',
         ],
         'storeListing': manifest.get('storeListing', {}),
-        'subscriptions': manifest.get('subscriptions', {}),
+        'monetization': monetization_config(manifest),
         'manifestPath': str(manifest_path()),
     }
 
@@ -375,7 +411,7 @@ def activate_base_plan(product_id: str, base_plan_id: str, pkg: str | None = Non
 def create_rasoi_subscriptions(*, activate: bool = True, pkg: str | None = None) -> dict[str, Any]:
     pkg = (pkg or package_name()).strip()
     manifest = load_manifest()
-    sub_cfg = manifest.get('subscriptions', {})
+    sub_cfg = monetization_config(manifest)
     products = sub_cfg.get('products', [])
 
     results: list[dict[str, Any]] = []
@@ -430,20 +466,42 @@ def _listing_body(listing: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _listings_from_manifest(manifest: dict[str, Any], language: str) -> list[tuple[str, dict[str, Any]]]:
+def _play_api_locale(manifest: dict[str, Any], manifest_locale: str, listing: dict[str, Any]) -> str:
+    """Map manifest locale (e.g. gu-IN) to Play edits API language code (e.g. gu)."""
+    if listing.get('playApiLocale'):
+        return str(listing['playApiLocale']).strip()
+    mapping = (manifest.get('localization') or {}).get('playApiLocaleByManifestLocale') or {}
+    return str(mapping.get(manifest_locale) or manifest_locale).strip()
+
+
+def _skipped_manifest_locales(manifest: dict[str, Any]) -> set[str]:
+    localization = manifest.get('localization') or {}
+    skipped = localization.get('skipApiPush') or []
+    return {str(locale).strip() for locale in skipped if str(locale).strip()}
+
+
+def _listings_from_manifest(manifest: dict[str, Any], language: str) -> list[tuple[str, str, dict[str, Any]]]:
+    """Returns (manifest_locale, play_api_locale, listing_body)."""
+    skipped = _skipped_manifest_locales(manifest)
     if language == 'all':
-        entries: list[tuple[str, dict[str, Any]]] = [('en-US', manifest.get('storeListing', {}))]
-        for lang, loc in (manifest.get('localizedListings') or {}).items():
-            entries.append((lang, loc))
+        entries: list[tuple[str, str, dict[str, Any]]] = [
+            ('en-US', 'en-US', manifest.get('storeListing', {})),
+        ]
+        for manifest_locale, loc in (manifest.get('localizedListings') or {}).items():
+            if manifest_locale in skipped:
+                continue
+            api_locale = _play_api_locale(manifest, manifest_locale, loc)
+            entries.append((manifest_locale, api_locale, loc))
         return entries
 
     if language == 'en-US':
-        return [('en-US', manifest.get('storeListing', {}))]
+        return [('en-US', 'en-US', manifest.get('storeListing', {}))]
 
     localized = (manifest.get('localizedListings') or {}).get(language)
     if not localized:
         raise PlayError(f'No localized listing for "{language}" in manifest.localizedListings')
-    return [(language, localized)]
+    api_locale = _play_api_locale(manifest, language, localized)
+    return [(language, api_locale, localized)]
 
 
 def repo_root() -> Path:
@@ -468,18 +526,28 @@ def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> di
 
     updated_listings: list[dict[str, Any]] = []
     errors: list[dict[str, str]] = []
-    for lang, listing in _listings_from_manifest(manifest, language):
+    for manifest_locale, api_locale, listing in _listings_from_manifest(manifest, language):
         try:
             updated = (
                 service.edits()
                 .listings()
-                .update(packageName=pkg, editId=edit_id, language=lang, body=_listing_body(listing))
+                .update(packageName=pkg, editId=edit_id, language=api_locale, body=_listing_body(listing))
                 .execute()
             )
-            updated_listings.append({'language': lang, 'listing': updated})
+            updated_listings.append({
+                'manifestLocale': manifest_locale,
+                'playApiLocale': api_locale,
+                'language': api_locale,
+                'listing': updated,
+            })
         except Exception as exc:  # noqa: BLE001
             if language == 'all':
-                errors.append({'language': lang, 'error': str(exc)})
+                errors.append({
+                    'manifestLocale': manifest_locale,
+                    'playApiLocale': api_locale,
+                    'language': api_locale,
+                    'error': str(exc),
+                })
                 continue
             raise
 
@@ -490,7 +558,7 @@ def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> di
 
     result: dict[str, Any] = {
         'package_name': pkg,
-        'languages': [entry['language'] for entry in updated_listings],
+        'languages': [entry.get('manifestLocale', entry['language']) for entry in updated_listings],
         'listings': updated_listings,
         'commit': committed,
     }
@@ -575,7 +643,7 @@ def push_store_graphics(
     assets = manifest.get('assets') or {}
     lang = (language or manifest.get('application', {}).get('defaultLanguage') or 'en-US').strip()
 
-    feature_rel = assets.get('featureGraphic')
+    feature_rel = feature_graphic_relative_path(manifest)
     screenshots_rel = assets.get('phoneScreenshots') or []
     if not feature_rel and not screenshots_rel:
         raise PlayError('manifest.assets.featureGraphic or phoneScreenshots required')
@@ -668,10 +736,14 @@ def push_aso_bundle(*, pkg: str | None = None, include_graphics: bool = True) ->
 
     manifest = load_manifest()
     steps['play_console_tags'] = {
-        'tags': manifest.get('playConsoleTags', []),
-        'note': manifest.get(
-            'playConsoleTagsNote',
-            'Set tags manually in Play Console — API does not support tags.',
+        'tags': play_console_tags(manifest),
+        'tagsApiSupported': (manifest.get('playConsole') or {}).get(
+            'tagsApiSupported',
+            False,
+        ),
+        'requiresManualConsoleEnable': (manifest.get('localization') or {}).get(
+            'requiresManualConsoleEnable',
+            (manifest.get('localization') or {}).get('skipApiPush', []),
         ),
     }
     steps['status'] = 'complete'
@@ -709,7 +781,8 @@ def full_rasoi_setup(*, pkg: str | None = None, activate_subscriptions: bool = T
 
     steps['status'] = 'complete'
     steps['manifest'] = str(manifest_path())
-    steps['revenuecat'] = manifest.get('subscriptions', {}).get('revenueCatPackages')
+    revenue_cat = monetization_config(manifest).get('revenueCat', {})
+    steps['revenuecat'] = revenue_cat.get('packages')
     return steps
 
 

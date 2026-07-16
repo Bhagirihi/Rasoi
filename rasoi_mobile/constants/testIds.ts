@@ -29,6 +29,7 @@ export const testIds = {
 
   qaOpenPaywall: 'qa-open-paywall',
   qaOpenTrialWelcome: 'qa-open-trial-welcome',
+  qaOpenTrialEnded: 'qa-open-trial-ended',
 
   legalConsentCheckbox: 'legal-consent-checkbox',
   legalConsentContinue: 'legal-consent-continue',
@@ -70,6 +71,7 @@ export const testIds = {
   homeRecipeSave: 'home-recipe-save',
 
   trialContinue: 'trial-continue',
+  trialWelcomeBack: 'trial-welcome-back',
 
   settingsThemeLight: 'settings-theme-light',
   settingsThemeDark: 'settings-theme-dark',

@@ -34,7 +34,7 @@ export default function RecipeIngredientsGuide({
   const availableSet = new Set(available);
   const missingSet = new Set(missing);
 
-  const rowStatus = (ingredientName: string) => {
+  const chipStatus = (ingredientName: string) => {
     if ([...availableSet].some((name) => ingredientMatchesMainName(ingredientName, name))) {
       return "pantry" as const;
     }
@@ -64,53 +64,77 @@ export default function RecipeIngredientsGuide({
           },
         ]}
       >
-        {ingredients.map((ingredient, index) => {
-          const status = rowStatus(ingredient.name);
-          const inPantry = status === "pantry";
-          const isMissing = status === "missing";
+        <View style={styles.grid}>
+          {ingredients.map((ingredient, index) => {
+            const status = chipStatus(ingredient.name);
+            const inPantry = status === "pantry";
+            const isMissing = status === "missing";
+            const label = ingredient.isStaple
+              ? `${ingredient.name} · staple`
+              : ingredient.name;
 
-          return (
-            <View
-              key={`${ingredient.name}-${index}`}
-              style={[
-                styles.row,
-                index < ingredients.length - 1 && styles.rowBorder,
-                { borderBottomColor: themeColors.border },
-                inPantry && styles.rowInPantry,
-                isMissing && styles.rowMissing,
-              ]}
-            >
+            return (
               <View
+                key={`${ingredient.name}-${index}`}
                 style={[
-                  styles.statusIcon,
-                  inPantry && styles.statusIconPantry,
-                  isMissing && styles.statusIconMissing,
-                  !inPantry &&
-                    !isMissing && {
-                      backgroundColor: isDark
-                        ? themeColors.border
-                        : colors.border,
-                    },
+                  styles.chip,
+                  {
+                    backgroundColor: inPantry
+                      ? isDark
+                        ? "rgba(0,168,107,0.16)"
+                        : "rgba(0,168,107,0.08)"
+                      : isMissing
+                        ? isDark
+                          ? "rgba(255,107,53,0.16)"
+                          : "rgba(255,107,53,0.08)"
+                        : themeColors.cream,
+                    borderColor: inPantry
+                      ? colors.green
+                      : isMissing
+                        ? colors.primary
+                        : themeColors.border,
+                  },
                 ]}
               >
                 {inPantry ? (
-                  <Check size={11} color={colors.white} strokeWidth={3} />
-                ) : null}
+                  <View style={styles.chipCheck}>
+                    <Check size={10} color={colors.white} strokeWidth={3} />
+                  </View>
+                ) : (
+                  <View
+                    style={[
+                      styles.chipDot,
+                      {
+                        borderColor: isMissing
+                          ? colors.primary
+                          : themeColors.border,
+                        backgroundColor: isMissing
+                          ? colors.primary
+                          : "transparent",
+                      },
+                    ]}
+                  />
+                )}
+                <Text
+                  style={[
+                    styles.chipText,
+                    {
+                      color: inPantry
+                        ? colors.green
+                        : isMissing
+                          ? colors.primary
+                          : themeColors.charcoal,
+                    },
+                  ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {label}
+                </Text>
               </View>
-              <Text style={[styles.text, { color: themeColors.charcoal }]}>
-                <Text style={styles.ingredientName}>{ingredient.name}</Text>
-                {ingredient.isStaple ? (
-                  <Text
-                    style={[styles.stapleHint, { color: themeColors.muted }]}
-                  >
-                    {" "}
-                    · staple
-                  </Text>
-                ) : null}
-              </Text>
-            </View>
-          );
-        })}
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -145,47 +169,46 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
   },
-  row: {
+  grid: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    padding: spacing.md,
   },
-  rowBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    borderRadius: radius.sm,
+    borderWidth: 1.5,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+    flexGrow: 0,
+    flexShrink: 1,
+    maxWidth: "100%",
+    minHeight: 40,
   },
-  rowInPantry: {
-    backgroundColor: "rgba(0,168,107,0.04)",
-  },
-  rowMissing: {
-    backgroundColor: "rgba(255,107,53,0.05)",
-  },
-  statusIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    marginTop: 2,
+  chipCheck: {
+    width: 16,
+    height: 16,
+    borderRadius: radius.pill,
+    backgroundColor: colors.green,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  statusIconPantry: {
-    backgroundColor: colors.green,
+  chipDot: {
+    width: 16,
+    height: 16,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    flexShrink: 0,
   },
-  statusIconMissing: {
-    backgroundColor: colors.primary,
-  },
-  text: {
-    flex: 1,
-    fontFamily: appFonts.body,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  ingredientName: {
+  chipText: {
     fontFamily: appFonts.bodyBold,
-  },
-  stapleHint: {
-    fontFamily: appFonts.body,
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: "700",
+    flexShrink: 1,
+    lineHeight: 16,
   },
 });

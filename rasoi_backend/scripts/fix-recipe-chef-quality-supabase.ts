@@ -11,7 +11,7 @@ import { resolve } from 'node:path';
 import { Pool } from 'pg';
 
 import { getDirectDatabaseUrl } from '../src/lib/database-url';
-import { localizeDescriptionToHindi, buildDetailedStepsHi } from '../src/lib/recipe-content-hi';
+import { buildDetailedStepsHi } from '../src/lib/recipe-content-hi';
 import { buildRecipeDescription, buildRecipeDescriptionHi } from '../src/lib/recipe-description';
 import { fixRecipeIngredientsFromTitle } from '../src/lib/fix-recipe-ingredients';
 import {
@@ -29,7 +29,6 @@ const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 type DbRecipe = {
   id: string;
   title: string;
-  description: string;
   steps: string | null;
   prepTime: number;
   kitchenStyleId: string;
@@ -84,7 +83,6 @@ function buildContent(recipe: DbRecipe, ingredients: RecipeIngredient[], forceNe
     ingredients,
     prepTime: recipe.prepTime,
     difficulty: recipe.difficulty,
-    description: recipe.description,
     steps: forceNewSteps ? undefined : storedSteps,
   });
 
@@ -93,7 +91,7 @@ function buildContent(recipe: DbRecipe, ingredients: RecipeIngredient[], forceNe
   const descriptionHi = buildRecipeDescriptionHi({ ...input, steps });
   const stepsHi = buildDetailedStepsHi({ ...input, steps, description });
 
-  return { steps, description, descriptionHi, stepsHi };
+  return { steps, descriptionHi, stepsHi };
 }
 
 function summarizeByCode(results: ChefAuditResult[]): Record<ChefAuditIssueCode, number> {
@@ -172,7 +170,7 @@ function writeAuditReport(label: string, results: ChefAuditResult[], totalRecipe
 
 async function loadRecipes(limit?: number): Promise<DbRecipe[]> {
   const { rows } = await pool.query<DbRecipe>(`
-    SELECT id, title, description, steps, "prepTime", "kitchenStyleId", "dietType", difficulty, ingredients
+    SELECT id, title, steps, "prepTime", "kitchenStyleId", "dietType", difficulty, ingredients
     FROM rasoi."Recipe"
     ORDER BY id
     ${limit ? `LIMIT ${limit}` : ''}
@@ -259,17 +257,15 @@ async function main() {
           `
             UPDATE rasoi."Recipe"
             SET ingredients = $2,
-                description = COALESCE($3, description),
-                steps = COALESCE($4, steps),
-                "descriptionHi" = COALESCE($5, "descriptionHi"),
-                "stepsHi" = COALESCE($6, "stepsHi"),
+                steps = COALESCE($3, steps),
+                "descriptionHi" = COALESCE($4, "descriptionHi"),
+                "stepsHi" = COALESCE($5, "stepsHi"),
                 "updatedAt" = NOW()
             WHERE id = $1
           `,
           [
             recipe.id,
             JSON.stringify(fixed),
-            content?.description ?? null,
             content ? JSON.stringify(content.steps) : null,
             content?.descriptionHi ?? null,
             content ? JSON.stringify(content.stepsHi) : null,

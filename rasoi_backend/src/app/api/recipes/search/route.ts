@@ -49,10 +49,10 @@ export async function GET(request: NextRequest) {
       recipeMatchesSearchQuery(
         {
           title: recipe.title,
-          description: recipe.description,
+          description: '',
           region: recipe.region,
           dietType: recipe.dietType,
-          tags: recipe.tags,
+          tags: [],
           ingredients: recipe.ingredients,
         },
         query,

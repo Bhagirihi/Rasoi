@@ -175,13 +175,11 @@ model Recipe {
   calories          Int
   region            String
   kitchenStyleId    String   @default("north")
-  kitchenStyleIds   String   @default("[]")
   dietType          String
   difficulty        String
-  description       String
   imageUrl          String
-  tags              String
   ingredients       String
+  main_ingredients  String?
   steps             String?
   descriptionHi     String?
   stepsHi           String?
@@ -314,6 +312,8 @@ model PantrySection {
 model AppSettings {
   id                        String   @id @default("default")
   paymentsEnabled           Boolean  @default(false)
+  /// Optional semver floor — paywall only for apps >= this when paymentsEnabled.
+  paymentsMinAppVersion     String?
   defaultPantryIngredients  String   @default("[]")
   updatedAt                 DateTime @updatedAt
 

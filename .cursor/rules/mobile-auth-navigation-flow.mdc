@@ -10,7 +10,7 @@ alwaysApply: false
 
 ## Register path (new account)
 
-`Register (contact details + gender)` → `Diet` → `Kitchen styles` → `Email OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` (notifications + location; diet/cuisines skipped if collected on Register) → `Pantry` → optional `Trial welcome` → `Dashboard (tabs)`
+`Register (contact details + gender)` → `Diet` → `Kitchen styles` → `Email OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` (notifications + location; diet/cuisines skipped if collected on Register) → optional `Trial welcome` (soft paywall) → `Pantry` → `Dashboard (tabs)`
 
 Onboarding sub-steps (fixed order):
 
@@ -19,7 +19,7 @@ Onboarding sub-steps (fixed order):
 3. Notifications permission
 4. Location permission
 
-Implementation anchors: `register.tsx` (OTP → legal-consent), `legal-consent.tsx`, `onboarding.tsx`, `authNavigation.ts` (`pendingPantrySetup` → pantry), `trial-welcome.tsx`.
+Implementation anchors: `register.tsx` (OTP → legal-consent), `legal-consent.tsx`, `onboarding.tsx`, `authNavigation.ts` (`pendingTrialWelcome` → trial-welcome before pantry), `trial-welcome.tsx` (continue → pantry if `pendingPantrySetup`).
 
 ## Login path (existing account)
 

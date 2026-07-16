@@ -35,7 +35,7 @@ export default function SavedScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const meal = getMealContext();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const { pantryIngredients, dietChoice, regionalCuisine, showPartners, offlineRecipeIds } =
     useAppContext();
   const { savedRecipes } = useSavedRecipes();
@@ -121,7 +121,7 @@ export default function SavedScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      style={[styles.safe, { backgroundColor: screenBackground }]}
       edges={["top"]}
       testID={testIds.screenSaved}
     >

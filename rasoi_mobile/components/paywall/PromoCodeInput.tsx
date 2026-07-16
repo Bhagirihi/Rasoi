@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { colors, radius, spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 type PromoCodeInputProps = {
   disabled?: boolean;
+  forceDark?: boolean;
   onRedeem: (code: string) => Promise<{ message: string }>;
   onSuccess: (message: string) => void;
   onError: (message: string) => void;
@@ -14,10 +16,19 @@ type PromoCodeInputProps = {
 
 export default function PromoCodeInput({
   disabled = false,
+  forceDark = false,
   onRedeem,
   onSuccess,
   onError,
 }: PromoCodeInputProps) {
+  const { colors: themeColors, isDark } = useTheme();
+  const dark = forceDark || isDark;
+  const text = dark ? colors.dark.text : themeColors.charcoal;
+  const muted = dark ? colors.dark.textMuted : themeColors.muted;
+  const inputBg = dark ? colors.dark.surface : colors.white;
+  const inputBorder = dark ? 'rgba(255,107,53,0.45)' : colors.white;
+  const applyBg = dark ? colors.primary : colors.charcoal;
+
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -38,20 +49,34 @@ export default function PromoCodeInput({
   };
 
   return (
-    <View style={styles.wrap}>
+    <View
+      style={[
+        styles.wrap,
+        {
+          borderColor: dark ? 'rgba(255,107,53,0.55)' : 'rgba(255,107,53,0.35)',
+          backgroundColor: dark ? 'rgba(255,107,53,0.12)' : 'transparent',
+        },
+      ]}
+    >
       <LinearGradient
-        colors={['rgba(255,107,53,0.14)', 'rgba(255,153,51,0.08)']}
+        colors={
+          dark
+            ? ['rgba(255,107,53,0.22)', 'rgba(255,153,51,0.1)']
+            : ['rgba(255,107,53,0.14)', 'rgba(255,153,51,0.08)']
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
         <View style={styles.header}>
-          <View style={styles.iconWrap}>
+          <View style={[styles.iconWrap, { backgroundColor: dark ? colors.dark.card : colors.white }]}>
             <Tag size={18} color={colors.primary} />
           </View>
           <View style={styles.headerCopy}>
-            <Text style={styles.title}>Have a promo code?</Text>
-            <Text style={styles.subtitle}>Apply before checkout for extra savings on yearly</Text>
+            <Text style={[styles.title, { color: text }]}>Have a promo code?</Text>
+            <Text style={[styles.subtitle, { color: muted }]}>
+              Apply before checkout for extra savings on yearly
+            </Text>
           </View>
         </View>
 
@@ -60,19 +85,27 @@ export default function PromoCodeInput({
             value={code}
             onChangeText={setCode}
             placeholder="Enter your code"
-            placeholderTextColor={colors.placeholder}
+            placeholderTextColor={muted}
             autoCapitalize="characters"
             autoCorrect={false}
             editable={!busy && !disabled}
             returnKeyType="done"
             onSubmitEditing={() => void handleApply()}
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: inputBg,
+                borderColor: inputBorder,
+                color: text,
+              },
+            ]}
           />
           <Pressable
             onPress={() => void handleApply()}
             disabled={busy || disabled || !code.trim()}
             style={[
               styles.applyBtn,
+              { backgroundColor: applyBg },
               (busy || disabled || !code.trim()) && styles.applyBtnDisabled,
             ]}
           >
@@ -89,7 +122,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(255,107,53,0.35)',
   },
   card: {
     padding: spacing.lg,
@@ -104,7 +136,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -115,12 +146,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.charcoal,
   },
   subtitle: {
     fontSize: 13,
     lineHeight: 18,
-    color: colors.muted,
     fontWeight: '500',
   },
   row: {
@@ -130,19 +159,15 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 2,
-    borderColor: colors.white,
     borderRadius: radius.md,
-    backgroundColor: colors.white,
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
     fontSize: 16,
     fontWeight: '700',
-    color: colors.charcoal,
     letterSpacing: 1,
   },
   applyBtn: {
     borderRadius: radius.md,
-    backgroundColor: colors.charcoal,
     paddingHorizontal: spacing.lg,
     minWidth: 84,
     alignItems: 'center',

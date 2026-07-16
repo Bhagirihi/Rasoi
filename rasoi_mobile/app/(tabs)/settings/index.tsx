@@ -90,7 +90,7 @@ function formatCuisineLabels(
 export default function SettingsScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors, colorScheme, setColorScheme } = useTheme();
+  const { colors, colorScheme, setColorScheme, screenBackground } = useTheme();
   const { kitchenStyles } = useReferenceData();
   const {
     userName,
@@ -395,7 +395,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: colors.cream }]}
+      style={[styles.safe, { backgroundColor: screenBackground }]}
       edges={["top"]}
       testID={testIds.screenSettings}
     >

@@ -29,7 +29,7 @@ type FieldError = 'name' | 'phone' | 'general' | null;
 export default function EditProfileScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const { userName, userPhone, userEmail, isGuest, updateProfile } =
     useAppContext();
 
@@ -90,7 +90,7 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: screenBackground }]} edges={['top']}>
       <AppSavingOverlay
         visible={isSubmitting}
         message="Saving your profile…"

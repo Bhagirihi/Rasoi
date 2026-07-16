@@ -18,7 +18,11 @@ enableScreens(true);
 import AnalyticsScreenBridge from '@/components/AnalyticsScreenBridge';
 import AppCrashFallback from '@/components/AppCrashFallback';
 import { AppErrorBoundary } from '@/components/AppErrorBoundary';
-import LaunchSplash from '@/components/LaunchSplash';
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
+import LaunchSplash, {
+  LAUNCH_SPLASH_EXIT_MS,
+  LAUNCH_SPLASH_MAX_MS,
+} from '@/components/LaunchSplash';
 import LaunchSplashGate from '@/components/LaunchSplashGate';
 import AppDialogHost from '@/components/AppDialogHost';
 import TrialExpiredPaywallModal from '@/components/paywall/TrialExpiredPaywallModal';
@@ -54,6 +58,11 @@ if (__DEV__) {
 export { AppErrorBoundary as ErrorBoundary };
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+/** Never block cold start on custom fonts — proceed with system fonts after this. */
+const FONT_LOAD_TIMEOUT_MS = 4000;
+/** Hard cap for the whole launch splash sequence (gate + fade-out). */
+const LAUNCH_SPLASH_HARD_CAP_MS = LAUNCH_SPLASH_MAX_MS + LAUNCH_SPLASH_EXIT_MS + 600;
 
 type GlobalBoundaryProps = {
   children: React.ReactNode;
@@ -127,13 +136,21 @@ function RootLayoutInner({
   splashDismissing: boolean;
   setSplashDismissing: (value: boolean) => void;
 }) {
-  const { colors, isDark } = useTheme();
+  const { colors, isDark, screenBackground } = useTheme();
+  const shellBackground = isDark ? AUTH_ATMOSPHERE_BG : colors.cream;
   const [fontsLoaded] = useFonts({
     Fraunces_700Bold,
     DMSans_400Regular,
     DMSans_500Medium,
     DMSans_700Bold,
   });
+  const [fontsTimedOut, setFontsTimedOut] = useState(false);
+  const fontsReady = fontsLoaded || fontsTimedOut;
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFontsTimedOut(true), FONT_LOAD_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     void ensureTelemetryStarted().catch(() => undefined);
@@ -157,7 +174,25 @@ function RootLayoutInner({
     await SplashScreen.hideAsync().catch(() => undefined);
   }, [setLaunchDone]);
 
-  if (!fontsLoaded) {
+  // If Reanimated fade never calls onDismissed, unblock the UI anyway.
+  useEffect(() => {
+    if (!splashDismissing || launchDone) return;
+    const timer = setTimeout(() => {
+      void finishLaunchSplash();
+    }, LAUNCH_SPLASH_EXIT_MS + 400);
+    return () => clearTimeout(timer);
+  }, [finishLaunchSplash, launchDone, splashDismissing]);
+
+  // Absolute cold-start cap — Play reviewers must reach login even on slow devices.
+  useEffect(() => {
+    if (launchDone) return;
+    const timer = setTimeout(() => {
+      void finishLaunchSplash();
+    }, LAUNCH_SPLASH_HARD_CAP_MS);
+    return () => clearTimeout(timer);
+  }, [finishLaunchSplash, launchDone]);
+
+  if (!fontsReady) {
     return null;
   }
 
@@ -170,12 +205,13 @@ function RootLayoutInner({
             <TonightRecipesProvider>
               <AppDialogProvider>
               <PartnersProvider>
-                <View style={{ flex: 1, backgroundColor: colors.cream }}>
+                <View style={{ flex: 1, backgroundColor: shellBackground }}>
+                  {isDark ? <AuthAtmosphere /> : null}
                   <StatusBar style={launchDone ? (isDark ? 'light' : 'dark') : 'light'} />
                   <Stack
                     screenOptions={{
                       headerShown: false,
-                      contentStyle: { backgroundColor: colors.cream, flex: 1 },
+                      contentStyle: { backgroundColor: screenBackground, flex: 1 },
                     }}
                   >
                     <Stack.Screen name="index" />
@@ -209,7 +245,7 @@ function RootLayoutInner({
                     />
                   )}
                   <LaunchSplashGate
-                    fontsLoaded={fontsLoaded}
+                    fontsLoaded={fontsReady}
                     launchDone={launchDone}
                     splashDismissing={splashDismissing}
                     onReady={beginSplashDismiss}

@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Flame } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import RecipeDetailSkeleton from "@/components/RecipeDetailSkeleton";
 import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
@@ -46,10 +47,6 @@ import {
   partitionIngredients,
   countMatchableIngredients,
 } from "@/utils/recipes";
-import {
-  scaleIngredientLabel,
-  servingMultiplierLabel,
-} from "@/utils/servingScale";
 import { shareRecipeOnWhatsApp } from "@/utils/shareRecipe";
 import { logRecipeView, logRecipeCooked } from "@/services/recommendations";
 import { PAYWALL_HREF } from "@/utils/routes";
@@ -78,7 +75,6 @@ export default function RecipeDetailScreen() {
     isRecipeOffline,
     showPartners,
     partnersInTrialMode,
-    householdSize,
   } = useAppContext();
   const { trySaveRecipe } = useSaveRecipeGate();
   const { tryToggleOfflineRecipe } = useOfflineRecipeGate();
@@ -102,17 +98,16 @@ export default function RecipeDetailScreen() {
   const [adScrollGeneration, setAdScrollGeneration] = useState(0);
   const [cookMode, setCookMode] = useState(startInCookMode);
   const [stepsLang, setStepsLang] = useState<"en" | "hi">("en");
-  const [servingMultiplier, setServingMultiplier] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(
     () => new Set(),
   );
-  const { colors: themeColors, isDark } = useTheme();
+  const { colors: themeColors, isDark, screenBackground } = useTheme();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     setCookMode(startInCookMode);
     setCompletedSteps(new Set());
     setStepsLang("en");
-    setServingMultiplier(1);
   }, [recipeId, startInCookMode]);
 
   useEffect(() => {
@@ -207,17 +202,6 @@ export default function RecipeDetailScreen() {
     return recipe.description;
   }, [recipe, stepsLang]);
 
-  const scaledRecipe = useMemo(() => {
-    if (!recipe || servingMultiplier === 1) return recipe;
-    return {
-      ...recipe,
-      ingredients: recipe.ingredients.map((ingredient) => ({
-        ...ingredient,
-        name: scaleIngredientLabel(ingredient.name, servingMultiplier),
-      })),
-    };
-  }, [recipe, servingMultiplier]);
-
   const cookedLoggedRef = useRef(false);
 
   useEffect(() => {
@@ -246,7 +230,7 @@ export default function RecipeDetailScreen() {
 
   if (!recipe) {
     return (
-      <View style={[styles.notFound, { backgroundColor: themeColors.cream }]}>
+      <View style={[styles.notFound, { backgroundColor: screenBackground }]}>
         <Text style={[styles.notFoundTitle, { color: themeColors.charcoal }]}>
           Recipe not found
         </Text>
@@ -325,24 +309,6 @@ export default function RecipeDetailScreen() {
     setCookMode((on) => !on);
   };
 
-  const servingChips = (
-    <>
-      {[0.5, 1, 2].map((multiplier) => (
-        <RecipeDetailToolChip
-          key={multiplier}
-          label={
-            multiplier === 1
-              ? servingMultiplierLabel(1, householdSize)
-              : `${multiplier}×`
-          }
-          active={servingMultiplier === multiplier}
-          onPress={() => setServingMultiplier(multiplier)}
-          accessibilityLabel={`Scale servings ${multiplier}x`}
-        />
-      ))}
-    </>
-  );
-
   const methodChips = (
     <>
       <RecipeDetailToolChip
@@ -358,9 +324,84 @@ export default function RecipeDetailScreen() {
     </>
   );
 
+  if (cookMode) {
+    return (
+      <View
+        style={[styles.root, { backgroundColor: screenBackground }]}
+        testID={testIds.screenRecipe}
+      >
+        <View
+          style={[
+            styles.cookHeader,
+            {
+              paddingTop: insets.top + spacing.sm,
+              borderBottomColor: themeColors.border,
+              backgroundColor: themeColors.white,
+            },
+          ]}
+        >
+          <Text
+            style={[styles.cookTitle, { color: themeColors.charcoal }]}
+            numberOfLines={2}
+          >
+            {recipe.title}
+          </Text>
+          <Text style={[styles.cookProgress, { color: themeColors.muted }]}>
+            {completedSteps.size} of {displaySteps.length} steps done
+          </Text>
+          <View style={styles.cookLangRow}>
+            <RecipeDetailToolChip
+              label={stepsLang === "hi" ? "हिंदी" : "English"}
+              active={stepsLang === "hi"}
+              onPress={() => setStepsLang((lang) => (lang === "en" ? "hi" : "en"))}
+            />
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.scroll}
+          {...scrollIndicator}
+          contentContainerStyle={[
+            styles.cookScrollContent,
+            { paddingBottom: insets.bottom + 88 },
+          ]}
+        >
+          <RecipeMethodTimeline
+            title={recipe.title}
+            steps={displaySteps}
+            prepTime={recipe.prepTime}
+            cookMode
+            completedSteps={completedSteps}
+            onToggleStep={toggleStepDone}
+          />
+        </ScrollView>
+
+        <View
+          style={[
+            styles.cookExitBar,
+            {
+              paddingBottom: Math.max(insets.bottom, spacing.md),
+              backgroundColor: themeColors.white,
+              borderTopColor: themeColors.border,
+            },
+          ]}
+        >
+          <Pressable
+            onPress={toggleCookMode}
+            style={styles.cookExitBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Exit cook mode"
+          >
+            <Text style={styles.cookExitBtnText}>Exit cook mode</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View
-      style={[styles.root, { backgroundColor: themeColors.cream }]}
+      style={[styles.root, { backgroundColor: screenBackground }]}
       testID={testIds.screenRecipe}
     >
       <ScrollView
@@ -467,10 +508,9 @@ export default function RecipeDetailScreen() {
                 ? `${missing.length} missing from your pantry`
                 : "Everything looks stocked"
             }
-            toolbar={servingChips}
           >
             <RecipeIngredientsGuide
-              ingredients={(scaledRecipe ?? recipe).ingredients}
+              ingredients={recipe.ingredients}
               available={available}
               missing={missing}
             />
@@ -642,6 +682,51 @@ const styles = StyleSheet.create({
   notFoundBtnText: {
     fontFamily: appFonts.bodyBold,
     fontSize: 15,
+    color: colors.white,
+  },
+  cookHeader: {
+    paddingHorizontal: layout.screenPadding,
+    paddingBottom: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: spacing.xs,
+  },
+  cookTitle: {
+    fontFamily: appFonts.bodyBold,
+    fontSize: 20,
+    lineHeight: 26,
+  },
+  cookProgress: {
+    fontFamily: appFonts.bodyMedium,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  cookLangRow: {
+    flexDirection: "row",
+    marginTop: spacing.xs,
+  },
+  cookScrollContent: {
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: spacing.lg,
+  },
+  cookExitBar: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: layout.screenPadding,
+    paddingTop: spacing.md,
+  },
+  cookExitBtn: {
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+  },
+  cookExitBtnText: {
+    fontFamily: appFonts.bodyBold,
+    fontSize: 16,
     color: colors.white,
   },
 });

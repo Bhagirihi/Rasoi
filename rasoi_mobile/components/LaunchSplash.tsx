@@ -76,6 +76,12 @@ export default function LaunchSplash({ dismissing = false, onDismissed }: Launch
         }
       },
     );
+
+    const fallback = setTimeout(() => {
+      handleDismissed();
+    }, LAUNCH_SPLASH_EXIT_MS + 300);
+
+    return () => clearTimeout(fallback);
   }, [dismissing, handleDismissed, opacity, rootOpacity, scale]);
 
   const rootStyle = useAnimatedStyle(() => ({

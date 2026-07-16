@@ -52,7 +52,6 @@ export function MonthlyPlanCard({ disabled, onPress, storePricing }: PlanCardPro
             <Calendar size={12} color={colors.white} />
             <Text style={styles.monthlyBadgeText}>Flexible</Text>
           </View>
-          <Text style={styles.monthlyPopular}>Popular</Text>
         </View>
         <Text style={styles.monthlyTitle}>Monthly</Text>
         <Text style={styles.monthlyPrice}>{priceLabel}</Text>
@@ -105,8 +104,9 @@ export function YearlyPlanCard({
             <Crown size={12} color={colors.primary} />
             <Text style={styles.yearlyBadgeText}>Best value</Text>
           </View>
-          <Text style={styles.yearlySavings}>{savingsLabel}</Text>
+          <Text style={styles.yearlyPopular}>Popular</Text>
         </View>
+        <Text style={styles.yearlySavings}>{savingsLabel}</Text>
         <Text style={styles.yearlyTitle}>Yearly</Text>
         <Text style={styles.yearlyPrice}>{priceLabel}</Text>
         <Text style={styles.yearlyPeriod}>per year</Text>
@@ -129,17 +129,17 @@ export function PaywallPlanGrid({
 }) {
   return (
     <View style={styles.grid}>
-      <MonthlyPlanCard
-        disabled={disabled}
-        yearlyPromoOfferTag={yearlyPromoOfferTag}
-        storePricing={storePricing}
-        onPress={() => onSubscribe('monthly')}
-      />
       <YearlyPlanCard
         disabled={disabled}
         yearlyPromoOfferTag={yearlyPromoOfferTag}
         storePricing={storePricing}
         onPress={() => onSubscribe('yearly')}
+      />
+      <MonthlyPlanCard
+        disabled={disabled}
+        yearlyPromoOfferTag={yearlyPromoOfferTag}
+        storePricing={storePricing}
+        onPress={() => onSubscribe('monthly')}
       />
     </View>
   );
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
   yearlyWrap: {
     borderRadius: radius.lg,
     overflow: 'hidden',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: colors.primary,
   },
   pressed: {
@@ -243,6 +243,18 @@ const styles = StyleSheet.create({
     color: colors.primary,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
+  },
+  yearlyPopular: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: colors.white,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    overflow: 'hidden',
+    borderRadius: radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   yearlySavings: {
     fontSize: 11,

@@ -321,9 +321,7 @@ export function validateParsedRecipe(data: ParsedRecipeMarkdown): string[] {
     errors.push('Title is required (use `# Title` or `title:` in frontmatter).');
   }
 
-  if (data.description.trim().length < 10) {
-    errors.push('Description must be at least 10 characters (`## Description` section).');
-  }
+  // Description is optional — rasoi."Recipe" no longer stores it; API synthesizes on read.
 
   if (!data.imageUrl.trim()) {
     errors.push('Image URL is required (`image:` metadata).');

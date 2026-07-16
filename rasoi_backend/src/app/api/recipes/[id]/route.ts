@@ -49,11 +49,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         kitchenStyleId: input.kitchenStyleId,
         dietType: input.dietType,
         difficulty: input.difficulty,
-        description: input.description,
+        descriptionHi:
+          input.descriptionHi !== undefined ? input.descriptionHi.trim() || null : undefined,
         imageUrl: input.imageUrl,
-        tags: input.tags ? JSON.stringify(input.tags) : undefined,
         ingredients: input.ingredients ? JSON.stringify(input.ingredients) : undefined,
         steps: input.steps ? JSON.stringify(input.steps) : undefined,
+        stepsHi:
+          input.stepsHi !== undefined
+            ? input.stepsHi.length > 0
+              ? JSON.stringify(input.stepsHi)
+              : null
+            : undefined,
         published: input.published,
       },
     });

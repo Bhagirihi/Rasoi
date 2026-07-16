@@ -22,7 +22,7 @@ export default function PlanDayPicker({
   maxDayOffset = 2,
   onLockedDay,
 }: PlanDayPickerProps) {
-  const { colors: themeColors, isDark } = useTheme();
+  const { colors: themeColors } = useTheme();
 
   return (
     <View
@@ -56,7 +56,7 @@ export default function PlanDayPicker({
               styles.segment,
               active && styles.segmentActive,
               active && {
-                backgroundColor: isDark ? 'rgba(255,107,53,0.22)' : '#FFF0EA',
+                backgroundColor: colors.primary,
                 borderColor: colors.primary,
               },
             ]}
@@ -64,7 +64,13 @@ export default function PlanDayPicker({
             <Text
               style={[
                 styles.label,
-                { color: active ? colors.primary : locked ? themeColors.muted : themeColors.charcoal },
+                {
+                  color: active
+                    ? colors.white
+                    : locked
+                      ? themeColors.muted
+                      : themeColors.charcoal,
+                },
               ]}
               numberOfLines={1}
             >
@@ -74,7 +80,7 @@ export default function PlanDayPicker({
               <Text
                 style={[
                   styles.caption,
-                  { color: active ? colors.primary : themeColors.muted },
+                  { color: active ? 'rgba(255,255,255,0.9)' : themeColors.muted },
                 ]}
                 numberOfLines={1}
               >

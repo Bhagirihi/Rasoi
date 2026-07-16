@@ -1,13 +1,16 @@
 import { useRouter } from 'expo-router';
-import { Crown, Sparkles } from 'lucide-react-native';
+import { Crown, Sparkles, TimerOff } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { openTrialExpiredPaywallForQa } from '@/components/paywall/TrialExpiredPaywallModal';
 import { QA_MONETIZATION_QUERY, QA_MONETIZATION_UI_ENABLED } from '@/constants/qaMonetization';
 import { colors, radius, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function HomeQaMonetizationBar() {
   const router = useRouter();
+  const { colors: themeColors } = useTheme();
 
   if (!QA_MONETIZATION_UI_ENABLED) {
     return null;
@@ -25,10 +28,13 @@ export default function HomeQaMonetizationBar() {
             })
           }
           testID={testIds.qaOpenPaywall}
-          style={styles.btn}
+          style={[
+            styles.btn,
+            { borderColor: themeColors.border, backgroundColor: themeColors.white },
+          ]}
         >
           <Crown size={14} color={colors.primary} />
-          <Text style={styles.btnText}>Paywall</Text>
+          <Text style={[styles.btnText, { color: themeColors.charcoal }]}>Paywall</Text>
         </Pressable>
         <Pressable
           onPress={() =>
@@ -38,12 +44,28 @@ export default function HomeQaMonetizationBar() {
             })
           }
           testID={testIds.qaOpenTrialWelcome}
-          style={styles.btn}
+          style={[
+            styles.btn,
+            { borderColor: themeColors.border, backgroundColor: themeColors.white },
+          ]}
         >
           <Sparkles size={14} color={colors.primary} />
-          <Text style={styles.btnText}>Trial welcome</Text>
+          <Text style={[styles.btnText, { color: themeColors.charcoal }]}>Trial welcome</Text>
         </Pressable>
       </View>
+      <Pressable
+        onPress={() => {
+          openTrialExpiredPaywallForQa();
+        }}
+        testID={testIds.qaOpenTrialEnded}
+        style={[
+          styles.btnWide,
+          { borderColor: themeColors.border, backgroundColor: themeColors.white },
+        ]}
+      >
+        <TimerOff size={14} color={colors.primary} />
+        <Text style={[styles.btnText, { color: themeColors.charcoal }]}>Trial ended popup</Text>
+      </Pressable>
     </View>
   );
 }
@@ -77,14 +99,21 @@ const styles = StyleSheet.create({
     gap: 6,
     borderRadius: radius.sm,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.sm,
+  },
+  btnWide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: radius.sm,
+    borderWidth: 1,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.sm,
   },
   btnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.charcoal,
   },
 });

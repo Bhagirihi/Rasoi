@@ -11,7 +11,6 @@ import type { RecipeCatalogEntry } from './recipe-catalog/types';
 const pool = new Pool({ connectionString: getDirectDatabaseUrl() });
 
 async function upsertRasoiRecipe(entry: RecipeCatalogEntry, now: Date): Promise<void> {
-  const kitchenStyleIds = entry.kitchenStyleIds ?? [entry.kitchenStyleId];
   const imageUrl = imageForRecipe(entry.title, entry.imageKeyword);
   const steps = resolveRecipeSteps({
     title: entry.title,
@@ -26,14 +25,14 @@ async function upsertRasoiRecipe(entry: RecipeCatalogEntry, now: Date): Promise<
   await pool.query(
     `
       INSERT INTO rasoi."Recipe" (
-        id, title, "prepTime", calories, region, "kitchenStyleId", "kitchenStyleIds",
-        "dietType", difficulty, description, "imageUrl", tags, ingredients, steps,
+        id, title, "prepTime", calories, region, "kitchenStyleId",
+        "dietType", difficulty, "imageUrl", ingredients, steps,
         published, "createdAt", "updatedAt"
       )
       VALUES (
-        $1, $2, $3, $4, $5, $6, $7,
-        $8, $9, $10, $11, $12, $13, $14,
-        $15, $16, $17
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11,
+        $12, $13, $14
       )
       ON CONFLICT (id) DO UPDATE SET
         title = EXCLUDED.title,
@@ -41,12 +40,9 @@ async function upsertRasoiRecipe(entry: RecipeCatalogEntry, now: Date): Promise<
         calories = EXCLUDED.calories,
         region = EXCLUDED.region,
         "kitchenStyleId" = EXCLUDED."kitchenStyleId",
-        "kitchenStyleIds" = EXCLUDED."kitchenStyleIds",
         "dietType" = EXCLUDED."dietType",
         difficulty = EXCLUDED.difficulty,
-        description = EXCLUDED.description,
         "imageUrl" = EXCLUDED."imageUrl",
-        tags = EXCLUDED.tags,
         ingredients = EXCLUDED.ingredients,
         steps = EXCLUDED.steps,
         published = EXCLUDED.published,
@@ -59,12 +55,9 @@ async function upsertRasoiRecipe(entry: RecipeCatalogEntry, now: Date): Promise<
       entry.calories,
       entry.region,
       entry.kitchenStyleId,
-      JSON.stringify(kitchenStyleIds),
       entry.dietType,
       entry.difficulty,
-      entry.description,
       imageUrl,
-      JSON.stringify(entry.tags),
       JSON.stringify(entry.ingredients),
       JSON.stringify(steps),
       true,

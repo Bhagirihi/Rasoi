@@ -24,7 +24,7 @@ function getTabBarLayout(bottomInset: number) {
 }
 
 export default function TabLayout() {
-  const { colors } = useTheme();
+  const { colors, screenBackground } = useTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const tabBarLayout = useMemo(() => getTabBarLayout(insets.bottom), [insets.bottom]);
@@ -42,6 +42,7 @@ export default function TabLayout() {
       lazy: true,
       freezeOnBlur: false,
       detachInactiveScreens: true,
+      sceneStyle: { backgroundColor: screenBackground },
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.muted,
       tabBarStyle: {
@@ -57,7 +58,7 @@ export default function TabLayout() {
         fontWeight: '600' as const,
       },
     }),
-    [colors.primary, colors.muted, colors.white, colors.border, tabBarLayout],
+    [colors.primary, colors.muted, colors.white, colors.border, tabBarLayout, screenBackground],
   );
 
   if (!isHydrated) {
@@ -72,7 +73,8 @@ export default function TabLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (pendingTrialWelcome && !pendingPantrySetup) {
+  // Soft paywall before pantry setup when trial welcome is pending.
+  if (pendingTrialWelcome) {
     return <Redirect href="/(auth)/trial-welcome" />;
   }
 

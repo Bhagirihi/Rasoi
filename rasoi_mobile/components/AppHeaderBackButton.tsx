@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
 
-import { colors } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function AppHeaderBackButton() {
@@ -32,7 +31,7 @@ export default function AppHeaderBackButton() {
         },
       ]}
     >
-      <ChevronLeft size={20} color={colors.charcoal} strokeWidth={2.4} />
+      <ChevronLeft size={20} color={themeColors.charcoal} strokeWidth={2.4} />
     </Pressable>
   );
 }

@@ -103,10 +103,10 @@ export const TRIAL_WELCOME_FEATURES = [
 ] as const;
 
 export const TRIAL_WELCOME_HERO_SUB_STARTED =
-  'Your trial includes the full 3-day plan and unlimited partner checkout. Upgrade to Plus to remove ads, unlock unlimited saves & shuffles, and keep access after trial.';
+  'Full 3-day plan + unlimited Blinkit/Zepto/Instamart checkout. Next you’ll set up your pantry — or subscribe now for ad-free Plus.';
 
 export const TRIAL_WELCOME_HERO_SUB_NEW =
-  'Try the 3-day meal planner and unlimited grocery & delivery checkout free. No payment until you subscribe below.';
+  'Try the 3-day planner and unlimited grocery checkout free. Continue to set up your pantry, or subscribe now — no card for trial.';
 
 export const PLAN_FEATURES = {
   free: {

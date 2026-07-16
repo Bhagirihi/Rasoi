@@ -113,11 +113,19 @@ export const recipeCreateSchema = z.object({
   kitchenStyleIds: z.array(z.string().trim().min(2).max(40)).optional(),
   dietType: dietType,
   difficulty: difficulty,
-  description: z.string().min(10).max(2000),
+  /** Optional preview-only; not stored (column dropped — API synthesizes on read). */
+  description: z.string().max(2000).optional(),
+  descriptionHi: z.string().max(2000).optional(),
   imageUrl: z.string().url(),
+  /** Accepted for API compat; not stored (column dropped — serialized as []). */
   tags: z.array(recipeTag).default([]),
   ingredients: z.array(ingredient).min(1),
+  /** Comma-separated or string[] — stored as rasoi.Recipe.main_ingredients. */
+  mainIngredients: z
+    .union([z.array(z.string().trim().min(1).max(120)).max(40), z.string().max(2000)])
+    .optional(),
   steps: z.array(z.string().min(1)).optional(),
+  stepsHi: z.array(z.string().min(1)).optional(),
   published: z.boolean().default(true),
 });
 

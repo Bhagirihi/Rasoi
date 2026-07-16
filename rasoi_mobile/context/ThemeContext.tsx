@@ -35,6 +35,8 @@ type ThemeContextValue = {
   colors: AppColors;
   semantic: (typeof semanticColors)[ColorScheme];
   isDark: boolean;
+  /** Root screen fill — transparent in dark so AuthAtmosphere glows show through. */
+  screenBackground: string;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -58,7 +60,8 @@ function buildAppColors(scheme: ColorScheme): AppColors {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [colorScheme, setColorSchemeState] = useState<ColorScheme>('light');
+  /** Dark matches login/register; Light remains available in Settings. */
+  const [colorScheme, setColorSchemeState] = useState<ColorScheme>('dark');
 
   useEffect(() => {
     void (async () => {
@@ -66,9 +69,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const storedAppearance = await AsyncStorage.getItem(APPEARANCE_KEY);
         if (storedAppearance === 'light' || storedAppearance === 'dark') {
           setColorSchemeState(storedAppearance);
+        } else {
+          await AsyncStorage.setItem(APPEARANCE_KEY, 'dark');
         }
       } catch {
-        // keep defaults
+        // keep dark default
       }
     })();
   }, []);
@@ -78,16 +83,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     await AsyncStorage.setItem(APPEARANCE_KEY, scheme);
   }, []);
 
-  const value = useMemo<ThemeContextValue>(
-    () => ({
+  const value = useMemo<ThemeContextValue>(() => {
+    const isDark = colorScheme === 'dark';
+    const colors = buildAppColors(colorScheme);
+    return {
       colorScheme,
       setColorScheme,
-      colors: buildAppColors(colorScheme),
+      colors,
       semantic: semanticColors[colorScheme],
-      isDark: colorScheme === 'dark',
-    }),
-    [colorScheme, setColorScheme],
-  );
+      isDark,
+      screenBackground: isDark ? 'transparent' : colors.cream,
+    };
+  }, [colorScheme, setColorScheme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

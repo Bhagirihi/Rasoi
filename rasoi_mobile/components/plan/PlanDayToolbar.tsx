@@ -91,8 +91,8 @@ export default function PlanDayToolbar({
             accessibilityRole="button"
             accessibilityLabel={`Save all ${unsavedCount} meals`}
           >
-            <Bookmark size={15} color={colors.charcoal} strokeWidth={2.2} />
-            <Text style={styles.saveLabel}>Save all</Text>
+            <Bookmark size={15} color={themeColors.charcoal} strokeWidth={2.2} />
+            <Text style={[styles.saveLabel, { color: themeColors.charcoal }]}>Save all</Text>
           </Pressable>
         ) : null}
       </View>

@@ -71,7 +71,7 @@ const PICK_SECTION_GAP = spacing.md;
 export default function HomeScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
   const { openBrandSearch } = usePartners();
   const { userName, showPartners, userCity, isGuest } = useAppContext();
@@ -265,7 +265,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      style={[styles.safe, { backgroundColor: screenBackground }]}
       edges={["top"]}
       testID={testIds.screenHome}
     >

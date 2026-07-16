@@ -18,7 +18,7 @@ import { useTheme } from '@/context/ThemeContext';
 export default function EditDietScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors, colorScheme } = useTheme();
+  const { colors: themeColors, colorScheme, screenBackground } = useTheme();
   const prefVariant = colorScheme === 'dark' ? 'dark' : 'light';
   const { showDialog } = useAppDialog();
   const {
@@ -63,7 +63,7 @@ export default function EditDietScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: screenBackground }]} edges={['top']}>
       <AppSavingOverlay visible={isSaving} message="Saving your diet…" />
       <SettingsSubHeader title="Diet" onBack={() => router.back()} />
 

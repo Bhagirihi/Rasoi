@@ -929,7 +929,6 @@ export function resolveStepsForRecipe(recipe: Recipe): string[] {
     ingredients,
     prepTime: recipe.prepTime,
     difficulty: recipe.difficulty,
-    description: recipe.description,
     steps: stored,
   });
 }

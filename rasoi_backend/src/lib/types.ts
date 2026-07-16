@@ -9,6 +9,8 @@ export type CuisineId = string;
 
 export interface AppConfigResponse {
   paymentsEnabled: boolean;
+  /** Optional semver floor; empty/null = all versions when payments are on. */
+  paymentsMinAppVersion?: string | null;
 }
 
 export interface KitchenStyleResponse {

@@ -78,10 +78,7 @@ export function buildRecipeWhere(
     where.difficulty = difficulty;
   }
 
-  const tag = params.tag?.trim();
-  if (tag && tag !== 'all') {
-    where.tags = { contains: `"${tag}"` };
-  }
+  // tags column dropped — tag/fastFilter is applied client-side from synthesized fields.
 
   if (params.published === 'published') {
     where.published = true;

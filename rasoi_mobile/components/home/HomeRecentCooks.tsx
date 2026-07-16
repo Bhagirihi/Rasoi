@@ -6,11 +6,13 @@ import HomeSectionHeader from '@/components/home/HomeSectionHeader';
 import type { Recipe } from '@/data/mockRecipes';
 import { fetchRecentCooks } from '@/services/recommendations';
 import { appFonts } from '@/constants/fonts';
-import { colors, radius, spacing } from '@/constants/theme';
+import { radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function HomeRecentCooks() {
   const router = useRouter();
+  const { colors: themeColors } = useTheme();
   const { isLoggedIn, planLimits } = useAppContext();
   const [items, setItems] = useState<Recipe[]>([]);
   const limit = planLimits.recentCooksLimit;
@@ -35,12 +37,20 @@ export default function HomeRecentCooks() {
           <Pressable
             key={recipe.id}
             onPress={() => router.push(`/recipe/${recipe.id}`)}
-            style={styles.chip}
+            style={[
+              styles.chip,
+              {
+                backgroundColor: themeColors.white,
+                borderColor: themeColors.border,
+              },
+            ]}
           >
-            <Text style={styles.chipTitle} numberOfLines={2}>
+            <Text style={[styles.chipTitle, { color: themeColors.charcoal }]} numberOfLines={2}>
               {recipe.title}
             </Text>
-            <Text style={styles.chipMeta}>{recipe.prepTime} min</Text>
+            <Text style={[styles.chipMeta, { color: themeColors.muted }]}>
+              {recipe.prepTime} min
+            </Text>
           </Pressable>
         ))}
       </ScrollView>
@@ -55,20 +65,16 @@ const styles = StyleSheet.create({
     width: 148,
     padding: spacing.md,
     borderRadius: radius.lg,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#EDE6DC',
   },
   chipTitle: {
     fontFamily: appFonts.bodyBold,
     fontSize: 14,
     lineHeight: 18,
-    color: colors.charcoal,
   },
   chipMeta: {
     marginTop: spacing.xs,
     fontFamily: appFonts.body,
     fontSize: 12,
-    color: colors.muted,
   },
 });

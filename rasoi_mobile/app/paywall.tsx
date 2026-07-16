@@ -16,6 +16,7 @@ import { PLAN_LABELS, PAYWALL_HERO_SUB, PAYWALL_HERO_TITLE, PAYWALL_PLUS_SUCCESS
 import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
+import { useTheme } from '@/context/ThemeContext';
 import { usePaywall } from '@/hooks/usePaywall';
 import { useRevenueCatPricing } from '@/hooks/useRevenueCatPricing';
 import { getEffectivePaymentProviderId } from '@/constants/payments';
@@ -27,6 +28,7 @@ export default function PaywallScreen() {
   const { qa } = useLocalSearchParams<{ qa?: string }>();
   const qaPreview = isQaMonetizationPreview(qa);
   const insets = useSafeAreaInsets();
+  const { colors: themeColors, screenBackground } = useTheme();
   const {
     effectiveTier,
     trialStartedAt,
@@ -107,7 +109,7 @@ export default function PaywallScreen() {
             : 'Subscribe to unlock everything below';
 
   return (
-    <View style={[styles.root, { paddingTop: insets.top }]}>
+    <View style={[styles.root, { paddingTop: insets.top, backgroundColor: screenBackground }]}>
       <AppSavingOverlay
         visible={paywall.isBusy}
         steps={[
@@ -118,9 +120,9 @@ export default function PaywallScreen() {
 
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-          <ArrowLeft size={22} color={colors.charcoal} />
+          <ArrowLeft size={22} color={themeColors.charcoal} />
         </Pressable>
-        <Text style={styles.headerTitle}>Rasoi Plus</Text>
+        <Text style={[styles.headerTitle, { color: themeColors.charcoal }]}>Rasoi Plus</Text>
         <View style={styles.backBtn} />
       </View>
 
@@ -135,22 +137,27 @@ export default function PaywallScreen() {
           <Text style={styles.heroSub}>{PAYWALL_HERO_SUB}</Text>
         </LinearGradient>
 
-        <View style={styles.statusStrip}>
+        <View
+          style={[
+            styles.statusStrip,
+            { backgroundColor: themeColors.white, borderColor: themeColors.border },
+          ]}
+        >
           {effectiveTier === 'paid' ? (
             <Crown size={16} color={colors.primary} />
           ) : effectiveTier === 'trial' ? (
             <Sparkles size={16} color={colors.primary} />
           ) : null}
-          <Text style={styles.statusPlan}>
+          <Text style={[styles.statusPlan, { color: themeColors.charcoal }]}>
             {paymentsEnabled ? PLAN_LABELS[effectiveTier] : 'Early access'}
           </Text>
-          <Text style={styles.statusDot}>·</Text>
-          <Text style={styles.statusMeta}>{statusLine}</Text>
+          <Text style={[styles.statusDot, { color: themeColors.muted }]}>·</Text>
+          <Text style={[styles.statusMeta, { color: themeColors.muted }]}>{statusLine}</Text>
         </View>
 
         <PaywallBenefitsStrip />
 
-        <Text style={styles.sectionLabel}>Promo & pricing</Text>
+        <Text style={[styles.sectionLabel, { color: colors.primary }]}>Promo & pricing</Text>
 
         <PaywallPricingSection
           effectiveTier={effectiveTier}
@@ -172,7 +179,7 @@ export default function PaywallScreen() {
           storePricing={storeReady ? pricing : null}
         />
 
-        <Text style={styles.sectionLabel}>Compare plans</Text>
+        <Text style={[styles.sectionLabel, { color: colors.primary }]}>Compare plans</Text>
         <PaywallCompareTable highlightTier={effectiveTier} />
 
         <AdMobBanner placement="paywall" />
@@ -184,7 +191,6 @@ export default function PaywallScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.cream,
   },
   header: {
     flexDirection: 'row',

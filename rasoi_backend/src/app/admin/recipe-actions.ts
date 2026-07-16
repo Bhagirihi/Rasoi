@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 
 import { getAdminFromCookies } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { formatMainIngredientsColumn } from '@/lib/recipe-main-ingredients';
 import { recipeCreateSchema, recipeUpdateSchema } from '@/lib/validators';
 
 async function requireAdminSession() {
@@ -15,6 +16,10 @@ async function requireAdminSession() {
 export async function createRecipeAction(raw: unknown) {
   await requireAdminSession();
   const input = recipeCreateSchema.parse(raw);
+  const mainIngredients =
+    input.mainIngredients !== undefined
+      ? formatMainIngredientsColumn(input.mainIngredients)
+      : null;
 
   await db.recipe.create({
     data: {
@@ -23,16 +28,14 @@ export async function createRecipeAction(raw: unknown) {
       calories: input.calories,
       region: input.region,
       kitchenStyleId: input.kitchenStyleId,
-      kitchenStyleIds: JSON.stringify(
-        input.kitchenStyleIds?.length ? input.kitchenStyleIds : [input.kitchenStyleId],
-      ),
       dietType: input.dietType,
       difficulty: input.difficulty,
-      description: input.description,
+      descriptionHi: input.descriptionHi?.trim() || null,
       imageUrl: input.imageUrl,
-      tags: JSON.stringify(input.tags),
       ingredients: JSON.stringify(input.ingredients),
+      main_ingredients: mainIngredients,
       steps: input.steps ? JSON.stringify(input.steps) : null,
+      stepsHi: input.stepsHi?.length ? JSON.stringify(input.stepsHi) : null,
       published: input.published,
     },
   });
@@ -53,24 +56,23 @@ export async function updateRecipeAction(id: string, raw: unknown) {
       calories: input.calories,
       region: input.region,
       kitchenStyleId: input.kitchenStyleId,
-      ...(input.kitchenStyleIds !== undefined || input.kitchenStyleId !== undefined
-        ? {
-            kitchenStyleIds: JSON.stringify(
-              input.kitchenStyleIds?.length
-                ? input.kitchenStyleIds
-                : input.kitchenStyleId
-                  ? [input.kitchenStyleId]
-                  : [],
-            ),
-          }
-        : {}),
       dietType: input.dietType,
       difficulty: input.difficulty,
-      description: input.description,
+      descriptionHi:
+        input.descriptionHi !== undefined ? input.descriptionHi.trim() || null : undefined,
       imageUrl: input.imageUrl,
-      tags: input.tags ? JSON.stringify(input.tags) : undefined,
       ingredients: input.ingredients ? JSON.stringify(input.ingredients) : undefined,
+      main_ingredients:
+        input.mainIngredients !== undefined
+          ? formatMainIngredientsColumn(input.mainIngredients)
+          : undefined,
       steps: input.steps ? JSON.stringify(input.steps) : undefined,
+      stepsHi:
+        input.stepsHi !== undefined
+          ? input.stepsHi.length > 0
+            ? JSON.stringify(input.stepsHi)
+            : null
+          : undefined,
       published: input.published,
     },
   });

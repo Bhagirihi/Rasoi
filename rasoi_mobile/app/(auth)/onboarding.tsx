@@ -1,5 +1,4 @@
 import * as Haptics from 'expo-haptics';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect, Redirect, useLocalSearchParams } from 'expo-router';
 import {
   ArrowRight,
@@ -21,13 +20,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import CuisinePreferenceList from '@/components/CuisinePreferenceList';
 import DietPreferenceList from '@/components/DietPreferenceList';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
 import PermissionOnboardingStep, { PermissionIconBadge } from '@/components/auth/PermissionOnboardingStep';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import {
   CuisineId,
   DietChoice,
   colors,
-  gradients,
   scrollIndicator,
   spacing,
 } from '@/constants/theme';
@@ -287,11 +286,16 @@ export default function OnboardingScreen() {
         router.replace('/(auth)/login');
         return;
       }
+      // Prefer soft paywall before pantry (flag set at signup + returned from completeOnboarding).
+      if (showTrialWelcome || pendingTrialWelcome) {
+        router.replace('/(auth)/trial-welcome');
+        return;
+      }
       if (pendingPantrySetup) {
         router.replace('/(tabs)/pantry');
         return;
       }
-      router.replace(showTrialWelcome ? '/(auth)/trial-welcome' : '/(tabs)');
+      router.replace('/(tabs)');
     } catch {
       finishingRef.current = false;
       throw new Error('Could not save onboarding. Please try again.');
@@ -303,7 +307,17 @@ export default function OnboardingScreen() {
   }
 
   if (isHydrated && hasCompletedOnboarding && !permissionsOnly && (step === 'diet' || step === 'kitchen')) {
-    return <Redirect href={pendingPantrySetup ? '/(tabs)/pantry' : '/(tabs)'} />;
+    return (
+      <Redirect
+        href={
+          pendingTrialWelcome
+            ? '/(auth)/trial-welcome'
+            : pendingPantrySetup
+              ? '/(tabs)/pantry'
+              : '/(tabs)'
+        }
+      />
+    );
   }
 
   if (
@@ -315,10 +329,10 @@ export default function OnboardingScreen() {
     return (
       <Redirect
         href={
-          pendingPantrySetup
-            ? '/(tabs)/pantry'
-            : pendingTrialWelcome
-              ? '/(auth)/trial-welcome'
+          pendingTrialWelcome
+            ? '/(auth)/trial-welcome'
+            : pendingPantrySetup
+              ? '/(tabs)/pantry'
               : '/(tabs)'
         }
       />
@@ -404,11 +418,7 @@ export default function OnboardingScreen() {
           message="Setting up your Rasoi…"
           subtitle="Saving tastes and reminders"
         />
-        <LinearGradient
-          colors={['#0A0908', '#0F1210', '#0A0908']}
-          style={StyleSheet.absoluteFillObject}
-        />
-        <View style={styles.glowGreen} />
+        <AuthAtmosphere />
 
         <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={testIds.screenOnboarding}>
           <View style={styles.header}>
@@ -500,11 +510,7 @@ export default function OnboardingScreen() {
         message="Setting up your Rasoi…"
         subtitle="Saving tastes and reminders"
       />
-      <LinearGradient
-        colors={['#0A0908', '#0F1210', '#0A0908']}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.glowGreen} />
+      <AuthAtmosphere />
 
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={testIds.screenOnboarding}>
         <View style={styles.header}>
@@ -567,16 +573,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   darkRoot: {
     flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
-  glowGreen: {
-    position: 'absolute',
-    right: -80,
-    bottom: 120,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(0,168,107,0.12)',
+    backgroundColor: AUTH_ATMOSPHERE_BG,
   },
   backButton: {
     position: 'absolute',
