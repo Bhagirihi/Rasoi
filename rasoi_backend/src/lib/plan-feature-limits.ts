@@ -8,7 +8,10 @@ export const SAVED_RECIPE_LIMITS: Record<PlanTier, number | null> = {
   paid: null,
 };
 
-export function getEffectivePlanTier(user: Pick<User, 'planTier'>, now = Date.now()): PlanTier {
+export function getEffectivePlanTier(
+  user: Pick<User, 'planTier' | 'trialStartedAt' | 'trialBonusDays'>,
+  now = Date.now(),
+): PlanTier {
   if (user.planTier === 'paid') return 'paid';
   if (user.planTier === 'trial' && isActiveTrial(user, now)) return 'trial';
   return 'free';
