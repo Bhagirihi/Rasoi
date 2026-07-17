@@ -1,9 +1,10 @@
 import * as Linking from 'expo-linking';
-import { useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AppSavingOverlay from '@/components/AppSavingOverlay';
 import { authStyles as styles } from '@/components/auth/authStyles';
 import {
   CURRENT_TERMS_VERSION,
@@ -13,6 +14,8 @@ import {
 } from '@/constants/legalHighlights';
 import { colors, radius, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
+import { useAppContext } from '@/context/AppContext';
+import { resolvePostAuthHref } from '@/utils/authNavigation';
 import { saveLegalConsent } from '@/utils/legalConsent';
 import { markTelemetryStarted } from '@/utils/telemetry';
 
@@ -32,8 +35,16 @@ function HighlightSection({ title, items }: { title: string; items: readonly str
 
 export default function LegalConsentScreen() {
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
+  const fromRegister = from === 'register';
+  const { pendingPantrySetup, pendingTrialWelcome, userCity, hasCompletedOnboarding, isHydrated } =
+    useAppContext();
   const [checked, setChecked] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  if (isHydrated && !fromRegister) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const handleContinue = async () => {
     if (!checked || busy) return;
@@ -41,7 +52,12 @@ export default function LegalConsentScreen() {
     try {
       await saveLegalConsent();
       markTelemetryStarted();
-      router.replace('/(auth)/login');
+
+      const href = await resolvePostAuthHref(
+        { showTrialWelcome: pendingTrialWelcome, hasCompletedOnboarding, userCity },
+        { userCity, pendingPantrySetup },
+      );
+      router.replace(href as Href);
     } finally {
       setBusy(false);
     }
@@ -49,6 +65,11 @@ export default function LegalConsentScreen() {
 
   return (
     <SafeAreaView style={localStyles.safe} edges={['top', 'bottom']} testID={testIds.screenLegalConsent}>
+      <AppSavingOverlay
+        visible={busy}
+        message="Opening Rasoi…"
+        subtitle="Setting up your kitchen"
+      />
       <ScrollView
         style={localStyles.flex}
         contentContainerStyle={localStyles.scroll}

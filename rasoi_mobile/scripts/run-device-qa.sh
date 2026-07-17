@@ -53,37 +53,37 @@ ok() {
 
 case "$SUITE" in
   smoke)
-    run_flow e2e/maestro/01-guest-smoke.yaml
+    run_flow e2e/maestro/01-login-smoke.yaml
     ;;
   auth)
+    unset QA_OTP
     export QA_NAME="${QA_NAME:-QA Tester}"
-    export QA_PHONE="${QA_PHONE:-9820174653}"
+    export QA_PHONE="${QA_PHONE:-9374766500}"
     export QA_EMAIL="${QA_EMAIL:-dvesp1901+$(date +%s)@gmail.com}"
     run_flow e2e/maestro/01-register-send-otp.yaml
-    if [[ -z "${QA_OTP:-}" ]]; then
-      echo "Waiting for OTP…"
-      for i in $(seq 1 40); do
-        if QA_OTP="$(python3 scripts/fetch-otp.py 2>/dev/null)"; then
-          export QA_OTP
-          break
-        fi
-        sleep 3
-      done
-      [[ -n "${QA_OTP:-}" ]] || { echo "❌ OTP not received"; exit 1; }
-    fi
+    unset QA_OTP
+    echo "Waiting for register OTP…"
+    for i in $(seq 1 40); do
+      if QA_OTP="$(python3 scripts/fetch-otp.py 2>/dev/null)"; then
+        export QA_OTP
+        break
+      fi
+      sleep 3
+    done
+    [[ -n "${QA_OTP:-}" ]] || { echo "❌ Register OTP not received"; exit 1; }
     run_flow e2e/maestro/02-register-verify.yaml
     run_flow e2e/maestro/09-logout.yaml
     run_flow e2e/maestro/10-login-send-otp.yaml
-    if [[ -z "${QA_OTP:-}" ]] || [[ "$QA_OTP" == "$(python3 scripts/fetch-otp.py 2>/dev/null || true)" ]]; then
-      unset QA_OTP
-      for i in $(seq 1 40); do
-        if QA_OTP="$(python3 scripts/fetch-otp.py 2>/dev/null)"; then
-          export QA_OTP
-          break
-        fi
-        sleep 3
-      done
-    fi
+    unset QA_OTP
+    echo "Waiting for login OTP…"
+    for i in $(seq 1 40); do
+      if QA_OTP="$(python3 scripts/fetch-otp.py 2>/dev/null)"; then
+        export QA_OTP
+        break
+      fi
+      sleep 3
+    done
+    [[ -n "${QA_OTP:-}" ]] || { echo "❌ Login OTP not received"; exit 1; }
     run_flow e2e/maestro/11-login-verify.yaml
     ;;
   modules)
@@ -95,7 +95,7 @@ case "$SUITE" in
     run_flow e2e/maestro/08-settings.yaml
     ;;
   all)
-    run_flow e2e/maestro/01-guest-smoke.yaml
+    run_flow e2e/maestro/01-login-smoke.yaml
     run_flow e2e/maestro/03-home.yaml
     run_flow e2e/maestro/04-recipes-tab.yaml
     run_flow e2e/maestro/05-recipe-detail.yaml

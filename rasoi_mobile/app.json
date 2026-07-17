@@ -3,7 +3,7 @@
     "name": "Rasoi",
     "slug": "rasoi",
     "owner": "takeyshi",
-    "version": "1.0.7",
+    "version": "1.0.14",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rasoi",
@@ -22,10 +22,11 @@
     },
     "android": {
       "package": "com.bhagihiri.rasoiapp",
-      "versionCode": 8,
+      "versionCode": 15,
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#FF6B35",
@@ -85,7 +86,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "1.0.6",
+    "runtimeVersion": "1.0.9",
     "updates": {
       "url": "https://u.expo.dev/01de1672-85ce-4ad7-83d7-7fc958fc5659",
       "checkAutomatically": "NEVER",

@@ -76,7 +76,7 @@ export function resolvePrimaryIngredient(recipe: Recipe): string {
     return recipe.primaryIngredient.trim().toLowerCase();
   }
 
-  const ingredients = normalizeRecipeIngredients(parseJson(recipe.ingredients, []));
+  const ingredients = normalizeRecipeIngredients(recipe.ingredients);
   return (
     primaryFromTitle(recipe.title) ??
     primaryFromIngredients(ingredients) ??
@@ -85,7 +85,5 @@ export function resolvePrimaryIngredient(recipe: Recipe): string {
 }
 
 export function getRecipeCuisineIds(recipe: Recipe): string[] {
-  const ids = parseJson<string[]>(recipe.kitchenStyleIds, []);
-  if (ids.length > 0) return [...new Set(ids)];
   return [recipe.kitchenStyleId];
 }

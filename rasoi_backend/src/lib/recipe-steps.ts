@@ -24,16 +24,54 @@ const DETAILED_STEP_COUNT = 5;
 
 export function stepsLookVague(steps: string[]): boolean {
   if (steps.length === 0) return true;
+  const text = steps.join(' ');
   const vague = [
     'Prepare and portion ingredients',
     'Cook the base tempering',
     'Add hero ingredients',
     'Finish with garnish and serve hot',
-    'Adjust gravy consistency, finish with fresh coriander',
-    'Wash, peel, and cut',
-    'until vegetables or protein are tender but hold shape',
+    'Rinse and drain Bread',
+    'Rinse and drain bread',
+    'the main grain',
+    'Prepare pantry ingredients and hero components for',
+    'Cook aromatics in ghee or oil until fragrant and lightly caramelized',
+    'Add hero ingredients with spices and simmer to desired texture',
   ];
-  return steps.some((step) => vague.some((pattern) => step.includes(pattern)));
+  return vague.some((pattern) => text.includes(pattern));
+}
+
+/** Detect auto-generated curry/bread steps applied to the wrong dish title. */
+export function stepsMismatchTitle(title: string, steps: string[]): boolean {
+  if (steps.length === 0) return false;
+  const t = title.toLowerCase();
+  const text = steps.join(' ').toLowerCase();
+  const curryMasala =
+    /onion turns golden|onion-tomato masala|ginger-garlic paste.*onion|raw tomato smell/.test(text);
+
+  if ((t.includes('chapati') || t.includes('phulka') || t.includes('roti') || t.includes('paratha')) && curryMasala) {
+    return true;
+  }
+  if ((/aloo\s*jeera|jeera\s*aloo/.test(t) || t.includes('bhindi fry') || t.includes('karela fry')) && curryMasala) {
+    return true;
+  }
+  if ((t.includes('plain rice') || t === 'rice' || t.includes('steamed rice')) && /kadai|onion turns golden/.test(text)) {
+    return true;
+  }
+  if (t.includes('raita') && curryMasala) return true;
+  if (t.includes('chutney') && curryMasala) return true;
+  if (t.includes('halwa') && curryMasala) return true;
+  if (/\bbread\b/.test(t) && t.includes('poha') && /rinse and drain/i.test(text)) return true;
+  if (/khichdi|khichri/.test(t) && /dhebra|knead into a soft dough|lemon-sized balls|pat each ball/i.test(text)) {
+    return true;
+  }
+  if (/khichdi|khichri/.test(t) && /onion-tomato masala thickens|gravy consistency/i.test(text)) return true;
+  if (/thepla|paratha|rotla|roti|bhakri|missi|naan|dhebra/.test(t) && curryMasala) return true;
+  if (/dosa|idli|uttapam|appam/.test(t) && curryMasala) return true;
+  if (/raab|porridge|raita|salad|soup|smoothie/.test(t) && curryMasala) return true;
+  if (t.includes('dal') && /onion turns golden.*tomato.*masala thickens/i.test(text) && !/pressure-cook|tadka|whistles/.test(text)) {
+    return false; // dal curry steps might be ok
+  }
+  return false;
 }
 
 function heroIngredient(ingredients: RecipeIngredient[]): string {
@@ -78,11 +116,37 @@ function normalizeIngredients(ingredients: RecipeIngredient[]): RecipeIngredient
   return ingredients.filter((item) => item?.name?.trim());
 }
 
-function detectDishKind(title: string, ingredients: RecipeIngredient[]): string {
+function isDrySabzi(title: string, ingText: string): boolean {
+  if (/curry|masala|jhol|jalfrezi|kolhapuri|kadhi|gravy/.test(title)) return false;
+  if (/pyaaz|onion|tamatar|tomato/.test(ingText) && /matar|tomato|capsicum|kolhapuri|jalfrezi/.test(title)) {
+    return false;
+  }
+  if (/aloo\s*jeera|jeera\s*aloo|bateta.*jeera/.test(title)) return true;
+  if (/bhindi fry|karela fry|methi bhaji|tinda sabzi|tori sabzi|gawar fali|beans potato/.test(title)) return true;
+  if (/\bfry\b/.test(title) && !/fish|chicken|mutton|pakoda|vada|fafda|french|egg|paneer tikka/.test(title)) {
+    return true;
+  }
+  if (/\bbhaji\b/.test(title) && !/pav bhaji|bhaji masala/.test(title)) return true;
+  if (/sabzi\b/.test(title) && !/pyaaz|onion|tamatar|tomato/.test(ingText)) return true;
+  return false;
+}
+
+export function detectDishKind(title: string, ingredients: RecipeIngredient[]): string {
   const t = title.toLowerCase();
   const ing = normalizeIngredients(ingredients)
     .map((item) => item.name.toLowerCase())
     .join(' ');
+
+  if (/\bbread\b/.test(t) && (t.includes('poha') || t.includes('upma'))) return 'bread-snack';
+  if (t.includes('raita')) return 'raita';
+  if (t.includes('salad') || t.includes('kachumber')) return 'salad';
+  if (t.includes('smoothie') || t.includes('shake') && !t.includes('milkshake bowl')) return 'smoothie';
+  if (t.includes('soup') || t.includes('shorba') || (t.includes('rasam') && !t.includes('sambar'))) return 'soup';
+  if (t.includes('porridge') || t.includes('raab') || t.includes('congee')) return 'porridge';
+  if (t.includes('plain rice') || t === 'rice' || (t.includes('steamed') && t.includes('rice'))) return 'plain-rice';
+  if (t.includes('noodle') || t.includes('pasta') || t.includes('macaroni')) return 'noodles';
+  if (t.includes('chapati') || t.includes('phulka')) return 'bread';
+  if (isDrySabzi(t, ing)) return 'dry-sabzi';
 
   if (
     t.includes('chaat') ||
@@ -110,12 +174,12 @@ function detectDishKind(title: string, ingredients: RecipeIngredient[]): string 
   ) {
     return 'fried';
   }
+  if (t.includes('khichdi') || t.includes('khichri')) return 'khichdi';
   if (t.includes('dhebra') || ((t.includes('bajri') || t.includes('bajra')) && !t.includes('dal'))) return 'dhebra';
   if (t.includes('khandvi') || t.includes('locho') || t.includes('khichu') || t.includes('dhokla') || t.includes('khaman')) {
     return 'steamed';
   }
   if (t.includes('biryani') || t.includes('pulao') || t.includes('pulav')) return 'rice-layered';
-  if (t.includes('khichdi') || t.includes('khichri')) return 'khichdi';
   if (
     t.includes('paratha') ||
     t.includes('thepla') ||
@@ -315,12 +379,101 @@ function buildBreadSteps(input: RecipeStepInput): string[] {
   const title = input.title;
   const pairing = servingPairing(input.kitchenStyleId, 'bread');
 
+  if (t.includes('chapati') || t.includes('phulka')) {
+    return [
+      `Knead ${dry} with salt and warm water into a soft, pliable dough; rest covered for ${restMinutes(input.prepTime)} minutes.`,
+      'Divide into equal balls, dust with dry atta, and roll into thin rounds.',
+      t.includes('phulka')
+        ? 'Partially cook both sides on a hot tawa, then puff directly on open flame using tongs until fully ballooned.'
+        : 'Cook on a hot tawa until bubbles appear, flip, and press gently until golden spots form on both sides.',
+      t.includes('phulka')
+        ? `Serve ${title} immediately while still puffed — best with dal or sabzi.`
+        : `Brush with ghee and keep wrapped in a cotton cloth until the meal is served.`,
+      `Serve ${title} hot with ${pairing}. ${regionalTip(input, 'bread')}`,
+    ];
+  }
+
   return [
     `In a large bowl, combine ${dry} with salt and a little oil. Mix, then add warm water gradually and knead into a soft, pliable dough.`,
     `Cover and rest the dough for ${restMinutes(input.prepTime)} minutes. Prepare any stuffing with ${hero} and cook it until dry if the bread is stuffed.`,
     `Divide into equal portions, roll gently with light pressure, and dust with dry flour so the bread does not stick or tear.`,
     `Heat a tawa until a drop of water sizzles. Cook on medium heat with ghee or oil, pressing edges until golden brown spots appear on both sides.`,
     `Serve ${title} hot with ${pairing}. ${regionalTip(input, 'bread')}`,
+  ];
+}
+
+function buildDrySabziSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+  const pairing = servingPairing(input.kitchenStyleId, 'curry');
+  const t = input.title.toLowerCase();
+
+  if (/aloo\s*jeera|jeera\s*aloo/.test(t)) {
+    return [
+      `Boil ${hero} until just tender, peel, and cut into bite-sized cubes.`,
+      'Heat 2 tbsp oil in a kadai, add cumin seeds, and let them splutter over medium heat.',
+      `Add potato cubes, turmeric, red chilli powder, and salt; toss on medium-high heat until edges turn crisp and golden.`,
+      'Finish with slit green chilli and fresh coriander before serving.',
+      `Serve ${title} hot with roti or dal. ${regionalTip(input, 'dry-sabzi')}`,
+    ];
+  }
+
+  if (t.includes('bhindi') || t.includes('karela')) {
+    return [
+      `Wash and pat dry ${hero}; trim ends and slice evenly so pieces cook at the same rate.`,
+      'Heat oil in a wide kadai until shimmering. Add cumin or mustard seeds if using, then add the vegetable.',
+      'Cook on medium-high heat, stirring frequently, until lightly browned and tender without turning mushy.',
+      'Add turmeric, salt, and dry spices in the last few minutes so they stay aromatic.',
+      `Serve ${title} crisp and hot with ${pairing}. ${regionalTip(input, 'dry-sabzi')}`,
+    ];
+  }
+
+  return [
+    `Wash and prep ${hero}. Pat dry if frying to avoid splatter.`,
+    'Heat oil in a kadai, add cumin or mustard seeds, and let them crackle.',
+    `Add ${hero}, turmeric, salt, and spice powders. Cook on medium heat, stirring occasionally, until tender and lightly browned.`,
+    'Adjust seasoning and finish with fresh coriander if using.',
+    `Serve ${title} hot with roti or rice. ${regionalTip(input, 'dry-sabzi')}`,
+  ];
+}
+
+function buildSmoothieSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+
+  return [
+    `Wash and prep ${hero} and any fruit or greens. Freeze banana or berries for 20 minutes if you want a thicker bowl.`,
+    `Add ingredients to a blender with a splash of milk, curd, or water. Blend on high until completely smooth and pourable.`,
+    `Taste and adjust sweetness with honey, dates, or jaggery. Add ice or more liquid to reach your preferred thickness.`,
+    `Pour into a chilled bowl and top with seeds, nuts, or fresh fruit if the title suggests a bowl-style serve.`,
+    `Serve ${title} immediately before it separates.`,
+  ];
+}
+
+function buildSoupSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+  const pairing = servingPairing(input.kitchenStyleId, 'curry');
+
+  return [
+    `Prep ${hero} and aromatics. For clear soups, keep vegetables in even bite-sized pieces; for creamy soups, reserve a portion for blending later.`,
+    `Heat oil or butter in a pot, sauté onion, ginger, and garlic until soft and fragrant without browning too dark.`,
+    `Add ${hero}, water or stock, salt, and pepper. Bring to a boil, then simmer gently until everything is tender and the broth tastes well seasoned.`,
+    `Adjust thickness: blend a ladleful for creaminess, or leave brothy. Balance with lemon, soy, vinegar, or cornflour slurry depending on the soup style.`,
+    `Serve ${title} piping hot with ${pairing} on the side if desired. ${regionalTip(input, 'soup')}`,
+  ];
+}
+
+function buildPorridgeSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+
+  return [
+    `Dry-roast or rinse ${hero} as needed. Bring water or milk to a boil in a heavy pan.`,
+    `Whisk in ${hero} slowly to avoid lumps, then reduce heat to low and cook, stirring often, until thick and smooth.`,
+    `Sweeten with jaggery or sugar, or keep savoury with salt, cumin, and ginger as the title suggests.`,
+    `Adjust consistency with a splash of hot water or milk. The porridge should coat a spoon comfortably.`,
+    `Serve ${title} warm, topped with ghee, nuts, or fresh herbs as appropriate.`,
   ];
 }
 
@@ -514,13 +667,84 @@ function buildBreakfastGrainSteps(input: RecipeStepInput): string[] {
   const title = input.title;
   const pairing = servingPairing(input.kitchenStyleId, 'breakfast-grain');
   const temper = cuisineTemperOil(input.kitchenStyleId);
+  const isPoha = hero.toLowerCase().includes('poha') || title.toLowerCase().includes('poha');
 
   return [
-    `Rinse and drain ${hero} until water runs almost clear. Spread on a tray briefly if the recipe needs dry grains before tempering.`,
+    isPoha
+      ? `Rinse ${hero} gently in a colander until water runs clear; drain well and spread on a tray for 5 minutes so grains stay separate.`
+      : `Roast ${hero} on a dry pan until lightly golden and aromatic; set aside.`,
     `Heat oil or ghee, add ${temper}, then peanuts or curry leaves if used. Sauté onion and green chilli until fragrant.`,
-    `Add turmeric, salt, and the main grain. Toss on medium heat so every grain is coated and lightly toasted without breaking.`,
+    `Add turmeric, salt, and ${isPoha ? 'drained poha' : hero}. Toss on medium heat so every grain is coated and lightly toasted without breaking.`,
     `Add a measured splash of water only if needed, cover, and steam on low for 2–4 minutes until tender. Fluff with a fork.`,
     `Finish ${title} with lemon juice, fresh coriander, and sev or coconut if needed. Serve immediately with ${pairing}.`,
+  ];
+}
+
+function buildBreadSnackSteps(input: RecipeStepInput): string[] {
+  const title = input.title;
+  const pairing = servingPairing(input.kitchenStyleId, 'street');
+  const temper =
+    input.kitchenStyleId === 'street'
+      ? 'mustard seeds, cumin, and curry leaves'
+      : cuisineTemperOil(input.kitchenStyleId);
+
+  return [
+    'Tear or cube stale bread into bite-sized pieces; keep slightly dry so it toasts instead of turning mushy.',
+    `Heat oil in a wide pan, add ${temper}, and sauté chopped onion and green chilli until soft.`,
+    'Add turmeric, salt, and bread pieces. Toss on medium-high heat until bread is crisp at the edges and evenly coated.',
+    'Fold in roasted peanuts or sev if using; cook 1 minute more so flavours meld.',
+    `Finish ${title} with lemon juice and coriander. Serve hot with ${pairing}.`,
+  ];
+}
+
+function buildRaitaSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+
+  return [
+    `Whisk dahi smooth with a little chilled pani until pouring consistency.`,
+    `Prep ${hero} — chop, grate, or soak as needed (e.g. squeeze boondi after a brief warm water soak).`,
+    'Fold prepared mix into dahi with roasted jeera powder and kala namak.',
+    'Chill 10–15 minutes so flavours settle.',
+    `Garnish ${title} with coriander and serve as a cooling side with biryani, pulao, or paratha.`,
+  ];
+}
+
+function buildSaladSteps(input: RecipeStepInput): string[] {
+  const title = input.title;
+
+  return [
+    'Wash and dice cucumber, tomato, and onion into small even pieces.',
+    'Add slit green chilli and fresh coriander if using.',
+    'Dress with nimbu juice, namak, and optional roasted jeera powder.',
+    'Toss gently and taste for balance of salt and acid.',
+    `Serve ${title} immediately alongside dal-roti or rice.`,
+  ];
+}
+
+function buildPlainRiceSteps(input: RecipeStepInput): string[] {
+  const title = input.title;
+  const pairing = servingPairing(input.kitchenStyleId, 'dal');
+
+  return [
+    'Wash basmati chawal until water runs clear; soak 15–20 minutes and drain.',
+    'Boil salted pani in a heavy pot; add drained rice when water is at a rolling boil.',
+    'Cook on medium heat until grains are tender and water is absorbed.',
+    'Rest covered 5 minutes off heat, then fluff with a fork.',
+    `Dot with ghee if desired and serve ${title} hot with ${pairing}.`,
+  ];
+}
+
+function buildNoodlesSteps(input: RecipeStepInput): string[] {
+  const hero = heroIngredient(input.ingredients);
+  const title = input.title;
+
+  return [
+    `Boil ${hero} in salted pani until al dente; drain and toss with a little oil to prevent sticking.`,
+    'Heat oil in a wok, sauté garlic, ginger, and chopped vegetables on high heat.',
+    'Add soy sauce, vinegar, or ketchup as per taste along with salt and pepper.',
+    `Toss cooked ${hero} with vegetables until evenly coated and heated through.`,
+    `Serve ${title} hot as a snack or light meal.`,
   ];
 }
 
@@ -593,11 +817,38 @@ export function buildDetailedSteps(input: RecipeStepInput): string[] {
 
   let steps: string[];
   switch (kind) {
+    case 'bread-snack':
+      steps = buildBreadSnackSteps(normalized);
+      break;
+    case 'raita':
+      steps = buildRaitaSteps(normalized);
+      break;
+    case 'salad':
+      steps = buildSaladSteps(normalized);
+      break;
+    case 'smoothie':
+      steps = buildSmoothieSteps(normalized);
+      break;
+    case 'soup':
+      steps = buildSoupSteps(normalized);
+      break;
+    case 'porridge':
+      steps = buildPorridgeSteps(normalized);
+      break;
+    case 'plain-rice':
+      steps = buildPlainRiceSteps(normalized);
+      break;
+    case 'noodles':
+      steps = buildNoodlesSteps(normalized);
+      break;
     case 'dhebra':
       steps = buildDhebraSteps(normalized);
       break;
     case 'bread':
       steps = buildBreadSteps(normalized);
+      break;
+    case 'dry-sabzi':
+      steps = buildDrySabziSteps(normalized);
       break;
     case 'curry':
       steps = buildCurrySteps(normalized);
@@ -656,11 +907,20 @@ export function buildDetailedSteps(input: RecipeStepInput): string[] {
 }
 
 export function resolveRecipeSteps(input: RecipeStepInput): string[] {
+  if (
+    input.steps &&
+    input.steps.length > 0 &&
+    !stepsLookVague(input.steps) &&
+    !stepsMismatchTitle(input.title, input.steps)
+  ) {
+    return input.steps.slice(0, DETAILED_STEP_COUNT);
+  }
   return buildDetailedSteps(input);
 }
 
 export function resolveStepsForRecipe(recipe: Recipe): string[] {
   const ingredients = parseJsonArray<RecipeIngredient[]>(recipe.ingredients, []);
+  const stored = parseJsonArray<string[]>(recipe.steps ?? '[]', []);
 
   return resolveRecipeSteps({
     title: recipe.title,
@@ -669,6 +929,6 @@ export function resolveStepsForRecipe(recipe: Recipe): string[] {
     ingredients,
     prepTime: recipe.prepTime,
     difficulty: recipe.difficulty,
-    description: recipe.description,
+    steps: stored,
   });
 }

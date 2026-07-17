@@ -22,7 +22,7 @@ export function useRecipeDiscovery() {
     pantryIngredients,
     pantryFilterActive,
     setPantryFilterActive,
-    allergyExclusions,
+    allergyExclusions: effectiveAllergyExclusions,
   } = useAppContext();
   const { showDialog } = useAppDialog();
   const { recipes, loading: recipesLoading, error: recipesError, refreshRecipes, hasMore: recipesHasMore, loadingMore: recipesLoadingMore, loadMoreRecipes, totalCount: recipesTotalCount } = useRecipes();
@@ -46,7 +46,7 @@ export function useRecipeDiscovery() {
       fastFilters: activeFilters,
       requirePantryMatch: pantryFilterActive,
       pantryMatchMode: pantryFilterActive ? 'any' : 'full',
-      allergyExclusions,
+      allergyExclusions: effectiveAllergyExclusions,
     });
   }, [
     hasDiscoveryFilters,
@@ -58,7 +58,7 @@ export function useRecipeDiscovery() {
     pantryIngredients,
     activeFilters,
     pantryFilterActive,
-    allergyExclusions,
+    effectiveAllergyExclusions,
   ]);
 
   useEffect(() => {

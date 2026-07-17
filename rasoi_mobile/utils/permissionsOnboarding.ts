@@ -6,6 +6,13 @@ import { isNotificationPermissionGranted } from '@/utils/notifications';
 
 const PERMISSIONS_ONBOARDING_KEY = '@rasoi/permissions_onboarding_complete';
 
+export type MissingPermissionsState = {
+  needsFlow: boolean;
+  needsNotifications: boolean;
+  needsLocation: boolean;
+  initialStep: 'notifications' | 'location' | null;
+};
+
 export async function isPermissionsOnboardingComplete(): Promise<boolean> {
   try {
     return (await AsyncStorage.getItem(PERMISSIONS_ONBOARDING_KEY)) === 'true';
@@ -18,21 +25,52 @@ export async function markPermissionsOnboardingComplete(): Promise<void> {
   await AsyncStorage.setItem(PERMISSIONS_ONBOARDING_KEY, 'true');
 }
 
-/** True when the branded notification + location steps still need to run. */
-export async function shouldShowPermissionsOnboarding(userCity: string | null): Promise<boolean> {
-  if (Platform.OS === 'web') return false;
-  if (await isPermissionsOnboardingComplete()) return false;
+export async function clearPermissionsOnboardingComplete(): Promise<void> {
+  await AsyncStorage.removeItem(PERMISSIONS_ONBOARDING_KEY);
+}
+
+/** Which branded permission steps still need to run (based on OS permission + profile city). */
+export async function getMissingPermissionsState(
+  userCity: string | null,
+): Promise<MissingPermissionsState> {
+  if (Platform.OS === 'web') {
+    return {
+      needsFlow: false,
+      needsNotifications: false,
+      needsLocation: false,
+      initialStep: null,
+    };
+  }
 
   const [notifGranted, locGranted] = await Promise.all([
     isNotificationPermissionGranted(),
     isLocationPermissionGranted(),
   ]);
 
-  // Already granted everything we ask for — no need to show the flow again.
-  if (notifGranted && (locGranted || Boolean(userCity?.trim()))) {
-    await markPermissionsOnboardingComplete();
-    return false;
+  const hasCity = Boolean(userCity?.trim());
+  const needsNotifications = !notifGranted;
+  const needsLocation = !locGranted && !hasCity;
+  const needsFlow = needsNotifications || needsLocation;
+
+  let initialStep: 'notifications' | 'location' | null = null;
+  if (needsFlow) {
+    initialStep = needsNotifications ? 'notifications' : 'location';
   }
 
-  return true;
+  return { needsFlow, needsNotifications, needsLocation, initialStep };
+}
+
+/** True when notification and/or location permission screens should run after login. */
+export async function shouldShowPermissionsOnboarding(userCity: string | null): Promise<boolean> {
+  const state = await getMissingPermissionsState(userCity);
+  if (!state.needsFlow) {
+    await markPermissionsOnboardingComplete();
+  }
+  return state.needsFlow;
+}
+
+export function permissionsOnboardingHref(step?: 'notifications' | 'location' | null): string {
+  const base = '/(auth)/onboarding?permissionsOnly=1';
+  if (step) return `${base}&step=${step}`;
+  return base;
 }

@@ -22,10 +22,13 @@ export interface Recipe {
   dietType: DietType;
   difficulty: RecipeDifficulty;
   description: string;
+  descriptionHi?: string;
   imageUrl: string;
   tags: Array<'under20' | 'leftover' | 'kids' | 'quick' | 'festive'>;
   ingredients: RecipeIngredient[];
+  mainIngredients?: string[];
   steps?: string[];
+  stepsHi?: string[];
 }
 
 export const REGIONAL_CUISINES = [

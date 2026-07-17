@@ -1,18 +1,20 @@
 {
   "name": "rasoi",
   "main": "expo-router/entry",
-  "version": "1.0.7",
+  "version": "1.0.14",
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/fraunces": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-firebase/analytics": "^24.1.1",
     "@react-native-firebase/app": "^24.1.1",
+    "@react-native-firebase/auth": "^24.1.1",
     "@react-native-firebase/crashlytics": "^24.1.1",
     "@sentry/react-native": "^8.14.0",
     "@supabase/supabase-js": "^2.108.1",
     "expo": "~54.0.0",
     "expo-build-properties": "~1.0.10",
+    "expo-clipboard": "~8.0.8",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.12",
     "expo-haptics": "~15.0.8",
@@ -41,6 +43,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.10",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "babel-preset-expo": "~54.0.10",
     "typescript": "~5.9.2"
   },
@@ -71,7 +75,8 @@
     "qa:full": "bash scripts/run-full-device-qa.sh",
     "qa:stability": "python3 scripts/run-stability-3x.py",
     "qa:guest-delete": "python3 scripts/run-guest-delete-qa.py",
-    "qa:new": "python3 scripts/run-new-qa.py"
+    "qa:new": "python3 scripts/run-new-qa.py",
+    "validate:play-manifest": "node scripts/validate-play-manifest.mjs"
   },
   "private": true
 }

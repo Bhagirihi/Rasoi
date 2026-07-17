@@ -21,10 +21,16 @@ export default function AuthLayout() {
         options={{ gestureEnabled: false, contentStyle: { backgroundColor: colors.dark.bg, flex: 1 } }}
       />
       <Stack.Screen name="login" options={{ gestureEnabled: false }} />
-      <Stack.Screen name="register" options={{ gestureEnabled: false }} />
+      <Stack.Screen
+        name="register"
+        options={{ gestureEnabled: false, contentStyle: { backgroundColor: colors.dark.bg, flex: 1 } }}
+      />
       <Stack.Screen
         name="trial-welcome"
-        options={{ gestureEnabled: false, contentStyle: { backgroundColor: colors.dark.bg, flex: 1 } }}
+        options={{
+          gestureEnabled: true,
+          contentStyle: { backgroundColor: colors.dark.bg, flex: 1 },
+        }}
       />
     </Stack>
   );

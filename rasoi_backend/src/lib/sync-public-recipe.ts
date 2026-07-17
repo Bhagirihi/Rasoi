@@ -33,14 +33,8 @@ function parseJson<T>(value: string, fallback: T): T {
   }
 }
 
-function parseTags(tagsJson: string): string[] {
-  const parsed = parseJson<unknown>(tagsJson, []);
-  return Array.isArray(parsed) ? parsed.filter((tag) => typeof tag === 'string') : [];
-}
-
 function parseIngredients(ingredientsJson: string): RecipeIngredient[] {
-  const parsed = parseJson<unknown>(ingredientsJson, []);
-  return normalizeRecipeIngredients(parsed);
+  return normalizeRecipeIngredients(ingredientsJson);
 }
 
 function parseSteps(stepsJson: string | null): string[] {
@@ -156,7 +150,7 @@ async function syncPublicRecipeSteps(
  */
 export async function syncPublicRecipe(recipe: Recipe): Promise<void> {
   const client = getPool();
-  const tags = parseTags(recipe.tags);
+  const tags: string[] = [];
   const ingredients = parseIngredients(recipe.ingredients);
   const steps = parseSteps(recipe.steps);
 
@@ -193,7 +187,7 @@ export async function syncPublicRecipe(recipe: Recipe): Promise<void> {
     [
       recipe.id,
       recipe.title,
-      recipe.description,
+      '',
       recipe.prepTime,
       recipe.calories,
       recipe.region,

@@ -74,7 +74,7 @@ export default function PaywallActions({
 
       {paymentsEnabled && trialExpired && effectiveTier === 'free' && !hideExpiredNote && (
         <Text style={styles.expiredNote}>
-          Your trial has ended. Subscribe to restore partner checkout.
+          Your trial has ended. Subscribe to restore your 3-day plan, unlimited saves, and partner checkout.
         </Text>
       )}
 

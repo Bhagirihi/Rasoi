@@ -1,5 +1,6 @@
 import type { PlanTier } from '@/constants/plans';
 import type { CuisineId, DietChoice } from '@/constants/theme';
+import type { Gender } from '@/constants/genderOptions';
 import type { DietType } from '@/data/mockRecipes';
 import type { UserProfileResponse } from '@/types/api';
 import { parseJson } from '@/utils/parseJson';
@@ -11,6 +12,7 @@ export type DbUserRow = {
   email: string | null;
   phone: string | null;
   name: string;
+  gender?: string | null;
   isGuest: boolean;
   isActive?: boolean;
   hasCompletedOnboarding: boolean;
@@ -43,6 +45,7 @@ export function serializeUserProfile(row: DbUserRow): UserProfileResponse {
     email: row.email,
     phone: row.phone,
     name: row.name,
+    gender: (row.gender as Gender | null) ?? null,
     isGuest: row.isGuest,
     isActive: row.isActive ?? true,
     hasCompletedOnboarding: row.hasCompletedOnboarding,

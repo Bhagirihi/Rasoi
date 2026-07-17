@@ -5,6 +5,7 @@ import type {
   CuisineId,
   DietChoice,
   DietType,
+  Gender,
   RecipeDifficulty,
   RecipeIngredient,
   RecipeResponse,
@@ -14,7 +15,8 @@ import type {
   UserProfileResponse,
 } from '@/lib/types';
 import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
-import { resolveStepsForRecipe } from '@/lib/recipe-steps';
+import { parseMainIngredients } from '@/lib/recipe-main-ingredients';
+import { buildRecipeDescription, buildRecipeDescriptionHi } from '@/lib/recipe-description';
 
 export function parseJson<T>(value: string, fallback: T): T {
   try {
@@ -25,9 +27,21 @@ export function parseJson<T>(value: string, fallback: T): T {
 }
 
 export function serializeRecipe(recipe: Recipe): RecipeResponse {
-  const kitchenStyleIds = parseJson<CuisineId[]>(recipe.kitchenStyleIds, []);
-  const resolvedKitchenStyleIds =
-    kitchenStyleIds.length > 0 ? kitchenStyleIds : [recipe.kitchenStyleId];
+  const ingredients = normalizeRecipeIngredients(recipe.ingredients);
+  const mainIngredients = parseMainIngredients(recipe.main_ingredients);
+  const steps = parseJson<string[]>(recipe.steps ?? '[]', []);
+  const storedStepsHi = parseJson<string[]>(recipe.stepsHi ?? '[]', []);
+  const storedDescHi = recipe.descriptionHi?.trim() ?? '';
+  const kitchenStyleId = recipe.kitchenStyleId as CuisineId;
+  const description = buildRecipeDescription({
+    title: recipe.title,
+    kitchenStyleId: recipe.kitchenStyleId,
+    dietType: recipe.dietType,
+    ingredients,
+    prepTime: recipe.prepTime,
+    difficulty: recipe.difficulty,
+    steps,
+  });
 
   return {
     id: recipe.id,
@@ -35,15 +49,28 @@ export function serializeRecipe(recipe: Recipe): RecipeResponse {
     prepTime: recipe.prepTime,
     calories: recipe.calories,
     region: recipe.region,
-    kitchenStyleId: recipe.kitchenStyleId,
-    kitchenStyleIds: resolvedKitchenStyleIds,
+    kitchenStyleId,
+    kitchenStyleIds: [kitchenStyleId],
     dietType: recipe.dietType as DietType,
     difficulty: recipe.difficulty as RecipeDifficulty,
-    description: recipe.description,
+    description,
+    descriptionHi:
+      storedDescHi ||
+      buildRecipeDescriptionHi({
+        title: recipe.title,
+        kitchenStyleId: recipe.kitchenStyleId,
+        dietType: recipe.dietType,
+        ingredients,
+        prepTime: recipe.prepTime,
+        difficulty: recipe.difficulty,
+        steps,
+      }),
     imageUrl: recipe.imageUrl,
-    tags: parseJson<RecipeTag[]>(recipe.tags, []),
-    ingredients: normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, [])),
-    steps: resolveStepsForRecipe(recipe),
+    tags: [] as RecipeTag[],
+    ingredients,
+    mainIngredients: mainIngredients.length > 0 ? mainIngredients : undefined,
+    steps,
+    stepsHi: storedStepsHi.length > 0 ? storedStepsHi : undefined,
     published: recipe.published,
     createdAt: recipe.createdAt.toISOString(),
     updatedAt: recipe.updatedAt.toISOString(),
@@ -78,6 +105,7 @@ export function serializeUser(user: User): UserProfileResponse {
     email: user.email,
     phone: user.phone,
     name: user.name,
+    gender: (user.gender as Gender | null) ?? null,
     isGuest: user.isGuest,
     isActive: user.isActive ?? true,
     hasCompletedOnboarding: user.hasCompletedOnboarding,

@@ -1,5 +1,8 @@
 import type { MarketId } from '@/lib/markets';
 import { MARKET_PATHS } from '@/lib/markets';
+import { GENERATED_SEO_RECIPE_BLOGS } from '@/lib/seo-recipe-blogs-data';
+import { SEO_CITY_GUIDE_PAGES } from '@/lib/seo-city-guides';
+import { getAllTaxonomyPaths } from '@/lib/seo-taxonomy';
 
 export type SeoContentFaq = {
   question: string;
@@ -29,12 +32,18 @@ export type SeoRecipePage = {
   cuisine: string;
   diet: string;
   time: string;
+  imageUrl?: string;
+  ingredients?: string[];
+  steps?: string[];
+  marketNotes?: Partial<Record<MarketId, string>>;
   sections: { heading: string; body: string }[];
   faqs: SeoContentFaq[];
   relatedLinks: { href: string; label: string }[];
+  searchVolumeRank?: number;
+  sourceFile?: string;
 };
 
-export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
+const CORE_SEO_GUIDE_PAGES: SeoGuidePage[] = [
   {
     slug: 'what-to-cook-tonight-indian',
     title: 'What to Cook Tonight — Indian Home Cooking Ideas | Rasoi',
@@ -184,6 +193,8 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
     relatedLinks: [
       { href: MARKET_PATHS.US, label: 'Rasoi USA' },
       { href: '/indian-recipe-app', label: 'All guides' },
+      { href: '/indian-recipes-new-york-city', label: 'New York City' },
+      { href: '/indian-cooking-houston-texas', label: 'Houston, Texas' },
     ],
   },
   {
@@ -208,7 +219,11 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
       },
     ],
     marketId: 'CA',
-    relatedLinks: [{ href: MARKET_PATHS.CA, label: 'Rasoi Canada' }],
+    relatedLinks: [
+      { href: MARKET_PATHS.CA, label: 'Rasoi Canada' },
+      { href: '/indian-weeknight-dinners-toronto', label: 'Toronto weeknights' },
+      { href: '/indian-home-cooking-vancouver', label: 'Vancouver home cooking' },
+    ],
   },
   {
     slug: 'indian-cooking-in-australia',
@@ -232,7 +247,40 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
       },
     ],
     marketId: 'AU',
-    relatedLinks: [{ href: MARKET_PATHS.AU, label: 'Rasoi Australia' }],
+    relatedLinks: [
+      { href: MARKET_PATHS.AU, label: 'Rasoi Australia' },
+      { href: '/indian-recipes-sydney', label: 'Sydney recipes' },
+      { href: '/indian-cooking-melbourne', label: 'Melbourne cooking' },
+    ],
+  },
+  {
+    slug: 'indian-cooking-in-new-zealand',
+    title: 'Indian Cooking in New Zealand — Home Kitchen Guide | Rasoi',
+    description:
+      'Indian cooking in New Zealand — weeknight ideas, pantry match, and Rasoi guides for Auckland, Wellington, and diaspora home cooks.',
+    keywords: [
+      'indian cooking new zealand',
+      'indian recipes nz home',
+      'indian diaspora new zealand',
+      'indian food auckland',
+    ],
+    h1: 'Indian cooking in New Zealand',
+    intro:
+      'New Zealand home cooks shop at Pak\'nSave, Countdown, and local Indian grocers. Rasoi helps you decide what to cook tonight from those ingredients — with NZ grocery partner links rolling out over time.',
+    sections: [
+      {
+        heading: 'Weeknight reality in Kiwi kitchens',
+        body: 'Short evenings favour dal and rice, vegetable pulao, paneer stir-fries, and leftovers done well. Build a rotation your household already enjoys, then expand with regional picks from Rasoi.',
+      },
+    ],
+    faqs: [
+      {
+        question: 'Where is the New Zealand Rasoi page?',
+        answer: `Visit ${MARKET_PATHS.NZ} for New Zealand-focused guides and FAQs.`,
+      },
+    ],
+    marketId: 'NZ',
+    relatedLinks: [{ href: MARKET_PATHS.NZ, label: 'Rasoi New Zealand' }],
   },
   {
     slug: 'punjabi-dinner-ideas',
@@ -315,145 +363,10 @@ export const SEO_GUIDE_PAGES: SeoGuidePage[] = [
   },
 ];
 
-export const SEO_RECIPE_PAGES: SeoRecipePage[] = [
-  {
-    slug: 'paneer-butter-masala',
-    title: 'Paneer Butter Masala — Indian Home Recipe Guide | Rasoi',
-    description:
-      'Paneer butter masala for Indian home cooks — ingredients, pantry tips, and weeknight notes on rasoiapplication.in.',
-    keywords: ['paneer butter masala recipe', 'paneer butter masala home', 'north indian paneer'],
-    h1: 'Paneer butter masala — home kitchen guide',
-    intro:
-      'Paneer butter masala is a North Indian restaurant favourite that works beautifully at home when you have paneer, tomatoes, cream or milk, and basic masalas. It is a strong weeknight pick when you want something festive without hours of prep.',
-    cuisine: 'North Indian',
-    diet: 'Veg',
-    time: '~35 min',
-    sections: [
-      {
-        heading: 'Pantry check',
-        body: 'You need paneer, tomatoes (or puree), onion if your diet allows, ginger-garlic, butter, cream or malai, and garam masala. Kasuri methi at the end makes a big difference.',
-      },
-      {
-        heading: 'Home-cook tips',
-        body: 'Do not rush the tomato masala — let it cook until the fat separates. Paneer only needs to simmer briefly so it stays soft. Pair with roti, naan, or jeera rice.',
-      },
-    ],
-    faqs: [
-      {
-        question: 'Is paneer butter masala good for weeknights?',
-        answer: 'Yes, if your pantry already has paneer and tomato base — it is faster than most restaurant-style curries.',
-      },
-    ],
-    relatedLinks: [
-      { href: '/what-to-cook-tonight-indian', label: 'What to cook tonight' },
-      { href: '/', label: 'Rasoi India' },
-    ],
-  },
-  {
-    slug: 'dal-tadka',
-    title: 'Dal Tadka — Indian Home Recipe Guide | Rasoi',
-    description:
-      'Dal tadka at home — toor dal, tempering, and weeknight pairing ideas on rasoiapplication.in.',
-    keywords: ['dal tadka recipe', 'dal tadka home cooking', 'indian dal dinner'],
-    h1: 'Dal tadka — home kitchen guide',
-    intro:
-      'Dal tadka is one of the most reliable Indian home dinners. Toor dal, a strong tempering of ghee, cumin, garlic, and red chilli, and rice or roti on the side — simple, comforting, pantry-friendly.',
-    cuisine: 'North Indian',
-    diet: 'Veg',
-    time: '~40 min',
-    sections: [
-      {
-        heading: 'Why it works on busy nights',
-        body: 'Dal cooks while you prepare rice or roti. The tadka takes minutes and transforms plain dal into dinner everyone recognizes.',
-      },
-    ],
-    faqs: [
-      {
-        question: 'Which dal is best for tadka?',
-        answer: 'Toor dal is classic; moong or masoor work when that is what you have stocked.',
-      },
-    ],
-    relatedLinks: [{ href: '/punjabi-dinner-ideas', label: 'Punjabi dinner ideas' }],
-  },
-  {
-    slug: 'masala-dosa',
-    title: 'Masala Dosa — South Indian Home Guide | Rasoi',
-    description:
-      'Masala dosa at home — batter, potato filling, and weeknight tips on rasoiapplication.in.',
-    keywords: ['masala dosa home', 'south indian dosa guide', 'dosa potato filling'],
-    h1: 'Masala dosa — home kitchen guide',
-    intro:
-      'Masala dosa is a South Indian classic. At home it depends on fermented batter and a simple potato-onion filling. Plan ahead when you can; use store batter when you cannot — dinner still counts.',
-    cuisine: 'South Indian',
-    diet: 'Veg',
-    time: 'Batter + 20 min',
-    sections: [
-      {
-        heading: 'Batter reality',
-        body: 'Fermented rice-lentil batter is ideal. Good-quality store batter is a valid weeknight shortcut for diaspora and busy households.',
-      },
-    ],
-    faqs: [
-      {
-        question: 'Can masala dosa be a weeknight meal?',
-        answer: 'Yes if batter is ready — the potato filling and crisping take less time than most North Indian curries.',
-      },
-    ],
-    relatedLinks: [{ href: '/south-indian-weeknight-recipes', label: 'South Indian weeknights' }],
-  },
-  {
-    slug: 'chicken-biryani',
-    title: 'Chicken Biryani — Indian Home Recipe Guide | Rasoi',
-    description:
-      'Chicken biryani at home — layering, rice, and pantry notes for Indian home cooks on rasoiapplication.in.',
-    keywords: ['chicken biryani home', 'indian biryani guide', 'weekend biryani home cooking'],
-    h1: 'Chicken biryani — home kitchen guide',
-    intro:
-      'Chicken biryani is often a weekend or special-night dish, but home cooks simplify it with good basmati, marinated chicken, and a reliable dum or one-pot method. Plan sides lightly — raita and salad are enough.',
-    cuisine: 'Hyderabadi / Indian',
-    diet: 'Non-Veg',
-    time: '~90 min',
-    sections: [
-      {
-        heading: 'Prep ahead',
-        body: 'Marinate chicken earlier in the day. Soak rice. Measure whole spices once so assembly is calm. Biryani rewards prep more than last-minute rushing.',
-      },
-    ],
-    faqs: [
-      {
-        question: 'Is biryani realistic for home cooks?',
-        answer: 'Yes — especially when you treat it as a planned meal and use a method you have practiced once or twice.',
-      },
-    ],
-    relatedLinks: [{ href: '/what-to-cook-tonight-indian', label: 'Dinner planning' }],
-  },
-  {
-    slug: 'palak-paneer',
-    title: 'Palak Paneer — Indian Home Recipe Guide | Rasoi',
-    description:
-      'Palak paneer at home — spinach, paneer, and weeknight tips on rasoiapplication.in.',
-    keywords: ['palak paneer home', 'spinach paneer indian', 'veg north indian dinner'],
-    h1: 'Palak paneer — home kitchen guide',
-    intro:
-      'Palak paneer packs protein and greens into one familiar North Indian dinner. Fresh or frozen spinach works; paneer and cream or yogurt round out the gravy.',
-    cuisine: 'North Indian',
-    diet: 'Veg',
-    time: '~30 min',
-    sections: [
-      {
-        heading: 'Spinach prep',
-        body: 'Blanch fresh spinach for bright colour, or thaw frozen blocks — both work. Blend smoothly so kids do not object to texture.',
-      },
-    ],
-    faqs: [
-      {
-        question: 'Can I use frozen spinach?',
-        answer: 'Yes. Many home cooks prefer it for consistency and speed on weeknights.',
-      },
-    ],
-    relatedLinks: [{ href: '/recipes/paneer-butter-masala', label: 'Paneer butter masala' }],
-  },
-];
+export const SEO_GUIDE_PAGES: SeoGuidePage[] = [...CORE_SEO_GUIDE_PAGES, ...SEO_CITY_GUIDE_PAGES];
+
+/** Top 55 high-search recipe blogs — generated from Rasoi Scalper via `npm run seo:recipe-blogs`. */
+export const SEO_RECIPE_PAGES: SeoRecipePage[] = GENERATED_SEO_RECIPE_BLOGS;
 
 const guideBySlug = new Map(SEO_GUIDE_PAGES.map((page) => [page.slug, page]));
 const recipeBySlug = new Map(SEO_RECIPE_PAGES.map((page) => [page.slug, page]));
@@ -477,8 +390,10 @@ export function getAllRecipeSlugs(): string[] {
 export function getAllSeoContentPaths(): string[] {
   return [
     '/indian-recipe-app',
+    '/recipes',
     ...SEO_GUIDE_PAGES.map((p) => `/${p.slug}`),
     ...SEO_RECIPE_PAGES.map((p) => `/recipes/${p.slug}`),
+    ...getAllTaxonomyPaths(),
   ];
 }
 
@@ -486,7 +401,7 @@ export const INDIAN_RECIPE_APP_HUB = {
   path: '/indian-recipe-app',
   title: 'Indian Recipe Guides & Home Cooking | Rasoi',
   description:
-    'Indian home cooking guides on rasoiapplication.in — dinner ideas, Jain & veg recipes, regional cuisines, diaspora pages for USA, Canada & Australia, and dish guides from Rasoi.',
+    'Indian home cooking guides on rasoiapplication.in — 55 recipe blogs, city diaspora guides for Toronto, NYC, Sydney, and more, plus cuisine hubs for India, USA, Canada, Australia & New Zealand.',
   keywords: [
     'indian recipe guides',
     'indian home cooking',

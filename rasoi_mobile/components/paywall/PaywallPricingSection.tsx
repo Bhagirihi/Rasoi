@@ -10,6 +10,7 @@ import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS, RECURRING_PAYMENT_
 import { PAYMENTS_DISABLED_NOTE } from '@/constants/monetizationConfig';
 import { colors, radius, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
+import { useTheme } from '@/context/ThemeContext';
 
 import type { RevenueCatStorePricing } from '@/services/payments/revenueCatClient';
 
@@ -24,6 +25,7 @@ type PaywallPricingSectionProps = {
   lastError: string | null;
   yearlyPromoOfferTag?: string | null;
   showPromo?: boolean;
+  forceDark?: boolean;
   onStartTrial: () => void;
   onSubscribe: (interval: BillingInterval) => void;
   onRestore?: () => void;
@@ -44,6 +46,7 @@ export default function PaywallPricingSection({
   lastError,
   yearlyPromoOfferTag = null,
   showPromo = true,
+  forceDark = false,
   onStartTrial,
   onSubscribe,
   onRestore,
@@ -53,6 +56,10 @@ export default function PaywallPricingSection({
   storePricing = null,
 }: PaywallPricingSectionProps) {
   const { paymentsEnabled, isLoggedIn } = useAppContext();
+  const { colors: themeColors, isDark } = useTheme();
+  const dark = forceDark || isDark;
+  const muted = dark ? colors.dark.textMuted : themeColors.muted;
+  const text = dark ? colors.dark.text : themeColors.charcoal;
 
   const showSubscribeOptions =
     paymentsEnabled &&
@@ -66,13 +73,14 @@ export default function PaywallPricingSection({
       {!paymentsEnabled && (
         <View style={styles.betaCard}>
           <Text style={styles.betaTitle}>Early access</Text>
-          <Text style={styles.betaBody}>{PAYMENTS_DISABLED_NOTE}</Text>
+          <Text style={[styles.betaBody, { color: muted }]}>{PAYMENTS_DISABLED_NOTE}</Text>
         </View>
       )}
 
       {showPromoBlock && (
         <PromoCodeInput
           disabled={isBusy}
+          forceDark={forceDark}
           onRedeem={onRedeemPromo}
           onSuccess={onPromoSuccess}
           onError={onPromoError}
@@ -86,21 +94,26 @@ export default function PaywallPricingSection({
           style={[styles.trialBtn, isBusy && styles.btnDisabled]}
         >
           <Text style={styles.trialBtnText}>Start {TRIAL_DURATION_DAYS}-day free trial</Text>
-          <Text style={styles.trialBtnSub}>All partners unlocked · No card needed</Text>
+          <Text style={[styles.trialBtnSub, { color: muted }]}>
+            3-day plan · unlimited partners · no card needed
+          </Text>
         </Pressable>
       )}
 
       {paymentsEnabled && trialExpired && effectiveTier === 'free' && (
-        <View style={styles.alertCard}>
-          <Text style={styles.alertText}>
-            Trial ended. Pick monthly or yearly below to unlock partners again.
+        <View style={[styles.alertCard, dark && styles.alertCardDark]}>
+          <Text style={[styles.alertText, dark && { color: text }]}>
+            Trial ended. Subscribe to keep your 3-day plan, unlimited saves, shuffles, and partner
+            checkout.
           </Text>
         </View>
       )}
 
       {showSubscribeOptions && (
         <>
-          <Text style={styles.planHint}>Tap a plan to subscribe — Google Play or App Store checkout opens next.</Text>
+          <Text style={[styles.planHint, { color: muted }]}>
+            Tap a plan to subscribe — Google Play or App Store checkout opens next.
+          </Text>
           <PaywallPlanGrid
             disabled={isBusy}
             yearlyPromoOfferTag={yearlyPromoOfferTag}
@@ -111,20 +124,20 @@ export default function PaywallPricingSection({
       )}
 
       {paymentsEnabled && effectiveTier === 'paid' && providerId === 'revenuecat' && (
-        <Text style={styles.manageNote}>
+        <Text style={[styles.manageNote, { color: muted }]}>
           Manage billing in Google Play → Payments & subscriptions.
         </Text>
       )}
 
       {paymentsEnabled && effectiveTier === 'paid' && providerId === 'stub' && (
-        <Text style={styles.manageNote}>
+        <Text style={[styles.manageNote, { color: muted }]}>
           Preview mode — billing connects when you go live on Play Store.
         </Text>
       )}
 
       {paymentsEnabled && supportsRestore && onRestore && (
         <Pressable onPress={onRestore} disabled={isBusy} style={styles.restoreBtn}>
-          <Text style={styles.restoreText}>Restore purchases</Text>
+          <Text style={[styles.restoreText, { color: muted }]}>Restore purchases</Text>
         </Pressable>
       )}
 
@@ -134,7 +147,7 @@ export default function PaywallPricingSection({
         </View>
       )}
 
-      <Text style={styles.disclaimer}>
+      <Text style={[styles.disclaimer, { color: muted }]}>
         {paymentsEnabled
           ? `${RECURRING_PAYMENT_NOTICE} ${PAYMENT_DISCLAIMERS[providerId]} Billing · ${providerLabel}.`
           : PAYMENTS_DISABLED_NOTE}
@@ -190,6 +203,11 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     backgroundColor: 'rgba(229,57,53,0.08)',
     padding: spacing.md,
+  },
+  alertCardDark: {
+    backgroundColor: 'rgba(255,107,53,0.14)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,107,53,0.35)',
   },
   alertText: {
     fontSize: 13,

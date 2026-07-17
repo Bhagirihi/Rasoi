@@ -1,17 +1,19 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
-
-export const metadata: Metadata = {
-  title: 'Rasoi Admin',
-  description: 'Manage recipes, sponsors, partner links, and members.',
-};
-
 import AdminConsoleShell from '@/app/admin/_components/AdminConsoleShell';
 import RealtimeRefresh from '@/app/admin/_components/RealtimeRefresh';
 import { clearAdminToken } from '@/app/admin/actions';
 import { getAdminFromCookies } from '@/lib/auth';
+import { ADMIN_NOINDEX_METADATA } from '@/lib/seo';
+
+export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  ...ADMIN_NOINDEX_METADATA,
+  title: 'Rasoi Admin Console',
+  description: 'Manage recipes, sponsors, partner links, and members.',
+};
 
 export default async function AdminConsoleLayout({
   children,

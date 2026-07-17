@@ -44,7 +44,10 @@ function normalizeCode(raw: string): string {
   return raw.trim().toUpperCase().replace(/\s+/g, '');
 }
 
-export function isActiveTrial(user: User, now = Date.now()): boolean {
+export function isActiveTrial(
+  user: Pick<User, 'planTier' | 'trialStartedAt' | 'trialBonusDays'>,
+  now = Date.now(),
+): boolean {
   if (user.planTier !== 'trial' || !user.trialStartedAt) return false;
   const endsAt = user.trialStartedAt.getTime() + getTrialTotalDays(user.trialBonusDays ?? 0) * 86_400_000;
   return now < endsAt;

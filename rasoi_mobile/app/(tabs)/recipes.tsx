@@ -2,7 +2,14 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRouter } from "expo-router";
 import { Search, Timer } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, Keyboard } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  Keyboard,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import AffiliateCheckoutModal from "@/components/AffiliateCheckoutModal";
@@ -34,20 +41,36 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
 import { useAppDialog } from "@/context/AppDialogContext";
 import { Recipe } from "@/data/mockRecipes";
-import { logRecipeSearch, searchRecipes } from "@/services/recipeSearch";
+import { useRecipeListSearch } from "@/hooks/useRecipeListSearch";
+import { useTabWarmRender } from "@/hooks/useTabWarmRender";
+import { logRecipeSearch } from "@/services/recipeSearch";
 import type { AffiliatePartner } from "@/utils/affiliate";
 import {
   getPantryMatchPercent,
   getRecipePickReason,
   partitionIngredients,
-  recipeMatchesSearch,
+  sortRecipesByPantryMatch,
 } from "@/utils/recipes";
 
 export default function RecipesTabScreen() {
+  const shouldRender = useTabWarmRender();
+  const { screenBackground } = useTheme();
+  if (!shouldRender) {
+    return (
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: screenBackground }}
+        edges={["top"]}
+      />
+    );
+  }
+  return <RecipesTabContent />;
+}
+
+function RecipesTabContent() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
   const { keyboardHeight, keyboardVisible } = useKeyboardInset();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
   const { showPartners } = useAppContext();
   const {
@@ -83,8 +106,7 @@ export default function RecipesTabScreen() {
     null,
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [remoteSearchResults, setRemoteSearchResults] = useState<Recipe[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const [pantryMatchSortActive, setPantryMatchSortActive] = useState(true);
   const lastLoggedSearch = useRef("");
 
   const listRecipes = useMemo(
@@ -92,48 +114,30 @@ export default function RecipesTabScreen() {
     [moreRecipes, rankedRecipes],
   );
 
-  useEffect(() => {
-    const query = searchQuery.trim();
-    if (query.length < 2) {
-      setRemoteSearchResults([]);
-      setSearchLoading(false);
-      return;
-    }
+  const suggestionCatalog = useMemo(() => {
+    const catalog = recipes.length > 0 ? recipes : listRecipes;
+    return catalog.slice(0, 400);
+  }, [recipes, listRecipes]);
 
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      setSearchLoading(true);
-      void searchRecipes({
-        query,
-        dietChoice,
-        region: regionalCuisine,
-        limit: 60,
-      })
-        .then((response) => {
-          if (!cancelled) setRemoteSearchResults(response.items);
-        })
-        .catch(() => {
-          if (!cancelled) setRemoteSearchResults([]);
-        })
-        .finally(() => {
-          if (!cancelled) setSearchLoading(false);
-        });
-    }, 400);
+  const {
+    items: searchedMoreRecipes,
+    message: searchFallbackMessage,
+    suggestions: searchSuggestions,
+    searchLoading,
+  } = useRecipeListSearch({
+    query: searchQuery,
+    listRecipes,
+    suggestionCatalog,
+    dietChoice,
+    regionalCuisine,
+  });
 
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [searchQuery, dietChoice, regionalCuisine]);
+  const displayRecipes = useMemo(() => {
+    if (!pantryMatchSortActive) return searchedMoreRecipes;
+    return sortRecipesByPantryMatch(searchedMoreRecipes, pantryIngredients);
+  }, [searchedMoreRecipes, pantryMatchSortActive, pantryIngredients]);
 
-  const searchedMoreRecipes = useMemo(() => {
-    const query = searchQuery.trim();
-    if (!query) return listRecipes;
-    if (remoteSearchResults.length > 0) return remoteSearchResults;
-    return listRecipes.filter((recipe) => recipeMatchesSearch(recipe, query));
-  }, [listRecipes, searchQuery, remoteSearchResults]);
-
-  const recipeAdIndices = useRecipeListAdIndices(searchedMoreRecipes, {
+  const recipeAdIndices = useRecipeListAdIndices(displayRecipes, {
     stableSeed: "recipes-tab",
   });
   const { viewableIndices, viewabilityConfig, onViewableItemsChanged } =
@@ -154,12 +158,12 @@ export default function RecipesTabScreen() {
       void logRecipeSearch({
         query,
         sourceScreen: "recipes",
-        resultCount: searchedMoreRecipes.length,
+        resultCount: displayRecipes.length,
       });
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, searchedMoreRecipes.length]);
+  }, [searchQuery, displayRecipes.length]);
 
   const sheetRecipe = cookTonightTarget;
   const sheetMissing = useMemo(() => {
@@ -206,6 +210,7 @@ export default function RecipesTabScreen() {
     if (pantryFilterActive) {
       setPantryFilterActive(false);
     }
+    setPantryMatchSortActive(true);
   };
 
   const openShopModal = (
@@ -226,7 +231,7 @@ export default function RecipesTabScreen() {
 
   const discoveryReady = !recipesLoading && rankingReady;
   const showListSkeleton =
-    !discoveryReady && searchedMoreRecipes.length === 0 && !recipesError;
+    !discoveryReady && displayRecipes.length === 0 && !recipesError;
 
   const renderItem = ({ item, index }: { item: Recipe; index: number }) => (
     <View>
@@ -261,12 +266,12 @@ export default function RecipesTabScreen() {
 
   return (
     <SafeAreaView
-      style={[styles.safe, { backgroundColor: themeColors.cream }]}
+      style={[styles.safe, { backgroundColor: screenBackground }]}
       edges={["top"]}
       testID={testIds.screenRecipesTab}
     >
       <FlatListWithFloatingIndicator
-        data={searchedMoreRecipes}
+        data={displayRecipes}
         keyExtractor={(item) => item.id}
         {...scrollIndicator}
         viewabilityConfig={viewabilityConfig}
@@ -284,7 +289,9 @@ export default function RecipesTabScreen() {
           recipesLoadingMore ? (
             <View style={styles.listFooter}>
               <ActivityIndicator color={themeColors.saffron} />
-              <Text style={[styles.listFooterText, { color: themeColors.muted }]}>
+              <Text
+                style={[styles.listFooterText, { color: themeColors.muted }]}
+              >
                 Loading more recipes…
               </Text>
             </View>
@@ -293,7 +300,7 @@ export default function RecipesTabScreen() {
         contentContainerStyle={[
           styles.listContent,
           { paddingBottom: listBottomPadding },
-          searchedMoreRecipes.length === 0 && styles.listContentEmpty,
+          displayRecipes.length === 0 && styles.listContentEmpty,
         ]}
         ItemSeparatorComponent={() => <View style={styles.itemGap} />}
         ListHeaderComponent={
@@ -308,17 +315,50 @@ export default function RecipesTabScreen() {
               activeFilters={activeFilters}
               pantryFilterActive={pantryFilterActive}
               pantryIngredientCount={pantryIngredients.length}
-              hasQuickFilters={hasQuickFilters || searchQuery.trim().length > 0}
+              hasQuickFilters={
+                hasQuickFilters ||
+                searchQuery.trim().length > 0 ||
+                !pantryMatchSortActive
+              }
               activeFilterLabels={activeFilterLabels}
               onFilterToggle={handleFilterToggle}
               onClearPantryFilter={() => setPantryFilterActive(false)}
+              pantryMatchSortActive={pantryMatchSortActive}
+              onPantryMatchSortToggle={() =>
+                setPantryMatchSortActive((current) => !current)
+              }
+              pantryMatchSortTestId={testIds.recipesPantryMatchSort}
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
+              onSuggestionSelect={setSearchQuery}
+              searchSuggestions={searchSuggestions}
+              searchLoading={searchLoading}
               searchTestId={testIds.recipesSearchInput}
-              resultCount={searchedMoreRecipes.length}
+              resultCount={displayRecipes.length}
               totalCount={recipesTotalCount ?? listRecipes.length}
               onClearAll={clearDiscovery}
             />
+
+            {searchFallbackMessage ? (
+              <View
+                style={[
+                  styles.searchFallbackBanner,
+                  {
+                    backgroundColor: themeColors.white,
+                    borderColor: themeColors.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.searchFallbackText,
+                    { color: themeColors.muted },
+                  ]}
+                >
+                  {searchFallbackMessage}
+                </Text>
+              </View>
+            ) : null}
 
             {discoveryReady &&
               !recipesError &&
@@ -397,6 +437,7 @@ export default function RecipesTabScreen() {
                   handleFilterToggle("all");
                   setPantryFilterActive(false);
                   setSearchQuery("");
+                  setPantryMatchSortActive(true);
                 }}
                 style={styles.retryBtn}
               >
@@ -449,6 +490,17 @@ const styles = StyleSheet.create({
   screenSections: {
     gap: spacing.lg,
     marginBottom: spacing.md,
+  },
+  searchFallbackBanner: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  searchFallbackText: {
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
   },
   listSponsorInset: {
     marginTop: spacing.lg,

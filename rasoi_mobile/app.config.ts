@@ -78,7 +78,7 @@ function withFirebasePlugins(plugins: ExpoConfig['plugins']): ExpoConfig['plugin
       {
         ios: {
           useFrameworks: 'static',
-          forceStaticLinking: ['RNFBApp', 'RNFBAnalytics', 'RNFBCrashlytics'],
+          forceStaticLinking: ['RNFBApp', 'RNFBAnalytics', 'RNFBCrashlytics', 'RNFBAuth'],
         },
       },
     ],
@@ -92,7 +92,7 @@ const updatesUrl = `https://u.expo.dev/${EAS_PROJECT_ID}`;
 
 export default (): ExpoConfig => ({
   ...base,
-  runtimeVersion: base.version ?? '1.0.7',
+  runtimeVersion: base.version ?? '1.0.10',
   updates: {
     ...(typeof base.updates === 'object' ? base.updates : {}),
     url: updatesUrl,

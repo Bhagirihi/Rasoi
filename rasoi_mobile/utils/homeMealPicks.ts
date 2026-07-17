@@ -49,6 +49,21 @@ function getRecipeStyleKeys(recipe: Recipe): string[] {
   return ids.map((id) => `style:${id}`);
 }
 
+export function dedupeHomePicks(
+  picks: Recipe[],
+  lateNightPick?: Recipe,
+): { picks: Recipe[]; lateNightPick?: Recipe } {
+  const seen = new Set<string>();
+  const uniquePicks = picks.filter((recipe) => {
+    if (seen.has(recipe.id)) return false;
+    seen.add(recipe.id);
+    return true;
+  });
+  const late =
+    lateNightPick && !seen.has(lateNightPick.id) ? lateNightPick : undefined;
+  return { picks: uniquePicks, lateNightPick: late };
+}
+
 export function buildHomePicksProfileKey(input: {
   dietChoice: string;
   regionalCuisine: string;

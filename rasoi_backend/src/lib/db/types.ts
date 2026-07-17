@@ -8,6 +8,7 @@ export type User = {
   email: string | null;
   phone: string | null;
   name: string;
+  gender: string | null;
   isGuest: boolean;
   role: UserRole;
   isActive: boolean;
@@ -103,14 +104,14 @@ export type Recipe = {
   calories: number;
   region: string;
   kitchenStyleId: string;
-  kitchenStyleIds: string;
   dietType: string;
   difficulty: string;
-  description: string;
+  descriptionHi?: string | null;
   imageUrl: string;
-  tags: string;
   ingredients: string;
+  main_ingredients?: string | null;
   steps: string | null;
+  stepsHi?: string | null;
   primaryIngredient: string | null;
   popularityScore: number;
   qualityScore: number;
@@ -211,6 +212,7 @@ export type PantrySection = {
 export type AppSettings = {
   id: string;
   paymentsEnabled: boolean;
+  paymentsMinAppVersion: string | null;
   defaultPantryIngredients: string;
   updatedAt: Date;
 };

@@ -1,5 +1,4 @@
 import { apiFetch } from '@/utils/api';
-import { parseJson } from '@/utils/parseJson';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
 import type { Recipe } from '@/data/mockRecipes';
 import type { CuisineId } from '@/constants/theme';
@@ -19,6 +18,7 @@ type ApiRecipeRow = {
   imageUrl: string;
   tags: Recipe['tags'];
   ingredients: unknown;
+  mainIngredients?: string[];
 };
 
 function mapApiRecipe(row: ApiRecipeRow): Recipe {
@@ -38,9 +38,8 @@ function mapApiRecipe(row: ApiRecipeRow): Recipe {
     description: row.description,
     imageUrl: row.imageUrl,
     tags: Array.isArray(row.tags) ? row.tags : [],
-    ingredients: normalizeRecipeIngredients(
-      parseJson<unknown[]>(typeof row.ingredients === 'string' ? row.ingredients : null, []),
-    ),
+    ingredients: normalizeRecipeIngredients(row.ingredients),
+    mainIngredients: row.mainIngredients,
     steps: [],
   };
 }

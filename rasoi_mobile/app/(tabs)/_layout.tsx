@@ -1,19 +1,14 @@
 import { Redirect, Tabs, usePathname } from 'expo-router';
 import { useMemo } from 'react';
-import { Platform, View } from 'react-native';
-import { Bookmark, BookOpen, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
+import { Platform } from 'react-native';
+import { Bookmark, BookOpen, CalendarDays, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import AppSavingOverlay from '@/components/AppSavingOverlay';
 import PantryNudgeBridge from '@/components/pantry/PantryNudgeBridge';
+import TabIdleWarmup from '@/components/TabIdleWarmup';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
-
-const BOOTSTRAP_STEPS = [
-  { message: 'Opening Rasoi…', subtitle: 'Loading your kitchen' },
-  { message: 'Syncing preferences…', subtitle: 'Just a moment' },
-];
 
 const TAB_BAR_TOP_PADDING = 8;
 const TAB_BAR_BODY_HEIGHT = Platform.OS === 'ios' ? 49 : 48;
@@ -29,7 +24,7 @@ function getTabBarLayout(bottomInset: number) {
 }
 
 export default function TabLayout() {
-  const { colors } = useTheme();
+  const { colors, screenBackground } = useTheme();
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const tabBarLayout = useMemo(() => getTabBarLayout(insets.bottom), [insets.bottom]);
@@ -46,6 +41,8 @@ export default function TabLayout() {
       headerShown: false,
       lazy: true,
       freezeOnBlur: false,
+      detachInactiveScreens: true,
+      sceneStyle: { backgroundColor: screenBackground },
       tabBarActiveTintColor: colors.primary,
       tabBarInactiveTintColor: colors.muted,
       tabBarStyle: {
@@ -61,15 +58,11 @@ export default function TabLayout() {
         fontWeight: '600' as const,
       },
     }),
-    [colors.primary, colors.muted, colors.white, colors.border, tabBarLayout],
+    [colors.primary, colors.muted, colors.white, colors.border, tabBarLayout, screenBackground],
   );
 
   if (!isHydrated) {
-    return (
-      <View style={{ flex: 1, backgroundColor: colors.cream }}>
-        <AppSavingOverlay visible steps={BOOTSTRAP_STEPS} />
-      </View>
-    );
+    return <Redirect href="/" />;
   }
 
   if (!hasCompletedOnboarding) {
@@ -80,7 +73,8 @@ export default function TabLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (pendingTrialWelcome && !pendingPantrySetup) {
+  // Soft paywall before pantry setup when trial welcome is pending.
+  if (pendingTrialWelcome) {
     return <Redirect href="/(auth)/trial-welcome" />;
   }
 
@@ -91,47 +85,60 @@ export default function TabLayout() {
   return (
     <>
       <Tabs screenOptions={screenOptions}>
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Home',
-            tabBarButtonTestID: testIds.tabHome,
-            tabBarIcon: ({ color, size }) => <ChefHat color={color} size={size - 2} />,
-          }}
-        />
-        <Tabs.Screen
-          name="recipes"
-          options={{
-            title: 'Recipe',
-            tabBarButtonTestID: testIds.tabRecipes,
-            tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size - 2} />,
-          }}
-        />
-        <Tabs.Screen
-          name="pantry"
-          options={{
-            title: 'Pantry',
-            tabBarButtonTestID: testIds.tabPantry,
-            tabBarIcon: ({ color, size }) => <Refrigerator color={color} size={size - 2} />,
-          }}
-        />
-        <Tabs.Screen
-          name="saved"
-          options={{
-            title: 'Saved',
-            tabBarButtonTestID: testIds.tabSaved,
-            tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size - 2} />,
-          }}
-        />
-        <Tabs.Screen
-          name="settings"
-          options={{
-            title: 'Settings',
-            tabBarButtonTestID: testIds.tabSettings,
-            tabBarIcon: ({ color, size }) => <Settings color={color} size={size - 2} />,
-          }}
-        />
-      </Tabs>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          lazy: false,
+          tabBarButtonTestID: testIds.tabHome,
+          tabBarIcon: ({ color, size }) => <ChefHat color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="recipes"
+        options={{
+          title: 'Recipes',
+          lazy: false,
+          tabBarButtonTestID: testIds.tabRecipes,
+          tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="plan"
+        options={{
+          title: 'Plan',
+          lazy: false,
+          tabBarButtonTestID: testIds.tabPlan,
+          tabBarIcon: ({ color, size }) => <CalendarDays color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="pantry"
+        options={{
+          title: 'Pantry',
+          tabBarButtonTestID: testIds.tabPantry,
+          tabBarIcon: ({ color, size }) => <Refrigerator color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="saved"
+        options={{
+          title: 'Saved',
+          tabBarButtonTestID: testIds.tabSaved,
+          tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          href: null,
+          title: 'Settings',
+          tabBarButtonTestID: testIds.tabSettings,
+          tabBarIcon: ({ color, size }) => <Settings color={color} size={size - 2} />,
+        }}
+      />
+    </Tabs>
+      <TabIdleWarmup />
       <PantryNudgeBridge />
     </>
   );

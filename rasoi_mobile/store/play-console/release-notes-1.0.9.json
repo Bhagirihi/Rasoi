@@ -1,0 +1,6 @@
+{
+  "versionName": "1.0.9",
+  "versionCode": 10,
+  "en-US": "• Guest & new signups — full onboarding: Terms → diet & cuisines → notifications → location → pantry setup\n• Pantry setup — “select items to continue” prompt and always-visible Skip / Continue buttons\n• Onboarding — notification step advances reliably; Android notification permission fixed\n• Recipes — Best match filter sorts by highest pantry match %\n• Recipes — smarter search with suggestions, synonyms, and typo-tolerant fallback\n• Auth — more stable guest login and clearer error handling",
+  "hi-IN": "• गेस्ट और नए यूज़र — पूरा ऑनबोर्डिंग: Terms → डाइट व व्यंजन → नोटिफिकेशन → लोकेशन → पैंट्री\n• पैंट्री सेटअप — “जारी रखने के लिए आइटम चुनें” और Skip / Continue बटन हमेशा दिखेंगे\n• ऑनबोर्डिंग — नोटिफिकेशन स्टेप ठीक से आगे बढ़ता है; Android अनुमति सुधार\n• Recipes — सर्वश्रेष्ठ पैंट्री मैच % के अनुसार क्रम\n• Recipes — सुझाव, समानार्थी शब्द और टाइपो के लिए स्मार्ट खोज\n• Auth — गेस्ट लॉगिन और त्रुटि संदेश में सुधार"
+}

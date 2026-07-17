@@ -2,9 +2,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
-  FadeIn,
-  FadeOut,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -44,6 +43,10 @@ function LoadingDot({ delay }: { delay: number }) {
       -1,
       false,
     );
+
+    return () => {
+      cancelAnimation(offset);
+    };
   }, [delay, offset]);
 
   const style = useAnimatedStyle(() => ({
@@ -85,6 +88,9 @@ export default function AppSavingOverlay({
 
   useEffect(() => {
     if (!visible) {
+      cancelAnimation(breathe);
+      cancelAnimation(ringRotation);
+      cancelAnimation(ringPulse);
       setStepIndex(0);
       return;
     }
@@ -112,6 +118,12 @@ export default function AppSavingOverlay({
       -1,
       false,
     );
+
+    return () => {
+      cancelAnimation(breathe);
+      cancelAnimation(ringRotation);
+      cancelAnimation(ringPulse);
+    };
   }, [breathe, ringPulse, ringRotation, visible]);
 
   useEffect(() => {
@@ -159,17 +171,12 @@ export default function AppSavingOverlay({
             </Animated.View>
           </View>
 
-          <Animated.View
-            key={`step-${stepIndex}`}
-            entering={FadeIn.duration(220)}
-            exiting={FadeOut.duration(160)}
-            style={styles.copy}
-          >
+          <View style={styles.copy}>
             <Text style={styles.message}>{activeStep.message}</Text>
             {activeStep.subtitle ? (
               <Text style={styles.subtitle}>{activeStep.subtitle}</Text>
             ) : null}
-          </Animated.View>
+          </View>
 
           <LoadingDots />
         </View>

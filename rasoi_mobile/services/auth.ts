@@ -1,10 +1,12 @@
 import type { AuthResponse, UserProfileResponse } from '@/types/api';
 import { CURRENT_TERMS_VERSION } from '@/constants/legalHighlights';
+import type { Gender } from '@/constants/genderOptions';
 import { apiFetch, formatUserFacingApiError, getApiBaseUrl } from '@/utils/api';
 import { authError, authLog } from '@/utils/authLogger';
 import { clearAuthToken, clearRasoiUserId, saveRasoiUserId } from '@/utils/authToken';
 import { isSupabaseDirectMode } from '@/utils/rasoiDb';
-import { signInAnonymously, signOutSupabase } from '@/services/supabaseAuth';
+import { trySignInAnonymously, signOutSupabase } from '@/services/supabaseAuth';
+import { signOutFirebasePhoneAuth } from '@/services/firebasePhoneAuth';
 import { requireSupabaseClient } from '@/utils/supabase';
 import type { OnboardingPayload } from '@/utils/storage';
 
@@ -13,6 +15,37 @@ type AuthEnvelope<T> = {
   data?: T;
   error?: string;
 };
+
+async function readFunctionInvokeError(
+  error: unknown,
+  data: unknown,
+  functionName: string,
+): Promise<string> {
+  if (data && typeof data === 'object' && 'error' in data) {
+    const message = (data as { error?: unknown }).error;
+    if (typeof message === 'string' && message.trim()) return message;
+  }
+
+  if (error && typeof error === 'object' && 'context' in error) {
+    const context = (error as { context?: Response }).context;
+    if (context && typeof context.json === 'function') {
+      try {
+        const body = (await context.json()) as { error?: unknown };
+        if (typeof body.error === 'string' && body.error.trim()) {
+          return body.error;
+        }
+      } catch {
+        // Fall through to generic message.
+      }
+    }
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return `Auth function ${functionName} failed`;
+}
 
 async function invokeAuthFunction<T>(
   functionName: 'rasoi-auth-sync' | 'rasoi-auth-guest',
@@ -26,7 +59,7 @@ async function invokeAuthFunction<T>(
   });
 
   if (error) {
-    throw new Error(error.message || `Auth function ${functionName} failed`);
+    throw new Error(await readFunctionInvokeError(error, data, functionName));
   }
 
   const payload = data as AuthEnvelope<T> | T;
@@ -55,6 +88,8 @@ export async function syncSupabaseAccount(
     acceptedTerms?: boolean;
     linkGuestUserId?: string;
     onboarding?: OnboardingPayload;
+    phoneVerified?: boolean;
+    gender?: Gender;
   },
 ): Promise<AuthResponse> {
   authLog('syncSupabaseAccount:start', {
@@ -74,6 +109,8 @@ export async function syncSupabaseAccount(
         ...(options?.acceptedTerms ? { acceptedTerms: true as const } : {}),
         ...(options?.linkGuestUserId ? { linkGuestUserId: options.linkGuestUserId } : {}),
         ...(options?.onboarding ? { onboarding: options.onboarding } : {}),
+        ...(options?.phoneVerified ? { phoneVerified: true as const } : {}),
+        ...(options?.gender ? { gender: options.gender } : {}),
       }, supabaseAccessToken);
 
       authLog('syncSupabaseAccount:edge_success', {
@@ -101,6 +138,8 @@ export async function syncSupabaseAccount(
           ...(options?.acceptedTerms ? { acceptedTerms: true as const } : {}),
           ...(options?.linkGuestUserId ? { linkGuestUserId: options.linkGuestUserId } : {}),
           ...(options?.onboarding ? { onboarding: options.onboarding } : {}),
+          ...(options?.phoneVerified ? { phoneVerified: true } : {}),
+          ...(options?.gender ? { gender: options.gender } : {}),
         }),
       },
       { timeoutMs: 20_000 },
@@ -135,14 +174,17 @@ export async function loginAsGuestUser(options?: { name?: string }): Promise<Aut
 
   let supabaseAccessToken: string | undefined;
   try {
-    const session = await signInAnonymously();
-    supabaseAccessToken = session.access_token;
+    const session = await trySignInAnonymously();
+    supabaseAccessToken = session?.access_token;
+    if (!supabaseAccessToken) {
+      authLog('loginAsGuest:no_anonymous_session');
+    }
   } catch (error) {
     authError('loginAsGuest:supabase_anonymous_failed', error);
     authLog('loginAsGuest:fallback_without_supabase');
   }
 
-  if (isSupabaseDirectMode() && supabaseAccessToken) {
+  if (isSupabaseDirectMode()) {
     try {
       const result = await invokeAuthFunction<{ user: UserProfileResponse }>(
         'rasoi-auth-guest',
@@ -156,6 +198,7 @@ export async function loginAsGuestUser(options?: { name?: string }): Promise<Aut
 
       authLog('loginAsGuest:edge_success', {
         userId: result.user.id.slice(0, 8),
+        linkedSupabase: Boolean(supabaseAccessToken),
       });
       return finishSupabaseAuth(result.user);
     } catch (error) {
@@ -201,6 +244,7 @@ export async function loginAsGuestUser(options?: { name?: string }): Promise<Aut
 export async function logoutSession(): Promise<void> {
   authLog('logout:start');
   await signOutSupabase();
+  await signOutFirebasePhoneAuth();
   await clearAuthToken();
   await clearRasoiUserId();
 }

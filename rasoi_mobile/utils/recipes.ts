@@ -1,9 +1,15 @@
 import { DietType, Recipe } from '@/data/mockRecipes';
 import { isJainSafeRecipe } from '@/utils/jainSafe';
 import { ingredientKey, pantryHasIngredient } from '@/utils/recipeIngredients';
+import { getRecipeMainIngredients } from '@/utils/recipeMainIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
 import { recipeContainsAllergen } from '@/utils/allergyFilter';
+import {
+  countMatchableIngredients,
+  isPantryMatchExcluded,
+} from '@/utils/assumedAtHomeIngredients';
+import { recipeMatchesSearchQuery } from '@/utils/recipeSearchLocal';
 import {
   isBudgetFriendlyRecipe,
   isKidsFriendlyRecipe,
@@ -16,9 +22,9 @@ export type PantryMatchMode = 'any' | 'full';
 
 export function isRecipeFullyStocked(recipe: Recipe, pantryIngredients: string[]): boolean {
   if (pantryIngredients.length === 0) return false;
-  return recipe.ingredients.every((ingredient) =>
-    ingredientKey(ingredient.name) && pantryHasIngredient(pantryIngredients, ingredient.name),
-  );
+  const matchable = getRecipeMainIngredients(recipe);
+  if (matchable.length === 0) return true;
+  return matchable.every((name) => pantryHasIngredient(pantryIngredients, name));
 }
 
 export function countFullyStockedRecipes(
@@ -75,47 +81,7 @@ export function recipeMatchesFavoriteCuisines(
 }
 
 export function recipeMatchesSearch(recipe: Recipe, query: string): boolean {
-  const normalized = query.trim().toLowerCase();
-  if (!normalized) return true;
-
-  const terms = expandLocalSearchTerms(normalized);
-
-  const haystack = [
-    recipe.title,
-    recipe.description,
-    recipe.region,
-    recipe.dietType,
-    ...recipe.tags,
-    ...recipe.ingredients.map((ingredient) => ingredient.name),
-  ]
-    .join(' ')
-    .toLowerCase();
-
-  return terms.some((term) => haystack.includes(term));
-}
-
-const LOCAL_SEARCH_SYNONYMS: Record<string, string[]> = {
-  curd: ['dahi', 'yogurt'],
-  dahi: ['curd', 'yogurt'],
-  brinjal: ['baingan', 'eggplant'],
-  baingan: ['brinjal', 'eggplant'],
-  bhindi: ['okra'],
-  okra: ['bhindi'],
-  dal: ['daal', 'lentil'],
-  daal: ['dal', 'lentil'],
-  chana: ['chole', 'chickpea'],
-  chole: ['chana', 'chickpea'],
-};
-
-function expandLocalSearchTerms(query: string): string[] {
-  const terms = new Set<string>([query]);
-  for (const [key, synonyms] of Object.entries(LOCAL_SEARCH_SYNONYMS)) {
-    if (query.includes(key) || synonyms.some((synonym) => query.includes(synonym))) {
-      terms.add(key);
-      for (const synonym of synonyms) terms.add(synonym);
-    }
-  }
-  return [...terms];
+  return recipeMatchesSearchQuery(recipe, query);
 }
 
 export function filterRecipes(
@@ -184,8 +150,10 @@ export function filterRecipes(
       if (pantryMatchMode === 'full') {
         if (!isRecipeFullyStocked(recipe, pantryIngredients)) return false;
       } else {
-        const hasMatch = recipe.ingredients.some((ingredient) =>
-          pantryHasIngredient(pantryIngredients, ingredient.name),
+        const hasMatch = getRecipeMainIngredients(recipe).some(
+          (name) =>
+            !isPantryMatchExcluded(name) &&
+            pantryHasIngredient(pantryIngredients, name),
         );
         if (!hasMatch) return false;
       }
@@ -202,24 +170,39 @@ export function partitionIngredients(
   const available: string[] = [];
   const missing: string[] = [];
 
-  recipe.ingredients.forEach((ingredient) => {
-    const name = ingredient.name?.trim();
-    if (!name) return;
+  for (const name of getRecipeMainIngredients(recipe)) {
+    if (!name || isPantryMatchExcluded(name)) continue;
     if (pantryHasIngredient(pantryIngredients, name)) {
       available.push(name);
     } else {
       missing.push(name);
     }
-  });
+  }
 
   return { available, missing };
 }
 
+/** Same ingredient set used by partitionIngredients / getPantryMatchPercent. */
+export { countMatchableIngredients };
+
 export function getPantryMatchPercent(recipe: Recipe, pantryIngredients: string[]): number {
-  if (recipe.ingredients.length === 0) return 0;
-  if (pantryIngredients.length === 0) return 0;
-  const { available } = partitionIngredients(recipe, pantryIngredients);
-  return Math.round((available.length / recipe.ingredients.length) * 100);
+  const { available, missing } = partitionIngredients(recipe, pantryIngredients);
+  const total = available.length + missing.length;
+  if (total === 0) return 0;
+  return Math.round((available.length / total) * 100);
+}
+
+/** Recipes tab: highest pantry match first (stable title tie-break). */
+export function sortRecipesByPantryMatch(
+  recipes: Recipe[],
+  pantryIngredients: string[],
+): Recipe[] {
+  return [...recipes].sort((a, b) => {
+    const diff =
+      getPantryMatchPercent(b, pantryIngredients) - getPantryMatchPercent(a, pantryIngredients);
+    if (diff !== 0) return diff;
+    return a.title.localeCompare(b.title);
+  });
 }
 
 export function scoreRecipeForTonight(
@@ -264,23 +247,7 @@ export function getRecipePickReason(
     mealSlot?: MealSlot;
   },
 ): string {
-  const pantryPct = getPantryMatchPercent(recipe, options.pantryIngredients);
-  const regionalPct = getRegionalMatchPercent(recipe.region, options.regionalCuisine);
   const parts: string[] = [];
-
-  if (pantryPct >= 80) {
-    parts.push(`${pantryPct}% pantry match`);
-  } else if (pantryPct >= 50) {
-    parts.push(`${pantryPct}% ingredients at home`);
-  } else if (options.pantryIngredients.length > 0) {
-    parts.push(`uses ${pantryPct}% of your pantry`);
-  }
-
-  if (regionalPct >= 100 && options.regionalCuisine !== 'All India') {
-    parts.push(`fits your ${options.regionalCuisine} preference`);
-  } else if (regionalPct >= 72) {
-    parts.push('close to your regional taste');
-  }
 
   if (recipe.prepTime <= 20) {
     parts.push(getMealQuickReasonSuffix(options.mealSlot ?? 'dinner'));

@@ -61,6 +61,8 @@ If you prefer acting as your Google user instead of a service account:
 | `play_auth_status` | Credentials + Bhagihiri / Rasoi APP config |
 | `play_get_manifest` | Load manifest.json (listing + subscriptions) |
 | `play_push_listing` | Push title + descriptions to Play |
+| `play_push_graphics` | Upload feature graphic + phone screenshots from manifest |
+| `play_push_aso` | Full ASO: all listings (skip unsupported locales) + graphics |
 | `play_full_setup` | Verify app → listing → subscriptions |
 | `play_setup_guide` | Manual app creation + API wiring steps |
 | `play_verify_app` | Confirm `com.bhagihiri.rasoiapp` is reachable |

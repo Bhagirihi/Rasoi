@@ -17,6 +17,12 @@
     "db:sync-public-cuisines": "tsx scripts/sync-public-kitchen-styles.ts",
     "db:seed-recipes": "tsx scripts/seed-recipes-to-supabase.ts",
     "db:seed-recipes:dry": "tsx scripts/seed-recipes-to-supabase.ts --dry-run",
+    "db:dedupe-recipes:dry": "tsx scripts/apply-recipe-dedupe-supabase.ts --dry-run",
+    "db:dedupe-recipes": "tsx scripts/apply-recipe-dedupe-supabase.ts",
+    "db:enrich-recipe-content:dry": "tsx scripts/enrich-recipe-content-supabase.ts --dry-run",
+    "db:enrich-recipe-content": "tsx scripts/enrich-recipe-content-supabase.ts",
+    "db:extended-cleanup": "tsx scripts/apply-recipe-extended-cleanup-supabase.ts",
+    "db:analyze-recipe-duplicates": "tsx scripts/analyze-recipe-duplicates.ts",
     "db:seed-batch7": "tsx scripts/seed-batch7-to-supabase.ts",
     "db:seed-batch8": "tsx scripts/seed-batch8-to-supabase.ts",
     "db:seed-batch6": "tsx scripts/seed-batch6-recipes.ts",
@@ -26,7 +32,8 @@
     "cron:keep-alive": "tsx scripts/cron-keep-alive.ts",
     "cron:db-cleanup": "tsx scripts/cron-db-cleanup.ts",
     "cron:meal-notifications": "tsx scripts/cron-meal-notifications.ts",
-    "sync:apk": "bash scripts/sync-apk.sh"
+    "sync:apk": "bash scripts/sync-apk.sh",
+    "seo:recipe-blogs": "tsx scripts/generate-seo-recipe-blogs.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

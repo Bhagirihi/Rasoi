@@ -230,7 +230,17 @@ export async function cancelDailyReminder(): Promise<void> {
   );
 }
 
-export async function scheduleDailyReminder(): Promise<boolean> {
+function resolveReminderSlots(
+  slotIds: readonly string[] | 'all' = ['rasoi-daily-breakfast', 'rasoi-daily-dinner'],
+) {
+  if (slotIds === 'all') return DAILY_REMINDER_SLOTS;
+  const allowed = new Set(slotIds);
+  return DAILY_REMINDER_SLOTS.filter((slot) => allowed.has(slot.id));
+}
+
+export async function scheduleDailyReminder(
+  slotIds: readonly string[] | 'all' = ['rasoi-daily-breakfast', 'rasoi-daily-dinner'],
+): Promise<boolean> {
   if (Platform.OS === 'web') return false;
 
   const Notifications = await getNotifications();
@@ -240,10 +250,11 @@ export async function scheduleDailyReminder(): Promise<boolean> {
 
   await cancelDailyReminder();
 
+  const slots = resolveReminderSlots(slotIds);
+  if (slots.length === 0) return false;
+
   await Promise.all(
-    DAILY_REMINDER_SLOTS.filter(
-      (slot) => slot.id === 'rasoi-daily-breakfast' || slot.id === 'rasoi-daily-dinner',
-    ).map((slot) =>
+    slots.map((slot) =>
       Notifications.scheduleNotificationAsync({
         identifier: slot.id,
         content: {
@@ -304,12 +315,15 @@ export async function sendRecipeSavedNotification(recipeTitle: string): Promise<
   });
 }
 
-export async function syncDailyReminder(enabled: boolean): Promise<boolean> {
+export async function syncDailyReminder(
+  enabled: boolean,
+  slotIds: readonly string[] | 'all' = ['rasoi-daily-breakfast', 'rasoi-daily-dinner'],
+): Promise<boolean> {
   if (!enabled) {
     await cancelDailyReminder();
     return false;
   }
-  return scheduleDailyReminder();
+  return scheduleDailyReminder(slotIds);
 }
 
 export async function getExpoPushToken(): Promise<string | null> {

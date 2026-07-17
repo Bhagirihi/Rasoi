@@ -1,4 +1,5 @@
 import { formatAdminDateTime } from '@/app/admin/_components/admin-datetime';
+import { TRIAL_DURATION_DAYS } from '@/lib/plan-pricing';
 
 export type AdminUserSyncStatus = 'synced' | 'auth_only';
 
@@ -40,7 +41,7 @@ export type AdminUserRow = {
 export function formatPlanTierLabel(planTier: string): string {
   switch (planTier) {
     case 'trial':
-      return '3-day trial';
+      return `${TRIAL_DURATION_DAYS}-day trial`;
     case 'paid':
       return 'Rasoi Plus';
     case 'free':

@@ -19,6 +19,7 @@ const KEYS = {
   notificationsEnabled: '@rasoi/notifications_enabled',
   pendingTrialWelcome: '@rasoi/pending_trial_welcome',
   pendingPantrySetup: '@rasoi/pending_pantry_setup',
+  signupPreferences: '@rasoi/signup_preferences',
 } as const;
 
 export const DEFAULT_PANTRY: string[] = [];
@@ -38,6 +39,40 @@ export interface OnboardingPayload {
   regionalCuisine: string;
   favoriteCuisines: CuisineId[];
   notificationsEnabled: boolean;
+}
+
+export type SignupPreferences = Pick<
+  OnboardingPayload,
+  'dietPreference' | 'dietChoice' | 'regionalCuisine' | 'favoriteCuisines'
+>;
+
+export async function saveSignupPreferences(prefs: SignupPreferences): Promise<void> {
+  await AsyncStorage.setItem(KEYS.signupPreferences, JSON.stringify(prefs));
+}
+
+export async function loadSignupPreferences(): Promise<SignupPreferences | null> {
+  const raw = await AsyncStorage.getItem(KEYS.signupPreferences);
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw) as SignupPreferences;
+    if (
+      !parsed ||
+      typeof parsed.dietChoice !== 'string' ||
+      typeof parsed.dietPreference !== 'string' ||
+      typeof parsed.regionalCuisine !== 'string' ||
+      !Array.isArray(parsed.favoriteCuisines)
+    ) {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export async function clearSignupPreferences(): Promise<void> {
+  await AsyncStorage.removeItem(KEYS.signupPreferences);
 }
 
 export function localStateToOnboardingPayload(
@@ -87,6 +122,11 @@ export async function loadLocalOnboardingState(): Promise<LocalOnboardingState> 
     favoriteCuisines,
     notificationsEnabled: map[KEYS.notificationsEnabled] === 'true',
   };
+}
+
+/** Server says onboarding is incomplete — drop stale local complete flag (e.g. old guest auto-skip). */
+export async function clearLocalOnboardingCompleteFlag(): Promise<void> {
+  await AsyncStorage.removeItem(KEYS.onboardingComplete);
 }
 
 export async function saveOnboardingComplete(payload: OnboardingPayload): Promise<void> {

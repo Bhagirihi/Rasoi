@@ -1,0 +1,6 @@
+.env
+.venv/
+credentials/app_credentials.json
+credentials/token.json
+local-schedule.json
+fb-schedule-state.json

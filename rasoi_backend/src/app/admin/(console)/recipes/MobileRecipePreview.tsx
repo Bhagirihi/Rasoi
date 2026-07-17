@@ -13,10 +13,12 @@ export type RecipePreviewData = {
   dietType: string;
   difficulty: string;
   description: string;
+  descriptionHi?: string;
   imageUrl: string;
   tags: RecipeTag[];
   ingredients: RecipeIngredient[];
   steps: string[];
+  stepsHi?: string[];
   published: boolean;
 };
 
@@ -76,12 +78,19 @@ function FeedCardPreview({ data }: { data: RecipePreviewData }) {
 }
 
 function DetailPreview({ data }: { data: RecipePreviewData }) {
+  const [stepsLang, setStepsLang] = useState<'en' | 'hi'>('en');
   const staples = data.ingredients.filter((item) => item.isStaple);
   const missing = data.ingredients.filter((item) => !item.isStaple);
   const totalIngredients = data.ingredients.length;
   const stockedCount = staples.length;
   const progress = totalIngredients > 0 ? stockedCount / totalIngredients : 0;
   const sponsored = data.ingredients.find((item) => item.recommendedBrand);
+  const displayDescription =
+    stepsLang === 'hi' && data.descriptionHi?.trim()
+      ? data.descriptionHi
+      : data.description;
+  const displaySteps =
+    stepsLang === 'hi' && data.stepsHi?.length ? data.stepsHi : data.steps;
 
   return (
     <div className="relative h-full bg-[#FAFAFA]">
@@ -190,7 +199,7 @@ function DetailPreview({ data }: { data: RecipePreviewData }) {
           </div>
 
           <p className="mt-4 text-[15px] leading-relaxed text-[#6B7280]">
-            {data.description || 'Recipe description appears here.'}
+            {displayDescription || 'Recipe description appears here.'}
           </p>
 
           {/* Stats */}
@@ -210,12 +219,44 @@ function DetailPreview({ data }: { data: RecipePreviewData }) {
           </div>
 
           {/* How to cook */}
-          <h3 className="mt-8 text-[15px] font-extrabold text-[#1A1A2E]">How to cook</h3>
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-[15px] font-extrabold text-[#1A1A2E]">
+              {stepsLang === 'hi' ? 'बनाने की विधि' : 'How to cook'}
+            </h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setStepsLang('en')}
+                className={`rounded-full border px-3 py-1 text-[11px] font-bold ${
+                  stepsLang === 'en'
+                    ? 'border-[#FF6B35] bg-[rgba(255,107,53,0.12)] text-[#FF6B35]'
+                    : 'border-[#E5E7EB] bg-white text-[#6B7280]'
+                }`}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setStepsLang('hi')}
+                className={`rounded-full border px-3 py-1 text-[11px] font-bold ${
+                  stepsLang === 'hi'
+                    ? 'border-[#FF6B35] bg-[rgba(255,107,53,0.12)] text-[#FF6B35]'
+                    : 'border-[#E5E7EB] bg-white text-[#6B7280]'
+                }`}
+              >
+                हिंदी
+              </button>
+            </div>
+          </div>
           <div className="mt-3 space-y-3">
-            {data.steps.length === 0 ? (
-              <p className="text-sm text-[#6B7280]">No steps added yet.</p>
+            {displaySteps.length === 0 ? (
+              <p className="text-sm text-[#6B7280]">
+                {stepsLang === 'hi'
+                  ? 'No Hindi steps added yet.'
+                  : 'No steps added yet.'}
+              </p>
             ) : (
-              data.steps.map((step, index) => (
+              displaySteps.map((step, index) => (
                 <div
                   key={index}
                   className="flex gap-3 rounded-2xl border border-[#E5E7EB] bg-white p-3.5 shadow-sm"

@@ -1,9 +1,9 @@
-# TC-002: Register — fill details and send OTP (OTP entered in 02-register-verify.yaml)
+# TC-002: Register — contact → diet → kitchen → email OTP (verified in 02-register-verify.yaml)
 # Env: QA_NAME, QA_PHONE, QA_EMAIL
 appId: com.bhagihiri.rasoiapp
 ---
 - runFlow:
-    file: _bootstrap.yaml
+    file: _bootstrap-to-login.yaml
 - runFlow:
     when:
       visible:
@@ -29,6 +29,8 @@ appId: com.bhagihiri.rasoiapp
           id: register-name-input
       - inputText: ${QA_NAME}
       - tapOn:
+          id: register-gender-male
+      - tapOn:
           id: register-phone-input
       - inputText: ${QA_PHONE}
       - tapOn:
@@ -41,13 +43,42 @@ appId: com.bhagihiri.rasoiapp
     commands:
       - tapOn: "e.g. Priya Sharma"
       - inputText: ${QA_NAME}
-      - tapOn: "9820174653"
+      - tapOn: "Male"
+      - tapOn: "9876543210"
       - inputText: ${QA_PHONE}
       - tapOn: "you@example.com"
       - inputText: ${QA_EMAIL}
 - hideKeyboard
 - tapOn:
-    text: "Send verification code"
+    id: register-continue-contact
+- runFlow:
+    when:
+      notVisible:
+        id: register-continue-contact
+    commands:
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      id: onboarding-diet-veg
+    timeout: 15000
+- tapOn:
+    id: onboarding-diet-veg
+- tapOn:
+    id: register-continue-diet
+- runFlow:
+    when:
+      notVisible:
+        id: register-continue-diet
+    commands:
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      id: onboarding-cuisine-first
+    timeout: 15000
+- tapOn:
+    id: onboarding-cuisine-first
+- tapOn:
+    id: register-send-otp
 - runFlow:
     when:
       visible:

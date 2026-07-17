@@ -7,6 +7,7 @@ import {
 } from '../_shared/autoTrial.ts';
 import { corsHeaders, fail, ok } from '../_shared/http.ts';
 import { isAnonymousAuthUser, serializeUser } from '../_shared/serializeUser.ts';
+import { newUserRowIds } from '../_shared/userInsert.ts';
 
 const CURRENT_TERMS_VERSION = Deno.env.get('RASOI_TERMS_VERSION') ?? '2025-06-01';
 
@@ -117,6 +118,7 @@ Deno.serve(async (request) => {
       const { data: created, error: createError } = await db
         .from('User')
         .insert({
+          ...newUserRowIds(now),
           name: resolvedName,
           isGuest: true,
           supabaseUserId: authUser.id,
@@ -138,6 +140,7 @@ Deno.serve(async (request) => {
   const { data: created, error: createError } = await db
     .from('User')
     .insert({
+      ...newUserRowIds(now),
       name: resolvedName,
       isGuest: true,
       supabaseUserId: null,

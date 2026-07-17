@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppSavingOverlay from '@/components/AppSavingOverlay';
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import { colors, gradients, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
@@ -12,6 +13,7 @@ import { testIds } from '@/constants/testIds';
 type PermissionOnboardingStepProps = {
   screenTestID?: string;
   skipTestID?: string;
+  enableTestID?: string;
   eyebrow?: string;
   savingMessage?: string;
   savingSubtitle?: string;
@@ -29,6 +31,7 @@ type PermissionOnboardingStepProps = {
 export default function PermissionOnboardingStep({
   screenTestID = testIds.screenOnboarding,
   skipTestID,
+  enableTestID,
   eyebrow,
   savingMessage = 'Setting up your Rasoi…',
   savingSubtitle = 'Saving tastes and reminders',
@@ -45,15 +48,18 @@ export default function PermissionOnboardingStep({
   return (
     <View style={styles.darkRoot}>
       <AppSavingOverlay visible={isSubmitting} message={savingMessage} subtitle={savingSubtitle} />
-      <LinearGradient colors={['#0A0908', '#0F1210', '#0A0908']} style={StyleSheet.absoluteFillObject} />
-      <View style={styles.glowGreen} />
+      <AuthAtmosphere />
 
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={screenTestID}>
         <View style={styles.header}>
           <Text style={styles.brand}>Rasoi</Text>
         </View>
 
-        <ScrollViewWithFloatingIndicator {...scrollIndicator} contentContainerStyle={styles.content}>
+        <ScrollViewWithFloatingIndicator
+          style={styles.flex}
+          {...scrollIndicator}
+          contentContainerStyle={styles.content}
+        >
           {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
@@ -64,6 +70,7 @@ export default function PermissionOnboardingStep({
           <Pressable
             onPress={onEnable}
             disabled={isSubmitting}
+            testID={enableTestID}
             style={[styles.buttonWrap, isSubmitting && styles.buttonDisabled]}
           >
             <LinearGradient
@@ -107,16 +114,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   darkRoot: {
     flex: 1,
-    backgroundColor: colors.dark.bg,
-  },
-  glowGreen: {
-    position: 'absolute',
-    right: -80,
-    bottom: 120,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(0,168,107,0.12)',
+    backgroundColor: AUTH_ATMOSPHERE_BG,
   },
   header: {
     alignItems: 'center',

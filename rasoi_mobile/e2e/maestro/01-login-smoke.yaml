@@ -1,0 +1,21 @@
+# Login smoke — fresh install lands on login; no guest entry points
+appId: com.bhagihiri.rasoiapp
+---
+- runFlow:
+    file: _bootstrap-to-login.yaml
+- assertVisible:
+    id: screen-login
+- assertVisible:
+    text: "Welcome back"
+- assertNotVisible:
+    text: "Explore as guest"
+- assertNotVisible:
+    text: "Continue as guest"
+- tapOn:
+    id: login-go-register
+- extendedWaitUntil:
+    visible:
+      id: screen-register
+    timeout: 15000
+- assertNotVisible:
+    text: "Explore as guest"

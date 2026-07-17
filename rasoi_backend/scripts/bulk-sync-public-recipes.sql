@@ -22,20 +22,14 @@ INSERT INTO public.recipes (
 SELECT
   r.id,
   r.title,
-  r.description,
+  COALESCE(r."descriptionHi", ''),
   r."prepTime",
   r.calories,
   r.region,
   r."dietType"::public.diet_type,
   r.difficulty::public.recipe_difficulty,
   r."imageUrl",
-  COALESCE(
-    (
-      SELECT array_agg(value::text)
-      FROM jsonb_array_elements_text(r.tags::jsonb)
-    ),
-    '{}'::text[]
-  ),
+  '{}'::text[],
   r.published,
   NOW()
 FROM rasoi."Recipe" r

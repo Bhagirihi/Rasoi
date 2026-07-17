@@ -9,8 +9,12 @@ import {
   recipeCatalogFilterKey,
   saveCachedRecipePage,
 } from '@/utils/recipeCatalogCache';
-import { resolveStepsForRecipe } from '@/utils/generateRecipeSteps';
+import {
+  buildRecipeDescription,
+  buildRecipeDescriptionHi,
+} from '@/utils/recipeDescription';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
+import { parseMainIngredients } from '@/utils/recipeMainIngredients';
 import {
   RECIPE_PAGE_SIZE,
   type PaginatedItems,
@@ -24,19 +28,20 @@ type DbRecipeRow = {
   calories: number;
   region: string;
   kitchenStyleId: string;
-  kitchenStyleIds: string;
   dietType: DietType;
   difficulty: Recipe['difficulty'];
-  description: string;
+  descriptionHi?: string | null;
   imageUrl: string;
-  tags: string;
   ingredients: string;
+  main_ingredients?: string | null;
+  steps?: string | null;
+  stepsHi?: string | null;
   published: boolean;
 };
 
 /** List/bootstrap columns — omit steps + admin scores to shrink Supabase egress per page. */
 const RECIPE_LIST_COLUMNS =
-  'id, title, prepTime, calories, region, kitchenStyleId, kitchenStyleIds, dietType, difficulty, description, imageUrl, tags, ingredients, published';
+  'id, title, prepTime, calories, region, kitchenStyleId, dietType, difficulty, descriptionHi, imageUrl, ingredients, main_ingredients, published';
 
 export type RecipeFetchFilters = {
   region?: string;
@@ -46,11 +51,12 @@ export type RecipeFetchFilters = {
 };
 
 function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean }): Recipe {
-  const kitchenStyleIds = parseJson<CuisineId[]>(recipe.kitchenStyleIds, []);
-  const resolvedKitchenStyleIds =
-    kitchenStyleIds.length > 0 ? kitchenStyleIds : [recipe.kitchenStyleId as CuisineId];
-
-  const normalizedIngredients = normalizeRecipeIngredients(parseJson<unknown>(recipe.ingredients, []));
+  const kitchenStyleId = recipe.kitchenStyleId as CuisineId;
+  const normalizedIngredients = normalizeRecipeIngredients(recipe.ingredients);
+  const mainIngredients = parseMainIngredients(recipe.main_ingredients);
+  const dbSteps = parseJson<string[]>(recipe.steps ?? null, []);
+  const dbStepsHi = parseJson<string[]>(recipe.stepsHi ?? null, []);
+  const storedDescHi = recipe.descriptionHi?.trim() ?? '';
 
   return {
     id: recipe.id,
@@ -58,25 +64,26 @@ function mapRecipeRow(recipe: DbRecipeRow, options?: { includeSteps?: boolean })
     prepTime: recipe.prepTime,
     calories: recipe.calories,
     region: recipe.region,
-    kitchenStyleId: recipe.kitchenStyleId as CuisineId,
-    kitchenStyleIds: resolvedKitchenStyleIds,
+    kitchenStyleId,
+    kitchenStyleIds: [kitchenStyleId],
     dietType: recipe.dietType,
     difficulty: recipe.difficulty,
-    description: recipe.description,
-    imageUrl: recipe.imageUrl,
-    tags: parseJson<Recipe['tags']>(recipe.tags, []),
-    ingredients: normalizedIngredients,
-    steps: options?.includeSteps
-      ? resolveStepsForRecipe({
+    description: buildRecipeDescription({
+      title: recipe.title,
+      ingredients: normalizedIngredients,
+    }),
+    descriptionHi:
+      storedDescHi ||
+      buildRecipeDescriptionHi({
         title: recipe.title,
-        kitchenStyleId: recipe.kitchenStyleId,
-        dietType: recipe.dietType,
-        ingredients: recipe.ingredients,
-        prepTime: recipe.prepTime,
-        difficulty: recipe.difficulty,
-        description: recipe.description,
-      })
-      : [],
+        ingredients: normalizedIngredients,
+      }),
+    imageUrl: recipe.imageUrl,
+    tags: [],
+    ingredients: normalizedIngredients,
+    mainIngredients: mainIngredients.length > 0 ? mainIngredients : undefined,
+    steps: options?.includeSteps ? dbSteps : undefined,
+    stepsHi: options?.includeSteps && dbStepsHi.length > 0 ? dbStepsHi : undefined,
   };
 }
 
@@ -110,10 +117,7 @@ function buildPublishedRecipeQuery(filters?: RecipeFetchFilters) {
     query = query.eq('dietType', dietType);
   }
 
-  const tag = filters?.tag?.trim();
-  if (tag && tag !== 'all') {
-    query = query.ilike('tags', `%"${tag}"%`);
-  }
+  // tags column dropped — tag filters are applied client-side where needed.
 
   return query.order('createdAt', { ascending: false });
 }
@@ -203,10 +207,13 @@ type ApiRecipe = {
   dietType: Recipe['dietType'];
   difficulty: Recipe['difficulty'];
   description: string;
+  descriptionHi?: string;
   imageUrl: string;
   tags: Recipe['tags'];
   ingredients: Recipe['ingredients'];
+  mainIngredients?: string[];
   steps?: string[];
+  stepsHi?: string[];
   published: boolean;
 };
 
@@ -234,10 +241,13 @@ function mapApiRecipe(recipe: ApiRecipe): Recipe {
     dietType: recipe.dietType,
     difficulty: recipe.difficulty,
     description: recipe.description,
+    descriptionHi: recipe.descriptionHi,
     imageUrl: recipe.imageUrl,
     tags: recipe.tags ?? [],
     ingredients: normalizeRecipeIngredients(recipe.ingredients),
+    mainIngredients: recipe.mainIngredients,
     steps: recipe.steps,
+    stepsHi: recipe.stepsHi,
   };
 }
 

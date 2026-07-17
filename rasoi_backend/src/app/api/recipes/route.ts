@@ -66,16 +66,13 @@ export async function POST(request: NextRequest) {
         calories: input.calories,
         region: input.region,
         kitchenStyleId: input.kitchenStyleId,
-        kitchenStyleIds: JSON.stringify(
-          input.kitchenStyleIds?.length ? input.kitchenStyleIds : [input.kitchenStyleId],
-        ),
         dietType: input.dietType,
         difficulty: input.difficulty,
-        description: input.description,
+        descriptionHi: input.descriptionHi?.trim() || null,
         imageUrl: input.imageUrl,
-        tags: JSON.stringify(input.tags),
         ingredients: JSON.stringify(input.ingredients),
         steps: input.steps ? JSON.stringify(input.steps) : null,
+        stepsHi: input.stepsHi?.length ? JSON.stringify(input.stepsHi) : null,
         published: input.published,
       },
     });

@@ -2,7 +2,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Recipe } from '@/data/mockRecipes';
 import { authApiFetch } from '@/utils/api';
-import { parseJson } from '@/utils/parseJson';
 import { dietChoiceToDietType } from '@/utils/recipeFilters';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
 import type { CuisineId } from '@/constants/theme';
@@ -23,6 +22,7 @@ type ApiRecipeRow = {
   imageUrl: string;
   tags: Recipe['tags'];
   ingredients: unknown;
+  mainIngredients?: string[];
 };
 
 export type RecommendationPickResponse = {
@@ -73,9 +73,8 @@ function mapApiRecipe(row: ApiRecipeRow): Recipe {
     description: row.description,
     imageUrl: row.imageUrl,
     tags: Array.isArray(row.tags) ? row.tags : [],
-    ingredients: normalizeRecipeIngredients(
-      parseJson<unknown[]>(typeof row.ingredients === 'string' ? row.ingredients : null, []),
-    ),
+    ingredients: normalizeRecipeIngredients(row.ingredients),
+    mainIngredients: row.mainIngredients,
     steps: [],
   };
 }

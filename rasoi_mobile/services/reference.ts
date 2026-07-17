@@ -17,12 +17,15 @@ export type ReferenceData = {
   kitchenStyles: KitchenStyle[];
   appConfig: {
     paymentsEnabled: boolean;
+    /** Semver floor from AppSettings; empty/null = all versions. */
+    paymentsMinAppVersion: string | null;
     defaultPantryIngredients: string[];
   };
 };
 
 const DEFAULT_APP_CONFIG = {
   paymentsEnabled: false,
+  paymentsMinAppVersion: null as string | null,
   defaultPantryIngredients: [] as string[],
 };
 
@@ -39,9 +42,12 @@ let loadPromise: Promise<ReferenceData> | null = null;
 function parseAppConfigRow(
   paymentsEnabled: boolean | null | undefined,
   defaultPantryRaw: string | null | undefined,
+  paymentsMinAppVersion?: string | null,
 ): ReferenceData['appConfig'] {
+  const minVersion = paymentsMinAppVersion?.trim() || null;
   return {
     paymentsEnabled: paymentsEnabled ?? DEFAULT_APP_CONFIG.paymentsEnabled,
+    paymentsMinAppVersion: minVersion,
     defaultPantryIngredients: parseJson<string[]>(
       defaultPantryRaw,
       DEFAULT_APP_CONFIG.defaultPantryIngredients,
@@ -56,15 +62,23 @@ export async function loadAppConfigFresh(): Promise<ReferenceData['appConfig']> 
       const db = getRasoiDb();
       const { data, error } = await db
         .from('AppSettings')
-        .select('paymentsEnabled, defaultPantryIngredients')
+        .select('paymentsEnabled, paymentsMinAppVersion, defaultPantryIngredients')
         .eq('id', 'default')
         .maybeSingle();
       if (error) throw error;
-      return parseAppConfigRow(data?.paymentsEnabled, data?.defaultPantryIngredients);
+      return parseAppConfigRow(
+        data?.paymentsEnabled,
+        data?.defaultPantryIngredients,
+        data?.paymentsMinAppVersion,
+      );
     }
 
     const data = await apiFetch<ReferenceData>('/api/reference');
-    return data.appConfig ?? DEFAULT_APP_CONFIG;
+    return {
+      ...DEFAULT_APP_CONFIG,
+      ...data.appConfig,
+      paymentsMinAppVersion: data.appConfig?.paymentsMinAppVersion?.trim() || null,
+    };
   } catch (error) {
     console.warn('[reference] Could not refresh app config', error);
     return cachedReference?.appConfig ?? DEFAULT_APP_CONFIG;
@@ -76,6 +90,7 @@ async function mergeFreshAppConfig(data: ReferenceData): Promise<ReferenceData> 
   const prevPantry = data.appConfig?.defaultPantryIngredients ?? [];
   if (
     appConfig.paymentsEnabled === data.appConfig?.paymentsEnabled &&
+    appConfig.paymentsMinAppVersion === data.appConfig?.paymentsMinAppVersion &&
     appConfig.defaultPantryIngredients.length === prevPantry.length &&
     appConfig.defaultPantryIngredients.every((item, index) => item === prevPantry[index])
   ) {
@@ -105,7 +120,7 @@ async function loadReferenceFromSupabase(): Promise<ReferenceData> {
       .eq('active', true)
       .order('sortOrder', { ascending: true })
       .order('title', { ascending: true }),
-    db.from('AppSettings').select('paymentsEnabled, defaultPantryIngredients').eq('id', 'default').maybeSingle(),
+    db.from('AppSettings').select('paymentsEnabled, paymentsMinAppVersion, defaultPantryIngredients').eq('id', 'default').maybeSingle(),
   ]);
 
   const firstError =
@@ -127,6 +142,7 @@ async function loadReferenceFromSupabase(): Promise<ReferenceData> {
     appConfig: parseAppConfigRow(
       settingsResult.data?.paymentsEnabled,
       settingsResult.data?.defaultPantryIngredients,
+      settingsResult.data?.paymentsMinAppVersion,
     ),
   };
 }

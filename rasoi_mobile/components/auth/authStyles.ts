@@ -37,6 +37,14 @@ export const authStyles = StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
   },
+  stepEyebrow: {
+    marginTop: 12,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: colors.muted,
+  },
   title: {
     marginTop: 8,
     fontSize: 30,
@@ -230,5 +238,11 @@ export const authStyles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     color: colors.muted,
+  },
+  preferenceFieldError: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(229,57,53,0.35)',
+    padding: 8,
   },
 });

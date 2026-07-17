@@ -1,0 +1,15 @@
+{
+  "backedUpAt": "2026-06-30",
+  "source": "rasoi_mobile/store/play-console/manifest.json → storeListing",
+  "packageName": "com.bhagihiri.rasoiapp",
+  "language": "en-US",
+  "storeListing": {
+    "title": "Rasoi: Aaj Kya Banaye? Recipes",
+    "shortDescription": "Aaj kya banaye? Cook from your pantry. 1,200+ Indian recipes. 15 cuisines.",
+    "fullDescription": "Rasoi helps Indian home cooks answer \"Aaj kya banaye?\" every evening — decide dinner in seconds from what's already in your kitchen.\n\n🍳 TONIGHT'S PICKS\n• Smart meal suggestions for breakfast, lunch, dinner & late-night\n• Personalized picks based on your diet and regional cuisine\n\n🥘 COOK FROM YOUR PANTRY\n• Add pantry items and see recipe match %\n• Filter recipes you can cook right now\n\n📚 1,200+ INDIAN RECIPES\n• 15 regional cuisines — Gujarati, South Indian, Punjabi, Bengali & more\n• Veg, Jain, Egg & Non-Veg filters\n• Quick filters: under 20 min, leftovers, kids-friendly\n\n🛒 SHOP & ORDER (Rasoi Plus)\n• Open Blinkit, Zepto & Instamart for missing groceries\n• Zomato & Swiggy delivery when you want to order instead\n\n⭐ RASOI PLUS SUBSCRIPTION\n• Monthly ₹49 or Yearly ₹499 (save 15% vs monthly)\n• Ad-free experience across the app\n• Partner grocery & delivery checkout links\n• Cancel anytime in Google Play → Subscriptions\n\n🆓 FREE TO START\n• Free plan with recipes & pantry matching\n• Optional 3-day in-app trial for partner features (managed in-app, not a Play free trial)\n\nRasoi may use your city (optional location permission) for local recipe relevance and sponsor analytics.\n\nWebsite: https://rasoiapplication.in\nPrivacy: https://rasoiapplication.in/privacy\nTerms: https://rasoiapplication.in/terms\nSupport: cooking@rasoiapplication.in",
+    "website": "https://rasoiapplication.in",
+    "email": "cooking@rasoiapplication.in",
+    "privacyPolicyUrl": "https://rasoiapplication.in/privacy"
+  },
+  "note": "Restore by copying storeListing fields back into manifest.json storeListing, then run play_push_listing."
+}

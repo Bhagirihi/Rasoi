@@ -2,7 +2,6 @@ import { dietChoiceToDietType } from '@/lib/recipe-filters';
 import { isJainSafeRecipe } from '@/lib/jain-safe';
 import type { Recipe } from '@/lib/db/types';
 import { serializeRecipeListItem } from '@/lib/serializers';
-import { parseJson } from '@/lib/serializers';
 import type { RecipeResponse } from '@/lib/types';
 
 export type SeasonalRailPick = {
@@ -86,8 +85,7 @@ export function buildSeasonalRailPicks(
   const pool = recipes.filter((recipe) => {
     if (recipe.dietType !== dietType) return false;
     if (user.dietChoice === 'Jain' && !isJainSafeRecipe(recipe)) return false;
-    const tags = parseJson<string[]>(recipe.tags, []);
-    return config.tags.some((tag) => tags.includes(tag));
+    return true;
   });
 
   const ranked = pool

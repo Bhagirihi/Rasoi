@@ -27,13 +27,13 @@ export default function HomePlanTomorrow({
       </View>
       {lateNightPick ? (
         <Pressable onPress={() => onRecipePress(lateNightPick)} style={styles.row}>
-          <Text style={styles.eyebrow}>Tonight snack</Text>
+          <Text style={[styles.eyebrow, { color: themeColors.muted }]}>Tonight snack</Text>
           <Text style={[styles.recipeTitle, { color: themeColors.charcoal }]}>{lateNightPick.title}</Text>
         </Pressable>
       ) : null}
       {tomorrowPick ? (
         <Pressable onPress={() => onRecipePress(tomorrowPick)} style={styles.row}>
-          <Text style={styles.eyebrow}>Tomorrow breakfast</Text>
+          <Text style={[styles.eyebrow, { color: themeColors.muted }]}>Tomorrow breakfast</Text>
           <Text style={[styles.recipeTitle, { color: themeColors.charcoal }]}>{tomorrowPick.title}</Text>
         </Pressable>
       ) : null}
@@ -62,7 +62,6 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 12,
-    color: colors.muted,
     fontWeight: '600',
   },
   recipeTitle: {

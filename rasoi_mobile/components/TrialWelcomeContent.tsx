@@ -14,10 +14,12 @@ import {
 import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS } from '@/constants/payments';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
+import type { RevenueCatStorePricing } from '@/services/payments/revenueCatClient';
 
 type TrialWelcomeContentProps = {
   trialStarted: boolean;
   trialDays: number;
+  storePricing?: RevenueCatStorePricing | null;
   onContinueTrial: () => void | Promise<void>;
   onSubscribe: (interval: BillingInterval) => Promise<void>;
 };
@@ -31,11 +33,17 @@ const HIGHLIGHTS = [
 export default function TrialWelcomeContent({
   trialStarted,
   trialDays,
+  storePricing = null,
   onContinueTrial,
   onSubscribe,
 }: TrialWelcomeContentProps) {
   const [loading, setLoading] = useState<BillingInterval | null>(null);
   const [continuingTrial, setContinuingTrial] = useState(false);
+
+  const monthlyLabel = storePricing?.monthly?.priceString ?? PAID_PLAN_MONTHLY_PRICE;
+  const yearlyLabel = storePricing?.yearly?.priceString ?? PAID_PLAN_YEARLY_PRICE;
+  const yearlySubline = storePricing?.yearly?.subline ?? PAID_PLAN_YEARLY_DETAIL;
+  const yearlySavings = storePricing?.yearly?.savingsLabel ?? PAID_PLAN_YEARLY_SAVINGS_LABEL;
 
   const handleSubscribe = async (interval: BillingInterval) => {
     setLoading(interval);
@@ -124,11 +132,11 @@ export default function TrialWelcomeContent({
           disabled={actionsDisabled}
           style={[styles.yearlyBtn, actionsDisabled && styles.btnDisabled]}
         >
-          <Text style={styles.savingsChip}>{PAID_PLAN_YEARLY_SAVINGS_LABEL}</Text>
+          <Text style={styles.savingsChip}>{yearlySavings}</Text>
           <Text style={styles.yearlyBtnText}>
-            {loading === 'yearly' ? 'Processing…' : `Yearly · ${PAID_PLAN_YEARLY_PRICE}`}
+            {loading === 'yearly' ? 'Processing…' : `Yearly · ${yearlyLabel}`}
           </Text>
-          <Text style={styles.yearlyBtnSub}>{PAID_PLAN_YEARLY_DETAIL}</Text>
+          <Text style={styles.yearlyBtnSub}>{yearlySubline}</Text>
         </Pressable>
 
         <Pressable
@@ -137,7 +145,7 @@ export default function TrialWelcomeContent({
           style={[styles.monthlyBtn, actionsDisabled && styles.btnDisabled]}
         >
           <Text style={styles.monthlyBtnText}>
-            {loading === 'monthly' ? 'Processing…' : `Monthly · ${PAID_PLAN_MONTHLY_PRICE}`}
+            {loading === 'monthly' ? 'Processing…' : `Monthly · ${monthlyLabel}`}
           </Text>
         </Pressable>
 

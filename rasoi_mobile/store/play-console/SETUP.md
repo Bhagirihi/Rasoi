@@ -3,7 +3,7 @@
 **Developer account:** Bhagihiri Applications  
 **App name (Play Console):** Rasoi APP  
 **Package:** `com.bhagihiri.rasoiapp`  
-**Source of truth:** [`manifest.json`](./manifest.json) (derived from mobile code)
+**Source of truth:** [`manifest.json`](./manifest.json) (derived from mobile code) · validated by [`manifest.schema.json`](./manifest.schema.json) via `npm run validate:play-manifest`
 
 ## What Google allows
 
@@ -75,7 +75,7 @@ RevenueCat mapping:
 **Note:** The app’s 3-day trial is **in-app** (`TRIAL_DURATION_DAYS` in `plans.ts`), not a Play subscription free trial.
 
 ### Content rating
-Answer questionnaire per `manifest.json` → `contentRatingQuestionnaire` (general audience cooking app).
+Answer questionnaire per `manifest.json` → `contentRatingSurvey` (general audience cooking app).
 
 ### Build & upload
 ```bash

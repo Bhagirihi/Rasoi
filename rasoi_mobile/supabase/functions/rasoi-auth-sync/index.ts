@@ -13,13 +13,16 @@ import {
   isDummyIndianPhone,
 } from '../_shared/identityValidation.ts';
 import { normalizePhone, serializeUser } from '../_shared/serializeUser.ts';
+import { newUserRowIds } from '../_shared/userInsert.ts';
 
 const CURRENT_TERMS_VERSION = Deno.env.get('RASOI_TERMS_VERSION') ?? '2025-06-01';
 
 type SyncBody = {
   name?: string;
   phone?: string;
+  gender?: 'Male' | 'Female' | 'Other';
   acceptedTerms?: true;
+  phoneVerified?: true;
   linkGuestUserId?: string;
   onboarding?: {
     dietPreference: string;
@@ -92,9 +95,27 @@ Deno.serve(async (request) => {
   if (phone && isDummyIndianPhone(phone)) {
     return fail(getDummyPhoneError(), 400);
   }
+
   const admin = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
+
+  if (body.phoneVerified) {
+    const { error: metaError } = await admin.auth.admin.updateUserById(authUser.id, {
+      user_metadata: {
+        ...(typeof authUser.user_metadata === 'object' && authUser.user_metadata
+          ? authUser.user_metadata
+          : {}),
+        ...(phone ? { phone } : {}),
+        phone_verified: true,
+        phone_verified_at: new Date().toISOString(),
+      },
+    });
+    if (metaError) {
+      console.warn('[rasoi-auth-sync] phone metadata update failed', metaError.message);
+    }
+  }
+
   const db = admin.schema('rasoi');
 
   if (body.linkGuestUserId) {
@@ -197,6 +218,7 @@ Deno.serve(async (request) => {
       isGuest: false,
       supabaseUserId: authUser.id,
       updatedAt: now,
+      ...(body.gender ? { gender: body.gender } : {}),
       ...termsUpdate,
       ...(existing.hasCompletedOnboarding ? {} : onboardingData),
       ...trialUpdate,
@@ -217,11 +239,13 @@ Deno.serve(async (request) => {
     const { data, error } = await db
       .from('User')
       .insert({
+        ...newUserRowIds(now),
         name,
         phone: phone ?? null,
         email: authUser.email,
         isGuest: false,
         supabaseUserId: authUser.id,
+        ...(body.gender ? { gender: body.gender } : {}),
         termsAcceptedAt: now,
         termsAcceptedVersion: CURRENT_TERMS_VERSION,
         ...onboardingData,

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
 import Text from "@/components/ui/Text";
-import { FreeBadge } from "@/components/ui/Primitives";
+import AppHeaderTrailing from "@/components/AppHeaderTrailing";
 import { useTheme } from "@/context/ThemeContext";
 import { spacing } from "@/constants/theme";
 import { a11yHeader } from "@/utils/a11y";
@@ -15,8 +15,9 @@ export function AppTabHeader({
   trailing,
   testID,
   compact = false,
+  showSettingsButton = true,
 }: {
-  title: string;
+  title?: string;
   subtitle?: string;
   eyebrow?: string;
   /** Icon or control shown to the left of the title (e.g. back). */
@@ -25,6 +26,8 @@ export function AppTabHeader({
   testID?: string;
   /** Tighter title block for dense screens (e.g. Pantry). */
   compact?: boolean;
+  /** Show settings gear in the top-right (default true). */
+  showSettingsButton?: boolean;
 }) {
   const { colorScheme } = useTheme();
   return (
@@ -39,7 +42,9 @@ export function AppTabHeader({
         >
           RASOI
         </Text>
-        {trailing ?? <FreeBadge />}
+        {trailing ?? (
+          <AppHeaderTrailing showSettingsButton={showSettingsButton} />
+        )}
       </View>
       {eyebrow ? (
         <Text
@@ -51,21 +56,24 @@ export function AppTabHeader({
           {eyebrow}
         </Text>
       ) : null}
-      <View style={styles.titleRow}>
-        {leading ? <View style={styles.leading}>{leading}</View> : null}
-        <Text
-          variant="display"
-          scheme={colorScheme}
-          style={[
-            styles.title,
-            compact && styles.titleCompact,
-            leading ? styles.titleWithLeading : null,
-          ]}
-          {...a11yHeader(title)}
-        >
-          {title}
-        </Text>
-      </View>
+      {title && (
+        <View style={styles.titleRow}>
+          {leading ? <View style={styles.leading}>{leading}</View> : null}
+          <Text
+            variant="display"
+            scheme={colorScheme}
+            style={[
+              styles.title,
+              compact && styles.titleCompact,
+              leading ? styles.titleWithLeading : null,
+            ]}
+            {...a11yHeader(title)}
+          >
+            {title}
+          </Text>
+        </View>
+      )}
+
       {subtitle ? (
         <Text
           variant="body"

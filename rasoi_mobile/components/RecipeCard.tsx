@@ -6,12 +6,17 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import MissingShopInline, {
   missingShopActionStyles,
 } from "@/components/MissingShopInline";
-import RecipeVisualBadge, { RecipeTagChips } from "@/components/RecipeVisualBadge";
+import RecipeVisualBadge, {
+  RecipeTagChips,
+} from "@/components/RecipeVisualBadge";
 import { useAppContext } from "@/context/AppContext";
+import { useSaveRecipeGate } from "@/hooks/useSaveRecipeGate";
 import { useTheme } from "@/context/ThemeContext";
 import { colors, radius, shadows, spacing } from "@/constants/theme";
 import { Recipe } from "@/data/mockRecipes";
 import type { AffiliatePartner } from "@/utils/affiliate";
+import { hasRecipeImage } from "@/utils/recipeImage";
+import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
 import { getPantryMatchPercent, partitionIngredients } from "@/utils/recipes";
 
 export type RecipeCardVariant = "tonight" | "list";
@@ -31,6 +36,8 @@ interface RecipeCardProps {
     partner?: AffiliatePartner,
   ) => void;
   onCookTonight?: (recipe: Recipe) => void;
+  /** Plan tab: missing ingredients open Pantry instead of shop modal. */
+  onPantryPress?: () => void;
 }
 
 export default function RecipeCard({
@@ -42,19 +49,29 @@ export default function RecipeCard({
   pantryMatchPercent,
   onShopMissing,
   onCookTonight,
+  onPantryPress,
   cookCtaLabel = "Cook tonight",
 }: RecipeCardProps) {
   const resolvedVariant: RecipeCardVariant =
     variant ?? (compact ? "tonight" : "list");
   const router = useRouter();
-  const { colors: themeColors } = useTheme();
-  const { pantryIngredients, isRecipeSaved, toggleSavedRecipe } =
-    useAppContext();
+  const { colors: themeColors, isDark } = useTheme();
+  const { pantryIngredients, isRecipeSaved, isRecipeOffline } = useAppContext();
+  const { trySaveRecipe } = useSaveRecipeGate();
   const matchPercent =
     pantryMatchPercent ?? getPantryMatchPercent(recipe, pantryIngredients);
   const { missing } = partitionIngredients(recipe, pantryIngredients);
   const saved = isRecipeSaved(recipe.id);
+  const offlineReady = isRecipeOffline(recipe.id);
   const isTonight = resolvedVariant === "tonight";
+  const visual = getRecipeVisualIdentity(recipe);
+  const recipeHasPhoto = hasRecipeImage(recipe);
+  const matchColor =
+    matchPercent >= 70
+      ? colors.green
+      : matchPercent >= 40
+        ? colors.primary
+        : themeColors.muted;
 
   const handlePress = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -63,7 +80,7 @@ export default function RecipeCard({
 
   const handleSavePress = () => {
     void Haptics.selectionAsync();
-    toggleSavedRecipe(recipe.id);
+    trySaveRecipe(recipe.id);
   };
 
   const handleShopPress = (partner?: AffiliatePartner) => {
@@ -77,7 +94,7 @@ export default function RecipeCard({
   };
 
   const shopFooter =
-    missing.length > 0 ? (
+    !onPantryPress && missing.length > 0 ? (
       <MissingShopInline
         missing={missing}
         variant="footer"
@@ -100,6 +117,37 @@ export default function RecipeCard({
         onPartnerPress={(partner) => handleShopPress(partner)}
       />
     ) : null;
+
+  const pantryFooter =
+    onPantryPress && missing.length > 0 ? (
+      <Pressable
+        onPress={(event) => {
+          event.stopPropagation?.();
+          void Haptics.selectionAsync();
+          onPantryPress();
+        }}
+        style={[
+          styles.pantryFooter,
+          {
+            backgroundColor: themeColors.white,
+            borderTopColor: themeColors.border,
+          },
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel="Update pantry for missing ingredients"
+      >
+        <Text style={styles.pantryFooterCta}>Update pantry →</Text>
+        <Text
+          style={[styles.pantryFooterItems, { color: themeColors.muted }]}
+          numberOfLines={2}
+        >
+          {missing.slice(0, 3).join(", ")}
+          {missing.length > 3 ? ` +${missing.length - 3}` : ""}
+        </Text>
+      </Pressable>
+    ) : null;
+
+  const cardFooter = pantryFooter ?? shopFooter;
 
   const cookPill = onCookTonight ? (
     <Pressable
@@ -162,6 +210,7 @@ export default function RecipeCard({
 
             <Text style={[styles.tonightMeta, { color: themeColors.muted }]}>
               {recipe.prepTime} min · {matchPercent}% pantry · {recipe.dietType}
+              {offlineReady ? ' · Offline' : ''}
             </Text>
 
             <RecipeTagChips recipe={recipe} />
@@ -171,7 +220,7 @@ export default function RecipeCard({
             ) : null}
           </View>
         </Pressable>
-        {shopFooter}
+        {cardFooter}
       </View>
     );
   }
@@ -184,7 +233,11 @@ export default function RecipeCard({
       ]}
     >
       <Pressable onPress={handlePress} testID={testID}>
-        <RecipeVisualBadge recipe={recipe} variant="banner" />
+        <RecipeVisualBadge
+          recipe={recipe}
+          variant="hero"
+          style={styles.listHero}
+        />
 
         <View style={styles.listBody}>
           <View style={styles.listTitleRow}>
@@ -207,18 +260,49 @@ export default function RecipeCard({
             </Pressable>
           </View>
 
+          {recipeHasPhoto ? (
+            <Text
+              style={[styles.listKitchen, { color: themeColors.muted }]}
+              numberOfLines={1}
+            >
+              {visual.kitchenLabel} · {recipe.region}
+            </Text>
+          ) : null}
+
           {pickReason ? (
             <Text
-              style={[styles.listReason, { color: themeColors.muted }]}
+              style={[styles.listReason, { color: colors.primary }]}
               numberOfLines={2}
             >
               {pickReason}
             </Text>
           ) : null}
 
-          <Text style={[styles.listMeta, { color: themeColors.muted }]}>
-            {recipe.prepTime} min · {matchPercent}% pantry · {recipe.region}
-          </Text>
+          <View style={styles.listMetaRow}>
+            <Text style={[styles.listMeta, { color: themeColors.muted }]}>
+              {recipe.prepTime} min · {recipe.dietType}
+              {offlineReady ? ' · Offline' : ''}
+            </Text>
+            <View
+              style={[
+                styles.matchBadge,
+                {
+                  backgroundColor:
+                    matchPercent >= 70
+                      ? "rgba(0,168,107,0.12)"
+                      : matchPercent >= 40
+                        ? "rgba(255,107,53,0.12)"
+                        : isDark
+                          ? "rgba(255,255,255,0.08)"
+                          : "rgba(26,26,46,0.06)",
+                },
+              ]}
+            >
+              <Text style={[styles.matchBadgeText, { color: matchColor }]}>
+                {matchPercent}% pantry
+              </Text>
+            </View>
+          </View>
 
           <RecipeTagChips recipe={recipe} />
 
@@ -228,7 +312,7 @@ export default function RecipeCard({
         </View>
       </Pressable>
 
-      {shopFooter}
+      {cardFooter}
     </View>
   );
 }
@@ -293,9 +377,14 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     ...shadows.card,
   },
+  listHero: {
+    minHeight: 128,
+  },
   listBody: {
     padding: spacing.lg,
+    paddingTop: spacing.md,
     paddingBottom: spacing.md,
+    gap: spacing.xs,
   },
   listTitleRow: {
     flexDirection: "row",
@@ -306,19 +395,57 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontWeight: "800",
+    lineHeight: 22,
     color: colors.charcoal,
   },
+  listKitchen: {
+    fontSize: 12,
+    fontWeight: "700",
+    lineHeight: 16,
+  },
   listReason: {
-    marginTop: 6,
+    marginTop: 2,
     fontSize: 13,
     lineHeight: 18,
     fontWeight: "600",
     color: colors.primary,
   },
+  listMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.sm,
+    marginTop: 4,
+  },
   listMeta: {
-    marginTop: 8,
+    flex: 1,
     fontSize: 12,
     fontWeight: "600",
     color: colors.muted,
+  },
+  matchBadge: {
+    borderRadius: radius.pill,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  matchBadgeText: {
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  pantryFooter: {
+    borderTopWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 4,
+  },
+  pantryFooterCta: {
+    fontSize: 12,
+    fontWeight: "800",
+    color: colors.primary,
+  },
+  pantryFooterItems: {
+    fontSize: 11,
+    fontWeight: "600",
+    lineHeight: 15,
   },
 });

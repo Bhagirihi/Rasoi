@@ -2,12 +2,14 @@
 export const testIds = {
   tabHome: 'tab-home',
   tabRecipes: 'tab-recipes',
+  tabPlan: 'tab-plan',
   tabPantry: 'tab-pantry',
   tabSaved: 'tab-saved',
   tabSettings: 'tab-settings',
 
   screenHome: 'screen-home',
   screenRecipesTab: 'screen-recipes-tab',
+  screenPlan: 'screen-plan',
   screenPantry: 'screen-pantry',
   screenSaved: 'screen-saved',
   screenSettings: 'screen-settings',
@@ -16,21 +18,39 @@ export const testIds = {
   screenLegalConsent: 'screen-legal-consent',
   screenOnboarding: 'screen-onboarding',
   screenTrialWelcome: 'screen-trial-welcome',
+  screenCrashFallback: 'screen-crash-fallback',
+
+  crashRetry: 'crash-retry',
+  crashSendFeedback: 'crash-send-feedback',
+  crashFeedbackInput: 'crash-feedback-input',
+  crashSupportRef: 'crash-support-ref',
+
+  settingsTestCrash: 'settings-test-crash',
+
+  qaOpenPaywall: 'qa-open-paywall',
+  qaOpenTrialWelcome: 'qa-open-trial-welcome',
+  qaOpenTrialEnded: 'qa-open-trial-ended',
 
   legalConsentCheckbox: 'legal-consent-checkbox',
   legalConsentContinue: 'legal-consent-continue',
   screenRecipe: 'screen-recipe',
 
-  loginGuest: 'login-guest',
-  guestContinue: 'guest-continue',
   loginSendOtp: 'login-send-otp',
   loginVerifyOtp: 'login-verify-otp',
   loginEmailInput: 'login-email-input',
   loginOtpInput: 'login-otp-input',
   loginGoRegister: 'login-go-register',
+  registerPhoneOtpInput: 'register-phone-otp-input',
+  registerVerifyPhoneOtp: 'register-verify-phone-otp',
+  registerResendPhoneOtp: 'register-resend-phone-otp',
   registerSendOtp: 'register-send-otp',
+  registerContinueContact: 'register-continue-contact',
+  registerContinueDiet: 'register-continue-diet',
   registerVerifyOtp: 'register-verify-otp',
   registerNameInput: 'register-name-input',
+  registerGenderMale: 'register-gender-male',
+  registerGenderFemale: 'register-gender-female',
+  registerGenderOther: 'register-gender-other',
   registerPhoneInput: 'register-phone-input',
   registerEmailInput: 'register-email-input',
   registerOtpInput: 'register-otp-input',
@@ -43,6 +63,7 @@ export const testIds = {
   onboardingCuisineFirst: 'onboarding-cuisine-first',
   onboardingCuisineContinue: 'onboarding-cuisine-continue',
   onboardingSkipNotify: 'onboarding-skip-notify',
+  onboardingEnableNotify: 'onboarding-enable-notify',
   onboardingSkipLocation: 'onboarding-skip-location',
 
   pantrySetupContinue: 'pantry-setup-continue',
@@ -50,16 +71,26 @@ export const testIds = {
   homeRecipeSave: 'home-recipe-save',
 
   trialContinue: 'trial-continue',
+  trialWelcomeBack: 'trial-welcome-back',
 
   settingsThemeLight: 'settings-theme-light',
   settingsThemeDark: 'settings-theme-dark',
 
   recipeCardFirst: 'recipe-card-first',
   recipesSearchInput: 'recipes-search-input',
+  recipesPantryMatchSort: 'recipes-pantry-match-sort',
   recipeSaveButton: 'recipe-save-button',
+  recipeOfflineButton: 'recipe-offline-button',
+  savedOfflineFilter: 'saved-offline-filter',
 
   settingsLogout: 'settings-logout',
   settingsLogoutConfirm: 'settings-logout-confirm',
   settingsDeleteAccount: 'settings-delete-account',
   settingsDeleteConfirm: 'settings-delete-confirm',
+
+  deleteReasonModal: 'delete-reason-modal',
+  deleteReasonOption: 'delete-reason-option',
+  deleteReasonDetail: 'delete-reason-detail',
+  deleteReasonContinue: 'delete-reason-continue',
+  deleteReasonCancel: 'delete-reason-cancel',
 } as const;

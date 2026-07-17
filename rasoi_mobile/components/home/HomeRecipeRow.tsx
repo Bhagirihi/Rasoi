@@ -1,4 +1,5 @@
 import * as Haptics from "expo-haptics";
+import { useSaveRecipeGate } from '@/hooks/useSaveRecipeGate';
 import { LinearGradient } from "expo-linear-gradient";
 import { ChevronRight, Info, Leaf, Bookmark, RefreshCw } from "lucide-react-native";
 import type { ReactNode } from "react";
@@ -16,7 +17,9 @@ import {
   getHomeDisplayTags,
   type HomeRecipeSection,
 } from "@/utils/homeRecipeTags";
+import RecipeVisualBadge from "@/components/RecipeVisualBadge";
 import { getRecipeVisualIdentity } from "@/utils/recipeVisualIdentity";
+import { hasRecipeImage } from "@/utils/recipeImage";
 import { partitionIngredients } from "@/utils/recipes";
 
 type HomeRecipeRowProps = {
@@ -76,7 +79,13 @@ function formatMissingList(missing: string[]): string {
   return missing.join(", ");
 }
 
-export function HomePickShuffleButton({ onPress }: { onPress: () => void }) {
+export function HomePickShuffleButton({
+  onPress,
+  onDark = false,
+}: {
+  onPress: () => void;
+  onDark?: boolean;
+}) {
   const { isDark } = useTheme();
 
   return (
@@ -87,13 +96,16 @@ export function HomePickShuffleButton({ onPress }: { onPress: () => void }) {
       }}
       style={[
         styles.shuffleButton,
-        isDark && { backgroundColor: "rgba(255,107,53,0.18)" },
+        onDark && styles.shuffleButtonOnDark,
+        !onDark && isDark && { backgroundColor: "rgba(255,107,53,0.18)" },
       ]}
       accessibilityRole="button"
       accessibilityLabel="Show different recipe ideas"
     >
-      <RefreshCw size={14} color={colors.primary} />
-      <Text style={styles.shuffleButtonText}>Different ideas</Text>
+      <RefreshCw size={14} color={onDark ? colors.white : colors.primary} />
+      {!onDark ? (
+        <Text style={styles.shuffleButtonText}>Different ideas</Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -153,7 +165,7 @@ function MetaTagsRow({
         icon={<Leaf size={11} color={colors.green} strokeWidth={2.5} />}
       />
       <MetaPill
-        label={`${pantryMatchPercent}% match`}
+        label={`${pantryMatchPercent}% pantry match`}
         backgroundColor={matchBg}
         textColor={matchColor}
       />
@@ -192,18 +204,20 @@ export default function HomeRecipeRow({
   hideMissingOrder = false,
 }: HomeRecipeRowProps) {
   const { colors: themeColors, isDark } = useTheme();
-  const { isRecipeSaved, toggleSavedRecipe, pantryIngredients } =
-    useAppContext();
+  const { isRecipeSaved, pantryIngredients } = useAppContext();
+  const { trySaveRecipe } = useSaveRecipeGate();
   const { showDialog } = useAppDialog();
   const hasDescription = Boolean(recipe.description?.trim());
   const missing = useMemo(
     () => partitionIngredients(recipe, pantryIngredients).missing,
-    [recipe.id, recipe.ingredients, pantryIngredients],
+    [recipe.id, recipe.mainIngredients, recipe.ingredients, pantryIngredients],
   );
   const hasMissing = missing.length > 0;
   const showOrderUi = hasMissing && !hideMissingOrder;
   const isPick = section === "pick";
   const saved = isRecipeSaved(recipe.id);
+  const visual = getRecipeVisualIdentity(recipe);
+  const recipeHasPhoto = hasRecipeImage(recipe);
   const matchColor =
     pantryMatchPercent >= 70
       ? colors.green
@@ -230,6 +244,12 @@ export default function HomeRecipeRow({
         },
       ]}
     >
+      <RecipeVisualBadge
+        recipe={recipe}
+        variant="hero"
+        style={isPick ? styles.homeHeroFeatured : styles.homeHero}
+      />
+
       <View style={[styles.cardBody, isPick && styles.cardBodyFeatured]}>
         {isPick && (sectionLabel || headerTrailing) ? (
           <View style={styles.pickHeaderRow}>
@@ -259,6 +279,7 @@ export default function HomeRecipeRow({
               style={[
                 styles.title,
                 styles.titleFlex,
+                isPick && styles.titleFeatured,
                 { color: themeColors.charcoal },
               ]}
               numberOfLines={2}
@@ -287,7 +308,7 @@ export default function HomeRecipeRow({
               onPress={(event) => {
                 event.stopPropagation?.();
                 void Haptics.selectionAsync();
-                toggleSavedRecipe(recipe.id);
+                trySaveRecipe(recipe.id);
               }}
               hitSlop={10}
               style={styles.bookmarkBtn}
@@ -301,6 +322,15 @@ export default function HomeRecipeRow({
               />
             </Pressable>
           </View>
+
+          {recipeHasPhoto ? (
+            <Text
+              style={[styles.kitchenLine, { color: themeColors.muted }]}
+              numberOfLines={1}
+            >
+              {visual.kitchenLabel} · {visual.mood}
+            </Text>
+          ) : null}
 
           <MetaTagsRow
             recipe={recipe}
@@ -419,6 +449,12 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: colors.primary,
   },
+  homeHero: {
+    minHeight: 136,
+  },
+  homeHeroFeatured: {
+    minHeight: 128,
+  },
   themeBand: {
     flexDirection: "row",
     alignItems: "center",
@@ -480,10 +516,12 @@ const styles = StyleSheet.create({
   },
   cardBody: {
     padding: spacing.lg,
-    gap: spacing.md,
+    paddingTop: spacing.md,
+    gap: spacing.sm,
   },
   cardBodyFeatured: {
     padding: spacing.md,
+    paddingTop: spacing.sm,
     gap: spacing.sm,
   },
   content: {
@@ -516,6 +554,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: "rgba(232, 93, 44, 0.1)",
   },
+  shuffleButtonOnDark: {
+    width: 36,
+    height: 36,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    justifyContent: "center",
+    backgroundColor: "rgba(0,0,0,0.38)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
   shuffleButtonText: {
     fontFamily: appFonts.bodyBold,
     fontSize: 12,
@@ -545,6 +593,16 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     letterSpacing: -0.2,
+  },
+  titleFeatured: {
+    fontSize: 20,
+    lineHeight: 26,
+  },
+  kitchenLine: {
+    fontFamily: appFonts.bodyBold,
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0.1,
   },
   metaRow: {
     flexDirection: "row",

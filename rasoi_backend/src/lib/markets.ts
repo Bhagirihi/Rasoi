@@ -1,6 +1,9 @@
+import { APP_NAME, RECIPE_LIBRARY_LABEL } from '@/lib/app-download';
+import { TRIAL_DURATION_DAYS } from '@/lib/plan-pricing';
+
 export const MARKET_COOKIE = 'rasoi_market';
 
-export const MARKET_IDS = ['IN', 'US', 'CA', 'AU'] as const;
+export const MARKET_IDS = ['IN', 'US', 'CA', 'AU', 'NZ'] as const;
 export type MarketId = (typeof MARKET_IDS)[number];
 
 export type MarketPartner = {
@@ -41,6 +44,10 @@ export type MarketConfig = {
   plusPricing: string;
   faqs: readonly MarketFaq[];
   showSponsor: boolean;
+  /** Phone placeholder on sponsor application form */
+  sponsorPhonePlaceholder: string;
+  /** Brand name placeholder examples for sponsor form */
+  sponsorBrandExample: string;
   priceCurrency: string;
   schemaMonthlyPrice: string;
 };
@@ -79,12 +86,14 @@ export const MARKET_PATHS = {
   US: '/indian-recipe-app-usa',
   CA: '/indian-recipe-app-canada',
   AU: '/indian-recipe-app-australia',
+  NZ: '/indian-recipe-app-new-zealand',
 } as const;
 
 export const MARKET_SHORT_PATHS = {
   US: '/us',
   CA: '/ca',
   AU: '/au',
+  NZ: '/nz',
 } as const;
 
 const WEB_INTERNATIONAL_FAQ_BASE = (
@@ -129,9 +138,9 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     hreflang: 'en-IN',
     countryName: 'India',
     geoCountryCodes: ['IN'],
-    title: 'Rasoi — Aaj Kya Banaye? | Indian Home Cooking, Pantry Match & Regional Recipes',
+    title: `${APP_NAME} | Indian Home Cooking, Pantry Match & Regional Recipes`,
     description:
-      'Rasoi helps Indian home cooks answer "Aaj kya banaye?" — match recipes to your pantry, browse 1,200+ regional dishes, Veg & Jain filters, and practical guides on rasoiapplication.in.',
+      `Rasoi helps Indian home cooks answer "Aaj kya banaye?" — match recipes to your pantry, browse ${RECIPE_LIBRARY_LABEL} regional dishes, Veg & Jain filters, and practical guides on rasoiapplication.in.`,
     keywords: [
       'Rasoi app',
       'rasoiapplication.in',
@@ -147,8 +156,8 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'South Indian recipe app',
       'what to cook tonight app India',
     ],
-    heroBadge: 'Aaj kya banaye? · Indian home cooking',
-    heroTitle: 'Rasoi: Aaj Kya Banaye?',
+    heroBadge: 'Google Play · Aaj kya banaye? · Indian home cooking',
+    heroTitle: APP_NAME,
     heroSubtitle: 'Decide dinner from your pantry and your region.',
     heroBody:
       'Discover regional dishes, match recipes to what you already have, save favourites, and shop missing ingredients via Blinkit, Zepto, Instamart, Zomato, or Swiggy — built for real Indian kitchens.',
@@ -164,7 +173,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Rasoi Plus unlocks grocery and food delivery checkout. Missing paneer? Open Blinkit. Want delivery instead? Jump to Zomato or Swiggy with affiliate tracking built in.',
     partnersStatus: 'live',
     plusIntro:
-      'Start with a 3-day trial of partner checkout, then subscribe to keep Blinkit, Zepto, Instamart, Zomato, and Swiggy links — and remove ads across the app.',
+      `Start with a ${TRIAL_DURATION_DAYS}-day trial of partner checkout, then subscribe to keep Blinkit, Zepto, Instamart, Zomato, and Swiggy links — and remove ads across the app.`,
     plusFeatures: [
       'No ads on Free, Trial, or Plus journeys',
       'Blinkit, Zepto & Instamart grocery cart deep links',
@@ -174,9 +183,9 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     plusPricing: '₹49/month or ₹499/year (save ~15% vs monthly)',
     faqs: [
       {
-        question: 'What is Rasoi: Aaj Kya Banaye?',
+        question: `What is ${APP_NAME}?`,
         answer:
-          'Rasoi answers the daily question "Aaj kya banaye?" for Indian home cooks — dinner ideas from your pantry, 1,200+ regional recipes, and filters for Veg, Jain, Egg, and Non-Veg.',
+          `Rasoi answers the daily question "Aaj kya banaye?" for Indian home cooks — dinner ideas from your pantry, ${RECIPE_LIBRARY_LABEL} regional recipes, and filters for Veg, Jain, Egg, and Non-Veg.`,
       },
       {
         question: 'How does pantry matching work?',
@@ -204,6 +213,8 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       },
     ],
     showSponsor: true,
+    sponsorPhonePlaceholder: '+91 98765 43210',
+    sponsorBrandExample: 'e.g. Amul, Tata Sampann, MDH',
     priceCurrency: 'INR',
     schemaMonthlyPrice: '49',
   },
@@ -218,7 +229,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     geoCountryCodes: ['US'],
     title: 'Indian Home Cooking USA | Rasoi — Pantry Match & Regional Recipes',
     description:
-      'Rasoi helps Indian home cooks in the USA decide dinner from your pantry. 1,200+ regional recipes, pantry match %, Veg & Jain filters, and US grocery partners rolling out. Indian home cooking for the diaspora.',
+      `Rasoi helps Indian home cooks in the USA decide dinner from your pantry. ${RECIPE_LIBRARY_LABEL} regional recipes, pantry match %, Veg & Jain filters, and US grocery partners rolling out. Indian home cooking for the diaspora.`,
     keywords: [
       'Indian home cooking USA',
       'Indian recipe guide USA',
@@ -238,7 +249,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     heroTitle: 'Indian home cooking for the United States',
     heroSubtitle: 'Cook from your pantry. Regional recipes for the diaspora.',
     heroBody:
-      'Rasoi helps Indian home cooks and the diaspora answer "what\'s for dinner?" Match recipes to ingredients you already have and explore 1,200+ regional dishes — with US grocery partner links rolling out.',
+      `Rasoi helps Indian home cooks and the diaspora answer "what's for dinner?" Match recipes to ingredients you already have and explore ${RECIPE_LIBRARY_LABEL} regional dishes — with US grocery partner links rolling out.`,
     phonePartners: ['Instacart', 'Amazon', 'DoorDash', 'Uber Eats'],
     partners: [
       { name: 'Instacart', note: 'Grocery delivery', color: '#43b02a' },
@@ -262,7 +273,9 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'the United States',
       'Instacart, Amazon, DoorDash, and Uber Eats',
     ),
-    showSponsor: false,
+    showSponsor: true,
+    sponsorPhonePlaceholder: '+1 (415) 555-0100',
+    sponsorBrandExample: "e.g. Rao's, MDH, Goya, Trader Joe's",
     priceCurrency: 'USD',
     schemaMonthlyPrice: '2.99',
   },
@@ -317,7 +330,9 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Canada',
       'Instacart, Amazon.ca, SkipTheDishes, and Uber Eats',
     ),
-    showSponsor: false,
+    showSponsor: true,
+    sponsorPhonePlaceholder: '+1 (416) 555-0100',
+    sponsorBrandExample: "e.g. President's Choice, Patak's, Natrel",
     priceCurrency: 'CAD',
     schemaMonthlyPrice: '3.99',
   },
@@ -373,8 +388,66 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Australia',
       'Woolworths, Coles, DoorDash, and Menulog',
     ),
-    showSponsor: false,
+    showSponsor: true,
+    sponsorPhonePlaceholder: '+61 412 345 678',
+    sponsorBrandExample: "e.g. Patak's, Sharwood's, Woolworths Indian",
     priceCurrency: 'AUD',
+    schemaMonthlyPrice: '4.99',
+  },
+  NZ: {
+    id: 'NZ',
+    label: 'New Zealand',
+    flag: '🇳🇿',
+    path: '/indian-recipe-app-new-zealand',
+    shortPath: '/nz',
+    hreflang: 'en-NZ',
+    countryName: 'New Zealand',
+    geoCountryCodes: ['NZ'],
+    title: 'Indian Home Cooking New Zealand | Rasoi — Veg, Jain & Regional Dishes',
+    description:
+      `Rasoi helps Indian home cooks in New Zealand decide dinner from your pantry. ${RECIPE_LIBRARY_LABEL} regional recipes, pantry match %, Veg & Jain filters, and NZ grocery partners rolling out.`,
+    keywords: [
+      'indian home cooking new zealand',
+      'indian recipes nz',
+      'indian cooking auckland',
+      'indian recipes wellington',
+      'fijian indian recipes nz',
+      'veg indian recipes nz',
+      'pantry indian recipes new zealand',
+      'Rasoi New Zealand',
+    ],
+    heroBadge: 'Indian home cooking · New Zealand',
+    heroTitle: 'Indian home cooking for New Zealand',
+    heroSubtitle: 'Cook from your pantry. Regional recipes for home.',
+    heroBody:
+      'For Kiwi home cooks and the Indian diaspora. Discover regional recipes and see what you can make tonight from ingredients you already have at Pak\'nSave, Countdown, or local spice shops.',
+    phonePartners: ["Pak'nSave", 'Countdown', 'Uber Eats', 'Menulog'],
+    partners: [
+      { name: "Pak'nSave", note: 'Supermarket search', color: '#ffe600' },
+      { name: 'Countdown', note: 'Grocery search', color: '#00843d' },
+      { name: 'Uber Eats', note: 'Food delivery', color: '#06c167' },
+      { name: 'Menulog', note: 'Restaurant delivery', color: '#ff8000' },
+    ],
+    partnersIntro:
+      'Rasoi Plus will open Pak\'nSave, Countdown, and delivery apps with your missing ingredients — one tap from any recipe.',
+    partnersStatus: 'rolling_out',
+    plusIntro:
+      'Subscribe to Rasoi Plus for ad-free browsing and New Zealand grocery & delivery partner links when live.',
+    plusFeatures: [
+      'Ad-free recipe browsing',
+      "Pak'nSave & Countdown grocery search links",
+      'Uber Eats & Menulog delivery links',
+      'Pantry match across 15 cuisines',
+    ],
+    plusPricing: 'Plus plans vary by region — details on your New Zealand Rasoi page.',
+    faqs: WEB_INTERNATIONAL_FAQ_BASE(
+      'New Zealand',
+      "Pak'nSave, Countdown, Uber Eats, and Menulog",
+    ),
+    showSponsor: true,
+    sponsorPhonePlaceholder: '+64 21 123 4567',
+    sponsorBrandExample: "e.g. Patak's, Countdown Indian range",
+    priceCurrency: 'NZD',
     schemaMonthlyPrice: '4.99',
   },
 };

@@ -1,30 +1,18 @@
 # TC-014: Login — send OTP to registered email
-# Env: QA_EMAIL
+# Env: QA_EMAIL. Run after 09-logout in the same Maestro session.
 appId: com.bhagihiri.rasoiapp
 ---
-- launchApp
 - extendedWaitUntil:
     visible:
       id: screen-login
     timeout: 30000
-- runFlow:
-    when:
-      visible:
-        id: login-email-input
-    commands:
-      - tapOn:
-          id: login-email-input
-      - inputText: ${QA_EMAIL}
-- runFlow:
-    when:
-      notVisible:
-        id: login-email-input
-    commands:
-      - tapOn: "you@example.com"
-      - inputText: ${QA_EMAIL}
+- tapOn:
+    id: login-email-input
+- eraseText
+- inputText: ${QA_EMAIL}
 - hideKeyboard
 - tapOn:
-    text: "Send sign-in code"
+    id: login-send-otp
 - extendedWaitUntil:
     visible:
       text: "Check your email"

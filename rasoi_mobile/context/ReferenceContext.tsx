@@ -16,10 +16,12 @@ import {
   type PantrySection,
   type ReferenceData,
 } from '@/services/reference';
+import { resolveEffectivePaymentsEnabled } from '@/utils/appVersion';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
 const DEFAULT_APP_CONFIG = {
   paymentsEnabled: false,
+  paymentsMinAppVersion: null as string | null,
   defaultPantryIngredients: [] as string[],
 };
 
@@ -77,6 +79,7 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
           const prevPantry = current.appConfig?.defaultPantryIngredients ?? [];
           if (
             appConfig.paymentsEnabled === current.appConfig?.paymentsEnabled &&
+            appConfig.paymentsMinAppVersion === current.appConfig?.paymentsMinAppVersion &&
             appConfig.defaultPantryIngredients.length === prevPantry.length &&
             appConfig.defaultPantryIngredients.every((item, index) => item === prevPantry[index])
           ) {
@@ -104,7 +107,10 @@ export function ReferenceProvider({ children }: { children: ReactNode }) {
       regionalCuisines: reference.regionalCuisines,
       pantrySections: reference.pantrySections,
       kitchenStyles: reference.kitchenStyles,
-      paymentsEnabled: reference.appConfig?.paymentsEnabled ?? false,
+      paymentsEnabled: resolveEffectivePaymentsEnabled({
+        paymentsEnabled: reference.appConfig?.paymentsEnabled ?? false,
+        paymentsMinAppVersion: reference.appConfig?.paymentsMinAppVersion,
+      }),
       loading,
       error,
       refreshReference,

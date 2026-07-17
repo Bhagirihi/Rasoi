@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
   getEasOtaAdminStatusAction,
@@ -9,38 +9,41 @@ import {
   rollbackLastEasOtaAction,
 } from '@/app/admin/eas-update-actions';
 import { useToast } from '@/app/admin/_components/Toast';
-import type { EasUpdateSummary } from '@/lib/eas-updates';
+import type { EasOtaAdminStatus, EasUpdateSummary } from '@/lib/eas-updates';
 
-export default function EasUpdatePanel() {
+type EasUpdatePanelProps = {
+  initialStatus: EasOtaAdminStatus;
+};
+
+export default function EasUpdatePanel({ initialStatus }: EasUpdatePanelProps) {
   const router = useRouter();
   const toast = useToast();
-  const [configured, setConfigured] = useState<boolean | null>(null);
-  const [branch, setBranch] = useState('production');
+  const [configured, setConfigured] = useState<boolean | null>(initialStatus.configured);
+  const [branch, setBranch] = useState(initialStatus.branch);
+  const [disabledReason, setDisabledReason] = useState<string | null>(
+    initialStatus.disabledReason ?? null,
+  );
   const [updates, setUpdates] = useState<EasUpdateSummary[]>([]);
   const [loading, setLoading] = useState<'list' | 'rollback' | null>(null);
 
   const refresh = async () => {
     setLoading('list');
     try {
-      const [status, rows] = await Promise.all([
-        getEasOtaAdminStatusAction(),
-        listEasOtaUpdatesAction(),
-      ]);
+      const status: EasOtaAdminStatus = await getEasOtaAdminStatusAction();
+      const rows = status.configured ? await listEasOtaUpdatesAction() : [];
       setConfigured(status.configured);
       setBranch(status.branch);
+      setDisabledReason(status.disabledReason ?? null);
       setUpdates(rows);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Could not load EAS updates');
       setConfigured(false);
+      setDisabledReason('Could not load EAS update status.');
       setUpdates([]);
     } finally {
       setLoading(null);
     }
   };
-
-  useEffect(() => {
-    void refresh();
-  }, []);
 
   const handleRollback = async () => {
     if (
@@ -82,8 +85,7 @@ export default function EasUpdatePanel() {
 
       {configured === false ? (
         <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          EXPO_TOKEN is not set on this backend — rollback is disabled until you add an Expo access token to
-          Vercel env.
+          {disabledReason ?? 'EAS OTA admin is unavailable in this backend runtime.'} Rollback is disabled here.
         </p>
       ) : null}
 

@@ -1,8 +1,10 @@
 import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
+import { getAppConfig } from '@/lib/app-settings';
 import { db } from '@/lib/db';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
+import { getSavedRecipeLimit } from '@/lib/plan-feature-limits';
 import { savedRecipesSchema } from '@/lib/validators';
 import { parseJson, serializeUser } from '@/lib/serializers';
 
@@ -26,6 +28,12 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
     const input = savedRecipesSchema.parse(body);
+
+    const { paymentsEnabled } = await getAppConfig();
+    const limit = getSavedRecipeLimit(user, paymentsEnabled);
+    if (limit !== null && input.recipeIds.length > limit) {
+      return jsonError(`Saved recipe limit is ${limit} on your current plan`, 403);
+    }
 
     const updated = await db.user.update({
       where: { id: user.id },

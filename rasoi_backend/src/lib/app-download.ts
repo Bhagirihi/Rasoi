@@ -1,10 +1,15 @@
+import { TRIAL_DURATION_DAYS } from '@/lib/plan-pricing';
+
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://rasoiapplication.in';
 
 /** Matches Google Play listing title — use in SEO titles and JSON-LD. */
-export const APP_NAME = 'Rasoi: Aaj Kya Banaye?';
+export const APP_NAME = 'Rasoi - Indian Recipe App';
 
 export const APP_SHORT_NAME = 'Rasoi';
+
+/** Marketing-safe recipe library size — keep in sync with Play Store manifest. */
+export const RECIPE_LIBRARY_LABEL = '5,000+' as const;
 
 export const APP_DEVELOPER = 'Karbh It Solutions';
 
@@ -28,8 +33,11 @@ export const ANDROID_APK_URL = `${SITE_URL}/api/download/apk`;
 
 export const APP_DOWNLOAD_PATH = '/download';
 
-/** Keyword-rich public URL for Google Play SEO (indexable landing page). */
-export const PLAY_STORE_SEO_PATH =
+/** Canonical indexable URL for Google Play SEO landing page. */
+export const PLAY_STORE_SEO_PATH = '/play-store';
+
+/** Legacy keyword-rich path — 301 redirects to PLAY_STORE_SEO_PATH. */
+export const PLAY_STORE_LEGACY_SEO_PATH =
   '/google-play/rasoi-aaj-kya-banaye-indian-recipe-app-android';
 
 /** Short redirect — 302 to Play Store listing (share in campaigns). */
@@ -61,6 +69,6 @@ export const APP_FEATURES = [
   },
   {
     title: 'Personalised for you',
-    body: 'Phone login, diet and cuisine preferences, meal reminders, and a 3-day Rasoi Plus trial.',
+    body: `Phone login, diet and cuisine preferences, meal reminders, and a ${TRIAL_DURATION_DAYS}-day Rasoi Plus trial.`,
   },
 ] as const;

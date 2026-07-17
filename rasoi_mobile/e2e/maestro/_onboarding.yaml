@@ -1,4 +1,4 @@
-# Complete onboarding when shown; guests with payments may skip straight to home/trial.
+# Complete onboarding when shown.
 appId: com.bhagihiri.rasoiapp
 ---
 - extendedWaitUntil:
@@ -13,20 +13,36 @@ appId: com.bhagihiri.rasoiapp
     commands:
       - tapOn:
           id: onboarding-diet-veg
-      - tapOn:
-          id: onboarding-diet-continue
-      - extendedWaitUntil:
-          visible:
+      - scrollUntilVisible:
+          element:
             id: onboarding-cuisine-first
-          timeout: 20000
-      - tapOn:
-          id: onboarding-cuisine-first
+          direction: DOWN
+          timeout: 60000
+      - runFlow:
+          when:
+            visible:
+              id: onboarding-cuisine-first
+          commands:
+            - tapOn:
+                id: onboarding-cuisine-first
+      - runFlow:
+          when:
+            notVisible:
+              id: onboarding-cuisine-first
+          commands:
+            - scrollUntilVisible:
+                element:
+                  text: "Gujarati"
+                direction: DOWN
+                timeout: 30000
+            - tapOn:
+                text: "Gujarati"
       - extendedWaitUntil:
           notVisible:
-            text: "Pick at least one style"
+            text: "Pick at least one kitchen style"
           timeout: 15000
       - tapOn:
-          id: onboarding-cuisine-continue
+          id: onboarding-diet-continue
       - extendedWaitUntil:
           visible:
             id: onboarding-skip-notify
@@ -62,19 +78,10 @@ appId: com.bhagihiri.rasoiapp
           id: trial-continue
 - runFlow:
     file: _dismiss-permissions.yaml
-- extendedWaitUntil:
-    visible:
-      id: screen-pantry
-    timeout: 60000
-    optional: true
 - runFlow:
-    when:
-      visible:
-        id: pantry-setup-skip
-    commands:
-      - tapOn:
-          id: pantry-setup-skip
+    file: _skip-pantry-setup.yaml
 - extendedWaitUntil:
     visible:
       id: screen-home
     timeout: 60000
+    optional: true

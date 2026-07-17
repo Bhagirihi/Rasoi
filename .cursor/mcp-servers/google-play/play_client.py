@@ -23,7 +23,7 @@ OAUTH_REDIRECT_PORT = 8766
 
 DEFAULT_PACKAGE = 'com.bhagihiri.rasoiapp'
 DEFAULT_REGIONS_VERSION = '2025/01'
-DEFAULT_DEVELOPER_NAME = 'Bhagihiri Applications'
+DEFAULT_DEVELOPER_NAME = 'Karbh It Solutions'
 DEFAULT_APP_TITLE = 'Rasoi APP'
 
 
@@ -51,6 +51,42 @@ def load_manifest() -> dict[str, Any]:
     if not path.exists():
         raise PlayError(f'Play manifest not found: {path}')
     return json.loads(path.read_text(encoding='utf-8'))
+
+
+def monetization_config(manifest: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Unified monetization block (schema v2) with legacy subscriptions/planTiers fallback."""
+    m = manifest or load_manifest()
+    if 'monetization' in m:
+        return m['monetization']
+    legacy_subs = m.get('subscriptions', {})
+    return {
+        'entitlementId': legacy_subs.get('entitlementId'),
+        'revenueCat': {
+            'offering': legacy_subs.get('revenueCatOffering'),
+            'packages': legacy_subs.get('revenueCatPackages', {}),
+            'playProducts': legacy_subs.get('revenueCatPlayProducts', {}),
+        },
+        'tiers': m.get('planTiers', {}),
+        'products': legacy_subs.get('products', []),
+    }
+
+
+def play_console_tags(manifest: dict[str, Any] | None = None) -> list[str]:
+    m = manifest or load_manifest()
+    play_console = m.get('playConsole') or {}
+    if play_console.get('tags'):
+        return list(play_console['tags'])
+    return list(m.get('playConsoleTags', []))
+
+
+def feature_graphic_relative_path(manifest: dict[str, Any]) -> str | None:
+    assets = manifest.get('assets') or {}
+    feature_graphic = assets.get('featureGraphic')
+    if isinstance(feature_graphic, dict):
+        return str(feature_graphic.get('path', '')).strip() or None
+    if isinstance(feature_graphic, str):
+        return feature_graphic.strip() or None
+    return None
 
 
 def package_name() -> str:
@@ -210,7 +246,7 @@ def setup_guide() -> dict[str, Any]:
             'Run MCP tool play_full_setup after app exists in console.',
         ],
         'storeListing': manifest.get('storeListing', {}),
-        'subscriptions': manifest.get('subscriptions', {}),
+        'monetization': monetization_config(manifest),
         'manifestPath': str(manifest_path()),
     }
 
@@ -375,7 +411,7 @@ def activate_base_plan(product_id: str, base_plan_id: str, pkg: str | None = Non
 def create_rasoi_subscriptions(*, activate: bool = True, pkg: str | None = None) -> dict[str, Any]:
     pkg = (pkg or package_name()).strip()
     manifest = load_manifest()
-    sub_cfg = manifest.get('subscriptions', {})
+    sub_cfg = monetization_config(manifest)
     products = sub_cfg.get('products', [])
 
     results: list[dict[str, Any]] = []
@@ -422,37 +458,296 @@ def create_rasoi_subscriptions(*, activate: bool = True, pkg: str | None = None)
     }
 
 
-def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> dict[str, Any]:
-    """Push title, short + full description from manifest via edits API."""
-    pkg = (pkg or package_name()).strip()
-    manifest = load_manifest()
-    listing = manifest.get('storeListing', {})
-    service = get_service()
-
-    edit = service.edits().insert(packageName=pkg, body={}).execute()
-    edit_id = edit['id']
-
-    body = {
+def _listing_body(listing: dict[str, Any]) -> dict[str, Any]:
+    return {
         'title': listing.get('title', app_title())[:50],
         'shortDescription': listing.get('shortDescription', '')[:80],
         'fullDescription': listing.get('fullDescription', '')[:4000],
     }
 
-    updated = (
-        service.edits()
-        .listings()
-        .update(packageName=pkg, editId=edit_id, language=language, body=body)
-        .execute()
-    )
+
+def _play_api_locale(manifest: dict[str, Any], manifest_locale: str, listing: dict[str, Any]) -> str:
+    """Map manifest locale (e.g. gu-IN) to Play edits API language code (e.g. gu)."""
+    if listing.get('playApiLocale'):
+        return str(listing['playApiLocale']).strip()
+    mapping = (manifest.get('localization') or {}).get('playApiLocaleByManifestLocale') or {}
+    return str(mapping.get(manifest_locale) or manifest_locale).strip()
+
+
+def _skipped_manifest_locales(manifest: dict[str, Any]) -> set[str]:
+    localization = manifest.get('localization') or {}
+    skipped = localization.get('skipApiPush') or []
+    return {str(locale).strip() for locale in skipped if str(locale).strip()}
+
+
+def _listings_from_manifest(manifest: dict[str, Any], language: str) -> list[tuple[str, str, dict[str, Any]]]:
+    """Returns (manifest_locale, play_api_locale, listing_body)."""
+    skipped = _skipped_manifest_locales(manifest)
+    if language == 'all':
+        entries: list[tuple[str, str, dict[str, Any]]] = [
+            ('en-US', 'en-US', manifest.get('storeListing', {})),
+        ]
+        for manifest_locale, loc in (manifest.get('localizedListings') or {}).items():
+            if manifest_locale in skipped:
+                continue
+            api_locale = _play_api_locale(manifest, manifest_locale, loc)
+            entries.append((manifest_locale, api_locale, loc))
+        return entries
+
+    if language == 'en-US':
+        return [('en-US', 'en-US', manifest.get('storeListing', {}))]
+
+    localized = (manifest.get('localizedListings') or {}).get(language)
+    if not localized:
+        raise PlayError(f'No localized listing for "{language}" in manifest.localizedListings')
+    api_locale = _play_api_locale(manifest, language, localized)
+    return [(language, api_locale, localized)]
+
+
+def repo_root() -> Path:
+    return manifest_path().parents[3]
+
+
+def resolve_repo_path(relative: str) -> Path:
+    path = Path(relative.strip())
+    if path.is_absolute():
+        return path
+    return repo_root() / path
+
+
+def push_store_listing(*, pkg: str | None = None, language: str = 'en-US') -> dict[str, Any]:
+    """Push title, short + full description from manifest via edits API."""
+    pkg = (pkg or package_name()).strip()
+    manifest = load_manifest()
+    service = get_service()
+
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+
+    updated_listings: list[dict[str, Any]] = []
+    errors: list[dict[str, str]] = []
+    for manifest_locale, api_locale, listing in _listings_from_manifest(manifest, language):
+        try:
+            updated = (
+                service.edits()
+                .listings()
+                .update(packageName=pkg, editId=edit_id, language=api_locale, body=_listing_body(listing))
+                .execute()
+            )
+            updated_listings.append({
+                'manifestLocale': manifest_locale,
+                'playApiLocale': api_locale,
+                'language': api_locale,
+                'listing': updated,
+            })
+        except Exception as exc:  # noqa: BLE001
+            if language == 'all':
+                errors.append({
+                    'manifestLocale': manifest_locale,
+                    'playApiLocale': api_locale,
+                    'language': api_locale,
+                    'error': str(exc),
+                })
+                continue
+            raise
+
+    if not updated_listings:
+        raise PlayError(f'No listings updated. Errors: {errors}')
 
     committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
 
-    return {
+    result: dict[str, Any] = {
         'package_name': pkg,
-        'language': language,
-        'listing': updated,
+        'languages': [entry.get('manifestLocale', entry['language']) for entry in updated_listings],
+        'listings': updated_listings,
         'commit': committed,
     }
+    if errors:
+        result['errors'] = errors
+    return result
+
+
+def _delete_existing_images(
+    service: Any,
+    *,
+    pkg: str,
+    edit_id: str,
+    language: str,
+    image_type: str,
+) -> int:
+    deleted = 0
+    try:
+        listed = (
+            service.edits()
+            .images()
+            .list(packageName=pkg, editId=edit_id, language=language, imageType=image_type)
+            .execute()
+        )
+    except Exception:  # noqa: BLE001
+        return 0
+    for image in listed.get('images') or []:
+        image_id = image.get('id')
+        if not image_id:
+            continue
+        service.edits().images().delete(
+            packageName=pkg,
+            editId=edit_id,
+            language=language,
+            imageType=image_type,
+            imageId=image_id,
+        ).execute()
+        deleted += 1
+    return deleted
+
+
+def _prepare_feature_graphic(source: Path) -> Path:
+    """Play requires 1024x500 feature graphic; resize to temp file when needed."""
+    from googleapiclient.http import MediaFileUpload  # noqa: F401 — imported by caller
+
+    import subprocess
+
+    target_w, target_h = 1024, 500
+    try:
+        import PIL.Image
+
+        with PIL.Image.open(source) as img:
+            if img.size == (target_w, target_h):
+                return source
+            resized = img.resize((target_w, target_h), PIL.Image.Resampling.LANCZOS)
+            temp = ROOT / 'credentials' / '_feature_graphic_1024x500.png'
+            resized.save(temp, format='PNG')
+            return temp
+    except Exception:  # noqa: BLE001
+        pass
+
+    temp = ROOT / 'credentials' / '_feature_graphic_1024x500.png'
+    subprocess.run(
+        ['sips', '-z', str(target_h), str(target_w), str(source), '--out', str(temp)],
+        check=True,
+        capture_output=True,
+    )
+    return temp
+
+
+def push_store_graphics(
+    *,
+    pkg: str | None = None,
+    language: str | None = None,
+    replace_existing: bool = True,
+) -> dict[str, Any]:
+    """Upload feature graphic + phone screenshots from manifest.assets via Play edits API."""
+    from googleapiclient.http import MediaFileUpload
+
+    pkg = (pkg or package_name()).strip()
+    manifest = load_manifest()
+    assets = manifest.get('assets') or {}
+    lang = (language or manifest.get('application', {}).get('defaultLanguage') or 'en-US').strip()
+
+    feature_rel = feature_graphic_relative_path(manifest)
+    screenshots_rel = assets.get('phoneScreenshots') or []
+    if not feature_rel and not screenshots_rel:
+        raise PlayError('manifest.assets.featureGraphic or phoneScreenshots required')
+
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+
+    uploaded: list[dict[str, Any]] = []
+    deleted: dict[str, int] = {}
+
+    if replace_existing:
+        deleted['featureGraphic'] = _delete_existing_images(
+            service, pkg=pkg, edit_id=edit_id, language=lang, image_type='featureGraphic',
+        )
+        deleted['phoneScreenshots'] = _delete_existing_images(
+            service, pkg=pkg, edit_id=edit_id, language=lang, image_type='phoneScreenshots',
+        )
+
+    if feature_rel:
+        feature_path = resolve_repo_path(str(feature_rel))
+        if not feature_path.exists():
+            raise PlayError(f'Feature graphic not found: {feature_path}')
+        upload_path = _prepare_feature_graphic(feature_path)
+        media = MediaFileUpload(str(upload_path), mimetype='image/png', resumable=True)
+        result = (
+            service.edits()
+            .images()
+            .upload(
+                packageName=pkg,
+                editId=edit_id,
+                language=lang,
+                imageType='featureGraphic',
+                media_body=media,
+            )
+            .execute()
+        )
+        uploaded.append({'type': 'featureGraphic', 'path': str(feature_path), 'result': result})
+
+    for rel in screenshots_rel:
+        shot_path = resolve_repo_path(str(rel))
+        if not shot_path.exists():
+            raise PlayError(f'Screenshot not found: {shot_path}')
+        media = MediaFileUpload(str(shot_path), mimetype='image/png', resumable=True)
+        result = (
+            service.edits()
+            .images()
+            .upload(
+                packageName=pkg,
+                editId=edit_id,
+                language=lang,
+                imageType='phoneScreenshots',
+                media_body=media,
+            )
+            .execute()
+        )
+        uploaded.append({'type': 'phoneScreenshots', 'path': str(shot_path), 'result': result})
+
+    committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
+    return {
+        'package_name': pkg,
+        'language': lang,
+        'deleted': deleted,
+        'uploaded_count': len(uploaded),
+        'uploaded': uploaded,
+        'commit': committed,
+    }
+
+
+def push_aso_bundle(*, pkg: str | None = None, include_graphics: bool = True) -> dict[str, Any]:
+    """Push all store listings (skip unsupported locales) + optional graphics."""
+    pkg = (pkg or package_name()).strip()
+    steps: dict[str, Any] = {'package_name': pkg}
+
+    steps['verify'] = verify_app(pkg)
+    if not steps['verify'].get('ok'):
+        steps['status'] = 'blocked'
+        return steps
+
+    try:
+        steps['listing'] = push_store_listing(pkg=pkg, language='all')
+    except Exception as exc:  # noqa: BLE001
+        steps['listing'] = {'error': str(exc)}
+
+    if include_graphics:
+        try:
+            steps['graphics'] = push_store_graphics(pkg=pkg)
+        except Exception as exc:  # noqa: BLE001
+            steps['graphics'] = {'error': str(exc)}
+
+    manifest = load_manifest()
+    steps['play_console_tags'] = {
+        'tags': play_console_tags(manifest),
+        'tagsApiSupported': (manifest.get('playConsole') or {}).get(
+            'tagsApiSupported',
+            False,
+        ),
+        'requiresManualConsoleEnable': (manifest.get('localization') or {}).get(
+            'requiresManualConsoleEnable',
+            (manifest.get('localization') or {}).get('skipApiPush', []),
+        ),
+    }
+    steps['status'] = 'complete'
+    return steps
 
 
 def full_rasoi_setup(*, pkg: str | None = None, activate_subscriptions: bool = True) -> dict[str, Any]:
@@ -470,12 +765,12 @@ def full_rasoi_setup(*, pkg: str | None = None, activate_subscriptions: bool = T
     if not verify.get('ok'):
         steps['status'] = 'blocked'
         steps['message'] = (
-            'App not reachable. Create "Rasoi APP" in Play Console under Bhagihiri Applications first.'
+            'App not reachable. Create "Rasoi APP" in Play Console under Karbh It Solutions first.'
         )
         return steps
 
     try:
-        steps['listing'] = push_store_listing(pkg=pkg)
+        steps['listing'] = push_store_listing(pkg=pkg, language='all')
     except Exception as exc:  # noqa: BLE001
         steps['listing'] = {'error': str(exc)}
 
@@ -486,7 +781,8 @@ def full_rasoi_setup(*, pkg: str | None = None, activate_subscriptions: bool = T
 
     steps['status'] = 'complete'
     steps['manifest'] = str(manifest_path())
-    steps['revenuecat'] = manifest.get('subscriptions', {}).get('revenueCatPackages')
+    revenue_cat = monetization_config(manifest).get('revenueCat', {})
+    steps['revenuecat'] = revenue_cat.get('packages')
     return steps
 
 
@@ -500,6 +796,245 @@ def convert_region_prices(price_inr: float, pkg: str | None = None) -> dict[str,
             body={'price': money('INR', price_inr)},
         )
         .execute()
+    )
+
+
+def load_release_notes(version_name: str | None = None) -> list[dict[str, str]]:
+    """Load Play release notes from store/play-console/release-notes-{version}.json."""
+    manifest = load_manifest()
+    vn = (version_name or manifest.get('application', {}).get('versionName') or '').strip()
+    notes_dir = manifest_path().parent
+    candidates = [notes_dir / f'release-notes-{vn}.json'] if vn else []
+    candidates.append(notes_dir / 'release-notes-1.0.10.json')
+    path = next((p for p in candidates if p.exists()), None)
+    if path is None:
+        raise PlayError(f'Release notes JSON not found for version "{vn}" under {notes_dir}')
+    data = json.loads(path.read_text(encoding='utf-8'))
+    notes: list[dict[str, str]] = []
+    for key, text in data.items():
+        if key in {'versionName', 'versionCode'} or not isinstance(text, str):
+            continue
+        notes.append({'language': key, 'text': text})
+    if not notes:
+        raise PlayError(f'No localized release notes in {path}')
+    return notes
+
+
+TRACK_ALIASES = {
+    'internal': 'internal',
+    'closed': 'alpha',
+    'alpha': 'alpha',
+    'open': 'beta',
+    'beta': 'beta',
+    'openTesting': 'beta',
+    'open_testing': 'beta',
+    'production': 'production',
+    'prod': 'production',
+}
+
+
+def normalize_track(track: str) -> str:
+    key = track.strip()
+    resolved = TRACK_ALIASES.get(key) or TRACK_ALIASES.get(key.lower())
+    if not resolved:
+        raise PlayError(
+            f'Unknown track "{track}". Use internal, alpha (closed), beta (open), or production.',
+        )
+    return resolved
+
+
+def get_track_releases(*, pkg: str | None = None, tracks: list[str] | None = None) -> dict[str, Any]:
+    """Read current releases on Play tracks (read-only edit, not committed)."""
+    pkg = (pkg or package_name()).strip()
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+    track_names = [normalize_track(t) for t in (tracks or ['internal', 'alpha', 'beta', 'production'])]
+    result: dict[str, Any] = {'package_name': pkg, 'tracks': {}}
+    for track in track_names:
+        try:
+            data = service.edits().tracks().get(packageName=pkg, editId=edit_id, track=track).execute()
+            result['tracks'][track] = data
+        except Exception as exc:  # noqa: BLE001
+            result['tracks'][track] = {'error': str(exc)}
+    return result
+
+
+def rollout_release(
+    *,
+    track: str,
+    version_code: int,
+    release_notes: list[dict[str, str]] | None = None,
+    status: str = 'completed',
+    name: str = '',
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    """Roll out an uploaded app bundle (by versionCode) to a Play track."""
+    pkg = (pkg or package_name()).strip()
+    normalized = normalize_track(track)
+    if status not in {'completed', 'draft', 'halted', 'inProgress'}:
+        raise PlayError(f'Invalid release status "{status}".')
+
+    release: dict[str, Any] = {
+        'versionCodes': [str(version_code)],
+        'status': status,
+    }
+    if name.strip():
+        release['name'] = name.strip()
+    if release_notes:
+        release['releaseNotes'] = [
+            {'language': note['language'], 'text': note['text'][:500]}
+            for note in release_notes
+            if note.get('language') and note.get('text')
+        ]
+
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+    updated = (
+        service.edits()
+        .tracks()
+        .update(
+            packageName=pkg,
+            editId=edit_id,
+            track=normalized,
+            body={'track': normalized, 'releases': [release]},
+        )
+        .execute()
+    )
+    committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
+    return {
+        'package_name': pkg,
+        'track': normalized,
+        'version_code': version_code,
+        'status': status,
+        'release': updated,
+        'commit': committed,
+    }
+
+
+def rollout_rasoi_open_testing(
+    *,
+    version_code: int | None = None,
+    version_name: str | None = None,
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    manifest = load_manifest()
+    app = manifest.get('application', {})
+    vn = (version_name or app.get('versionName') or '1.0.10').strip()
+    vc = version_code if version_code is not None else int(app.get('versionCode', 11))
+    notes = load_release_notes(vn)
+    return rollout_release(
+        track='beta',
+        version_code=vc,
+        release_notes=notes,
+        status='completed',
+        name=vn,
+        pkg=pkg,
+    )
+
+
+def upload_and_rollout_open_testing(
+    *,
+    aab_path: str,
+    version_name: str | None = None,
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    """Upload an AAB and roll it out to Open testing (beta) with all release-note locales."""
+    from googleapiclient.http import MediaFileUpload
+
+    path = Path(aab_path).expanduser().resolve()
+    if not path.exists():
+        raise PlayError(f'AAB not found: {path}')
+
+    pkg = (pkg or package_name()).strip()
+    manifest = load_manifest()
+    app = manifest.get('application', {})
+    vn = (version_name or app.get('versionName') or '1.0.10').strip()
+    notes = load_release_notes(vn)
+
+    service = get_service()
+    edit = service.edits().insert(packageName=pkg, body={}).execute()
+    edit_id = edit['id']
+
+    media = MediaFileUpload(str(path), mimetype='application/octet-stream', resumable=True)
+    bundle = (
+        service.edits()
+        .bundles()
+        .upload(packageName=pkg, editId=edit_id, media_body=media)
+        .execute()
+    )
+    version_code = int(bundle['versionCode'])
+
+    release: dict[str, Any] = {
+        'versionCodes': [str(version_code)],
+        'status': 'completed',
+        'name': vn,
+        'releaseNotes': [
+            {'language': note['language'], 'text': note['text'][:500]}
+            for note in notes
+            if note.get('language') and note.get('text')
+        ],
+    }
+    updated = (
+        service.edits()
+        .tracks()
+        .update(
+            packageName=pkg,
+            editId=edit_id,
+            track='beta',
+            body={'track': 'beta', 'releases': [release]},
+        )
+        .execute()
+    )
+    committed = service.edits().commit(packageName=pkg, editId=edit_id).execute()
+    return {
+        'package_name': pkg,
+        'track': 'beta',
+        'aab_path': str(path),
+        'version_code': version_code,
+        'version_name': vn,
+        'release_note_languages': [note['language'] for note in notes],
+        'release': updated,
+        'commit': committed,
+    }
+
+
+def rollout_rasoi_production(
+    *,
+    version_code: int = 9,
+    version_name: str = '1.0.8',
+    pkg: str | None = None,
+) -> dict[str, Any]:
+    notes = [
+        {
+            'language': 'en-US',
+            'text': (
+                '• Opens faster — no Terms screen when you launch the app\n'
+                '• Smoother login and permission setup\n'
+                '• Easier to turn on meal reminders\n'
+                '• More stable — better recovery if something goes wrong\n'
+                '• Bug fixes in onboarding and settings'
+            ),
+        },
+        {
+            'language': 'hi-IN',
+            'text': (
+                '• ऐप तेज़ खुलता है — ओपन पर Terms स्क्रीन नहीं\n'
+                '• लॉगिन और अनुमति सेटअप आसान\n'
+                '• भोजन रिमाइंडर चालू करना आसान\n'
+                '• ऐप ज़्यादा स्थिर — गड़बड़ी पर बेहतर रिकवरी\n'
+                '• ऑनबोर्डिंग और सेटिंग्स में सुधार'
+            ),
+        },
+    ]
+    return rollout_release(
+        track='production',
+        version_code=version_code,
+        release_notes=notes,
+        status='completed',
+        name=version_name,
+        pkg=pkg,
     )
 
 

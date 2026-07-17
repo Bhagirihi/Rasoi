@@ -1,29 +1,61 @@
-import { Check, ShoppingBag, UtensilsCrossed, Zap } from 'lucide-react-native';
+import { Bookmark, CalendarDays, Check, Download, ShoppingBag, Zap } from 'lucide-react-native';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { PAYWALL_BENEFIT_HIGHLIGHTS } from '@/constants/plans';
 import { colors, radius, spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
-const BENEFITS = [
-  { icon: Zap, label: 'No ads', color: colors.primary },
-  { icon: ShoppingBag, label: 'Grocery partners', color: colors.green },
-  { icon: UtensilsCrossed, label: 'Food delivery', color: colors.saffron },
-] as const;
+const ICONS = {
+  calendar: CalendarDays,
+  bookmark: Bookmark,
+  offline: Download,
+  partners: ShoppingBag,
+  zap: Zap,
+} as const;
 
-export default function PaywallBenefitsStrip() {
+const ICON_COLORS = {
+  calendar: colors.primary,
+  bookmark: colors.saffron,
+  offline: colors.green,
+  partners: colors.green,
+  zap: colors.primary,
+} as const;
+
+export default function PaywallBenefitsStrip({ forceDark = false }: { forceDark?: boolean }) {
+  const { colors: themeColors, isDark } = useTheme();
+  const dark = forceDark || isDark;
+  const text = dark ? colors.dark.text : themeColors.charcoal;
+  const muted = dark ? colors.dark.textMuted : themeColors.muted;
+  const surface = dark ? colors.dark.card : themeColors.white;
+  const border = dark ? 'rgba(245, 240, 232, 0.12)' : themeColors.border;
+
   return (
-    <View style={styles.wrap}>
-      {BENEFITS.map(({ icon: Icon, label, color }, index) => (
-        <View
-          key={label}
-          style={[styles.row, index < BENEFITS.length - 1 && styles.rowBorder]}
-        >
-          <View style={[styles.icon, { backgroundColor: `${color}18` }]}>
-            <Icon size={16} color={color} />
+    <View style={[styles.wrap, { backgroundColor: surface, borderColor: border }]}>
+      {PAYWALL_BENEFIT_HIGHLIGHTS.map(({ icon, label, sub }, index) => {
+        const Icon = ICONS[icon];
+        const color = ICON_COLORS[icon];
+        return (
+          <View
+            key={label}
+            style={[
+              styles.row,
+              index < PAYWALL_BENEFIT_HIGHLIGHTS.length - 1 && {
+                borderBottomWidth: 1,
+                borderBottomColor: border,
+              },
+            ]}
+          >
+            <View style={[styles.icon, { backgroundColor: `${color}18` }]}>
+              <Icon size={16} color={color} />
+            </View>
+            <View style={styles.textWrap}>
+              <Text style={[styles.label, { color: text }]}>{label}</Text>
+              <Text style={[styles.sub, { color: muted }]}>{sub}</Text>
+            </View>
+            <Check size={16} color={colors.green} strokeWidth={3} />
           </View>
-          <Text style={styles.label}>{label}</Text>
-          <Check size={16} color={colors.green} strokeWidth={3} />
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 }
@@ -31,9 +63,7 @@ export default function PaywallBenefitsStrip() {
 const styles = StyleSheet.create({
   wrap: {
     borderRadius: radius.md,
-    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: colors.border,
     overflow: 'hidden',
   },
   row: {
@@ -43,10 +73,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
   },
-  rowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-  },
   icon: {
     width: 32,
     height: 32,
@@ -54,10 +80,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: {
+  textWrap: {
     flex: 1,
+    gap: 2,
+  },
+  label: {
     fontSize: 15,
     fontWeight: '700',
-    color: colors.charcoal,
+  },
+  sub: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '500',
   },
 });

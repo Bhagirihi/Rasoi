@@ -13,6 +13,7 @@ import {
 
 const dietType = z.enum(['Veg', 'Egg', 'Non-Veg']);
 const dietChoice = z.enum(['Veg', 'Egg', 'Non-Veg', 'Jain']);
+const genderChoice = z.enum(['Male', 'Female', 'Other']);
 const difficulty = z.enum(['Easy', 'Medium', 'Hard']);
 const recipeTag = z.enum(['under20', 'leftover', 'kids', 'quick', 'festive']);
 
@@ -60,6 +61,7 @@ export const onboardingSchema = z.object({
 
 export const supabaseSyncSchema = z.object({
   name: z.string().trim().min(2).max(80),
+  gender: genderChoice.optional(),
   phone: z
     .string()
     .optional()
@@ -80,6 +82,8 @@ export const supabaseSyncSchema = z.object({
   linkGuestUserId: z.string().trim().min(1).optional(),
   /** Apply onboarding in the same request to avoid a second round trip after OTP verify. */
   onboarding: onboardingSchema.optional(),
+  /** Set after Firebase SMS OTP verification during signup. */
+  phoneVerified: z.literal(true).optional(),
 });
 
 export const kitchenPreferencesSchema = z.object({
@@ -109,11 +113,19 @@ export const recipeCreateSchema = z.object({
   kitchenStyleIds: z.array(z.string().trim().min(2).max(40)).optional(),
   dietType: dietType,
   difficulty: difficulty,
-  description: z.string().min(10).max(2000),
+  /** Optional preview-only; not stored (column dropped — API synthesizes on read). */
+  description: z.string().max(2000).optional(),
+  descriptionHi: z.string().max(2000).optional(),
   imageUrl: z.string().url(),
+  /** Accepted for API compat; not stored (column dropped — serialized as []). */
   tags: z.array(recipeTag).default([]),
   ingredients: z.array(ingredient).min(1),
+  /** Comma-separated or string[] — stored as rasoi.Recipe.main_ingredients. */
+  mainIngredients: z
+    .union([z.array(z.string().trim().min(1).max(120)).max(40), z.string().max(2000)])
+    .optional(),
   steps: z.array(z.string().min(1)).optional(),
+  stepsHi: z.array(z.string().min(1)).optional(),
   published: z.boolean().default(true),
 });
 
@@ -309,6 +321,21 @@ export const feedbackSchema = z.object({
     .transform((value: string | undefined) => (value ? value : undefined)),
   appVersion: z.string().trim().max(32).optional(),
   platform: z.enum(['ios', 'android', 'web']).optional(),
+});
+
+export const deleteAccountReason = z.enum([
+  'not_using',
+  'missing_recipes',
+  'too_many_notifications',
+  'technical_issues',
+  'privacy_concerns',
+  'other',
+]);
+
+export const deleteAccountSchema = z.object({
+  confirmEmail: allowedEmail.optional(),
+  reason: deleteAccountReason,
+  reasonDetail: z.string().trim().max(500).optional(),
 });
 
 export const sponsorApplicationSchema = z.object({

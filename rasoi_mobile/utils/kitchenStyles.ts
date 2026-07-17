@@ -7,6 +7,16 @@ export type KitchenStyle = {
   heroImage: string;
 };
 
+const DIET_STYLE_IDS = new Set(['jain', 'vegetarian']);
+
+export function isSelectableKitchenStyle(style: KitchenStyle): boolean {
+  return !DIET_STYLE_IDS.has(style.id.toLowerCase());
+}
+
+export function getSelectableKitchenStyles(styles: KitchenStyle[]): KitchenStyle[] {
+  return styles.filter(isSelectableKitchenStyle);
+}
+
 export function getKitchenStyleLabel(id: string, styles: KitchenStyle[]): string {
   return styles.find((style) => style.id === id)?.label ?? id;
 }

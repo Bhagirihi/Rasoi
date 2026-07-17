@@ -20,8 +20,8 @@ export function scrollFieldIntoView(
         keyboardScreenY != null && keyboardScreenY > 0
           ? keyboardScreenY - extraOffset
           : Dimensions.get('window').height -
-            (keyboardHeight > 0 ? keyboardHeight : 300) -
-            extraOffset;
+          (keyboardHeight > 0 ? keyboardHeight : 300) -
+          extraOffset;
       const fieldBottom = y + height;
 
       if (fieldBottom > visibleBottom) {

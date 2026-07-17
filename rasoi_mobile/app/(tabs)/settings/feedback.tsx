@@ -31,7 +31,7 @@ type FieldError = 'category' | 'message' | 'email' | 'general' | null;
 export default function FeedbackScreen() {
   const router = useRouter();
   const tabBarHeight = useBottomTabBarHeight();
-  const { colors: themeColors } = useTheme();
+  const { colors: themeColors, screenBackground } = useTheme();
   const { userName, userEmail } = useAppContext();
 
   const [category, setCategory] = useState<FeedbackCategory | null>(null);
@@ -94,7 +94,7 @@ export default function FeedbackScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: themeColors.cream }]} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: screenBackground }]} edges={['top']}>
       <AppSavingOverlay visible={isSubmitting} message="Sending feedback…" />
       <SettingsSubHeader title="Send feedback" onBack={() => router.back()} />
 

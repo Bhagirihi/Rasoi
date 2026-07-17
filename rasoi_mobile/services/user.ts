@@ -1,4 +1,5 @@
 import type { PlanTier } from '@/constants/plans';
+import type { DeleteAccountReason } from '@/constants/deleteAccount';
 import type { CuisineId, DietChoice } from '@/constants/theme';
 import type { DietType } from '@/data/mockRecipes';
 import type { UserProfileResponse } from '@/types/api';
@@ -325,10 +326,16 @@ export async function exportUserData(): Promise<unknown> {
   return authApiFetch('/api/users/me/export');
 }
 
-export async function deleteUserAccount(confirmEmail?: string): Promise<void> {
+export type DeleteAccountPayload = {
+  confirmEmail?: string;
+  reason: DeleteAccountReason;
+  reasonDetail?: string;
+};
+
+export async function deleteUserAccount(payload: DeleteAccountPayload): Promise<void> {
   await authApiFetch('/api/users/me', {
     method: 'DELETE',
-    body: JSON.stringify(confirmEmail ? { confirmEmail } : {}),
+    body: JSON.stringify(payload),
   });
 }
 

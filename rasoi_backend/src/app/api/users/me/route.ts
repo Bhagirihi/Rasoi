@@ -1,11 +1,12 @@
 import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
+import { formatDeleteAccountFeedbackMessage } from '@/lib/delete-account-reasons';
 import { validateFavoriteCuisines } from '@/lib/kitchen-styles';
 import { db } from '@/lib/db';
 import { parseKitchenPreferences } from '@/lib/kitchen-preferences';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
-import { profileUpdateSchema } from '@/lib/validators';
+import { deleteAccountSchema, profileUpdateSchema } from '@/lib/validators';
 import { deleteUserAccount } from '@/lib/user-account';
 import { serializeUser } from '@/lib/serializers';
 
@@ -71,16 +72,30 @@ export async function DELETE(request: NextRequest) {
     const user = await getUserFromRequest(request);
     if (!user) return jsonError('Unauthorized', 401);
 
+    const body = await request.json().catch(() => ({}));
+    const input = deleteAccountSchema.parse(body);
+
+    if (input.reason === 'other' && !input.reasonDetail?.trim()) {
+      return jsonError('Please tell us more when you choose Other', 400);
+    }
+
+    await db.userFeedback.create({
+      data: {
+        userId: user.id,
+        category: 'other',
+        message: formatDeleteAccountFeedbackMessage(input.reason, input.reasonDetail),
+        name: user.name,
+        email: user.email,
+        status: 'pending',
+      },
+    });
+
     if (user.isGuest) {
       await deleteUserAccount(user.id);
       return jsonOk({ deleted: true });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const confirmEmail =
-      typeof body === 'object' && body && 'confirmEmail' in body
-        ? String((body as { confirmEmail?: string }).confirmEmail ?? '').trim().toLowerCase()
-        : '';
+    const confirmEmail = input.confirmEmail?.trim().toLowerCase() ?? '';
 
     if (!user.email || confirmEmail !== user.email.toLowerCase()) {
       return jsonError('Confirm your email address to delete this account', 400);

@@ -1,7 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
+import * as Haptics from 'expo-haptics';
 import { ChevronRight, LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Linking,
   Pressable,
@@ -22,6 +24,8 @@ import { DAILY_REMINDER_TIME_LABEL } from '@/utils/notifications';
 
 const LEGAL_BASE_URL = SITE_BASE_URL;
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.3';
+const DEV_MENU_TAP_TARGET = 7;
+const DEV_MENU_TAP_WINDOW_MS = 4000;
 
 function openLegalUrl(path: '/privacy' | '/terms') {
   void Linking.openURL(`${LEGAL_BASE_URL}${path}`);
@@ -83,6 +87,8 @@ export function KitchenPrefsCard({
   cuisineLabels,
   notificationsEnabled,
   onEdit,
+  onEditDiet,
+  onEditKitchen,
   onNotificationsChange,
 }: {
   dietLabel: string;
@@ -93,9 +99,13 @@ export function KitchenPrefsCard({
   cuisineLabels: string[];
   notificationsEnabled: boolean;
   onEdit: () => void;
+  onEditDiet?: () => void;
+  onEditKitchen?: () => void;
   onNotificationsChange: (next: boolean) => void;
 }) {
   const { colors: themeColors } = useTheme();
+  const openDiet = onEditDiet ?? onEdit;
+  const openKitchen = onEditKitchen ?? onEdit;
 
   return (
     <View
@@ -104,7 +114,7 @@ export function KitchenPrefsCard({
         { backgroundColor: themeColors.white, borderColor: themeColors.border },
       ]}
     >
-      <Pressable onPress={onEdit} style={({ pressed }) => [pressed && styles.rowPressed]}>
+      <Pressable onPress={openDiet} style={({ pressed }) => [pressed && styles.rowPressed]}>
         <View style={styles.kitchenTop}>
           <View style={[styles.kitchenDietBadge, { backgroundColor: dietBg }]}>
             <DietIcon size={16} color={dietTint} />
@@ -119,8 +129,10 @@ export function KitchenPrefsCard({
             <Text style={[styles.kitchenRegionText, { color: themeColors.charcoal }]}>{region}</Text>
           </View>
         </View>
+      </Pressable>
 
-        <Text style={[styles.kitchenCuisineTitle, { color: themeColors.muted }]}>Favourite cuisines</Text>
+      <Pressable onPress={openKitchen} style={({ pressed }) => [pressed && styles.rowPressed]}>
+        <Text style={[styles.kitchenCuisineTitle, { color: themeColors.muted }]}>Kitchen styles</Text>
         <View style={styles.kitchenChipWrap}>
           {cuisineLabels.length > 0 ? (
             cuisineLabels.map((label) => (
@@ -129,7 +141,7 @@ export function KitchenPrefsCard({
               </View>
             ))
           ) : (
-            <Text style={[styles.kitchenEmpty, { color: themeColors.muted }]}>Tap to pick cuisines</Text>
+            <Text style={[styles.kitchenEmpty, { color: themeColors.muted }]}>Tap to pick kitchen styles</Text>
           )}
         </View>
       </Pressable>
@@ -194,9 +206,9 @@ export function AccountActionsCard({
             style={styles.accountSignInGradient}
           >
             <View style={styles.accountSignInText}>
-              <Text style={styles.accountSignInTitle}>Sign in to Rasoi</Text>
+              <Text style={styles.accountSignInTitle}>Sign up to Rasoi</Text>
               <Text style={styles.accountSignInSub}>
-                Save recipes with your name & mobile
+                Create a free account with your name & mobile
               </Text>
             </View>
             <View style={styles.accountSignInArrow}>
@@ -399,7 +411,7 @@ export function SettingsProfileHero({
           </View>
           <View style={[styles.heroPill, isGuest && styles.heroPillGuest]}>
             <Text style={[styles.heroPillText, isGuest && styles.heroPillTextGuest]}>
-              {isGuest ? 'Sign in' : 'Edit'}
+              {isGuest ? 'Sign up' : 'Edit'}
             </Text>
           </View>
         </View>
@@ -465,8 +477,39 @@ function openContactEmail() {
   void Linking.openURL(CONTACT_MAILTO);
 }
 
-export function SettingsFooter() {
+export function SettingsFooter({ onTestCrash }: { onTestCrash?: () => void }) {
   const { colors: themeColors } = useTheme();
+  const [devMenuVisible, setDevMenuVisible] = useState(false);
+  const versionTapCountRef = useRef(0);
+  const versionTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetVersionTapCount = useCallback(() => {
+    versionTapCountRef.current = 0;
+    if (versionTapTimerRef.current) {
+      clearTimeout(versionTapTimerRef.current);
+      versionTapTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => resetVersionTapCount, [resetVersionTapCount]);
+
+  const handleVersionTap = useCallback(() => {
+    if (devMenuVisible) return;
+
+    versionTapCountRef.current += 1;
+    if (versionTapTimerRef.current) {
+      clearTimeout(versionTapTimerRef.current);
+    }
+    versionTapTimerRef.current = setTimeout(() => {
+      resetVersionTapCount();
+    }, DEV_MENU_TAP_WINDOW_MS);
+
+    if (versionTapCountRef.current >= DEV_MENU_TAP_TARGET) {
+      resetVersionTapCount();
+      setDevMenuVisible(true);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  }, [devMenuVisible, resetVersionTapCount]);
 
   return (
     <View style={styles.footerWrap}>
@@ -483,9 +526,32 @@ export function SettingsFooter() {
           <Text style={[styles.footerLink, { color: themeColors.primary }]}>{CONTACT_EMAIL}</Text>
         </Pressable>
       </View>
-      <Text style={[styles.footer, { color: themeColors.muted }]}>
-        Rasoi v{APP_VERSION} · Made for Indian home cooks
-      </Text>
+      <Pressable onPress={handleVersionTap} hitSlop={12}>
+        <Text style={[styles.footer, { color: themeColors.muted }]}>
+          Rasoi v{APP_VERSION} · Made for Indian home cooks
+        </Text>
+      </Pressable>
+
+      {devMenuVisible && onTestCrash ? (
+        <View style={styles.devMenu}>
+          <Text style={[styles.devMenuLabel, { color: themeColors.muted }]}>Developer</Text>
+          <Pressable
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onTestCrash();
+            }}
+            style={[styles.devMenuButton, { borderColor: themeColors.border }]}
+            testID={testIds.settingsTestCrash}
+          >
+            <Text style={[styles.devMenuButtonText, { color: themeColors.danger }]}>
+              Test crash screen
+            </Text>
+            <Text style={[styles.devMenuButtonSub, { color: themeColors.muted }]}>
+              Triggers the error fallback UI and Sentry report
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -911,5 +977,36 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 11,
     color: colors.muted,
+  },
+  devMenu: {
+    marginTop: spacing.lg,
+    width: '100%',
+    gap: spacing.sm,
+  },
+  devMenuLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  devMenuButton: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    backgroundColor: colors.white,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    ...shadows.card,
+  },
+  devMenuButtonText: {
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  devMenuButtonSub: {
+    marginTop: spacing.xs,
+    fontSize: 12,
+    lineHeight: 17,
+    textAlign: 'center',
   },
 });

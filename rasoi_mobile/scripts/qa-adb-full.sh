@@ -8,7 +8,7 @@ QA_DIR="${ROOT}/.qa/adb-full-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$QA_DIR"
 
 export QA_NAME="${QA_NAME:-QA Tester}"
-export QA_PHONE="${QA_PHONE:-9820174653}"
+export QA_PHONE="${QA_PHONE:-9374766500}"
 export QA_EMAIL="${QA_EMAIL:-dvesp1901+$(date +%s)@gmail.com}"
 
 PASS=0
@@ -137,8 +137,28 @@ if wait_text "Create your account" 20; then
   adb shell input keyevent 4
   sleep 0.5
   adb shell uiautomator dump /sdcard/uidump.xml >/dev/null 2>&1
-  read -r x y < <(tap_text "Send verification code" || echo "540 1600")
+  read -r x y < <(tap_text "Continue" || echo "540 1600")
   tap_center "$x" "$y"
+  sleep 1
+  if wait_text "What's your diet" 15 || wait_text "Veg" 15; then
+    tap_center 540 900
+    sleep 0.5
+    adb shell uiautomator dump /sdcard/uidump.xml >/dev/null 2>&1
+    read -r x y < <(tap_text "Continue" || echo "540 1800")
+    tap_center "$x" "$y"
+    sleep 1
+  fi
+  if wait_text "kitchen styles" 15 || wait_text "Kitchen styles" 15; then
+    tap_center 540 700
+    sleep 0.5
+    adb shell uiautomator dump /sdcard/uidump.xml >/dev/null 2>&1
+    read -r x y < <(tap_text "Send verification code" || echo "540 1800")
+    tap_center "$x" "$y"
+  else
+    adb shell uiautomator dump /sdcard/uidump.xml >/dev/null 2>&1
+    read -r x y < <(tap_text "Send verification code" || echo "540 1600")
+    tap_center "$x" "$y"
+  fi
   sleep 2
   if wait_text "Terms & Privacy" 10; then
     adb shell uiautomator dump /sdcard/uidump.xml >/dev/null 2>&1

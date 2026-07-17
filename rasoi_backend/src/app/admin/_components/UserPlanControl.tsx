@@ -161,7 +161,7 @@ export default function UserPlanControl({
               onClick={() => void runPlanAction('trial')}
               className="rounded-full border border-[#d4a574]/60 bg-[#f8e8dc] px-4 py-2 text-xs font-semibold uppercase tracking-wide text-[#9a4d28] transition hover:bg-[#f3ddd0] disabled:opacity-50"
             >
-              {loading === 'trial' ? 'Updating…' : 'Reset to 3-day trial'}
+              {loading === 'trial' ? 'Updating…' : `Reset to ${TRIAL_DURATION_DAYS}-day trial`}
             </button>
           ) : null}
         </div>

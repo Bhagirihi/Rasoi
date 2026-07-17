@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ArrowLeft, Mail } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
   Platform,
@@ -14,9 +14,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from "@/components/AuthAtmosphere";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import AppSavingOverlay from "@/components/AppSavingOverlay";
-import GuestContinueModal from "@/components/auth/GuestContinueModal";
 import RasoiBrandIcon from "@/components/RasoiBrandIcon";
 import {
   colors,
@@ -39,7 +39,7 @@ type FieldError = "email" | "otp" | "general" | null;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { sendLoginEmailOtp, verifyLoginEmailOtp, loginAsGuest, continueWithPendingEmailVerification, userCity, pendingPantrySetup } =
+  const { sendLoginEmailOtp, verifyLoginEmailOtp, pendingPantrySetup } =
     useAppContext();
 
   const [step, setStep] = useState<LoginStep>("email");
@@ -48,11 +48,10 @@ export default function LoginScreen() {
   const [fieldError, setFieldError] = useState<FieldError>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showGuestModal, setShowGuestModal] = useState(false);
-  const [guestName, setGuestName] = useState("");
-  const [guestError, setGuestError] = useState("");
   const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
+  const emailInputRef = useRef<TextInput>(null);
+  const otpInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
@@ -73,11 +72,19 @@ export default function LoginScreen() {
     if (step === "otp") warmApiConnection();
   }, [step]);
 
-  const navigateAfterAuth = async ({ showTrialWelcome, hasCompletedOnboarding }: AuthNavigationResult) => {
-    const href = await resolvePostAuthHref(
-      { showTrialWelcome, hasCompletedOnboarding },
-      { userCity, pendingPantrySetup },
-    );
+  useEffect(() => {
+    if (step !== "otp") return;
+    const timer = setTimeout(() => {
+      otpInputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [step]);
+
+  const navigateAfterAuth = async (nav: AuthNavigationResult) => {
+    const href = await resolvePostAuthHref(nav, {
+      userCity: nav.userCity,
+      pendingPantrySetup,
+    });
     router.replace(href);
   };
 
@@ -89,50 +96,6 @@ export default function LoginScreen() {
       return null;
     }
     return normalizeEmail(email);
-  };
-
-  const handleGuest = async () => {
-    setGuestError("");
-    setFieldError(null);
-    setErrorMessage("");
-    setIsSubmitting(true);
-    try {
-      void Haptics.selectionAsync();
-      Keyboard.dismiss();
-      const trimmed = guestName.trim();
-      const nav = await loginAsGuest(trimmed.length >= 2 ? { name: trimmed } : undefined);
-      setShowGuestModal(false);
-      void navigateAfterAuth(nav);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Could not continue as guest. Please try again.";
-      setGuestError(message);
-      setFieldError("general");
-      setErrorMessage(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleContinueWithoutEmailVerification = async (normalizedEmail: string) => {
-    setIsSubmitting(true);
-    try {
-      const nav = await continueWithPendingEmailVerification({
-        email: normalizedEmail,
-        flow: "login",
-      });
-      setEmailDeliveryBlocked(false);
-      if (nav) {
-        void navigateAfterAuth(nav);
-      }
-    } catch (error) {
-      setFieldError("general");
-      setErrorMessage(
-        error instanceof Error ? error.message : "Could not continue to the app. Please try again.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   const handleSendOtp = async () => {
@@ -255,12 +218,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient
-        colors={["#0A0908", "#12100E", "#0A0908"]}
-        style={StyleSheet.absoluteFillObject}
-      />
-      <View style={styles.glowGreen} />
-      <View style={styles.glowOrange} />
+      <AuthAtmosphere />
 
       <SafeAreaView
         style={styles.flex}
@@ -270,21 +228,16 @@ export default function LoginScreen() {
         <AppSavingOverlay
           visible={isSubmitting}
           steps={
-            showGuestModal
+            step === 'otp'
               ? [
-                  { message: 'Starting guest mode', subtitle: 'Setting up your kitchen' },
-                  { message: 'Almost there', subtitle: 'Opening Rasoi for you' },
+                  { message: 'Signing you in', subtitle: 'Verifying your code and loading your profile' },
                 ]
-              : step === 'otp'
-                ? [
-                    { message: 'Signing you in', subtitle: 'Verifying your code and loading your profile' },
-                  ]
-                : [
-                    {
-                      message: 'Sending your code',
-                      subtitle: 'Check your inbox — it usually arrives in a few seconds',
-                    },
-                  ]
+              : [
+                  {
+                    message: 'Sending your code',
+                    subtitle: 'Check your inbox — it usually arrives in a few seconds',
+                  },
+                ]
           }
         />
         <ScrollViewWithFloatingIndicator
@@ -332,6 +285,7 @@ export default function LoginScreen() {
                   >
                     <Mail size={18} color={colors.dark.textMuted} />
                     <TextInput
+                      ref={emailInputRef}
                       value={email}
                       onChangeText={(value) => {
                         setEmail(value);
@@ -343,6 +297,7 @@ export default function LoginScreen() {
                       autoCapitalize="none"
                       autoCorrect={false}
                       returnKeyType="done"
+                      submitBehavior="submit"
                       onSubmitEditing={handleSendOtp}
                       style={styles.input}
                       testID={testIds.loginEmailInput}
@@ -362,6 +317,7 @@ export default function LoginScreen() {
                   >
                     <Mail size={18} color={colors.dark.textMuted} />
                     <TextInput
+                      ref={otpInputRef}
                       value={otp}
                       onChangeText={(value) => {
                         setOtp(value.replace(/\D/g, "").slice(0, 8));
@@ -369,12 +325,12 @@ export default function LoginScreen() {
                       }}
                       placeholder="123456"
                       placeholderTextColor={colors.dark.buttonDisabledText}
-                      keyboardType="number-pad"
+                      keyboardType={Platform.OS === "android" ? "numeric" : "number-pad"}
                       maxLength={8}
                       returnKeyType="done"
+                      submitBehavior="submit"
                       onSubmitEditing={handleVerifyOtp}
                       style={[styles.input, styles.otpInput]}
-                      autoFocus
                       testID={testIds.loginOtpInput}
                     />
                   </View>
@@ -426,48 +382,20 @@ export default function LoginScreen() {
                   </Text>
                 </LinearGradient>
               </Pressable>
-
-              {emailDeliveryBlocked && step === "email" ? (
-                <Pressable
-                  onPress={() => {
-                    const normalizedEmail = validateEmail();
-                    if (normalizedEmail) {
-                      void handleContinueWithoutEmailVerification(normalizedEmail);
-                    }
-                  }}
-                  disabled={isSubmitting}
-                  style={styles.guestButton}
-                >
-                  <Text style={styles.guestButtonText}>Continue to app — verify email later</Text>
-                </Pressable>
-              ) : null}
             </View>
 
             {step === "email" ? (
-              <>
-                <Pressable
-                  onPress={() => {
-                    setGuestError("");
-                    setShowGuestModal(true);
-                  }}
-                  disabled={isSubmitting}
-                  testID={testIds.loginGuest}
-                  style={styles.guestButton}
-                >
-                  <Text style={styles.guestButtonText}>Explore as Guest</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => router.push("/(auth)/register")}
-                  disabled={isSubmitting}
-                  style={styles.switchAuthWrap}
-                  testID={testIds.loginGoRegister}
-                >
-                  <Text style={styles.switchAuthText}>
-                    New to Rasoi?{" "}
-                    <Text style={styles.switchAuthLink}>Create account</Text>
-                  </Text>
-                </Pressable>
-              </>
+              <Pressable
+                onPress={() => router.push("/(auth)/register")}
+                disabled={isSubmitting}
+                style={styles.switchAuthWrap}
+                testID={testIds.loginGoRegister}
+              >
+                <Text style={styles.switchAuthText}>
+                  New to Rasoi?{" "}
+                  <Text style={styles.switchAuthLink}>Create account</Text>
+                </Text>
+              </Pressable>
             ) : (
               <Text style={styles.footerHint}>
                 Didn’t get it? Check spam or tap Resend code.
@@ -475,18 +403,6 @@ export default function LoginScreen() {
             )}
           </ScrollViewWithFloatingIndicator>
       </SafeAreaView>
-      <GuestContinueModal
-        visible={showGuestModal}
-        name={guestName}
-        onChangeName={setGuestName}
-        onClose={() => {
-          setShowGuestModal(false);
-          setGuestError("");
-        }}
-        onContinue={() => void handleGuest()}
-        busy={isSubmitting}
-        errorMessage={guestError}
-      />
     </View>
   );
 }
@@ -494,28 +410,10 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.dark.bg,
+    backgroundColor: AUTH_ATMOSPHERE_BG,
   },
   flex: {
     flex: 1,
-  },
-  glowGreen: {
-    position: "absolute",
-    top: -80,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: "rgba(0,168,107,0.12)",
-  },
-  glowOrange: {
-    position: "absolute",
-    bottom: 120,
-    left: -80,
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    backgroundColor: "rgba(255,107,53,0.1)",
   },
   scrollContent: {
     flexGrow: 1,
@@ -658,20 +556,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
-  },
-  guestButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.14)",
-    backgroundColor: "rgba(255,255,255,0.04)",
-  },
-  guestButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: colors.dark.text,
   },
   switchAuthWrap: {
     alignItems: "center",

@@ -31,6 +31,12 @@ alwaysApply: true
 - **Do not** undo freeze-era patterns (re-hardcode partners, skip region, bypass `normalizeRecipeIngredients`).
 - **Do** state when a migration, APK rebuild, or `main` deploy is required.
 
+## Frozen mobile flows (do not change without approval)
+
+- Auth & navigation: `.cursor/rules/mobile-auth-navigation-flow.mdc`
+- Pantry match % & missing-ingredient UX: `.cursor/rules/mobile-recipe-pantry-ux.mdc`
+- Recipe steps from DB only (never client templates): `.cursor/rules/recipe-steps-db-source.mdc`
+
 ## Release path (development → main)
 
 1. QA on `development` (API smoke; device QA if mobile changed).

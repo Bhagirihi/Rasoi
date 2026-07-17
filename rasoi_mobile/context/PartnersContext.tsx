@@ -15,8 +15,9 @@ import {
   getGroceryPartnerUi,
 } from '@/constants/monetization';
 import type { AffiliatePartner, FoodDeliveryPartner } from '@/constants/partners';
-import { resolveGroceryPartnerId } from '@/constants/partners';
+import { buildDeliverySearchQuery, resolveGroceryPartnerId } from '@/constants/partners';
 import { useAppContext } from '@/context/AppContext';
+import { useShoppingSession } from '@/context/ShoppingSessionContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import {
   buildGroceryCheckoutQuery,
@@ -30,6 +31,7 @@ import {
   PHONE_REQUIRED_FOR_DELIVERY_MESSAGE,
 } from '@/utils/phoneGate';
 import { openPartnerUrls } from '@/utils/openPartnerUrl';
+import { partnerCheckoutLimitCopy } from '@/utils/planLimitCopy';
 import { PAYWALL_HREF } from '@/utils/routes';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
 
@@ -57,7 +59,14 @@ type PartnersContextValue = {
   openGroceryCheckout: (
     partnerId: AffiliatePartner,
     items: string[],
-    options?: { context?: string; recipeId?: string },
+    options?: {
+      context?: string;
+      recipeId?: string;
+      recipeTitle?: string;
+      shoppingItem?: string;
+      sessionItems?: string[];
+      sessionKind?: 'recipe' | 'pantry';
+    },
   ) => Promise<void>;
   openFoodDelivery: (
     partnerId: FoodDeliveryPartner,
@@ -113,6 +122,7 @@ function buildCards(links: PartnerLinkResponse[]) {
 
 export function PartnersProvider({ children }: { children: ReactNode }) {
   const { userPhone, partnerAccess, recordPartnerShop } = useAppContext();
+  const { registerPartnerCheckout } = useShoppingSession();
   const { showDialog } = useAppDialog();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,10 +172,10 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
 
   const ensurePartnerAccess = useCallback(() => {
     if (partnerAccess.canCheckout) return true;
+    const copy = partnerCheckoutLimitCopy();
     showDialog({
-      title: 'Partner checkout limit reached',
-      message:
-        'You have used your free partner shops for this month. Upgrade to Rasoi Plus for unlimited grocery and delivery checkout.',
+      title: copy.title,
+      message: copy.message,
       buttons: [
         { text: 'Not now', style: 'cancel' },
         { text: 'View plans', onPress: () => router.push(PAYWALL_HREF) },
@@ -194,17 +204,25 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
     async (
       partnerId: AffiliatePartner,
       items: string[],
-      options?: { context?: string; recipeId?: string },
+      options?: {
+        context?: string;
+        recipeId?: string;
+        recipeTitle?: string;
+        shoppingItem?: string;
+        sessionItems?: string[];
+        sessionKind?: 'recipe' | 'pantry';
+      },
     ) => {
       if (items.length === 0 || !ensurePartnerAccess()) return;
       const searchQuery = buildGroceryCheckoutQuery(items);
+      if (!searchQuery) return;
       const urls = buildPartnerUrls(partnerId, searchQuery, partnerLinks);
       if (!urls) return;
       void logAffiliateEvent({
         partner: partnerId,
         context: options?.context ?? 'grocery_checkout',
         recipeId: options?.recipeId,
-        query: items.map((item) => item.trim()).filter(Boolean).join(', '),
+        query: searchQuery,
       });
       const result = await openPartnerUrls(urls.deepLink, urls.webUrl);
       if (result === 'failed') {
@@ -223,6 +241,13 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
         });
         return;
       }
+      await registerPartnerCheckout({
+        kind: options?.sessionKind ?? (options?.recipeId ? 'recipe' : 'pantry'),
+        recipeId: options?.recipeId,
+        recipeTitle: options?.recipeTitle,
+        shoppingItem: options?.shoppingItem ?? searchQuery,
+        sessionItems: options?.sessionItems ?? items,
+      });
       if (partnerAccess.freemiumMode) {
         await recordPartnerShop();
       }
@@ -232,6 +257,7 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
       ensurePartnerAccess,
       partnerAccess.freemiumMode,
       recordPartnerShop,
+      registerPartnerCheckout,
       showDialog,
     ],
   );
@@ -242,7 +268,7 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
       query: string,
       options?: { context?: string; recipeId?: string },
     ) => {
-      const trimmed = query.trim();
+      const trimmed = buildDeliverySearchQuery(query);
       if (!trimmed || !ensurePartnerAccess() || !ensureDeliveryPhone()) return;
       const urls = buildPartnerUrls(partnerId, trimmed, partnerLinks);
       if (!urls) return;

@@ -11,7 +11,7 @@ export default function GuestRegisterBanner() {
 
   return (
     <Pressable
-      onPress={() => router.push('/(auth)/login')}
+      onPress={() => router.push('/(auth)/register')}
       style={[styles.card, { backgroundColor: themeColors.white, borderColor: themeColors.border }]}
       accessibilityRole="button"
       accessibilityLabel="Create account to sync pantry and get push picks"

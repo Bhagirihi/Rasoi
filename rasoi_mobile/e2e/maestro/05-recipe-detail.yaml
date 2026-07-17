@@ -1,17 +1,22 @@
 # TC-008–TC-009: Recipe detail + save bookmark
 appId: com.bhagihiri.rasoiapp
 ---
-- launchApp
-- extendedWaitUntil:
-    visible:
-      id: screen-home
-    timeout: 30000
-- tapOn:
-    id: tab-recipes
 - extendedWaitUntil:
     visible:
       id: recipe-card-first
     timeout: 45000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: recipe-card-first
+    commands:
+      - tapOn:
+          id: tab-recipes
+      - extendedWaitUntil:
+          visible:
+            id: recipe-card-first
+          timeout: 45000
 - tapOn:
     id: recipe-card-first
 - extendedWaitUntil:

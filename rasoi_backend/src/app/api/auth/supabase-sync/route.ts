@@ -113,6 +113,25 @@ export async function POST(request: NextRequest) {
       await validateFavoriteCuisines(input.onboarding.favoriteCuisines);
     }
 
+    if (input.phoneVerified) {
+      const { error: metaError } = await supabase.auth.admin.updateUserById(authUser.id, {
+        user_metadata: {
+          ...(typeof authUser.user_metadata === 'object' && authUser.user_metadata
+            ? authUser.user_metadata
+            : {}),
+          ...(input.phone ? { phone: input.phone } : {}),
+          phone_verified: true,
+          phone_verified_at: new Date().toISOString(),
+        },
+      });
+      if (metaError) {
+        console.warn('[supabase-sync] phone metadata update failed', {
+          message: metaError.message,
+          userId: authUser.id.slice(0, 8),
+        });
+      }
+    }
+
     const onboardingData = input.onboarding
       ? {
           hasCompletedOnboarding: true,
@@ -202,6 +221,7 @@ export async function POST(request: NextRequest) {
             email: authUser.email,
             isGuest: false,
             supabaseUserId: authUser.id,
+            ...(input.gender ? { gender: input.gender } : {}),
             ...termsUpdate,
             ...(!existing.hasCompletedOnboarding ? onboardingData : {}),
             ...trialUpdate,
@@ -214,6 +234,7 @@ export async function POST(request: NextRequest) {
             email: authUser.email,
             isGuest: false,
             supabaseUserId: authUser.id,
+            ...(input.gender ? { gender: input.gender } : {}),
             pantryIngredients: JSON.stringify(defaultPantry ?? []),
             termsAcceptedAt: new Date(),
             termsAcceptedVersion: CURRENT_TERMS_VERSION,

@@ -22,7 +22,6 @@ export default function DietPreferenceList({
     <View style={styles.list}>
       {DIET_PREFERENCE_OPTIONS.map((option) => {
         const isActive = selected === option.value;
-        const Icon = option.icon;
 
         return (
           <Pressable
@@ -38,9 +37,6 @@ export default function DietPreferenceList({
               isActive && (isDark ? styles.cardDarkActive : styles.cardLightActive),
             ]}
           >
-            <View style={[styles.iconWrap, { backgroundColor: option.iconBg }]}>
-              <Icon size={22} color={option.iconColor} />
-            </View>
             <View style={styles.textWrap}>
               <Text style={[styles.label, isDark ? styles.labelDark : styles.labelLight]}>
                 {option.label}
@@ -89,14 +85,6 @@ const styles = StyleSheet.create({
   cardLightActive: {
     borderColor: 'rgba(255,107,53,0.45)',
     backgroundColor: 'rgba(255,107,53,0.06)',
-  },
-  iconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
   },
   textWrap: {
     flex: 1,

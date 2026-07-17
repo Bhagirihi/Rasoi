@@ -1,7 +1,6 @@
 # TC-007: Recipes tab loads with recipe cards
 appId: com.bhagihiri.rasoiapp
 ---
-- launchApp
 - extendedWaitUntil:
     visible:
       id: screen-home

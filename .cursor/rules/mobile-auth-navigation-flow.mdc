@@ -1,0 +1,53 @@
+---
+description: Frozen mobile auth & navigation flows — do not reorder or skip steps
+globs: rasoi_mobile/app/**/*.tsx,rasoi_mobile/utils/authNavigation.ts,rasoi_mobile/context/AppContext.tsx
+alwaysApply: false
+---
+
+# Mobile auth & navigation flows (frozen)
+
+**Do not change step order, skip screens, or merge flows without explicit user approval.**
+
+## Register path (new account)
+
+`Register (contact details + gender)` → `Diet` → `Kitchen styles` → `Email OTP` → `Terms & Privacy` (`legal-consent?from=register`) → `Onboarding` (notifications + location; diet/cuisines skipped if collected on Register) → optional `Trial welcome` (soft paywall) → `Pantry` → `Dashboard (tabs)`
+
+Onboarding sub-steps (fixed order):
+
+1. Diet
+2. Kitchen styles — **skipped when already chosen on Register**
+3. Notifications permission
+4. Location permission
+
+Implementation anchors: `register.tsx` (OTP → legal-consent), `legal-consent.tsx`, `onboarding.tsx`, `authNavigation.ts` (`pendingTrialWelcome` → trial-welcome before pantry), `trial-welcome.tsx` (continue → pantry if `pendingPantrySetup`).
+
+## Login path (existing account)
+
+`Login` → `OTP` → `resolvePostAuthHref`:
+
+- Onboarding **only if** `hasCompletedOnboarding` is false (full prefs → notifications → location).
+- Else **permissions-only** flow (`onboarding?permissionsOnly=1`) when OS notification/location still missing.
+- Then `Dashboard` (skip pantry unless `pendingPantrySetup`).
+
+Login **must not** show legal-consent (register-only).
+
+## Legacy guest upgrade (existing guest sessions only)
+
+New guest login is **not** offered. Existing `isGuest` users may still upgrade via:
+
+`Settings` → **Sign up** → `Register` (not Login).
+
+## Splash / cold start
+
+Splash → bootstrap → **Login screen when no session** → route via `app/index.tsx`. Cold start does not auto-create a session; the user lands on `Login`, which offers **Create account** (Register). The splash itself still shows no Login/Register buttons — routing happens in `app/index.tsx`.
+
+Logged-in users with incomplete onboarding resume via `legal-consent?from=register` (if device legal consent missing) or `onboarding`.
+
+## Key files
+
+| Concern | File |
+|---------|------|
+| Post-auth routing | `utils/authNavigation.ts` |
+| Root redirect | `app/index.tsx` |
+| Guest upgrade CTA | `app/(tabs)/settings/index.tsx`, `components/settings/SettingsBlocks.tsx` |
+| New signup pantry gate | `AppContext.tsx` (`pendingPantrySetup` on signup) |

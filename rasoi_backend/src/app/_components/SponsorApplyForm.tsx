@@ -7,7 +7,15 @@ import {
   type SponsorApplicationPlacement,
 } from '@/lib/sponsor-placements';
 
-export default function SponsorApplyForm() {
+type SponsorApplyFormProps = {
+  phonePlaceholder?: string;
+  brandExample?: string;
+};
+
+export default function SponsorApplyForm({
+  phonePlaceholder = '+91 98765 43210',
+  brandExample = 'e.g. Amul, Tata Sampann',
+}: SponsorApplyFormProps) {
   const [companyName, setCompanyName] = useState('');
   const [contactName, setContactName] = useState('');
   const [email, setEmail] = useState('');
@@ -68,81 +76,81 @@ export default function SponsorApplyForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-[1.25rem] border border-[#e8dfd3] bg-white p-6 shadow-sm lg:p-8">
+    <form onSubmit={handleSubmit} className="rounded-[1.25rem] border border-landing-border bg-white p-6 shadow-sm lg:p-8">
       <div className="grid gap-5 md:grid-cols-2">
-        <label className="block text-sm font-medium text-[#1a1a2e]">
+        <label className="block text-sm font-medium text-landing-ink">
           Company name
           <input
             value={companyName}
             onChange={(event) => setCompanyName(event.target.value)}
             required
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
 
-        <label className="block text-sm font-medium text-[#1a1a2e]">
+        <label className="block text-sm font-medium text-landing-ink">
           Brand name
           <input
             value={brandName}
             onChange={(event) => setBrandName(event.target.value)}
             required
-            placeholder="e.g. Amul, Tata Sampann"
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            placeholder={brandExample}
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
 
-        <label className="block text-sm font-medium text-[#1a1a2e]">
+        <label className="block text-sm font-medium text-landing-ink">
           Contact name
           <input
             value={contactName}
             onChange={(event) => setContactName(event.target.value)}
             required
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
 
-        <label className="block text-sm font-medium text-[#1a1a2e]">
+        <label className="block text-sm font-medium text-landing-ink">
           Email
           <input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
 
-        <label className="block text-sm font-medium text-[#1a1a2e]">
+        <label className="block text-sm font-medium text-landing-ink">
           Phone (optional)
           <input
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
-            placeholder="+91"
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            placeholder={phonePlaceholder}
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
 
-        <label className="block text-sm font-medium text-[#1a1a2e]">
+        <label className="block text-sm font-medium text-landing-ink">
           Website (optional)
           <input
             type="url"
             value={website}
             onChange={(event) => setWebsite(event.target.value)}
             placeholder="https://"
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
 
         <fieldset className="md:col-span-2">
-          <legend className="text-sm font-medium text-[#1a1a2e]">Preferred placement</legend>
+          <legend className="text-sm font-medium text-landing-ink">Preferred placement</legend>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {SPONSOR_APPLICATION_PLACEMENT_OPTIONS.map((option) => (
               <label
                 key={option.value}
                 className={`cursor-pointer rounded-xl border px-4 py-3 transition ${
                   placementInterest === option.value
-                    ? 'border-[#c9a227] bg-[#f4efe6]'
-                    : 'border-[#e8dfd3] bg-[#fcf9f4] hover:border-[#d9d0c4]'
+                    ? 'border-landing-gold bg-landing-bg'
+                    : 'border-landing-border bg-landing-cream hover:border-[#d9d0c4]'
                 }`}
               >
                 <input
@@ -153,14 +161,14 @@ export default function SponsorApplyForm() {
                   onChange={() => setPlacementInterest(option.value)}
                   className="sr-only"
                 />
-                <span className="text-sm font-semibold text-[#1a1a2e]">{option.label}</span>
-                <p className="mt-1 text-xs text-[#6b6560]">{option.hint}</p>
+                <span className="text-sm font-semibold text-landing-ink">{option.label}</span>
+                <p className="mt-1 text-xs text-landing-muted">{option.hint}</p>
               </label>
             ))}
           </div>
         </fieldset>
 
-        <label className="block text-sm font-medium text-[#1a1a2e] md:col-span-2">
+        <label className="block text-sm font-medium text-landing-ink md:col-span-2">
           Product pitch
           <textarea
             value={productDescription}
@@ -168,18 +176,18 @@ export default function SponsorApplyForm() {
             required
             rows={4}
             placeholder="Tell us about the product, audience fit, and campaign goals."
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
 
-        <label className="block text-sm font-medium text-[#1a1a2e] md:col-span-2">
+        <label className="block text-sm font-medium text-landing-ink md:col-span-2">
           Additional notes (optional)
           <textarea
             value={message}
             onChange={(event) => setMessage(event.target.value)}
             rows={3}
             placeholder="Budget range, timeline, creative assets, or partnership references."
-            className="mt-2 w-full rounded-xl border border-[#e8dfd3] px-4 py-3 text-sm outline-none focus:border-[#c9a227]/60 focus:ring-2 focus:ring-[#c9a227]/15"
+            className="mt-2 w-full rounded-xl border border-landing-border px-4 py-3 text-sm outline-none focus:border-landing-gold/60 focus:ring-2 focus:ring-landing-gold/15"
           />
         </label>
       </div>

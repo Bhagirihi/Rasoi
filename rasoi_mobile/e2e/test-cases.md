@@ -2,7 +2,9 @@
 
 Full module coverage on a **real Android device** with Gmail OTP auth.
 
-**Auth email pattern:** `dvesp1901+{unix_timestamp}@gmail.com`  
+**Auth email pattern:** `dvesp1901+{anything}@gmail.com` (e.g. `dvesp1901+qa1730000000@gmail.com`)
+
+**QA phone (profile field):** `9374766500`  
 **OTP source:** Gmail inbox (`Rasoi sign-in code`) via IMAP or Gmail MCP  
 **Stability:** Each TC must pass **3 consecutive runs** (`npm run qa:stability`)
 
@@ -28,7 +30,7 @@ Full module coverage on a **real Android device** with Gmail OTP auth.
 | ID | Module | Preconditions | Steps | Expected | Automation |
 |----|--------|---------------|-------|----------|------------|
 | TC-001 | Legal consent | Fresh install | Accept terms checkbox → Continue | `screen-login` visible, UI-01/04/05 | `_legal-consent.yaml` / adb |
-| TC-002 | Register — form | On login screen | Tap Create account → fill name, phone, email → Send code → accept terms modal | OTP step visible, `screen-register` | `01-register-send-otp.yaml` |
+| TC-002 | Register — form | On login screen | Tap Create account → fill name, gender, phone, email → Send code → accept terms modal | OTP step visible, `screen-register` | `01-register-send-otp.yaml` |
 | TC-003 | Register — OTP | TC-002 done | Fetch Gmail OTP → enter code → Create account | Onboarding or home reached | `02-register-verify.yaml` / adb |
 | TC-004 | Onboarding — diet | Post-register | Select Veg → Continue | Cuisine step visible | `02-register-verify.yaml` |
 | TC-005 | Onboarding — cuisine | TC-004 done | Select cuisine → Save & continue | Notifications or trial step | `02-register-verify.yaml` |

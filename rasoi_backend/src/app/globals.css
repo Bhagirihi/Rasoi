@@ -4,14 +4,21 @@
   --admin-bg: #f4efe6;
   --admin-surface: #fcf9f4;
   --admin-ink: #1a1a2e;
-  --admin-muted: #6b6560;
+  --admin-muted: #5c5651;
   --admin-border: #d9d0c4;
   --admin-sidebar: #14110f;
   --admin-sidebar-muted: #9a9590;
-  --admin-gold: #c9a227;
+  --admin-gold: #8a6d14;
   --admin-gold-soft: #e8d5a3;
-  --admin-saffron: #c45c2a;
+  --admin-saffron: #9e4219;
   --admin-cream: #f5f0e8;
+  --landing-ink: #1a1a2e;
+  --landing-muted: #5c5651;
+  --landing-gold: #8a6d14;
+  --landing-saffron: #9e4219;
+  --landing-cream: #fcf9f4;
+  --landing-border: #e8dfd3;
+  --landing-bg: #f4efe6;
 }
 
 @theme inline {
@@ -28,6 +35,13 @@
   --color-admin-cream: var(--admin-cream);
   --color-admin-sidebar-muted: var(--admin-sidebar-muted);
   --color-admin-gold-soft: var(--admin-gold-soft);
+  --color-landing-ink: var(--landing-ink);
+  --color-landing-muted: var(--landing-muted);
+  --color-landing-gold: var(--landing-gold);
+  --color-landing-saffron: var(--landing-saffron);
+  --color-landing-cream: var(--landing-cream);
+  --color-landing-border: var(--landing-border);
+  --color-landing-bg: var(--landing-bg);
 }
 
 body {
@@ -107,8 +121,8 @@ body {
 }
 
 .admin-login-input::placeholder {
-  color: #6b6560;
-  -webkit-text-fill-color: #6b6560;
+  color: var(--admin-muted);
+  -webkit-text-fill-color: var(--admin-muted);
 }
 
 .admin-login-input:-webkit-autofill,

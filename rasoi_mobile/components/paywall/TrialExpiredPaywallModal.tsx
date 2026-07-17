@@ -2,33 +2,49 @@ import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Crown, X } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AppSavingOverlay from '@/components/AppSavingOverlay';
-import PaidPlanFeaturesList from '@/components/paywall/PaidPlanFeaturesList';
-import PaywallActions from '@/components/paywall/PaywallActions';
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
+import PaywallBenefitsStrip from '@/components/paywall/PaywallBenefitsStrip';
+import PaywallCompareTable from '@/components/paywall/PaywallCompareTable';
+import PaywallPricingSection from '@/components/paywall/PaywallPricingSection';
+import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import SmoothModal from '@/components/ui/SmoothModal';
-import { type BillingInterval } from '@/constants/plans';
 import { getEffectivePaymentProviderId } from '@/constants/payments';
-import { colors, radius, spacing } from '@/constants/theme';
+import {
+  PAYWALL_PLUS_SUCCESS_MESSAGE,
+  type BillingInterval,
+} from '@/constants/plans';
+import { colors, layout, radius, scrollIndicator, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useAppDialog } from '@/context/AppDialogContext';
 import { usePaywall } from '@/hooks/usePaywall';
 import { useRevenueCatPricing } from '@/hooks/useRevenueCatPricing';
 
+/** Forced dark palette — trial-ended sheet always matches auth look. */
+const darkUi = {
+  text: colors.dark.text,
+  muted: colors.dark.textMuted,
+  surface: colors.dark.card,
+  border: 'rgba(245, 240, 232, 0.12)',
+  bg: AUTH_ATMOSPHERE_BG,
+} as const;
+
 let dismissedThisSession = false;
+
+type QaOpenListener = () => void;
+const qaOpenListeners = new Set<QaOpenListener>();
 
 export function resetTrialExpiredPaywallSessionDismissal() {
   dismissedThisSession = false;
+}
+
+/** Dev/QA only — opens the trial-ended sheet regardless of plan state. */
+export function openTrialExpiredPaywallForQa() {
+  dismissedThisSession = false;
+  qaOpenListeners.forEach((listener) => listener());
 }
 
 export default function TrialExpiredPaywallModal() {
@@ -42,16 +58,17 @@ export default function TrialExpiredPaywallModal() {
     showPaywall,
     trialExpired,
     effectiveTier,
-    canStartTrial,
     yearlyPromoOfferTag,
     upgradeToPaid,
     restorePurchases,
     refreshPlan,
+    redeemPromoCode,
   } = useAppContext();
 
   const [visible, setVisible] = useState(false);
+  const [qaForced, setQaForced] = useState(false);
   const paywall = usePaywall({ upgradeToPaid, restorePurchases });
-  const { pricing, loading: pricingLoading, storeReady } = useRevenueCatPricing(
+  const { pricing, storeReady } = useRevenueCatPricing(
     paymentsEnabled && getEffectivePaymentProviderId() === 'revenuecat',
   );
 
@@ -66,6 +83,18 @@ export default function TrialExpiredPaywallModal() {
     !dismissedThisSession;
 
   useEffect(() => {
+    const openFromQa = () => {
+      setQaForced(true);
+      setVisible(true);
+    };
+    qaOpenListeners.add(openFromQa);
+    return () => {
+      qaOpenListeners.delete(openFromQa);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (qaForced) return;
     if (!shouldOffer) {
       setVisible(false);
       return;
@@ -73,10 +102,11 @@ export default function TrialExpiredPaywallModal() {
 
     const timer = setTimeout(() => setVisible(true), 400);
     return () => clearTimeout(timer);
-  }, [shouldOffer]);
+  }, [shouldOffer, qaForced]);
 
   const closeModal = () => {
     dismissedThisSession = true;
+    setQaForced(false);
     setVisible(false);
   };
 
@@ -85,17 +115,17 @@ export default function TrialExpiredPaywallModal() {
     const result = await paywall.purchasePlus(interval);
     if (!result.ok) {
       if (!result.cancelled) {
-        showDialog({ title: 'Subscribe', message: result.error });
+        showDialog({ title: 'Couldn’t subscribe', message: result.error });
       }
       return;
     }
     await refreshPlan();
+    closeModal();
     showDialog({
       title: 'Welcome to Rasoi Plus',
-      message: 'Ads removed and all partners unlocked.',
-      buttons: [{ text: 'Great', onPress: closeModal }],
+      message: PAYWALL_PLUS_SUCCESS_MESSAGE,
+      buttons: [{ text: 'Let’s cook' }],
     });
-    closeModal();
   };
 
   const handleRestore = async () => {
@@ -105,91 +135,88 @@ export default function TrialExpiredPaywallModal() {
       return;
     }
     await refreshPlan();
-    showDialog({
-      title: 'Restored',
-      message: 'Your Rasoi Plus subscription is active.',
-      buttons: [{ text: 'Continue', onPress: closeModal }],
-    });
     closeModal();
+    showDialog({
+      title: 'You’re back on Plus',
+      message: 'Your Rasoi Plus subscription is active again.',
+      buttons: [{ text: 'Continue' }],
+    });
   };
-
-  const billingLabel =
-    Platform.OS === 'ios' ? 'App Store' : Platform.OS === 'android' ? 'Google Play' : 'your store';
 
   return (
     <SmoothModal visible={visible} onClose={closeModal} variant="sheet" dismissOnBackdrop>
-      <View style={[styles.sheet, { maxHeight: '92%' }]}>
+      <View style={[styles.sheet, { maxHeight: '94%', paddingBottom: insets.bottom }]}>
+        <AuthAtmosphere />
         <AppSavingOverlay
           visible={paywall.isBusy}
-          message="Opening checkout…"
-          subtitle={`Confirm in ${billingLabel}`}
+          steps={[
+            { message: 'Processing payment…', subtitle: 'Connecting to the store' },
+            { message: 'Activating Rasoi Plus…', subtitle: 'Unlocking meal plan, saves & partners' },
+          ]}
         />
 
         <View style={styles.handle} />
 
         <View style={styles.headerRow}>
-          <View style={styles.headerTextWrap}>
-            <Text style={styles.headerTitle}>Trial ended</Text>
-            <Text style={styles.headerSub}>Subscribe to keep partner checkout unlocked</Text>
-          </View>
-          <Pressable onPress={closeModal} hitSlop={12} accessibilityLabel="Close paywall">
-            <X size={22} color={colors.muted} />
+          <Text style={styles.headerTitle}>Rasoi Plus</Text>
+          <Pressable onPress={closeModal} hitSlop={12} accessibilityLabel="Close">
+            <X size={22} color={darkUi.muted} />
           </Pressable>
         </View>
 
-        <ScrollView
-          bounces={false}
-          showsVerticalScrollIndicator={false}
+        <ScrollViewWithFloatingIndicator
+          {...scrollIndicator}
           keyboardShouldPersistTaps="handled"
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + spacing.lg },
-          ]}
+          contentContainerStyle={styles.scrollContent}
         >
           <LinearGradient colors={['#FF6B35', '#FF9933']} style={styles.hero}>
-            <View style={styles.heroIconWrap}>
-              <Crown size={22} color={colors.white} />
-            </View>
-            <Text style={styles.heroTitle}>Partners are locked again</Text>
+            <Crown size={26} color={colors.white} />
+            <Text style={styles.heroTitle}>Your free trial has ended</Text>
             <Text style={styles.heroSub}>
-              Blinkit, Zepto, Instamart, Zomato & Swiggy need an active Rasoi Plus plan.
+              Keep cooking on Free, or unlock Plus for the full 3-day plan, unlimited saves, and
+              partner checkout.
             </Text>
           </LinearGradient>
 
-          <View style={styles.featuresWrap}>
-            <PaidPlanFeaturesList />
+          <View style={styles.statusStrip}>
+            <Text style={styles.statusPlan}>Free</Text>
+            <Text style={styles.statusDot}>·</Text>
+            <Text style={styles.statusMeta}>Trial ended — subscribe to restore Plus</Text>
           </View>
 
-          {pricingLoading && getEffectivePaymentProviderId() === 'revenuecat' ? (
-            <View style={styles.pricingLoading}>
-              <ActivityIndicator color={colors.primary} />
-              <Text style={styles.pricingLoadingText}>Loading prices from {billingLabel}…</Text>
-            </View>
-          ) : (
-            <PaywallActions
-              effectiveTier={effectiveTier}
-              trialExpired={trialExpired}
-              canStartTrial={canStartTrial}
-              isBusy={paywall.isBusy}
-              paymentDisclaimer={paywall.paymentDisclaimer}
-              providerLabel={paywall.providerLabel}
-              providerId={paywall.providerId}
-              supportsRestore={paywall.supportsRestore}
-              lastError={paywall.lastError}
-              yearlyPromoOfferTag={yearlyPromoOfferTag}
-              storePricing={storeReady ? pricing : null}
-              hideExpiredNote
-              onStartTrial={() => undefined}
-              onSubscribe={(interval) => void handleSubscribe(interval)}
-              onRestore={() => void handleRestore()}
-            />
-          )}
+          <PaywallBenefitsStrip forceDark />
+
+          <Text style={styles.sectionLabel}>Promo & pricing</Text>
+
+          <PaywallPricingSection
+            effectiveTier="free"
+            trialExpired
+            canStartTrial={false}
+            isBusy={paywall.isBusy}
+            providerLabel={paywall.providerLabel}
+            providerId={paywall.providerId}
+            supportsRestore={paywall.supportsRestore}
+            lastError={paywall.lastError}
+            yearlyPromoOfferTag={yearlyPromoOfferTag}
+            showPromo
+            forceDark
+            onStartTrial={() => undefined}
+            onSubscribe={(interval) => void handleSubscribe(interval)}
+            onRestore={() => void handleRestore()}
+            onRedeemPromo={redeemPromoCode}
+            onPromoSuccess={(message) => showDialog({ title: 'Promo applied', message })}
+            onPromoError={(message) => showDialog({ title: 'Promo code', message })}
+            storePricing={storeReady ? pricing : null}
+          />
+
+          <Text style={styles.sectionLabel}>Compare plans</Text>
+          <PaywallCompareTable highlightTier="free" forceDark />
 
           <Pressable onPress={closeModal} style={styles.laterBtn}>
-            <Text style={styles.laterText}>Continue with ads for now</Text>
+            <Text style={styles.laterText}>Maybe later · keep cooking free</Text>
           </Pressable>
-        </ScrollView>
+        </ScrollViewWithFloatingIndicator>
       </View>
     </SmoothModal>
   );
@@ -199,91 +226,98 @@ const styles = StyleSheet.create({
   sheet: {
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
-    backgroundColor: colors.cream,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    backgroundColor: darkUi.bg,
+    overflow: 'hidden',
   },
   handle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: 'rgba(0,0,0,0.12)',
-    marginBottom: spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
   },
   headerRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: spacing.md,
-    marginBottom: spacing.md,
-  },
-  headerTextWrap: {
-    flex: 1,
-    gap: 4,
+    paddingHorizontal: layout.screenPadding,
+    paddingBottom: spacing.sm,
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: 17,
     fontWeight: '800',
-    color: colors.charcoal,
-    letterSpacing: -0.3,
-  },
-  headerSub: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.muted,
-    fontWeight: '600',
+    color: darkUi.text,
   },
   scroll: {
     flexShrink: 1,
   },
   scrollContent: {
-    gap: spacing.md,
+    paddingHorizontal: layout.screenPadding,
+    paddingBottom: spacing.xl,
+    gap: spacing.lg,
   },
   hero: {
     borderRadius: radius.lg,
-    padding: spacing.lg,
-  },
-  heroIconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
+    padding: spacing.xl,
+    alignItems: 'flex-start',
+    gap: spacing.sm,
   },
   heroTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '800',
     color: colors.white,
   },
   heroSub: {
-    marginTop: 6,
-    fontSize: 14,
-    lineHeight: 21,
+    fontSize: 15,
+    lineHeight: 22,
     color: 'rgba(255,255,255,0.92)',
   },
-  featuresWrap: {
-    marginTop: spacing.xs,
-  },
-  pricingLoading: {
+  statusStrip: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.xl,
+    gap: 6,
+    borderRadius: radius.pill,
+    backgroundColor: darkUi.surface,
+    borderWidth: 1,
+    borderColor: darkUi.border,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
   },
-  pricingLoadingText: {
+  statusPlan: {
     fontSize: 13,
-    color: colors.muted,
+    fontWeight: '800',
+    color: darkUi.text,
+  },
+  statusDot: {
+    fontSize: 13,
+    color: darkUi.muted,
+  },
+  statusMeta: {
+    fontSize: 13,
     fontWeight: '600',
+    color: darkUi.muted,
+  },
+  sectionLabel: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: colors.primary,
   },
   laterBtn: {
     alignItems: 'center',
     paddingVertical: spacing.md,
+    borderRadius: radius.md,
+    backgroundColor: darkUi.surface,
+    borderWidth: 1,
+    borderColor: darkUi.border,
   },
   laterText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    color: colors.muted,
+    color: darkUi.text,
   },
 });

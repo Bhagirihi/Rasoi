@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
+import { InteractionManager } from 'react-native';
 
 import { fetchSponsor, type SponsorCardData, type SponsorScreenPlacement } from '@/services/sponsors';
 import { useRasoiRealtimeTables } from '@/utils/realtime';
@@ -27,7 +28,14 @@ export function usePlacementSponsor(placement: SponsorScreenPlacement) {
   }, [placement]);
 
   useEffect(() => {
-    void refresh();
+    let cancelled = false;
+    const task = InteractionManager.runAfterInteractions(() => {
+      if (!cancelled) void refresh();
+    });
+    return () => {
+      cancelled = true;
+      task.cancel();
+    };
   }, [refresh]);
 
   useEffect(() => {

@@ -1,8 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   Easing,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -14,11 +16,26 @@ import RasoiBrandIcon from '@/components/RasoiBrandIcon';
 import SplashFoodCollage from '@/components/SplashFoodCollage';
 import { colors, spacing } from '@/constants/theme';
 
-export const LAUNCH_SPLASH_DURATION_MS = 2600;
+/** Minimum branded splash — dismiss early once app is ready (see _layout). */
+export const LAUNCH_SPLASH_MIN_MS = 900;
+/** Hard cap so cold start never feels stuck on splash. */
+export const LAUNCH_SPLASH_MAX_MS = 1800;
+/** Fade-out before unmount — avoids Reanimated/Fabric crashes on abrupt teardown. */
+export const LAUNCH_SPLASH_EXIT_MS = 220;
 
-export default function LaunchSplash() {
+type LaunchSplashProps = {
+  dismissing?: boolean;
+  onDismissed?: () => void;
+};
+
+export default function LaunchSplash({ dismissing = false, onDismissed }: LaunchSplashProps) {
   const scale = useSharedValue(0.92);
   const opacity = useSharedValue(0.6);
+  const rootOpacity = useSharedValue(1);
+
+  const handleDismissed = useCallback(() => {
+    onDismissed?.();
+  }, [onDismissed]);
 
   useEffect(() => {
     scale.value = withRepeat(
@@ -37,7 +54,39 @@ export default function LaunchSplash() {
       -1,
       false,
     );
-  }, [opacity, scale]);
+
+    return () => {
+      cancelAnimation(scale);
+      cancelAnimation(opacity);
+      cancelAnimation(rootOpacity);
+    };
+  }, [opacity, rootOpacity, scale]);
+
+  useEffect(() => {
+    if (!dismissing) return;
+
+    cancelAnimation(scale);
+    cancelAnimation(opacity);
+    rootOpacity.value = withTiming(
+      0,
+      { duration: LAUNCH_SPLASH_EXIT_MS, easing: Easing.out(Easing.quad) },
+      (finished) => {
+        if (finished) {
+          runOnJS(handleDismissed)();
+        }
+      },
+    );
+
+    const fallback = setTimeout(() => {
+      handleDismissed();
+    }, LAUNCH_SPLASH_EXIT_MS + 300);
+
+    return () => clearTimeout(fallback);
+  }, [dismissing, handleDismissed, opacity, rootOpacity, scale]);
+
+  const rootStyle = useAnimatedStyle(() => ({
+    opacity: rootOpacity.value,
+  }));
 
   const iconStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -48,7 +97,7 @@ export default function LaunchSplash() {
   }));
 
   return (
-    <View style={styles.root}>
+    <Animated.View style={[styles.root, rootStyle]} pointerEvents={dismissing ? 'none' : 'auto'}>
       <LinearGradient
         colors={['#0A0908', '#0F1210', '#0A0908']}
         style={StyleSheet.absoluteFillObject}
@@ -75,7 +124,7 @@ export default function LaunchSplash() {
           <View style={styles.dot} />
         </View>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 

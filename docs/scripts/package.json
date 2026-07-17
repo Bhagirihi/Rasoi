@@ -1,0 +1,9 @@
+{
+  "name": "rasoi-docs-pdf",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "marked": "^15.0.0",
+    "puppeteer": "^24.0.0"
+  }
+}
