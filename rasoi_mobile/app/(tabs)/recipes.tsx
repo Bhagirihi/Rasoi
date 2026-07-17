@@ -137,8 +137,12 @@ function RecipesTabContent() {
     return sortRecipesByPantryMatch(searchedMoreRecipes, pantryIngredients);
   }, [searchedMoreRecipes, pantryMatchSortActive, pantryIngredients]);
 
+  // First ad after 4 cards, then every 4–6.
   const recipeAdIndices = useRecipeListAdIndices(displayRecipes, {
     stableSeed: "recipes-tab",
+    minRecipesBeforeFirstAd: 4,
+    minGap: 4,
+    maxGapJitter: 2,
   });
   const { viewableIndices, viewabilityConfig, onViewableItemsChanged } =
     useFlatListAdViewability();

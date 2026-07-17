@@ -311,13 +311,6 @@ export default function HomeScreen() {
           <HomeAnnouncementBridge />
           {isGuest ? <GuestRegisterBanner /> : null}
 
-          <SponsorOrAd
-            sponsor={homeSponsor}
-            loading={homeSponsorLoading}
-            placement="home"
-            compact
-          />
-
           {!recipesLoading && recipesError && !showingOfflineDownloads ? (
             <EmptyState
               icon={Timer}
@@ -393,6 +386,15 @@ export default function HomeScreen() {
                 {showTonightSkeleton ? <HomeRecipeRowSkeleton /> : null}
               </View>
             </View>
+          ) : null}
+
+          {heroIntroFinished ? (
+            <SponsorOrAd
+              sponsor={homeSponsor}
+              loading={homeSponsorLoading}
+              placement="home"
+              compact
+            />
           ) : null}
 
           {heroIntroFinished && seasonalRail ? (

@@ -83,8 +83,12 @@ export default function SavedScreen() {
   );
   const { sponsor: savedSponsor, loading: savedSponsorLoading } =
     usePlacementSponsor("saved");
+  // First ad after 4 cards, then every 4–5.
   const savedAdIndices = useRecipeListAdIndices(visibleRecipes, {
     stableSeed: "saved-tab",
+    minRecipesBeforeFirstAd: 4,
+    minGap: 4,
+    maxGapJitter: 1,
   });
   const { viewableIndices, viewabilityConfig, onViewableItemsChanged } =
     useFlatListAdViewability();

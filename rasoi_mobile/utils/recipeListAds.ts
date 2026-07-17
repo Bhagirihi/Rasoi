@@ -10,7 +10,8 @@ export type RecipeListAdOptions = {
 };
 
 const DEFAULTS = {
-  minRecipesBeforeFirstAd: 2,
+  /** First ad after this many recipe cards (Recipes / Saved lists). */
+  minRecipesBeforeFirstAd: 4,
   minGap: 4,
   maxGapJitter: 2,
 } as const;

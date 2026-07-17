@@ -24,6 +24,7 @@ import PlanSectionLabel from "@/components/plan/PlanSectionLabel";
 import RecipeCard from "@/components/RecipeCard";
 import RecipeListSkeleton from "@/components/RecipeListSkeleton";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
+import SponsorOrAd from "@/components/SponsorOrAd";
 import {
   EmptyState,
   InsightBanner,
@@ -35,6 +36,7 @@ import { useAppContext } from "@/context/AppContext";
 import { useRecipes } from "@/context/RecipesContext";
 import { useTonightRecipes } from "@/context/TonightRecipesContext";
 import { useTheme } from "@/context/ThemeContext";
+import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
 import type { Recipe } from "@/data/mockRecipes";
 import type { MealSlot } from "@/utils/mealTime";
 import {
@@ -161,6 +163,8 @@ function PlanTabContent() {
     refreshRecipes,
   } = useRecipes();
   const { topPick, alsoFor, lateNightPick } = useTonightRecipes();
+  const { sponsor: planSponsor, loading: planSponsorLoading } =
+    usePlacementSponsor("plan");
 
   const [selectedDayOffset, setSelectedDayOffset] = useState<PlanDayOffset>(0);
   const [shuffleSaltByOffset, setShuffleSaltByOffset] = useState<
@@ -397,6 +401,13 @@ function PlanTabContent() {
                 ))}
               </View>
             </View>
+
+            <SponsorOrAd
+              sponsor={planSponsor}
+              loading={planSponsorLoading}
+              placement="plan"
+              compact
+            />
 
             <View style={styles.exploreBlock}>
               <PlanSectionLabel title="Explore more" hint="Full catalog" />

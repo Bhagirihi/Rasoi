@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 
 import { colors, spacing } from '@/constants/theme';
@@ -6,6 +6,11 @@ import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
 import { getAdMobBannerUnitId } from '@/constants/admob';
 import { isAdMobNativeAvailable } from '@/utils/admob';
+import { logFirebaseEvent } from '@/utils/firebase';
+import { addSentryBreadcrumb, captureMessage } from '@/utils/sentry';
+
+/** One automatic remount after the first load failure (fill / network blip). */
+const AD_RETRY_DELAY_MS = 2500;
 
 type BannerModule = {
   BannerAd: React.ComponentType<{
@@ -23,12 +28,61 @@ interface AdMobBannerProps {
   onVisibilityChange?: (visible: boolean) => void;
 }
 
+function adErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message.slice(0, 180);
+  if (typeof error === 'string') return error.slice(0, 180);
+  return 'unknown';
+}
+
 export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBannerProps) {
   const { showAds } = useAppContext();
   const { colors: themeColors, isDark } = useTheme();
   const [adsModule, setAdsModule] = useState<BannerModule | null>(null);
   const [adFailed, setAdFailed] = useState(false);
   const [adLoaded, setAdLoaded] = useState(false);
+  /** True while waiting to remount after the first failure. */
+  const [retryPending, setRetryPending] = useState(false);
+  /** Bumps to remount BannerAd for a single retry. */
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const retryUsedRef = useRef(false);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const unitId = getAdMobBannerUnitId(Platform.OS, placement);
+  const placementKey = placement ?? 'home';
+
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+  }, []);
+
+  const reportAdFailure = useCallback(
+    (error: unknown, attempt: number, willRetry: boolean) => {
+      const message = adErrorMessage(error);
+      addSentryBreadcrumb('admob_banner_failed', 'admob', {
+        placement: placementKey,
+        unitId,
+        attempt,
+        willRetry,
+        message,
+      });
+      void logFirebaseEvent('admob_banner_failed', {
+        placement: placementKey,
+        attempt,
+        will_retry: willRetry ? 1 : 0,
+        // Keep unit id short for Analytics param limits
+        unit_suffix: unitId.slice(-12),
+      });
+      if (!willRetry) {
+        captureMessage(`admob_banner_failed: ${placementKey}`, 'warning');
+      }
+      if (__DEV__) {
+        console.warn('[AdMob]', placementKey, `attempt=${attempt}`, willRetry ? 'retrying' : 'giving up', message);
+      }
+    },
+    [placementKey, unitId],
+  );
 
   useEffect(() => {
     if (!showAds || !isAdMobNativeAvailable()) {
@@ -47,27 +101,64 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
           });
         }
       })
-      .catch(() => {
-        if (!cancelled) setAdsModule(null);
+      .catch((error) => {
+        if (!cancelled) {
+          setAdsModule(null);
+          reportAdFailure(error, 0, false);
+          onVisibilityChange?.(false);
+        }
       });
 
     return () => {
       cancelled = true;
       onVisibilityChange?.(false);
     };
-  }, [showAds, onVisibilityChange]);
+  }, [showAds, onVisibilityChange, reportAdFailure]);
 
   useEffect(() => {
+    clearRetryTimer();
+    retryUsedRef.current = false;
     setAdFailed(false);
     setAdLoaded(false);
+    setRetryPending(false);
+    setLoadAttempt(0);
     onVisibilityChange?.(false);
-  }, [placement, showAds, onVisibilityChange]);
+  }, [placement, showAds, onVisibilityChange, clearRetryTimer]);
+
+  useEffect(() => () => clearRetryTimer(), [clearRetryTimer]);
+
+  const handleAdFailedToLoad = useCallback(
+    (error: Error) => {
+      const attempt = loadAttempt + 1;
+      const canRetry = !retryUsedRef.current;
+
+      if (canRetry) {
+        retryUsedRef.current = true;
+        reportAdFailure(error, attempt, true);
+        setAdLoaded(false);
+        setRetryPending(true);
+        onVisibilityChange?.(false);
+        clearRetryTimer();
+        retryTimerRef.current = setTimeout(() => {
+          setRetryPending(false);
+          setLoadAttempt((value) => value + 1);
+        }, AD_RETRY_DELAY_MS);
+        return;
+      }
+
+      reportAdFailure(error, attempt, false);
+      setRetryPending(false);
+      setAdFailed(true);
+      onVisibilityChange?.(false);
+    },
+    [clearRetryTimer, loadAttempt, onVisibilityChange, reportAdFailure],
+  );
 
   if (!showAds || Platform.OS === 'web' || !isAdMobNativeAvailable() || adFailed) {
     return null;
   }
 
-  if (!adsModule) {
+  if (!adsModule || retryPending) {
     return null;
   }
 
@@ -89,17 +180,21 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
       ]}
     >
       <BannerAd
-        unitId={getAdMobBannerUnitId(Platform.OS, placement)}
+        key={`${placementKey}-${unitId}-${loadAttempt}`}
+        unitId={unitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
         requestOptions={{ requestNonPersonalizedAdsOnly: true }}
         onAdLoaded={() => {
+          clearRetryTimer();
           setAdLoaded(true);
           onVisibilityChange?.(true);
+          void logFirebaseEvent('admob_banner_loaded', {
+            placement: placementKey,
+            attempt: loadAttempt + 1,
+            unit_suffix: unitId.slice(-12),
+          });
         }}
-        onAdFailedToLoad={() => {
-          setAdFailed(true);
-          onVisibilityChange?.(false);
-        }}
+        onAdFailedToLoad={handleAdFailedToLoad}
       />
     </View>
   );

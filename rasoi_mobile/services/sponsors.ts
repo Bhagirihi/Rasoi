@@ -24,7 +24,7 @@ function mapSponsor(sponsor: SponsorResponse): SponsorCardData {
   };
 }
 
-export type SponsorScreenPlacement = 'home' | 'recipes' | 'pantry' | 'saved';
+export type SponsorScreenPlacement = 'home' | 'recipes' | 'pantry' | 'saved' | 'plan';
 
 async function fetchSponsorsFromSupabase(
   placement: SponsorScreenPlacement | 'recipe',

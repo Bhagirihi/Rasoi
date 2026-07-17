@@ -514,6 +514,16 @@ export default function RecipeDetailScreen() {
               available={available}
               missing={missing}
             />
+            {missing.length > 0 ? (
+              <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
+                <SponsorOrAd
+                  sponsor={recipeSponsor}
+                  loading={recipeSponsorLoading}
+                  placement="recipe"
+                  compact
+                />
+              </ViewportLazyAdSlot>
+            ) : null}
             <View style={styles.ingredientShopWrap}>
               <MissingItemsPanel
                 missing={missing}
@@ -551,15 +561,6 @@ export default function RecipeDetailScreen() {
               onToggleStep={cookMode ? toggleStepDone : undefined}
             />
           </RecipeDetailSection>
-
-          <ViewportLazyAdSlot scrollGeneration={adScrollGeneration}>
-            <SponsorOrAd
-              sponsor={recipeSponsor}
-              loading={recipeSponsorLoading}
-              placement="recipe"
-              compact
-            />
-          </ViewportLazyAdSlot>
         </View>
       </ScrollView>
 
