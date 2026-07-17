@@ -30,6 +30,8 @@ export const testIds = {
   qaOpenPaywall: 'qa-open-paywall',
   qaOpenTrialWelcome: 'qa-open-trial-welcome',
   qaOpenTrialEnded: 'qa-open-trial-ended',
+  qaToggleOffline: 'qa-toggle-offline',
+  appToast: 'app-toast',
 
   legalConsentCheckbox: 'legal-consent-checkbox',
   legalConsentContinue: 'legal-consent-continue',

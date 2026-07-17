@@ -3,8 +3,9 @@ import { StyleSheet, View } from "react-native";
 
 import Text from "@/components/ui/Text";
 import AppHeaderTrailing from "@/components/AppHeaderTrailing";
+import RasoiWordmark from "@/components/RasoiWordmark";
 import { useTheme } from "@/context/ThemeContext";
-import { spacing } from "@/constants/theme";
+import { colors, spacing } from "@/constants/theme";
 import { a11yHeader } from "@/utils/a11y";
 
 export function AppTabHeader({
@@ -33,15 +34,10 @@ export function AppTabHeader({
   return (
     <View style={styles.wrap} testID={testID}>
       <View style={styles.topRow}>
-        <Text
-          variant="label"
-          color="accent"
-          scheme={colorScheme}
-          style={styles.brand}
-          accessibilityRole="text"
-        >
-          RASOI
-        </Text>
+        <View style={styles.brandBlock}>
+          <RasoiWordmark size="bar" />
+          <View style={styles.brandAccent} />
+        </View>
         {trailing ?? (
           <AppHeaderTrailing showSettingsButton={showSettingsButton} />
         )}
@@ -98,8 +94,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  brand: {
-    letterSpacing: 2,
+  brandBlock: {
+    gap: 4,
+  },
+  brandAccent: {
+    height: 2,
+    width: 28,
+    borderRadius: 1,
+    backgroundColor: colors.primary,
   },
   eyebrow: {
     marginTop: spacing.md,

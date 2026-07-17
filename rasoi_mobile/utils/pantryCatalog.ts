@@ -8,7 +8,6 @@ import {
   buildPantryKeySet,
   isEssentialIngredient,
   pantryDedupeKey,
-  pantryHasIngredient,
   pantryHasIngredientInSet,
   resolveCanonicalLabel,
 } from '@/utils/pantryCanonical';
@@ -138,7 +137,7 @@ export function buildPantryItemsFromRecipes(recipes: Recipe[]): string[] {
       if (!rawName || isPantryMatchExcluded(rawName)) continue;
 
       const label = chipLabelForIngredient(rawName);
-      const chipKey = ingredientKey(label);
+      const chipKey = pantryDedupeKey(label);
       if (!chipKey || seenChipKeys.has(chipKey)) continue;
 
       seenChipKeys.add(chipKey);
@@ -166,6 +165,21 @@ export function buildPantryRecipeSection(
   };
 }
 
+/** Drop labels already claimed by an earlier pantry section (canonical-key dedupe). */
+export function takeUnclaimedPantryItems(
+  items: string[],
+  claimedKeys: Set<string>,
+): string[] {
+  const unique: string[] = [];
+  for (const item of items) {
+    const key = pantryDedupeKey(item);
+    if (!key || claimedKeys.has(key)) continue;
+    claimedKeys.add(key);
+    unique.push(item);
+  }
+  return unique;
+}
+
 export function getMissingPantryLabels(
   recipes: Recipe[],
   pantryIngredients: string[],
@@ -173,11 +187,13 @@ export function getMissingPantryLabels(
 ): string[] {
   const seen = new Set<string>();
   const missing: string[] = [];
+  // Build once — pantryHasIngredient rebuilds the full key set per ingredient.
+  const pantryKeys = buildPantryKeySet(pantryIngredients);
 
   for (const recipe of recipes) {
     for (const ingredient of recipe.ingredients) {
       const rawName = ingredient.name?.trim();
-      if (!rawName || pantryHasIngredient(pantryIngredients, rawName)) continue;
+      if (!rawName || pantryHasIngredientInSet(pantryKeys, rawName)) continue;
 
       const label = chipLabelForIngredient(rawName);
       const key = pantryDedupeKey(label);

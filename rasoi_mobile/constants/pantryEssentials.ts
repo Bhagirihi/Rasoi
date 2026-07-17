@@ -134,3 +134,30 @@ export const PANTRY_ESSENTIAL_SECTIONS: PantryEssentialSection[] = [
     ],
   },
 ];
+
+/** First-run setup chips — onion, oil, salt, atta, rice (canonical ids). */
+export const PANTRY_SETUP_STAPLE_IDS = [
+  'pyaaz',
+  'tel',
+  'namak',
+  'gehu-atta',
+  'chawal',
+] as const;
+
+const ESSENTIAL_ITEMS_BY_ID = new Map(
+  PANTRY_ESSENTIAL_SECTIONS.flatMap((section) => section.items).map((item) => [item.id, item]),
+);
+
+/** Diet-aware labels for the welcome pantry staples row (pre-selected on setup). */
+export function getPantrySetupStapleLabels(dietChoice: DietChoice): string[] {
+  const labels: string[] = [];
+  for (const id of PANTRY_SETUP_STAPLE_IDS) {
+    const item = ESSENTIAL_ITEMS_BY_ID.get(id);
+    if (!item) continue;
+    if (item.excludedDiets?.includes(dietChoice)) continue;
+    // Match pantryPersonalization Jain veggie exclusions (onion).
+    if (dietChoice === 'Jain' && id === 'pyaaz') continue;
+    labels.push(item.label);
+  }
+  return labels;
+}

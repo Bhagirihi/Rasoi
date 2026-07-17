@@ -13,6 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import RasoiBrandIcon from '@/components/RasoiBrandIcon';
+import RasoiWordmark from '@/components/RasoiWordmark';
 import SplashFoodCollage from '@/components/SplashFoodCollage';
 import { colors, spacing } from '@/constants/theme';
 
@@ -116,7 +117,8 @@ export default function LaunchSplash({ dismissing = false, onDismissed }: Launch
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.brand}>Rasoi</Text>
+        <RasoiWordmark size="splash" />
+        <View style={styles.brandAccent} />
         <Text style={styles.tagline}>Loading your kitchen…</Text>
         <View style={styles.dotsRow}>
           <View style={[styles.dot, styles.dotActive]} />
@@ -185,11 +187,11 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     zIndex: 2,
   },
-  brand: {
-    fontSize: 32,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    color: colors.primary,
+  brandAccent: {
+    height: 2,
+    width: 40,
+    borderRadius: 1,
+    backgroundColor: colors.primary,
   },
   tagline: {
     fontSize: 14,

@@ -22,6 +22,7 @@ import {
 } from '@/services/recommendations';
 import { buildHomePicksProfileKey, dedupeHomePicks, resolveHomeMealPicks } from '@/utils/homeMealPicks';
 import { getScheduledMealWindow, type ScheduledMealWindow } from '@/utils/mealTime';
+import { getAllOfflineRecipes } from '@/utils/offlineRecipeStorage';
 import { getPlanRecipeIdsForHomeExclusion } from '@/utils/planMenu';
 import { MEAL_SECTION_MINUTES, minutesSinceMidnight } from '@/constants/mealTimeWindows';
 import { SEASONAL_RAIL_PICK_COUNTS } from '@/constants/planFeatureLimits';
@@ -56,6 +57,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     userId,
     effectiveAllergyExclusions,
     planLimits,
+    offlineRecipeIds,
   } = useAppContext();
   const homePickCount = planLimits.homePickCount;
   const { recipes, loading: recipesLoading } = useRecipes();
@@ -67,6 +69,28 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   const excludeOnRefreshRef = useRef<string[]>([]);
   const homePicksRef = useRef<Recipe[]>([]);
   const lateNightPickRef = useRef<Recipe | undefined>(undefined);
+
+  const canUseOfflineDownloads =
+    planLimits.offlineRecipeLimit > 0 && offlineRecipeIds.length > 0;
+
+  const resolveOfflineDownloadPicks = useCallback(async (): Promise<Recipe[]> => {
+    if (!canUseOfflineDownloads) return [];
+    const downloaded = await getAllOfflineRecipes();
+    if (downloaded.length === 0) return [];
+
+    // Diet/allergy only — keep intentional downloads even if cuisine filters would drop them.
+    const dietFiltered = filterRecipes(downloaded, {
+      dietPreference: dietChoiceToFilter(dietChoice),
+      dietChoice,
+      regionalCuisine: 'All India',
+      favoriteCuisines: [],
+      pantryIngredients: [],
+      fastFilters: [],
+      allergyExclusions: effectiveAllergyExclusions,
+    });
+    const pool = dietFiltered.length > 0 ? dietFiltered : downloaded;
+    return pool.slice(0, homePickCount);
+  }, [canUseOfflineDownloads, dietChoice, effectiveAllergyExclusions, homePickCount]);
 
   useEffect(() => {
     const syncWindow = () => setMealWindow(getScheduledMealWindow());
@@ -112,14 +136,8 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     }
 
     return sortRecipesForTonight(
-      filterRecipes(pickPool, {
-        dietPreference: dietChoiceToFilter(dietChoice),
-        dietChoice,
-        regionalCuisine,
-        favoriteCuisines,
-        pantryIngredients: deferredPantryIngredients,
-        fastFilters: [],
-      }),
+      // Pantry is for ranking only — keep the diet/cuisine pool unfiltered by stock.
+      pickPool,
       {
         regionalCuisine,
         pantryIngredients: deferredPantryIngredients,
@@ -128,9 +146,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     );
   }, [
     pickPool,
-    dietChoice,
     regionalCuisine,
-    favoriteCuisines,
     deferredPantryIngredients,
     mealWindow.slot,
   ]);
@@ -238,21 +254,43 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           }
           // API returned no picks — fall through to local meal picks below.
         } catch {
+          // Prefer user downloads over stale recommendation cache.
+          const downloadedPicks = await resolveOfflineDownloadPicks();
+          if (downloadedPicks.length > 0 && !cancelled) {
+            setSeasonalRail(null);
+            setLateNightPick(undefined);
+            setHomePicks(downloadedPicks);
+            setPickReasons([]);
+            setHomePicksReady(true);
+            return;
+          }
+
           const offline = await loadOfflineRecommendations(mealWindow.windowKey);
           if (offline && !cancelled) {
             const mapped = mapRecommendationPicks(offline);
             const deduped = dedupeHomePicks(mapped.picks, mapped.lateNightPick);
-            setSeasonalRail(mapped.seasonalRail ?? null);
+            if (deduped.picks.length > 0) {
+              setSeasonalRail(mapped.seasonalRail ?? null);
               setHomePicks(deduped.picks.slice(0, homePickCount));
-            setPickReasons(mapped.reasons);
-            setLateNightPick(deduped.lateNightPick);
-            setHomePicksReady(deduped.picks.length > 0);
-            return;
+              setPickReasons(mapped.reasons);
+              setLateNightPick(deduped.lateNightPick);
+              setHomePicksReady(true);
+              return;
+            }
           }
         }
       }
 
       if (recipesLoading || pickPool.length === 0) {
+        const downloadedPicks = await resolveOfflineDownloadPicks();
+        if (downloadedPicks.length > 0 && !cancelled) {
+          setSeasonalRail(null);
+          setLateNightPick(undefined);
+          setHomePicks(downloadedPicks);
+          setPickReasons([]);
+          setHomePicksReady(true);
+          return;
+        }
         setHomePicks([]);
         setPickReasons([]);
         setLateNightPick(undefined);
@@ -333,11 +371,13 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     refreshNonce,
     homePickCount,
     planLimits.seasonalRailMode,
+    resolveOfflineDownloadPicks,
   ]);
 
   const topPick = homePicks[0];
   const alsoFor = homePicks.slice(1, homePickCount);
-  const rankingReady = !recipesLoading && homePicksReady;
+  // Allow offline download picks to surface before the catalog refresh finishes.
+  const rankingReady = homePicksReady && (!recipesLoading || homePicks.length > 0);
 
   const [readyToCookCount, setReadyToCookCount] = useState(0);
   const [readyToCookReady, setReadyToCookReady] = useState(false);
@@ -345,7 +385,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setReadyToCookReady(false);
 
-    if (pickPool.length === 0 || pantryIngredients.length === 0) {
+    if (pickPool.length === 0 || deferredPantryIngredients.length === 0) {
       setReadyToCookCount(0);
       setReadyToCookReady(true);
       return;
@@ -357,7 +397,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
         dietPreference: dietChoiceToFilter(dietChoice),
         regionalCuisine,
         favoriteCuisines,
-        pantryIngredients,
+        pantryIngredients: deferredPantryIngredients,
         allergyExclusions: effectiveAllergyExclusions,
       });
       setReadyToCookCount(count);
@@ -365,7 +405,14 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     });
 
     return () => task.cancel();
-  }, [pickPool, dietChoice, regionalCuisine, favoriteCuisines, pantryIngredients, effectiveAllergyExclusions]);
+  }, [
+    pickPool,
+    dietChoice,
+    regionalCuisine,
+    favoriteCuisines,
+    deferredPantryIngredients,
+    effectiveAllergyExclusions,
+  ]);
 
   const value = useMemo<TonightRecipesContextValue>(
     () => ({

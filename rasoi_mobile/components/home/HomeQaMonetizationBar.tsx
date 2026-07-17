@@ -1,20 +1,32 @@
 import { useRouter } from 'expo-router';
-import { Crown, Sparkles, TimerOff } from 'lucide-react-native';
+import { Crown, Sparkles, TimerOff, WifiOff } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { openTrialExpiredPaywallForQa } from '@/components/paywall/TrialExpiredPaywallModal';
 import { QA_MONETIZATION_QUERY, QA_MONETIZATION_UI_ENABLED } from '@/constants/qaMonetization';
 import { colors, radius, spacing } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
+import { useNetworkConnectivity } from '@/context/NetworkConnectivityContext';
+import { useRecipes } from '@/context/RecipesContext';
+import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function HomeQaMonetizationBar() {
   const router = useRouter();
   const { colors: themeColors } = useTheme();
+  const { qaForceOffline, toggleQaForceOffline } = useNetworkConnectivity();
+  const { refreshRecipes } = useRecipes();
+  const { refreshHomePicks } = useTonightRecipes();
 
   if (!QA_MONETIZATION_UI_ENABLED) {
     return null;
   }
+
+  const toggleOffline = () => {
+    toggleQaForceOffline();
+    void refreshRecipes({ bypassCache: true });
+    void refreshHomePicks(true);
+  };
 
   return (
     <View style={styles.wrap}>
@@ -65,6 +77,21 @@ export default function HomeQaMonetizationBar() {
       >
         <TimerOff size={14} color={colors.primary} />
         <Text style={[styles.btnText, { color: themeColors.charcoal }]}>Trial ended popup</Text>
+      </Pressable>
+      <Pressable
+        onPress={toggleOffline}
+        testID={testIds.qaToggleOffline}
+        style={[
+          styles.btnWide,
+          qaForceOffline
+            ? { borderColor: colors.primary, backgroundColor: 'rgba(255,107,53,0.12)' }
+            : { borderColor: themeColors.border, backgroundColor: themeColors.white },
+        ]}
+      >
+        <WifiOff size={14} color={colors.primary} />
+        <Text style={[styles.btnText, { color: themeColors.charcoal }]}>
+          {qaForceOffline ? 'QA offline ON — tap to go online' : 'Simulate offline'}
+        </Text>
       </Pressable>
     </View>
   );

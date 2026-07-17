@@ -1,6 +1,6 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useRouter } from "expo-router";
-import { useMemo, useState, useCallback } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ChefHat } from "lucide-react-native";
@@ -22,6 +22,7 @@ import { colors, layout, radius, scrollIndicator, spacing } from "@/constants/th
 import { testIds } from "@/constants/testIds";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
+import { useNetworkConnectivity } from "@/context/NetworkConnectivityContext";
 import { Recipe } from "@/data/mockRecipes";
 import type { AffiliatePartner } from "@/utils/affiliate";
 import { getMealContext } from "@/utils/mealTime";
@@ -33,19 +34,44 @@ import {
 
 export default function SavedScreen() {
   const router = useRouter();
+  const { offline: offlineParam } = useLocalSearchParams<{ offline?: string }>();
   const tabBarHeight = useBottomTabBarHeight();
   const meal = getMealContext();
   const { colors: themeColors, screenBackground } = useTheme();
-  const { pantryIngredients, dietChoice, regionalCuisine, showPartners, offlineRecipeIds } =
-    useAppContext();
+  const {
+    pantryIngredients,
+    dietChoice,
+    regionalCuisine,
+    showPartners,
+    offlineRecipeIds,
+    planLimits,
+  } = useAppContext();
+  const { isOffline } = useNetworkConnectivity();
   const { savedRecipes } = useSavedRecipes();
   const { offlineRecipes } = useOfflineRecipes();
   const [offlineFilterOnly, setOfflineFilterOnly] = useState(false);
 
-  const visibleRecipes = offlineFilterOnly ? offlineRecipes : savedRecipes;
+  const planAllowsOffline = planLimits.offlineRecipeLimit > 0;
+  const cappedOfflineRecipes = useMemo(() => {
+    if (!planAllowsOffline) return [];
+    return offlineRecipes.slice(0, planLimits.offlineRecipeLimit);
+  }, [offlineRecipes, planAllowsOffline, planLimits.offlineRecipeLimit]);
+
+  const visibleRecipes = offlineFilterOnly ? cappedOfflineRecipes : savedRecipes;
   const hasAnySaved = savedRecipes.length > 0;
-  const hasAnyOffline = offlineRecipeIds.length > 0;
+  const hasAnyOffline = planAllowsOffline && offlineRecipeIds.length > 0;
   const showFilters = hasAnySaved || hasAnyOffline;
+
+  // Deep link / offline redirect → Offline ready (plan-gated).
+  useEffect(() => {
+    if (!planAllowsOffline) {
+      setOfflineFilterOnly(false);
+      return;
+    }
+    if (offlineParam === "1" || (isOffline && offlineRecipeIds.length > 0)) {
+      setOfflineFilterOnly(true);
+    }
+  }, [offlineParam, isOffline, planAllowsOffline, offlineRecipeIds.length]);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalRecipe, setModalRecipe] = useState<Recipe | null>(null);
@@ -163,9 +189,11 @@ export default function SavedScreen() {
                 <Pressable
                   onPress={() => setOfflineFilterOnly(true)}
                   style={[styles.filterChip, offlineFilterOnly && styles.filterChipActive]}
+                  disabled={!planAllowsOffline}
                 >
                   <Text style={[styles.filterChipText, offlineFilterOnly && styles.filterChipTextActive]}>
-                    Offline ready{hasAnyOffline ? ` (${offlineRecipeIds.length})` : ""}
+                    Offline ready
+                    {hasAnyOffline ? ` (${cappedOfflineRecipes.length})` : planAllowsOffline ? "" : " (Plus)"}
                   </Text>
                 </Pressable>
               </View>
@@ -217,8 +245,12 @@ export default function SavedScreen() {
           offlineFilterOnly ? (
             <EmptyState
               icon={ChefHat}
-              title="No offline recipes yet"
-              subtitle="Tap Download on any recipe from Home or recipe detail. Offline downloads are separate from Save."
+              title={planAllowsOffline ? "No offline recipes yet" : "Offline cooking is on Plus"}
+              subtitle={
+                planAllowsOffline
+                  ? "Tap Download on any recipe from Home or recipe detail. Offline downloads are separate from Save."
+                  : "Upgrade to Rasoi Plus (or start a trial) to download recipes and cook without internet."
+              }
             />
           ) : (
             <EmptyState

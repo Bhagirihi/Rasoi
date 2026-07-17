@@ -1329,13 +1329,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
             const payload = pantrySyncLatestRef.current;
             pantrySyncTimerRef.current = null;
             if (!payload) return;
-            void updatePantryIngredients(payload).then(applyUserProfile);
+            // Local state is already correct — avoid applyUserProfile (full re-render).
+            void updatePantryIngredients(payload).catch((error) => {
+              captureException(error, { scope: 'pantrySync' });
+            });
           }, 450);
         }
         return next;
       });
     },
-    [applyUserProfile, isLoggedIn],
+    [isLoggedIn],
   );
 
   const canSaveRecipe = useCallback(

@@ -14,7 +14,7 @@ export default function AuthLayout() {
     >
       <Stack.Screen
         name="legal-consent"
-        options={{ gestureEnabled: false, contentStyle: { backgroundColor: colors.cream, flex: 1 } }}
+        options={{ gestureEnabled: false, contentStyle: { backgroundColor: colors.dark.bg, flex: 1 } }}
       />
       <Stack.Screen
         name="onboarding"

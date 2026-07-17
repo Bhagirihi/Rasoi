@@ -10,8 +10,8 @@
     "packageName": "com.bhagihiri.rasoiapp",
     "expoSlug": "rasoi",
     "expoOwner": "takeyshi",
-    "versionName": "1.0.14",
-    "versionCode": 15,
+    "versionName": "1.0.15",
+    "versionCode": 16,
     "category": "FOOD_AND_DRINK",
     "appType": "APPLICATION",
     "contentRating": "Everyone",
@@ -19,8 +19,17 @@
     "pricing": "FREE"
   },
   "localization": {
-    "apiPushed": ["en-US", "hi-IN", "mr-IN", "ta-IN", "te-IN", "gu-IN"],
-    "skipApiPush": ["bn-IN"],
+    "apiPushed": [
+      "en-US",
+      "hi-IN",
+      "mr-IN",
+      "ta-IN",
+      "te-IN",
+      "gu-IN"
+    ],
+    "skipApiPush": [
+      "bn-IN"
+    ],
     "skipApiPushReason": {
       "bn-IN": "Bengali not available in Play Console store listing translations"
     },
@@ -31,38 +40,54 @@
   "playConsole": {
     "tagsApiSupported": false,
     "tags": [
-    "Recipes",
-    "Cooking",
-    "Food & drink",
-    "Meal planning",
-    "Lifestyle",
-    "Health & fitness"
-    ],
-    "competitorTagReference": {
-    "com.company.rasoiplan": {
-      "title": "Rasoi Plan",
-      "inferredTags": ["Meal planning", "Recipes", "Cooking", "Food & drink", "Lifestyle"],
-      "source": "Gujarati weekly meal planner; Jain/Swaminarayan diet"
-    },
-    "com.rasoiai.app": {
-      "title": "Rasoi AI - AI Powered Kitchen",
-      "inferredTags": ["Recipes", "Cooking", "Meal planning", "Food & drink", "Health & fitness", "Lifestyle"],
-      "source": "AI pantry recipes, weekly planner, nutrition/IFCT, Indian regional dishes"
-    },
-    "com.apnirasoi.customer.android": {
-      "title": "Apni Rasoi",
-      "inferredTags": ["Food delivery", "Restaurants"],
-      "source": "Restaurant food delivery — not applicable to Rasoi recipe app; do not add",
-      "skipForRasoi": true
-    },
-    "rasoiRecommendedTags": [
       "Recipes",
       "Cooking",
       "Food & drink",
       "Meal planning",
       "Lifestyle",
       "Health & fitness"
-    ]
+    ],
+    "competitorTagReference": {
+      "com.company.rasoiplan": {
+        "title": "Rasoi Plan",
+        "inferredTags": [
+          "Meal planning",
+          "Recipes",
+          "Cooking",
+          "Food & drink",
+          "Lifestyle"
+        ],
+        "source": "Gujarati weekly meal planner; Jain/Swaminarayan diet"
+      },
+      "com.rasoiai.app": {
+        "title": "Rasoi AI - AI Powered Kitchen",
+        "inferredTags": [
+          "Recipes",
+          "Cooking",
+          "Meal planning",
+          "Food & drink",
+          "Health & fitness",
+          "Lifestyle"
+        ],
+        "source": "AI pantry recipes, weekly planner, nutrition/IFCT, Indian regional dishes"
+      },
+      "com.apnirasoi.customer.android": {
+        "title": "Apni Rasoi",
+        "inferredTags": [
+          "Food delivery",
+          "Restaurants"
+        ],
+        "source": "Restaurant food delivery — not applicable to Rasoi recipe app; do not add",
+        "skipForRasoi": true
+      },
+      "rasoiRecommendedTags": [
+        "Recipes",
+        "Cooking",
+        "Food & drink",
+        "Meal planning",
+        "Lifestyle",
+        "Health & fitness"
+      ]
     }
   },
   "operatorActions": [
@@ -204,7 +229,9 @@
     "collection": {
       "collectsOrSharesData": true,
       "encryptedInTransit": true,
-      "accountCreationMethods": ["usernameAndOtherAuthentication"],
+      "accountCreationMethods": [
+        "usernameAndOtherAuthentication"
+      ],
       "notSold": true
     },
     "dataTypes": {
@@ -214,7 +241,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS"
+        ]
       },
       "name": {
         "playLabel": "Name",
@@ -222,7 +252,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
       },
       "emailAddress": {
         "playLabel": "Email address",
@@ -230,7 +263,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
       },
       "userIds": {
         "playLabel": "User IDs",
@@ -238,7 +274,11 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS", "ACCOUNT_MANAGEMENT"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS",
+          "ACCOUNT_MANAGEMENT"
+        ]
       },
       "phoneNumber": {
         "playLabel": "Phone number",
@@ -246,7 +286,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
       },
       "otherInfo": {
         "playLabel": "Other info",
@@ -254,7 +297,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
       },
       "purchaseHistory": {
         "playLabel": "Purchase history",
@@ -262,7 +308,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": false,
-        "purposes": ["APP_FUNCTIONALITY", "ACCOUNT_MANAGEMENT"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
       },
       "appInteractions": {
         "playLabel": "App interactions",
@@ -270,7 +319,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS"
+        ]
       },
       "inAppSearchHistory": {
         "playLabel": "In-app search history",
@@ -278,7 +330,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY", "ANALYTICS"]
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS"
+        ]
       },
       "otherUserGeneratedContent": {
         "playLabel": "Other user-generated content",
@@ -286,7 +341,9 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["APP_FUNCTIONALITY"]
+        "purposes": [
+          "APP_FUNCTIONALITY"
+        ]
       },
       "crashLogs": {
         "playLabel": "Crash logs",
@@ -294,7 +351,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["ANALYTICS", "APP_FUNCTIONALITY"]
+        "purposes": [
+          "ANALYTICS",
+          "APP_FUNCTIONALITY"
+        ]
       },
       "diagnostics": {
         "playLabel": "Diagnostics",
@@ -302,7 +362,10 @@
         "shared": false,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["ANALYTICS", "APP_FUNCTIONALITY"]
+        "purposes": [
+          "ANALYTICS",
+          "APP_FUNCTIONALITY"
+        ]
       },
       "deviceOrOtherIds": {
         "playLabel": "Device or other IDs",
@@ -310,7 +373,10 @@
         "shared": true,
         "ephemeral": false,
         "optional": true,
-        "purposes": ["ADVERTISING", "ANALYTICS"]
+        "purposes": [
+          "ADVERTISING",
+          "ANALYTICS"
+        ]
       }
     }
   },
@@ -373,7 +439,10 @@
           "ads": false,
           "partners": true
         },
-        "productIds": ["rasoi_plus_monthly", "rasoi_plus_yearly"]
+        "productIds": [
+          "rasoi_plus_monthly",
+          "rasoi_plus_yearly"
+        ]
       }
     },
     "products": [
@@ -449,14 +518,16 @@
   },
   "openTesting": {
     "trackStatus": "active",
-    "countries": ["IN"],
+    "countries": [
+      "IN"
+    ],
     "testerLimit": "unlimited",
     "optInUrl": "https://play.google.com/apps/testing/com.bhagihiri.rasoiapp",
     "versionCodeLink": "https://play.google.com/apps/test/com.bhagihiri.rasoiapp/10",
     "storeListingUrl": "https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp",
     "release": {
-      "versionName": "1.0.12",
-      "versionCode": 13
+      "versionName": "1.0.15",
+      "versionCode": 16
     }
   },
   "firebaseIntegrations": {

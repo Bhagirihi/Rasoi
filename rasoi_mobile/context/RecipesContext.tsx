@@ -29,7 +29,7 @@ type RecipesContextValue = {
   hasMore: boolean;
   totalCount: number | null;
   error: string | null;
-  refreshRecipes: () => Promise<void>;
+  refreshRecipes: (options?: { bypassCache?: boolean }) => Promise<void>;
   loadMoreRecipes: () => Promise<void>;
   syncRecipeFilters: (dietChoice: string, regionalCuisine: string) => void;
   getRecipeById: (id: string) => Recipe | undefined;
@@ -86,21 +86,33 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   const lastForegroundRefreshRef = useRef(0);
   /** Bumped on refresh/filter change so in-flight pagination cannot apply stale pages. */
   const fetchGenerationRef = useRef(0);
-  const realtimeRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const realtimeRefreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
-  const applyPage = useCallback((
-    pageItems: Recipe[],
-    pagination: { hasMore: boolean; nextOffset: number | null; total: number },
-    replace: boolean,
-    generation: number,
-  ) => {
-    if (generation !== fetchGenerationRef.current) return;
-    setRecipes((current) => (replace ? pageItems : mergeRecipeList(current, pageItems)));
-    setHasMore(pagination.hasMore);
-    setTotalCount(pagination.total);
-    hasMoreRef.current = pagination.hasMore;
-    nextOffsetRef.current = pagination.nextOffset ?? nextOffsetRef.current + pageItems.length;
-  }, []);
+  const applyPage = useCallback(
+    (
+      pageItems: Recipe[],
+      pagination: {
+        hasMore: boolean;
+        nextOffset: number | null;
+        total: number;
+      },
+      replace: boolean,
+      generation: number,
+    ) => {
+      if (generation !== fetchGenerationRef.current) return;
+      setRecipes((current) =>
+        replace ? pageItems : mergeRecipeList(current, pageItems),
+      );
+      setHasMore(pagination.hasMore);
+      setTotalCount(pagination.total);
+      hasMoreRef.current = pagination.hasMore;
+      nextOffsetRef.current =
+        pagination.nextOffset ?? nextOffsetRef.current + pageItems.length;
+    },
+    [],
+  );
 
   const loadMoreRecipes = useCallback(async () => {
     if (!hasMoreRef.current || loadingMoreRef.current) return;
@@ -134,48 +146,51 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     }
   }, [applyPage]);
 
-  const refreshRecipes = useCallback(async (options?: { bypassCache?: boolean }) => {
-    const generation = ++fetchGenerationRef.current;
-    loadingMoreRef.current = false;
-    setLoadingMore(false);
+  const refreshRecipes = useCallback(
+    async (options?: { bypassCache?: boolean }) => {
+      const generation = ++fetchGenerationRef.current;
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
 
-    const filters = listFiltersRef.current;
-    const hasRecipes = recipesRef.current.length > 0;
-    if (!hasRecipes) {
-      setLoading(true);
-    }
-    setError(null);
-
-    try {
-      const firstPage = await fetchPublishedRecipesPage(
-        filters,
-        0,
-        RECIPE_PAGE_SIZE,
-        options?.bypassCache ?? false,
-      );
-      if (generation !== fetchGenerationRef.current) return;
-      applyPage(firstPage.items, firstPage.pagination, true, generation);
-      lastFetchedKeyRef.current = recipeFiltersKey(filters);
-    } catch (caught) {
-      if (generation !== fetchGenerationRef.current) return;
-      setError(
-        formatUserFacingApiError(
-          caught,
-          "Could not load recipes. Pull to refresh when you are back online.",
-        ),
-      );
+      const filters = listFiltersRef.current;
+      const hasRecipes = recipesRef.current.length > 0;
       if (!hasRecipes) {
-        setRecipes(mergeOfflineStarterRecipes([]));
-        setHasMore(false);
-        setTotalCount(mergeOfflineStarterRecipes([]).length);
-        hasMoreRef.current = false;
+        setLoading(true);
       }
-    } finally {
-      if (generation === fetchGenerationRef.current) {
-        setLoading(false);
+      setError(null);
+
+      try {
+        const firstPage = await fetchPublishedRecipesPage(
+          filters,
+          0,
+          RECIPE_PAGE_SIZE,
+          options?.bypassCache ?? false,
+        );
+        if (generation !== fetchGenerationRef.current) return;
+        applyPage(firstPage.items, firstPage.pagination, true, generation);
+        lastFetchedKeyRef.current = recipeFiltersKey(filters);
+      } catch (caught) {
+        if (generation !== fetchGenerationRef.current) return;
+        setError(
+          formatUserFacingApiError(
+            caught,
+            "Could not load recipes. Pull to refresh when you are back online.",
+          ),
+        );
+        if (!hasRecipes) {
+          setRecipes(mergeOfflineStarterRecipes([]));
+          setHasMore(false);
+          setTotalCount(mergeOfflineStarterRecipes([]).length);
+          hasMoreRef.current = false;
+        }
+      } finally {
+        if (generation === fetchGenerationRef.current) {
+          setLoading(false);
+        }
       }
-    }
-  }, [applyPage]);
+    },
+    [applyPage],
+  );
 
   const syncRecipeFilters = useCallback(
     (dietChoice: string, regionalCuisine: string) => {
@@ -199,7 +214,8 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       if (state !== "active") return;
 
       const now = Date.now();
-      if (now - lastForegroundRefreshRef.current < FOREGROUND_RECIPE_REFRESH_MS) return;
+      if (now - lastForegroundRefreshRef.current < FOREGROUND_RECIPE_REFRESH_MS)
+        return;
       lastForegroundRefreshRef.current = now;
 
       void refreshRecipes();

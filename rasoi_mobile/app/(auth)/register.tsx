@@ -1,5 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail, Phone, User } from 'lucide-react-native';
 import { useEffect, useRef, useState, useMemo, type RefObject } from 'react';
@@ -20,6 +21,7 @@ import CuisinePreferenceList from '@/components/CuisinePreferenceList';
 import DietPreferenceList from '@/components/DietPreferenceList';
 import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
 import RasoiBrandIcon from '@/components/RasoiBrandIcon';
+import RasoiWordmark from '@/components/RasoiWordmark';
 import {
   colors,
   gradients,
@@ -29,6 +31,7 @@ import {
   type CuisineId,
   type DietChoice,
 } from '@/constants/theme';
+import { LEGAL_URLS } from '@/constants/legalHighlights';
 import { testIds } from '@/constants/testIds';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import AppSavingOverlay from '@/components/AppSavingOverlay';
@@ -513,11 +516,17 @@ export default function RegisterScreen() {
           {step === 'details' ? (
             <View style={[styles.hero, isCompact && styles.heroCompact]}>
               <RasoiBrandIcon size={isShort ? 64 : isCompact ? 72 : 88} borderRadius={isShort ? 16 : 20} />
-              {!isShort ? <Text style={styles.brand}>Rasoi</Text> : null}
+              {!isShort ? (
+                <>
+                  <RasoiWordmark size="hero" />
+                  <View style={styles.brandAccent} />
+                </>
+              ) : null}
             </View>
           ) : (
             <View style={styles.topRow}>
-              <Text style={styles.brand}>Rasoi</Text>
+              <RasoiWordmark size="bar" />
+              <View style={styles.brandAccent} />
             </View>
           )}
 
@@ -720,6 +729,29 @@ export default function RegisterScreen() {
             ]}
           >
             <View style={[styles.actions, isCompact && styles.actionsCompact]}>
+              {step === 'details' ? (
+                <Text style={styles.legalNotice}>
+                  By continuing you agree to{' '}
+                  <Text
+                    style={styles.legalLink}
+                    onPress={() => void Linking.openURL(LEGAL_URLS.terms)}
+                    accessibilityRole="link"
+                    accessibilityLabel="Terms of Service"
+                  >
+                    Terms
+                  </Text>
+                  {' & '}
+                  <Text
+                    style={styles.legalLink}
+                    onPress={() => void Linking.openURL(LEGAL_URLS.privacy)}
+                    accessibilityRole="link"
+                    accessibilityLabel="Privacy Policy"
+                  >
+                    Privacy
+                  </Text>
+                  .
+                </Text>
+              ) : null}
               <Pressable
                 onPress={handlePrimaryAction}
                 disabled={isSubmitting || stepMeta.primaryDisabled}
@@ -811,13 +843,13 @@ const styles = StyleSheet.create({
   },
   topRow: {
     alignItems: 'center',
+    gap: spacing.xs,
   },
-  brand: {
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    color: colors.primary,
-    textTransform: 'uppercase',
+  brandAccent: {
+    height: 2,
+    width: 36,
+    borderRadius: 1,
+    backgroundColor: colors.primary,
   },
   backRow: {
     flexDirection: 'row',
@@ -959,6 +991,18 @@ const styles = StyleSheet.create({
   },
   actionsCompact: {
     gap: spacing.sm,
+  },
+  legalNotice: {
+    textAlign: 'center',
+    fontSize: 12,
+    lineHeight: 18,
+    color: colors.dark.textMuted,
+    paddingHorizontal: spacing.sm,
+  },
+  legalLink: {
+    color: colors.primary,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   submitWrap: {
     borderRadius: 999,

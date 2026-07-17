@@ -18,6 +18,7 @@ import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from "@/components/AuthAtmosphere"
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import AppSavingOverlay from "@/components/AppSavingOverlay";
 import RasoiBrandIcon from "@/components/RasoiBrandIcon";
+import RasoiWordmark from "@/components/RasoiWordmark";
 import {
   colors,
   gradients,
@@ -252,7 +253,8 @@ export default function LoginScreen() {
           >
             <View style={styles.hero}>
               <RasoiBrandIcon size={112} borderRadius={26} />
-              <Text style={styles.brand}>Rasoi</Text>
+              <RasoiWordmark size="hero" />
+              <View style={styles.brandAccent} />
             </View>
 
             {step === "otp" && (
@@ -431,12 +433,12 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     marginBottom: spacing.xs,
   },
-  brand: {
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 1.5,
-    color: colors.primary,
-    textTransform: "uppercase",
+  brandAccent: {
+    height: 2,
+    width: 36,
+    borderRadius: 1,
+    backgroundColor: colors.primary,
+    marginTop: -spacing.xs,
   },
   backRow: {
     flexDirection: "row",

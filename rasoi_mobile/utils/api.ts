@@ -3,6 +3,7 @@ import Constants from 'expo-constants';
 
 import { getAuthToken } from '@/utils/authToken';
 import { getSupabaseSession } from '@/services/supabaseAuth';
+import { isQaForceOffline } from '@/context/NetworkConnectivityContext';
 import { addSentryBreadcrumb, captureException } from '@/utils/sentry';
 
 function parseExpoDevHost(): string | null {
@@ -238,6 +239,10 @@ export async function apiFetch<T>(
   init?: RequestInit,
   options?: ApiFetchOptions,
 ): Promise<T> {
+  if (isQaForceOffline()) {
+    throw new Error('Network request failed');
+  }
+
   const url = `${getApiBaseUrl()}${path.startsWith('/') ? path : `/${path}`}`;
 
   const controller = options?.timeoutMs ? new AbortController() : null;
@@ -335,9 +340,9 @@ export async function optionalAuthApiFetch<T>(path: string, init?: RequestInit):
     ...init,
     headers: authorization
       ? {
-          Authorization: authorization,
-          ...init?.headers,
-        }
+        Authorization: authorization,
+        ...init?.headers,
+      }
       : init?.headers,
   });
 }

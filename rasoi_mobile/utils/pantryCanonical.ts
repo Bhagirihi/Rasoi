@@ -15,8 +15,10 @@ const ALL_CANONICAL_ITEMS: PantryEssentialItem[] = [
 ];
 
 const KEY_TO_CANONICAL_ID = new Map<string, string>();
+const ID_TO_CANONICAL_ITEM = new Map<string, PantryEssentialItem>();
 
 for (const item of ALL_CANONICAL_ITEMS) {
+  ID_TO_CANONICAL_ITEM.set(item.id, item);
   const keys = [item.id, item.label, ...item.aliases].map(ingredientKey);
   for (const key of keys) {
     // Essentials are registered first — keep the first id so cuisine variants
@@ -28,7 +30,7 @@ for (const item of ALL_CANONICAL_ITEMS) {
 }
 
 function pantryItemForId(id: string): PantryEssentialItem | undefined {
-  return ALL_CANONICAL_ITEMS.find((item) => item.id === id);
+  return ID_TO_CANONICAL_ITEM.get(id);
 }
 
 export function resolveCanonicalId(name: string): string | null {
@@ -133,7 +135,9 @@ export function removePantryIngredient(pantryIngredients: string[], ingredientNa
 
 export function addPantryIngredient(pantryIngredients: string[], ingredientName: string): string[] {
   const canonicalLabel = resolveCanonicalLabel(ingredientName) ?? canonicalizeIngredientName(ingredientName);
-  if (!canonicalLabel || pantryHasIngredient(pantryIngredients, canonicalLabel)) {
+  if (!canonicalLabel) return pantryIngredients;
+  const pantryKeys = buildPantryKeySet(pantryIngredients);
+  if (pantryHasIngredientInSet(pantryKeys, canonicalLabel)) {
     return pantryIngredients;
   }
   const removeKeys = expandCanonicalKeys(canonicalLabel);

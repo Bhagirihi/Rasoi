@@ -16,10 +16,12 @@ export const authStyles = StyleSheet.create({
     paddingBottom: 16,
   },
   brand: {
+    fontFamily: 'DMSans_700Bold',
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 2,
     color: colors.primary,
+    textTransform: 'uppercase',
   },
   topRow: {
     flexDirection: 'row',

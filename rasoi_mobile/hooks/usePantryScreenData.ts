@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useDeferredValue } from 'react';
 import { InteractionManager } from 'react-native';
 
+import { getPantrySetupStapleLabels } from '@/constants/pantryEssentials';
 import { useAppContext } from '@/context/AppContext';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { useTonightRecipes } from '@/context/TonightRecipesContext';
@@ -12,6 +13,7 @@ import {
   countStockedPantryItems,
   getMissingPantryLabels,
   getPantryEssentialSections,
+  takeUnclaimedPantryItems,
 } from '@/utils/pantryCatalog';
 import {
   collectPlanMenuRecipes,
@@ -36,10 +38,17 @@ export function usePantryScreenData() {
     regionalCuisine,
     favoriteCuisines,
     effectiveAllergyExclusions,
+    pendingPantrySetup,
   } = useAppContext();
+  const deferredPantryIngredients = useDeferredValue(pantryIngredients);
   const { kitchenStyles } = useReferenceData();
   const { recipes } = useRecipes();
   const { topPick, alsoFor, lateNightPick, readyToCookCount } = useTonightRecipes();
+
+  const setupStaples = useMemo(
+    () => (pendingPantrySetup ? getPantrySetupStapleLabels(dietChoice) : []),
+    [pendingPantrySetup, dietChoice],
+  );
 
   const homeRecipes = useMemo(
     () =>
@@ -133,6 +142,32 @@ export function usePantryScreenData() {
     [homeRecipes, topPick],
   );
 
+  // Screen order: staples → plan days → home. Claim each ingredient once.
+  const { visibleSetupStaples, visiblePlanDaySections, visibleHomeSection } = useMemo(() => {
+    const claimedKeys = new Set<string>();
+    const visibleSetupStaples = takeUnclaimedPantryItems(setupStaples, claimedKeys);
+
+    const visiblePlanDaySections: PantryPlanDaySection[] = [];
+    for (const entry of planDaySections) {
+      const items = takeUnclaimedPantryItems(entry.section.items, claimedKeys);
+      if (items.length === 0) continue;
+      visiblePlanDaySections.push({
+        ...entry,
+        section: { ...entry.section, items },
+      });
+    }
+
+    const homeItems = homeSection
+      ? takeUnclaimedPantryItems(homeSection.items, claimedKeys)
+      : [];
+    const visibleHomeSection =
+      homeSection && homeItems.length > 0
+        ? { ...homeSection, items: homeItems }
+        : null;
+
+    return { visibleSetupStaples, visiblePlanDaySections, visibleHomeSection };
+  }, [setupStaples, planDaySections, homeSection]);
+
   const contextRecipes = useMemo(() => {
     const seen = new Set<string>();
     return [...homeRecipes, ...planRecipes].filter((recipe) => {
@@ -144,20 +179,22 @@ export function usePantryScreenData() {
 
   const stockStats = useMemo(() => {
     const personalItems = [
-      ...(homeSection?.items ?? []),
-      ...planDaySections.flatMap((entry) => entry.section.items),
+      ...visibleSetupStaples,
+      ...visiblePlanDaySections.flatMap((entry) => entry.section.items),
+      ...(visibleHomeSection?.items ?? []),
     ];
-    return countStockedPantryItems([], personalItems, pantryIngredients);
-  }, [homeSection, planDaySections, pantryIngredients]);
+    return countStockedPantryItems([], personalItems, deferredPantryIngredients);
+  }, [visibleSetupStaples, visiblePlanDaySections, visibleHomeSection, deferredPantryIngredients]);
 
   const restockItems = useMemo(
-    () => getMissingPantryLabels(contextRecipes, pantryIngredients),
-    [contextRecipes, pantryIngredients],
+    () => getMissingPantryLabels(contextRecipes, deferredPantryIngredients),
+    [contextRecipes, deferredPantryIngredients],
   );
 
   return {
-    homeSection,
-    planDaySections,
+    homeSection: visibleHomeSection,
+    planDaySections: visiblePlanDaySections,
+    setupStaples: visibleSetupStaples,
     stockStats,
     restockItems,
     matchCount: readyToCookCount,

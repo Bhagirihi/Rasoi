@@ -1,9 +1,8 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ArrowRight } from "lucide-react-native";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -23,7 +22,6 @@ import { useDismissOnBlur } from "@/hooks/useDismissOnBlur";
 import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
 import {
   colors,
-  gradients,
   layout,
   radius,
   scrollIndicator,
@@ -96,6 +94,7 @@ export default function PantryScreen() {
   const {
     homeSection,
     planDaySections,
+    setupStaples,
     stockStats,
     restockItems,
     matchCount,
@@ -107,15 +106,20 @@ export default function PantryScreen() {
   const [adScrollGeneration, setAdScrollGeneration] = useState(0);
   const { sponsor: pantrySponsor, loading: pantrySponsorLoading } =
     usePlacementSponsor("pantry");
+  const didSeedSetupStaplesRef = useRef(false);
 
   useDismissOnBlur(useCallback(() => setModalVisible(false), []));
 
   const setupSelectedCount = pantryIngredients.length;
+  const canContinueSetup = setupSelectedCount > 0;
 
   const handleToggle = useCallback(
     (item: string) => {
-      void Haptics.selectionAsync();
       togglePantryIngredient(item);
+      // Haptics after paint so chip selection stays snappy.
+      requestAnimationFrame(() => {
+        void Haptics.selectionAsync();
+      });
     },
     [togglePantryIngredient],
   );
@@ -130,6 +134,17 @@ export default function PantryScreen() {
     },
     [pantryIngredients, togglePantryIngredient],
   );
+
+  // Pre-select common staples once so Continue is usable out of the gate.
+  useEffect(() => {
+    if (!pendingPantrySetup) {
+      didSeedSetupStaplesRef.current = false;
+      return;
+    }
+    if (didSeedSetupStaplesRef.current || setupStaples.length === 0) return;
+    didSeedSetupStaplesRef.current = true;
+    handleAddAll(setupStaples);
+  }, [pendingPantrySetup, setupStaples, handleAddAll]);
 
   const handleFinishPantrySetup = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -168,58 +183,18 @@ export default function PantryScreen() {
             title="What's at home"
             subtitle={
               pendingPantrySetup
-                ? "Tap ingredients from your plan and home picks."
+                ? "Start with staples, then tap more from your plan and home picks."
                 : "Ingredients from your 3-day plan and tonight's picks."
             }
           />
 
-          {/* {pendingPantrySetup ? (
-            <View
-              style={[
-                styles.setupBanner,
-                {
-                  backgroundColor: themeColors.white,
-                  borderColor: "rgba(255,107,53,0.28)",
-                },
-              ]}
-            >
-              <LinearGradient
-                colors={gradients.header}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.setupBannerAccent}
-              />
-              <View style={styles.setupBannerRow}>
-                <Text
-                  style={[
-                    styles.setupBannerTitle,
-                    { color: themeColors.charcoal },
-                  ]}
-                >
-                  Your Staples Picks
-                </Text>
-                <Text
-                  style={[styles.setupBannerCount, { color: colors.primary }]}
-                >
-                  {setupSelectedCount === 0 ? "0" : setupSelectedCount}
-                </Text>
-              </View>
-              <View style={styles.setupProgressTrack}>
-                <View
-                  style={[
-                    styles.setupProgressFill,
-                    {
-                      width: `${Math.min(100, Math.max(setupSelectedCount > 0 ? 12 : 4, (setupSelectedCount / 6) * 100))}%`,
-                    },
-                  ]}
-                />
-              </View>
-            </View>
-          ) : null} */}
-
           <InsightBanner
             title="Tap what you have at home"
-            subtitle="We only show ingredients from your plan and home recipe picks."
+            subtitle={
+              pendingPantrySetup
+                ? "Common staples are pre-selected. Add more from your plan and home picks."
+                : "We only show ingredients from your plan and home recipe picks."
+            }
           />
           {pendingPantrySetup ? (
             <PantryHeroCard
@@ -230,6 +205,33 @@ export default function PantryScreen() {
               preferenceSummary={preferenceSummary}
               dietChoice={dietChoice}
             />
+          ) : null}
+
+          {pendingPantrySetup && setupStaples.length > 0 ? (
+            <>
+              <PantrySectionLabel
+                title="Common staples"
+                hint="Pre-selected — uncheck if you don't have them"
+                inline
+              />
+              <PantrySectionCard
+                section={{
+                  title: "Most kitchens start here",
+                  items: setupStaples,
+                }}
+                pantryIngredients={pantryIngredients}
+                onToggle={handleToggle}
+                onAddAll={handleAddAll}
+                accent
+                subtitle={
+                  dietChoice === "Jain"
+                    ? "Oil, salt, atta, rice — tap to adjust"
+                    : "Onion, oil, salt, atta, rice — tap to adjust"
+                }
+                setupMode
+                dense
+              />
+            </>
           ) : null}
 
           {planDaySections.length > 0 ? (
@@ -357,42 +359,56 @@ export default function PantryScreen() {
             ))}
 
           {pendingPantrySetup ? (
-            <View style={styles.setupActions}>
-              <Pressable
-                onPress={handleSkipPantrySetup}
-                testID={testIds.pantrySetupSkip}
-                accessibilityRole="button"
-                accessibilityLabel="Skip pantry setup"
-                style={({ pressed }) => [
-                  styles.setupSkipBtn,
-                  {
-                    borderColor: themeColors.border,
-                    backgroundColor: themeColors.white,
-                  },
-                  pressed && styles.setupBtnPressed,
-                ]}
-              >
-                <Text
-                  style={[styles.setupSkipText, { color: themeColors.muted }]}
+            <View style={styles.setupFooter}>
+              <View style={styles.setupActions}>
+                <Pressable
+                  onPress={handleSkipPantrySetup}
+                  testID={testIds.pantrySetupSkip}
+                  accessibilityRole="button"
+                  accessibilityLabel="Skip for now — go to Home"
+                  style={({ pressed }) => [
+                    styles.setupSkipBtn,
+                    {
+                      borderColor: themeColors.charcoal,
+                      backgroundColor: themeColors.white,
+                    },
+                    pressed && styles.setupBtnPressed,
+                  ]}
                 >
-                  Skip
+                  <Text
+                    style={[
+                      styles.setupSkipText,
+                      { color: themeColors.charcoal },
+                    ]}
+                    numberOfLines={2}
+                  >
+                    Skip for now — go to Home
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleFinishPantrySetup}
+                  disabled={!canContinueSetup}
+                  testID={testIds.pantrySetupContinue}
+                  accessibilityRole="button"
+                  accessibilityLabel="Continue to home"
+                  accessibilityState={{ disabled: !canContinueSetup }}
+                  style={({ pressed }) => [
+                    styles.setupContinueBtn,
+                    !canContinueSetup && styles.setupContinueDisabled,
+                    pressed && canContinueSetup && styles.setupBtnPressed,
+                  ]}
+                >
+                  <Text style={styles.setupContinueText}>Continue</Text>
+                  <ArrowRight size={16} color={themeColors.charcoal} />
+                </Pressable>
+              </View>
+              {!canContinueSetup ? (
+                <Text
+                  style={[styles.setupHelper, { color: themeColors.muted }]}
+                >
+                  Select at least one ingredient, or skip.
                 </Text>
-              </Pressable>
-              <Pressable
-                onPress={handleFinishPantrySetup}
-                disabled={setupSelectedCount === 0}
-                testID={testIds.pantrySetupContinue}
-                accessibilityRole="button"
-                accessibilityLabel="Continue to home"
-                style={({ pressed }) => [
-                  styles.setupContinueBtn,
-                  setupSelectedCount === 0 && styles.setupContinueDisabled,
-                  pressed && setupSelectedCount > 0 && styles.setupBtnPressed,
-                ]}
-              >
-                <Text style={styles.setupContinueText}>Continue</Text>
-                <ArrowRight size={16} color={themeColors.charcoal} />
-              </Pressable>
+              ) : null}
             </View>
           ) : null}
         </View>
@@ -475,76 +491,37 @@ const styles = StyleSheet.create({
   sectionStack: {
     gap: spacing.sm,
   },
-  setupBanner: {
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    overflow: "hidden",
+  setupFooter: {
     gap: spacing.xs,
-    ...shadows.card,
-  },
-  setupBannerAccent: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-  },
-  setupBannerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: spacing.sm,
-    paddingTop: spacing.xs,
-  },
-  setupBannerTitle: {
-    fontSize: 14,
-    fontWeight: "800",
-    flex: 1,
-  },
-  setupProgressTrack: {
-    height: 4,
-    borderRadius: radius.pill,
-    backgroundColor: "rgba(255,107,53,0.12)",
-    overflow: "hidden",
-  },
-  setupProgressFill: {
-    height: "100%",
-    borderRadius: radius.pill,
-    backgroundColor: colors.primary,
-  },
-  setupBannerCount: {
-    fontSize: 15,
-    fontWeight: "800",
-    minWidth: 20,
-    textAlign: "right",
+    marginTop: spacing.sm,
   },
   setupActions: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "stretch",
     gap: spacing.sm,
-    marginTop: spacing.sm,
   },
   setupSkipBtn: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 48,
+    minHeight: 52,
+    paddingHorizontal: spacing.sm,
     borderRadius: radius.pill,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   setupSkipText: {
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "800",
+    textAlign: "center",
+    lineHeight: 17,
   },
   setupContinueBtn: {
-    flex: 1.4,
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.xs,
-    minHeight: 48,
+    minHeight: 52,
     borderRadius: radius.pill,
     backgroundColor: colors.primary,
   },
@@ -555,6 +532,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "800",
     color: colors.charcoal,
+  },
+  setupHelper: {
+    fontSize: 12,
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 16,
   },
   setupBtnPressed: {
     opacity: 0.9,

@@ -16,6 +16,74 @@ function countStockedInSection(items: string[], pantryKeys: Set<string>) {
   return items.filter((item) => pantryHasIngredientInSet(pantryKeys, item)).length;
 }
 
+type PantryChipProps = {
+  item: string;
+  isSelected: boolean;
+  setupMode: boolean;
+  dense: boolean;
+  onToggle: (item: string) => void;
+  cream: string;
+  border: string;
+  charcoal: string;
+  isDark: boolean;
+};
+
+const PantryChip = memo(function PantryChip({
+  item,
+  isSelected,
+  setupMode,
+  dense,
+  onToggle,
+  cream,
+  border,
+  charcoal,
+  isDark,
+}: PantryChipProps) {
+  return (
+    <Pressable
+      onPress={() => onToggle(item)}
+      style={({ pressed }) => [
+        styles.chip,
+        dense && styles.chipDense,
+        {
+          backgroundColor: isSelected
+            ? isDark
+              ? 'rgba(0,168,107,0.16)'
+              : 'rgba(0,168,107,0.08)'
+            : cream,
+          borderColor: isSelected
+            ? colors.green
+            : setupMode && !isSelected
+              ? 'rgba(255,107,53,0.35)'
+              : border,
+          opacity: pressed ? 0.82 : 1,
+        },
+      ]}
+    >
+      {isSelected ? (
+        <View style={[styles.chipCheck, dense && styles.chipCheckDense]}>
+          <Check size={dense ? 8 : 10} color={colors.white} strokeWidth={3} />
+        </View>
+      ) : setupMode ? (
+        <View style={[styles.chipNewDot, { borderColor: colors.primary }]} />
+      ) : (
+        <View style={[styles.chipDot, dense && styles.chipDotDense, { borderColor: border }]} />
+      )}
+      <Text
+        style={[
+          styles.chipText,
+          dense && styles.chipTextDense,
+          { color: isSelected ? colors.green : charcoal },
+        ]}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
+        {item}
+      </Text>
+    </Pressable>
+  );
+});
+
 type PantrySectionCardProps = {
   section: PantrySection;
   pantryIngredients: string[];
@@ -186,53 +254,20 @@ export function PantrySectionCardComponent({
           ) : null}
 
           <View style={[styles.grid, useDense && styles.gridDense, embedded && styles.gridEmbedded]}>
-            {section.items.map((item) => {
-              const isSelected = pantryHasIngredientInSet(pantryKeys, item);
-              return (
-                <Pressable
-                  key={item}
-                  onPress={() => onToggle(item)}
-                  style={({ pressed }) => [
-                    styles.chip,
-                    useDense && styles.chipDense,
-                    {
-                      backgroundColor: isSelected
-                        ? isDark
-                          ? 'rgba(0,168,107,0.16)'
-                          : 'rgba(0,168,107,0.08)'
-                        : themeColors.cream,
-                      borderColor: isSelected
-                        ? colors.green
-                        : setupMode && !isSelected
-                          ? 'rgba(255,107,53,0.35)'
-                          : themeColors.border,
-                      opacity: pressed ? 0.82 : 1,
-                    },
-                  ]}
-                >
-                  {isSelected ? (
-                    <View style={[styles.chipCheck, useDense && styles.chipCheckDense]}>
-                      <Check size={useDense ? 8 : 10} color={colors.white} strokeWidth={3} />
-                    </View>
-                  ) : setupMode ? (
-                    <View style={[styles.chipNewDot, { borderColor: colors.primary }]} />
-                  ) : (
-                    <View style={[styles.chipDot, useDense && styles.chipDotDense, { borderColor: themeColors.border }]} />
-                  )}
-                  <Text
-                    style={[
-                      styles.chipText,
-                      useDense && styles.chipTextDense,
-                      { color: isSelected ? colors.green : themeColors.charcoal },
-                    ]}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {section.items.map((item) => (
+              <PantryChip
+                key={item}
+                item={item}
+                isSelected={pantryHasIngredientInSet(pantryKeys, item)}
+                setupMode={setupMode}
+                dense={useDense}
+                onToggle={onToggle}
+                cream={themeColors.cream}
+                border={themeColors.border}
+                charcoal={themeColors.charcoal}
+                isDark={isDark}
+              />
+            ))}
           </View>
         </>
       ) : null}

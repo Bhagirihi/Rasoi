@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppSavingOverlay from '@/components/AppSavingOverlay';
 import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
+import RasoiWordmark from '@/components/RasoiWordmark';
 import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import { colors, gradients, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
@@ -52,7 +53,8 @@ export default function PermissionOnboardingStep({
 
       <SafeAreaView style={styles.flex} edges={['top', 'bottom']} testID={screenTestID}>
         <View style={styles.header}>
-          <Text style={styles.brand}>Rasoi</Text>
+          <RasoiWordmark size="hero" />
+          <View style={styles.brandAccent} />
         </View>
 
         <ScrollViewWithFloatingIndicator
@@ -120,12 +122,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 8,
     paddingBottom: 8,
+    gap: 6,
   },
-  brand: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: colors.primary,
-    letterSpacing: -0.5,
+  brandAccent: {
+    height: 2,
+    width: 36,
+    borderRadius: 1,
+    backgroundColor: colors.primary,
   },
   content: {
     flexGrow: 1,

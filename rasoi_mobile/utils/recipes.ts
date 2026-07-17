@@ -1,6 +1,9 @@
 import { DietType, Recipe } from '@/data/mockRecipes';
 import { isJainSafeRecipe } from '@/utils/jainSafe';
-import { ingredientKey, pantryHasIngredient } from '@/utils/recipeIngredients';
+import {
+  buildPantryKeySet,
+  pantryHasIngredientInSet,
+} from '@/utils/pantryCanonical';
 import { getRecipeMainIngredients } from '@/utils/recipeMainIngredients';
 import { getMealQuickReasonSuffix, scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
@@ -20,11 +23,18 @@ export type FastFilter = 'all' | 'under20' | 'leftover' | 'kids' | 'budget' | 's
 export type ToggleableFastFilter = Exclude<FastFilter, 'all'>;
 export type PantryMatchMode = 'any' | 'full';
 
-export function isRecipeFullyStocked(recipe: Recipe, pantryIngredients: string[]): boolean {
+export function isRecipeFullyStocked(
+  recipe: Recipe,
+  pantryIngredients: string[],
+  pantryKeys?: Set<string>,
+): boolean {
   if (pantryIngredients.length === 0) return false;
-  const matchable = getRecipeMainIngredients(recipe);
+  const keys = pantryKeys ?? buildPantryKeySet(pantryIngredients);
+  const matchable = getRecipeMainIngredients(recipe).filter(
+    (name) => name && !isPantryMatchExcluded(name),
+  );
   if (matchable.length === 0) return true;
-  return matchable.every((name) => pantryHasIngredient(pantryIngredients, name));
+  return matchable.every((name) => pantryHasIngredientInSet(keys, name));
 }
 
 export function countFullyStockedRecipes(
@@ -119,6 +129,12 @@ export function filterRecipes(
       ? [fastFilter]
       : [];
 
+  // Build once — pantryHasIngredient rebuilds this set per ingredient otherwise.
+  const pantryKeys =
+    requirePantryMatch && pantryIngredients.length > 0
+      ? buildPantryKeySet(pantryIngredients)
+      : null;
+
   return recipes.filter((recipe) => {
     if (recipe.dietType !== dietPreference) return false;
 
@@ -146,14 +162,15 @@ export function filterRecipes(
     if (activeFastFilters.includes('budget') && !isBudgetFriendlyRecipe(recipe)) return false;
     if (activeFastFilters.includes('smallPortions') && !isSmallPortionRecipe(recipe)) return false;
 
-    if (requirePantryMatch && pantryIngredients.length > 0) {
+    if (pantryKeys) {
       if (pantryMatchMode === 'full') {
-        if (!isRecipeFullyStocked(recipe, pantryIngredients)) return false;
+        if (!isRecipeFullyStocked(recipe, pantryIngredients, pantryKeys)) return false;
       } else {
         const hasMatch = getRecipeMainIngredients(recipe).some(
           (name) =>
+            Boolean(name) &&
             !isPantryMatchExcluded(name) &&
-            pantryHasIngredient(pantryIngredients, name),
+            pantryHasIngredientInSet(pantryKeys, name),
         );
         if (!hasMatch) return false;
       }
@@ -166,13 +183,15 @@ export function filterRecipes(
 export function partitionIngredients(
   recipe: Recipe,
   pantryIngredients: string[],
+  pantryKeys?: Set<string>,
 ): { available: string[]; missing: string[] } {
   const available: string[] = [];
   const missing: string[] = [];
+  const keys = pantryKeys ?? buildPantryKeySet(pantryIngredients);
 
   for (const name of getRecipeMainIngredients(recipe)) {
     if (!name || isPantryMatchExcluded(name)) continue;
-    if (pantryHasIngredient(pantryIngredients, name)) {
+    if (pantryHasIngredientInSet(keys, name)) {
       available.push(name);
     } else {
       missing.push(name);
@@ -185,8 +204,12 @@ export function partitionIngredients(
 /** Same ingredient set used by partitionIngredients / getPantryMatchPercent. */
 export { countMatchableIngredients };
 
-export function getPantryMatchPercent(recipe: Recipe, pantryIngredients: string[]): number {
-  const { available, missing } = partitionIngredients(recipe, pantryIngredients);
+export function getPantryMatchPercent(
+  recipe: Recipe,
+  pantryIngredients: string[],
+  pantryKeys?: Set<string>,
+): number {
+  const { available, missing } = partitionIngredients(recipe, pantryIngredients, pantryKeys);
   const total = available.length + missing.length;
   if (total === 0) return 0;
   return Math.round((available.length / total) * 100);
@@ -197,9 +220,11 @@ export function sortRecipesByPantryMatch(
   recipes: Recipe[],
   pantryIngredients: string[],
 ): Recipe[] {
+  const pantryKeys = buildPantryKeySet(pantryIngredients);
   return [...recipes].sort((a, b) => {
     const diff =
-      getPantryMatchPercent(b, pantryIngredients) - getPantryMatchPercent(a, pantryIngredients);
+      getPantryMatchPercent(b, pantryIngredients, pantryKeys) -
+      getPantryMatchPercent(a, pantryIngredients, pantryKeys);
     if (diff !== 0) return diff;
     return a.title.localeCompare(b.title);
   });
@@ -210,9 +235,14 @@ export function scoreRecipeForTonight(
   options: {
     regionalCuisine: string;
     pantryIngredients: string[];
+    pantryKeys?: Set<string>;
   },
 ): number {
-  const pantryScore = getPantryMatchPercent(recipe, options.pantryIngredients);
+  const pantryScore = getPantryMatchPercent(
+    recipe,
+    options.pantryIngredients,
+    options.pantryKeys,
+  );
   const regionalScore = getRegionalMatchPercent(recipe.region, options.regionalCuisine);
   let score = pantryScore * 0.65 + regionalScore * 0.25;
   if (recipe.prepTime <= 20) score += 8;
@@ -229,10 +259,12 @@ export function sortRecipesForTonight(
   },
 ): Recipe[] {
   const mealSlot = options.mealSlot ?? 'dinner';
+  const pantryKeys = buildPantryKeySet(options.pantryIngredients);
   const scored = recipes.map((recipe) => ({
     recipe,
     score:
-      scoreRecipeForTonight(recipe, options) + scoreRecipeForMealSlot(recipe, mealSlot) * 0.4,
+      scoreRecipeForTonight(recipe, { ...options, pantryKeys }) +
+      scoreRecipeForMealSlot(recipe, mealSlot) * 0.4,
   }));
   scored.sort((a, b) => b.score - a.score);
   return scored.map((entry) => entry.recipe);

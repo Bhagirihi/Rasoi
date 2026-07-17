@@ -5,6 +5,8 @@ import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AppSavingOverlay from '@/components/AppSavingOverlay';
+import AuthAtmosphere, { AUTH_ATMOSPHERE_BG } from '@/components/AuthAtmosphere';
+import RasoiWordmark from '@/components/RasoiWordmark';
 import { authStyles as styles } from '@/components/auth/authStyles';
 import {
   CURRENT_TERMS_VERSION,
@@ -64,86 +66,96 @@ export default function LegalConsentScreen() {
   };
 
   return (
-    <SafeAreaView style={localStyles.safe} edges={['top', 'bottom']} testID={testIds.screenLegalConsent}>
-      <AppSavingOverlay
-        visible={busy}
-        message="Opening Rasoi…"
-        subtitle="Setting up your kitchen"
-      />
-      <ScrollView
-        style={localStyles.flex}
-        contentContainerStyle={localStyles.scroll}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={localStyles.brand}>RASOI</Text>
-        <Text style={localStyles.title}>Terms & Privacy</Text>
-        <Text style={localStyles.body}>
-          Please review these key points before using Rasoi. Analytics and crash reporting start only
-          after you agree (version {CURRENT_TERMS_VERSION}).
-        </Text>
-
-        <View style={localStyles.highlightsBox}>
-          <HighlightSection title="Terms of Service" items={TERMS_HIGHLIGHTS} />
-          <HighlightSection title="Privacy Policy" items={PRIVACY_HIGHLIGHTS} />
-
-          <View style={localStyles.fullLinksRow}>
-            <Text style={localStyles.fullLinksLabel}>Full documents: </Text>
-            <Text style={localStyles.link} onPress={() => void Linking.openURL(LEGAL_URLS.terms)}>
-              Terms
-            </Text>
-            <Text style={localStyles.fullLinksLabel}> · </Text>
-            <Text style={localStyles.link} onPress={() => void Linking.openURL(LEGAL_URLS.privacy)}>
-              Privacy
-            </Text>
+    <View style={localStyles.root}>
+      <AuthAtmosphere />
+      <SafeAreaView style={localStyles.safe} edges={['top', 'bottom']} testID={testIds.screenLegalConsent}>
+        <AppSavingOverlay
+          visible={busy}
+          message="Opening Rasoi…"
+          subtitle="Setting up your kitchen"
+        />
+        <ScrollView
+          style={localStyles.flex}
+          contentContainerStyle={localStyles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={localStyles.brandBlock}>
+            <RasoiWordmark size="bar" />
+            <View style={localStyles.brandAccent} />
           </View>
-        </View>
-      </ScrollView>
+          <Text style={localStyles.title}>Terms & Privacy</Text>
+          <Text style={localStyles.body}>
+            Please review these key points before using Rasoi. Analytics and crash reporting start only
+            after you agree (version {CURRENT_TERMS_VERSION}).
+          </Text>
 
-      <View style={localStyles.footer}>
-        <View style={localStyles.checkRow}>
-          <Switch
-            value={checked}
-            onValueChange={setChecked}
-            testID={testIds.legalConsentCheckbox}
-            trackColor={{ false: colors.border, true: colors.primary }}
-            thumbColor={colors.white}
-          />
+          <View style={localStyles.highlightsBox}>
+            <HighlightSection title="Terms of Service" items={TERMS_HIGHLIGHTS} />
+            <HighlightSection title="Privacy Policy" items={PRIVACY_HIGHLIGHTS} />
+
+            <View style={localStyles.fullLinksRow}>
+              <Text style={localStyles.fullLinksLabel}>Full documents: </Text>
+              <Text style={localStyles.link} onPress={() => void Linking.openURL(LEGAL_URLS.terms)}>
+                Terms
+              </Text>
+              <Text style={localStyles.fullLinksLabel}> · </Text>
+              <Text style={localStyles.link} onPress={() => void Linking.openURL(LEGAL_URLS.privacy)}>
+                Privacy
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+
+        <View style={localStyles.footer}>
+          <View style={localStyles.checkRow}>
+            <Switch
+              value={checked}
+              onValueChange={setChecked}
+              testID={testIds.legalConsentCheckbox}
+              trackColor={{ false: 'rgba(255,255,255,0.18)', true: colors.primary }}
+              thumbColor={colors.white}
+            />
+            <Pressable
+              onPress={() => setChecked((value) => !value)}
+              style={localStyles.checkLabelPressable}
+              accessibilityLabel="I have read and agree to the Terms of Service and Privacy Policy."
+            >
+              <Text style={localStyles.checkLabel}>
+                I have read and agree to the Terms of Service and Privacy Policy.
+              </Text>
+            </Pressable>
+          </View>
+
           <Pressable
-            onPress={() => setChecked((value) => !value)}
-            style={localStyles.checkLabelPressable}
-            accessibilityLabel="I have read and agree to the Terms of Service and Privacy Policy."
+            onPress={() => {
+              if (!checked || busy) return;
+              void handleContinue();
+            }}
+            testID={testIds.legalConsentContinue}
+            accessibilityRole="button"
+            accessibilityLabel="Continue"
+            style={[
+              styles.submitButton,
+              localStyles.continueButton,
+              (!checked || busy) && styles.buttonDisabled,
+            ]}
           >
-            <Text style={localStyles.checkLabel}>
-              I have read and agree to the Terms of Service and Privacy Policy.
-            </Text>
+            <Text style={styles.submitButtonText}>{busy ? 'Please wait…' : 'Continue'}</Text>
           </Pressable>
         </View>
-
-        <Pressable
-          onPress={() => {
-            if (!checked || busy) return;
-            void handleContinue();
-          }}
-          testID={testIds.legalConsentContinue}
-          accessibilityRole="button"
-          accessibilityLabel="Continue"
-          style={[
-            styles.submitButton,
-            localStyles.continueButton,
-            (!checked || busy) && styles.buttonDisabled,
-          ]}
-        >
-          <Text style={styles.submitButtonText}>{busy ? 'Please wait…' : 'Continue'}</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const localStyles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: AUTH_ATMOSPHERE_BG,
+  },
   safe: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: 'transparent',
   },
   flex: {
     flex: 1,
@@ -152,40 +164,43 @@ const localStyles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.md,
   },
+  brandBlock: {
+    gap: 4,
+    marginBottom: spacing.lg,
+  },
+  brandAccent: {
+    height: 2,
+    width: 28,
+    borderRadius: 1,
+    backgroundColor: colors.primary,
+  },
   footer: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.border,
-    backgroundColor: colors.cream,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: AUTH_ATMOSPHERE_BG,
     zIndex: 2,
     elevation: 4,
-  },
-  brand: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 4,
-    color: colors.primary,
-    marginBottom: spacing.lg,
   },
   title: {
     fontSize: 24,
     fontWeight: '800',
-    color: colors.charcoal,
+    color: colors.dark.text,
   },
   body: {
     marginTop: spacing.sm,
     fontSize: 14,
     lineHeight: 22,
-    color: colors.muted,
+    color: colors.dark.textMuted,
   },
   highlightsBox: {
     marginTop: spacing.lg,
     borderRadius: radius.sm,
-    backgroundColor: colors.white,
+    backgroundColor: colors.dark.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(255,255,255,0.08)',
     padding: spacing.md,
   },
   section: {
@@ -194,7 +209,7 @@ const localStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.charcoal,
+    color: colors.dark.text,
     textTransform: 'uppercase',
     letterSpacing: 0.4,
     marginBottom: spacing.sm,
@@ -216,7 +231,7 @@ const localStyles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     lineHeight: 20,
-    color: colors.charcoal,
+    color: colors.dark.textMuted,
   },
   fullLinksRow: {
     flexDirection: 'row',
@@ -226,7 +241,7 @@ const localStyles = StyleSheet.create({
   },
   fullLinksLabel: {
     fontSize: 12,
-    color: colors.muted,
+    color: colors.dark.textMuted,
   },
   link: {
     color: colors.primary,
@@ -246,7 +261,7 @@ const localStyles = StyleSheet.create({
   checkLabel: {
     fontSize: 14,
     lineHeight: 22,
-    color: colors.charcoal,
+    color: colors.dark.text,
   },
   continueButton: {
     backgroundColor: colors.primary,

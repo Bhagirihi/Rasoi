@@ -45,6 +45,7 @@ import { appFonts } from "@/constants/fonts";
 import { testIds } from "@/constants/testIds";
 import { useTheme } from "@/context/ThemeContext";
 import { useAppContext } from "@/context/AppContext";
+import { useNetworkConnectivity } from "@/context/NetworkConnectivityContext";
 import { useAppDialog } from "@/context/AppDialogContext";
 import { usePartners } from "@/context/PartnersContext";
 import { Recipe } from "@/data/mockRecipes";
@@ -74,7 +75,9 @@ export default function HomeScreen() {
   const { colors: themeColors, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
   const { openBrandSearch } = usePartners();
-  const { userName, showPartners, userCity, isGuest } = useAppContext();
+  const { userName, showPartners, userCity, isGuest, offlineRecipeIds, planLimits } =
+    useAppContext();
+  const { isOffline } = useNetworkConnectivity();
   const { tryShuffle: tryHomeShuffle } = useShuffleGate("home");
   const {
     meal,
@@ -141,7 +144,12 @@ export default function HomeScreen() {
 
   const { greeting, subtitle } = getLocalizedGreeting();
   const isLateNight = meal.isOvernightDual === true;
-  const discoveryReady = !recipesLoading && rankingReady;
+  const showingOfflineDownloads =
+    (isOffline || Boolean(recipesError)) &&
+    planLimits.offlineRecipeLimit > 0 &&
+    offlineRecipeIds.length > 0;
+  // rankingReady already allows offline download picks before catalog settle.
+  const discoveryReady = rankingReady;
   const heroDataReady = discoveryReady;
   const showHeroIntro = !heroIntroFinished;
   const showLateNightPick =
@@ -310,7 +318,7 @@ export default function HomeScreen() {
             compact
           />
 
-          {!recipesLoading && recipesError ? (
+          {!recipesLoading && recipesError && !showingOfflineDownloads ? (
             <EmptyState
               icon={Timer}
               title="Could not load recipes"
