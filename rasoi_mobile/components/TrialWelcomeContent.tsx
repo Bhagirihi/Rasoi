@@ -1,17 +1,14 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Check, Crown, Sparkles } from 'lucide-react-native';
+import { Check, Crown, ShoppingBag, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
-  PAID_PLAN_FEATURES,
   PAID_PLAN_MONTHLY_PRICE,
   PAID_PLAN_YEARLY_DETAIL,
   PAID_PLAN_YEARLY_PRICE,
   PAID_PLAN_YEARLY_SAVINGS_LABEL,
-  TRIAL_DURATION_DAYS,
-  TRIAL_WELCOME_FEATURES,
   type BillingInterval,
 } from '@/constants/plans';
 import { getConfiguredPaymentProviderId, PAYMENT_DISCLAIMERS } from '@/constants/payments';
@@ -20,12 +17,20 @@ import { testIds } from '@/constants/testIds';
 
 type TrialWelcomeContentProps = {
   trialStarted: boolean;
+  trialDays: number;
   onContinueTrial: () => void | Promise<void>;
   onSubscribe: (interval: BillingInterval) => Promise<void>;
 };
 
+const HIGHLIGHTS = [
+  { icon: ShoppingBag, label: 'Partner checkout unlocked' },
+  { icon: Sparkles, label: 'Full meal plans during trial' },
+  { icon: Check, label: 'Subscribe later to remove ads' },
+] as const;
+
 export default function TrialWelcomeContent({
   trialStarted,
+  trialDays,
   onContinueTrial,
   onSubscribe,
 }: TrialWelcomeContentProps) {
@@ -54,6 +59,7 @@ export default function TrialWelcomeContent({
   };
 
   const subscribeBusy = loading !== null;
+  const actionsDisabled = continuingTrial || subscribeBusy;
 
   return (
     <View style={styles.root}>
@@ -63,61 +69,37 @@ export default function TrialWelcomeContent({
         end={{ x: 1, y: 1 }}
         style={styles.hero}
       >
-        <View style={styles.heroBadge}>
-          <Sparkles size={14} color={colors.white} />
-          <Text style={styles.heroBadgeText}>Welcome to Rasoi</Text>
-        </View>
-        <Crown size={36} color={colors.white} />
+        <Crown size={32} color={colors.white} />
         <Text style={styles.heroTitle}>
           {trialStarted
-            ? `You're on trial for ${TRIAL_DURATION_DAYS} days`
-            : `Start your ${TRIAL_DURATION_DAYS}-day free trial`}
+            ? `You're on trial for ${trialDays} days`
+            : `Start your ${trialDays}-day free trial`}
         </Text>
         <Text style={styles.heroSub}>
-          {trialStarted
-            ? 'Enjoy partner checkout during your trial. Upgrade to Rasoi Plus to remove ads and keep access forever.'
-            : 'Try partner grocery and delivery checkout free. No payment required until you subscribe below.'}
+          Grocery & delivery partners are unlocked. Ads stay unless you subscribe.
         </Text>
       </LinearGradient>
 
       <View style={styles.body}>
-        <Text style={styles.sectionLabel}>During your trial</Text>
-        {TRIAL_WELCOME_FEATURES.map((feature) => (
-          <FeatureRow key={feature} text={feature} tone="trial" />
-        ))}
-
-        <Text style={[styles.sectionLabel, styles.sectionGap]}>
-          Rasoi Plus · charged immediately via Google Play
-        </Text>
-        <Text style={styles.subscribeNote}>
-          Subscribe now for {PAID_PLAN_MONTHLY_PRICE} or {PAID_PLAN_YEARLY_PRICE} (
-          {PAID_PLAN_YEARLY_SAVINGS_LABEL}). Cancel anytime in Google Play → Subscriptions.
-        </Text>
-        {PAID_PLAN_FEATURES.map((feature) => (
-          <FeatureRow key={feature} text={feature} tone="paid" />
-        ))}
+        <View style={styles.highlightCard}>
+          {HIGHLIGHTS.map(({ icon: Icon, label }, index) => (
+            <View
+              key={label}
+              style={[styles.highlightRow, index < HIGHLIGHTS.length - 1 && styles.highlightBorder]}
+            >
+              <View style={styles.highlightIcon}>
+                <Icon size={16} color={colors.primary} strokeWidth={2.5} />
+              </View>
+              <Text style={styles.highlightText}>{label}</Text>
+            </View>
+          ))}
+        </View>
 
         <Pressable
           onPress={() => void handleContinue()}
           disabled={continuingTrial}
           testID={testIds.trialContinue}
-          style={[styles.primaryTrialBtn, continuingTrial && styles.btnDisabled]}
-        >
-          <Text style={styles.primaryTrialBtnText}>
-            {continuingTrial
-              ? 'Starting trial…'
-              : trialStarted
-                ? 'Continue with trial'
-                : `Start free ${TRIAL_DURATION_DAYS}-day trial`}
-          </Text>
-        </Pressable>
-
-        <Text style={styles.orLabel}>Or subscribe now</Text>
-
-        <Pressable
-          onPress={() => void handleSubscribe('yearly')}
-          disabled={continuingTrial || subscribeBusy}
-          style={[styles.primaryBtn, (continuingTrial || subscribeBusy) && styles.btnDisabled]}
+          style={[styles.primaryBtn, continuingTrial && styles.btnDisabled]}
         >
           <LinearGradient
             colors={[colors.primary, colors.saffron]}
@@ -125,25 +107,43 @@ export default function TrialWelcomeContent({
             end={{ x: 1, y: 0.5 }}
             style={styles.primaryBtnInner}
           >
-            <Text style={styles.savingsBadge}>{PAID_PLAN_YEARLY_SAVINGS_LABEL}</Text>
             <Text style={styles.primaryBtnText}>
-              {loading === 'yearly' ? 'Processing…' : `Plus yearly · ${PAID_PLAN_YEARLY_PRICE}`}
+              {continuingTrial
+                ? 'Starting…'
+                : trialStarted
+                  ? 'Continue with trial'
+                  : `Start free ${trialDays}-day trial`}
             </Text>
-            <Text style={styles.primaryBtnSub}>{PAID_PLAN_YEARLY_DETAIL}</Text>
           </LinearGradient>
+        </Pressable>
+
+        <Text style={styles.orLabel}>Or go Plus now</Text>
+
+        <Pressable
+          onPress={() => void handleSubscribe('yearly')}
+          disabled={actionsDisabled}
+          style={[styles.yearlyBtn, actionsDisabled && styles.btnDisabled]}
+        >
+          <Text style={styles.savingsChip}>{PAID_PLAN_YEARLY_SAVINGS_LABEL}</Text>
+          <Text style={styles.yearlyBtnText}>
+            {loading === 'yearly' ? 'Processing…' : `Yearly · ${PAID_PLAN_YEARLY_PRICE}`}
+          </Text>
+          <Text style={styles.yearlyBtnSub}>{PAID_PLAN_YEARLY_DETAIL}</Text>
         </Pressable>
 
         <Pressable
           onPress={() => void handleSubscribe('monthly')}
-          disabled={continuingTrial || subscribeBusy}
-          style={[styles.secondaryBtn, (continuingTrial || subscribeBusy) && styles.btnDisabled]}
+          disabled={actionsDisabled}
+          style={[styles.monthlyBtn, actionsDisabled && styles.btnDisabled]}
         >
-          <Text style={styles.secondaryBtnText}>
-            {loading === 'monthly' ? 'Processing…' : `Plus monthly · ${PAID_PLAN_MONTHLY_PRICE}`}
+          <Text style={styles.monthlyBtnText}>
+            {loading === 'monthly' ? 'Processing…' : `Monthly · ${PAID_PLAN_MONTHLY_PRICE}`}
           </Text>
         </Pressable>
 
         <Text style={styles.disclaimer}>
+          Plus removes ads and keeps partners after trial. Cancel anytime in Google Play.
+          {'\n'}
           {PAYMENT_DISCLAIMERS[getConfiguredPaymentProviderId()]}
         </Text>
       </View>
@@ -151,47 +151,19 @@ export default function TrialWelcomeContent({
   );
 }
 
-function FeatureRow({ text, tone }: { text: string; tone: 'trial' | 'paid' }) {
-  return (
-    <View style={styles.featureRow}>
-      <View style={[styles.featureIcon, tone === 'paid' && styles.featureIconPaid]}>
-        <Check size={14} color={tone === 'paid' ? colors.white : colors.green} strokeWidth={3} />
-      </View>
-      <Text style={styles.featureText}>{text}</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.dark.bg,
   },
   hero: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxxl,
+    paddingTop: spacing.xxl,
     paddingBottom: spacing.xxl,
     alignItems: 'center',
   },
-  heroBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    borderRadius: radius.pill,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-    marginBottom: spacing.md,
-  },
-  heroBadgeText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: colors.white,
-  },
   heroTitle: {
-    marginTop: spacing.sm,
+    marginTop: spacing.md,
     fontSize: 26,
     fontWeight: '800',
     color: colors.white,
@@ -203,43 +175,43 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: 'rgba(255,255,255,0.92)',
     textAlign: 'center',
+    maxWidth: 320,
   },
   body: {
     padding: spacing.xl,
     paddingBottom: spacing.xxxl,
   },
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: colors.charcoal,
-    marginBottom: spacing.sm,
+  highlightCard: {
+    borderRadius: radius.md,
+    backgroundColor: colors.dark.card,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.06)',
+    overflow: 'hidden',
   },
-  sectionGap: {
-    marginTop: spacing.lg,
-  },
-  featureRow: {
+  highlightRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
   },
-  featureIcon: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: 'rgba(0,168,107,0.12)',
+  highlightBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.06)',
+  },
+  highlightIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,107,53,0.14)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 1,
   },
-  featureIconPaid: {
-    backgroundColor: colors.primary,
-  },
-  featureText: {
+  highlightText: {
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: colors.charcoal,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.dark.text,
   },
   primaryBtn: {
     marginTop: spacing.xl,
@@ -253,84 +225,71 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.md,
   },
-  savingsBadge: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    color: colors.charcoal,
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    borderRadius: radius.pill,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginBottom: 6,
-  },
   primaryBtnText: {
     fontSize: 16,
     fontWeight: '800',
     color: colors.white,
   },
-  primaryBtnSub: {
-    marginTop: 2,
-    fontSize: 11,
-    lineHeight: 16,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.92)',
-    textAlign: 'center',
-  },
-  secondaryBtn: {
-    marginTop: spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white,
-  },
-  secondaryBtnText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.charcoal,
-  },
-  primaryTrialBtn: {
-    marginTop: spacing.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: 'rgba(255,107,53,0.08)',
-  },
-  primaryTrialBtnText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.primary,
-  },
   orLabel: {
-    marginTop: spacing.md,
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
     fontSize: 12,
     fontWeight: '700',
-    color: colors.muted,
+    color: colors.dark.textMuted,
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
   },
-  subscribeNote: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: colors.muted,
-    marginBottom: spacing.sm,
+  yearlyBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,107,53,0.45)',
+    backgroundColor: 'rgba(255,107,53,0.08)',
+  },
+  savingsChip: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    color: colors.primary,
+    marginBottom: 4,
+  },
+  yearlyBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.dark.text,
+  },
+  yearlyBtnSub: {
+    marginTop: 2,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '600',
+    color: colors.dark.textMuted,
+    textAlign: 'center',
+  },
+  monthlyBtn: {
+    marginTop: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+  },
+  monthlyBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.dark.textMuted,
   },
   btnDisabled: {
     opacity: 0.6,
   },
   disclaimer: {
-    marginTop: spacing.md,
+    marginTop: spacing.lg,
     fontSize: 11,
     lineHeight: 16,
-    color: colors.muted,
+    color: colors.dark.textMuted,
     textAlign: 'center',
   },
 });

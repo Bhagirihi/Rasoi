@@ -7,6 +7,7 @@ import { PANTRY_ESSENTIAL_SECTIONS } from '@/constants/pantryEssentials';
 import { DIET_CHOICE_LABELS, type DietChoice } from '@/constants/theme';
 import type { PantrySection } from '@/services/reference';
 import { getKitchenStyleLabel, type KitchenStyle } from '@/utils/kitchenStyles';
+import { pantryDedupeKey } from '@/utils/pantryCanonical';
 
 const JAIN_EXCLUDED_ITEM_IDS = new Set(['pyaaz', 'lahsun', 'aloo', 'eggs']);
 
@@ -30,12 +31,16 @@ function filterSectionItems(
   items: PantryCatalogItem[],
   dietChoice: DietChoice,
   seenIds: Set<string>,
+  seenDedupeKeys: Set<string>,
 ): string[] {
   const labels: string[] = [];
   for (const item of items) {
     if (!itemAllowedForDiet(item, dietChoice)) continue;
     if (seenIds.has(item.id)) continue;
+    const dedupeKey = pantryDedupeKey(item.label);
+    if (seenDedupeKeys.has(dedupeKey)) continue;
     seenIds.add(item.id);
+    seenDedupeKeys.add(dedupeKey);
     labels.push(item.label);
   }
   return labels;
@@ -66,10 +71,11 @@ export function getPersonalizedPantrySections(input: {
 }): { sections: PantrySection[]; preferenceSummary: PantryPreferenceSummary } {
   const { dietChoice, favoriteCuisines, kitchenStyles } = input;
   const seenIds = new Set<string>();
+  const seenDedupeKeys = new Set<string>();
   const sections: PantrySection[] = [];
 
   for (const section of PANTRY_ESSENTIAL_SECTIONS) {
-    const items = filterSectionItems(section.items, dietChoice, seenIds);
+    const items = filterSectionItems(section.items, dietChoice, seenIds, seenDedupeKeys);
     if (items.length > 0) {
       sections.push({ title: section.title, items });
     }
@@ -77,7 +83,7 @@ export function getPersonalizedPantrySections(input: {
 
   if (dietChoice === 'Non-Veg') {
     for (const section of PANTRY_DIET_SECTIONS) {
-      const items = filterSectionItems(section.items, dietChoice, seenIds);
+      const items = filterSectionItems(section.items, dietChoice, seenIds, seenDedupeKeys);
       if (items.length > 0) {
         sections.push({ title: section.title, items });
       }
@@ -98,7 +104,7 @@ export function getPersonalizedPantrySections(input: {
     const cuisineSection = PANTRY_CUISINE_SECTIONS.find((entry) => entry.cuisineId === cuisineId);
     if (!cuisineSection) continue;
 
-    const items = filterSectionItems(cuisineSection.items, dietChoice, seenIds);
+    const items = filterSectionItems(cuisineSection.items, dietChoice, seenIds, seenDedupeKeys);
     if (items.length === 0) continue;
 
     sections.push({

@@ -5,6 +5,7 @@ import { Bookmark, BookOpen, ChefHat, Refrigerator, Settings } from 'lucide-reac
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import AppSavingOverlay from '@/components/AppSavingOverlay';
+import PantryNudgeBridge from '@/components/pantry/PantryNudgeBridge';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
@@ -88,47 +89,50 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs screenOptions={screenOptions}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarButtonTestID: testIds.tabHome,
-          tabBarIcon: ({ color, size }) => <ChefHat color={color} size={size - 2} />,
-        }}
-      />
-      <Tabs.Screen
-        name="recipes"
-        options={{
-          title: 'Recipe',
-          tabBarButtonTestID: testIds.tabRecipes,
-          tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size - 2} />,
-        }}
-      />
-      <Tabs.Screen
-        name="pantry"
-        options={{
-          title: 'Pantry',
-          tabBarButtonTestID: testIds.tabPantry,
-          tabBarIcon: ({ color, size }) => <Refrigerator color={color} size={size - 2} />,
-        }}
-      />
-      <Tabs.Screen
-        name="saved"
-        options={{
-          title: 'Saved',
-          tabBarButtonTestID: testIds.tabSaved,
-          tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size - 2} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-          tabBarButtonTestID: testIds.tabSettings,
-          tabBarIcon: ({ color, size }) => <Settings color={color} size={size - 2} />,
-        }}
-      />
-    </Tabs>
+    <>
+      <Tabs screenOptions={screenOptions}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarButtonTestID: testIds.tabHome,
+            tabBarIcon: ({ color, size }) => <ChefHat color={color} size={size - 2} />,
+          }}
+        />
+        <Tabs.Screen
+          name="recipes"
+          options={{
+            title: 'Recipe',
+            tabBarButtonTestID: testIds.tabRecipes,
+            tabBarIcon: ({ color, size }) => <BookOpen color={color} size={size - 2} />,
+          }}
+        />
+        <Tabs.Screen
+          name="pantry"
+          options={{
+            title: 'Pantry',
+            tabBarButtonTestID: testIds.tabPantry,
+            tabBarIcon: ({ color, size }) => <Refrigerator color={color} size={size - 2} />,
+          }}
+        />
+        <Tabs.Screen
+          name="saved"
+          options={{
+            title: 'Saved',
+            tabBarButtonTestID: testIds.tabSaved,
+            tabBarIcon: ({ color, size }) => <Bookmark color={color} size={size - 2} />,
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            title: 'Settings',
+            tabBarButtonTestID: testIds.tabSettings,
+            tabBarIcon: ({ color, size }) => <Settings color={color} size={size - 2} />,
+          }}
+        />
+      </Tabs>
+      <PantryNudgeBridge />
+    </>
   );
 }

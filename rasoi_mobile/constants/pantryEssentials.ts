@@ -100,7 +100,16 @@ export const PANTRY_ESSENTIAL_SECTIONS: PantryEssentialSection[] = [
       {
         id: 'hari-mirch',
         label: 'Hari Mirch',
-        aliases: ['hari mirch', 'hari mirchi', 'green chilli', 'green chili', 'mirch', 'mirchi'],
+        aliases: [
+          'hari mirch',
+          'hari mirchi',
+          'green chilli',
+          'green chili',
+          'green chillies',
+          'green chilies',
+          'mirch',
+          'mirchi',
+        ],
       },
       { id: 'palak', label: 'Palak', aliases: ['palak', 'spinach'] },
       { id: 'gobhi', label: 'Gobhi', aliases: ['gobhi', 'gobi', 'cauliflower'] },

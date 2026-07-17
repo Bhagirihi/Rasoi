@@ -257,6 +257,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const pendingPantrySetupRef = useRef(false);
   const profileRefreshInFlightRef = useRef(false);
   const logoutRef = useRef<(() => Promise<void>) | null>(null);
+  const pantrySyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pantrySyncLatestRef = useRef<string[] | null>(null);
 
   useEffect(() => {
     pendingPantrySetupRef.current = pendingPantrySetup;
@@ -1209,7 +1211,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ? removePantryIngredient(current, ingredient)
           : addPantryIngredient(current, ingredient);
         if (isLoggedIn) {
-          void updatePantryIngredients(next).then(applyUserProfile);
+          pantrySyncLatestRef.current = next;
+          if (pantrySyncTimerRef.current) {
+            clearTimeout(pantrySyncTimerRef.current);
+          }
+          pantrySyncTimerRef.current = setTimeout(() => {
+            const payload = pantrySyncLatestRef.current;
+            pantrySyncTimerRef.current = null;
+            if (!payload) return;
+            void updatePantryIngredients(payload).then(applyUserProfile);
+          }, 450);
         }
         return next;
       });

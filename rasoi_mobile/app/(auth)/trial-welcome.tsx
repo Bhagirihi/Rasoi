@@ -8,6 +8,7 @@ import { ScrollViewWithFloatingIndicator } from '@/components/ScrollableScreen';
 import { colors, scrollIndicator } from '@/constants/theme';
 import { testIds } from '@/constants/testIds';
 import { useAppContext } from '@/context/AppContext';
+import { getTrialTotalDays } from '@/utils/planLogic';
 
 export default function TrialWelcomeScreen() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function TrialWelcomeScreen() {
     upgradeToPaid,
     startTrial,
     effectiveTier,
+    trialBonusDays,
   } = useAppContext();
 
   if (!isHydrated) {
@@ -44,6 +46,7 @@ export default function TrialWelcomeScreen() {
   }
 
   const trialStarted = effectiveTier === 'trial';
+  const trialDays = getTrialTotalDays(trialBonusDays);
 
   const finishWelcome = () => {
     dismissTrialWelcome();
@@ -58,6 +61,7 @@ export default function TrialWelcomeScreen() {
       >
         <TrialWelcomeContent
           trialStarted={trialStarted}
+          trialDays={trialDays}
           onContinueTrial={async () => {
             if (!trialStarted) {
               await startTrial();
@@ -79,13 +83,13 @@ export default function TrialWelcomeScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.cream,
+    backgroundColor: colors.dark.bg,
   },
   loading: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cream,
+    backgroundColor: colors.dark.bg,
   },
   scrollContent: {
     flexGrow: 1,

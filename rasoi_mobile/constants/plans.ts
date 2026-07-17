@@ -51,10 +51,11 @@ export const PAID_PLAN_FEATURES = [
   'Keep partner access after trial ends',
 ] as const;
 
+/** Short highlights for trial welcome — keep this list scannable (≤3). */
 export const TRIAL_WELCOME_FEATURES = [
-  'All Rasoi Plus partner checkouts unlocked',
-  `Try grocery & delivery links free for ${TRIAL_DURATION_DAYS} days`,
-  'Subscribe anytime to remove ads and keep access',
+  'Partner checkout unlocked',
+  'Full meal plans during trial',
+  'Subscribe later to remove ads',
 ] as const;
 
 export const PLAN_FEATURES = {

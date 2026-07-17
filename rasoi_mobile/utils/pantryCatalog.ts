@@ -2,17 +2,19 @@ import type { Recipe } from '@/data/mockRecipes';
 import type { PantrySection } from '@/services/reference';
 import type { DietChoice } from '@/constants/theme';
 import type { MealContext } from '@/utils/mealTime';
+import type { KitchenStyle } from '@/utils/kitchenStyles';
 import {
+  buildPantryKeySet,
   isEssentialIngredient,
+  pantryDedupeKey,
   pantryHasIngredient,
+  pantryHasIngredientInSet,
   resolveCanonicalLabel,
 } from '@/utils/pantryCanonical';
 import {
   getPersonalizedPantrySections,
   type PantryPreferenceSummary,
 } from '@/utils/pantryPersonalization';
-import type { KitchenStyle } from '@/utils/kitchenStyles';
-import { ingredientKey } from '@/utils/recipeIngredients';
 
 export type PantryPersonalSection = {
   title: string;
@@ -74,7 +76,7 @@ export function buildPersonalPantrySection(
       if (isEssentialIngredient(rawName)) continue;
 
       const label = chipLabelForIngredient(rawName);
-      const chipKey = ingredientKey(label);
+      const chipKey = pantryDedupeKey(label);
       if (!chipKey || seenChipKeys.has(chipKey)) continue;
 
       seenChipKeys.add(chipKey);
@@ -125,7 +127,7 @@ export function getMissingPantryLabels(recipes: Recipe[], pantryIngredients: str
       if (!rawName || pantryHasIngredient(pantryIngredients, rawName)) continue;
 
       const label = chipLabelForIngredient(rawName);
-      const key = ingredientKey(label);
+      const key = pantryDedupeKey(label);
       if (!key || seen.has(key)) continue;
 
       seen.add(key);
@@ -144,12 +146,13 @@ export function countStockedPantryItems(
   const labels = [...sections.flatMap((section) => section.items), ...personalItems];
   const uniqueKeys = new Set<string>();
   let stocked = 0;
+  const pantryKeys = buildPantryKeySet(pantryIngredients);
 
   for (const label of labels) {
-    const key = ingredientKey(label);
+    const key = pantryDedupeKey(label);
     if (!key || uniqueKeys.has(key)) continue;
     uniqueKeys.add(key);
-    if (pantryHasIngredient(pantryIngredients, label)) {
+    if (pantryHasIngredientInSet(pantryKeys, label)) {
       stocked += 1;
     }
   }

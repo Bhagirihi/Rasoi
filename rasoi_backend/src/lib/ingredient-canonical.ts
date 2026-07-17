@@ -11,7 +11,15 @@ export const INGREDIENT_CANONICAL_ALIASES = {
     'Ginger Garlic',
     'Adrak Lehsun Paste',
   ],
-  'Hari Mirch': ['Green Chilli', 'Green Chili', 'Mirchi', 'Hari Mirchi', 'Mirch'],
+  'Hari Mirch': [
+    'Green Chilli',
+    'Green Chili',
+    'Green Chillies',
+    'Green Chilies',
+    'Mirchi',
+    'Hari Mirchi',
+    'Mirch',
+  ],
   Haldi: ['Turmeric'],
   'Dhania Patta': ['Hara Dhania', 'Coriander Leaves', 'Coriander', 'Fresh Coriander'],
   'Dhania Powder': ['Coriander Powder'],
@@ -61,7 +69,7 @@ export const INGREDIENT_CANONICAL_ALIASES = {
   Palak: ['Spinach', 'Saag'],
   Bhindi: ['Okra', 'Lady Finger', 'Bhendi'],
   Matar: ['Peas', 'Green Peas'],
-  Mirch: ['Chilli', 'Chili', 'Green Chili'],
+  Mirch: ['Chilli', 'Chili', 'Chillies', 'Chilies'],
   Methi: ['Fenugreek Leaves', 'Fresh Methi'],
   Paneer: ['Cottage Cheese', 'Indian Cottage Cheese'],
   Butter: ['Makkhan'],
@@ -101,7 +109,17 @@ export const DEFAULT_HOUSEHOLD_PANTRY_STAPLES = [
 export type CanonicalIngredientName = keyof typeof INGREDIENT_CANONICAL_ALIASES;
 
 function ingredientLookupKey(name: string): string {
-  return name.trim().toLowerCase().replace(/\s+/g, ' ');
+  let key = name.trim().toLowerCase().replace(/\s+/g, ' ');
+  key = key
+    .replace(/\bchillies\b/g, 'chilli')
+    .replace(/\bchilies\b/g, 'chilli')
+    .replace(/\bchilis\b/g, 'chili')
+    .replace(/\btomatoes\b/g, 'tomato')
+    .replace(/\bonions\b/g, 'onion')
+    .replace(/\bpotatoes\b/g, 'potato')
+    .replace(/\bleaves\b/g, 'leaf')
+    .replace(/\beggs\b/g, 'egg');
+  return key;
 }
 
 const ALIAS_TO_CANONICAL = new Map<string, string>();

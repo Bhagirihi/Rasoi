@@ -19,7 +19,11 @@ const KEY_TO_CANONICAL_ID = new Map<string, string>();
 for (const item of ALL_CANONICAL_ITEMS) {
   const keys = [item.id, item.label, ...item.aliases].map(ingredientKey);
   for (const key of keys) {
-    if (key) KEY_TO_CANONICAL_ID.set(key, item.id);
+    // Essentials are registered first — keep the first id so cuisine variants
+    // (e.g. south-green-chilli) do not create duplicate chips for Hari Mirch.
+    if (key && !KEY_TO_CANONICAL_ID.has(key)) {
+      KEY_TO_CANONICAL_ID.set(key, item.id);
+    }
   }
 }
 
@@ -87,15 +91,39 @@ export function expandCanonicalKeys(name: string): Set<string> {
   return new Set([ingredientKey(name)]);
 }
 
-export function pantryHasIngredient(pantryIngredients: string[], ingredientName: string): boolean {
-  const needed = expandCanonicalKeys(ingredientName);
+/** Stable key for collapsing duplicate chips (Green chilli / Hari Mirch / Green Chilies). */
+export function pantryDedupeKey(name: string): string {
+  const canonical = canonicalizeIngredientName(name);
+  const aliasKeys = [...expandIngredientAliasKeys(canonical)].filter(Boolean).sort();
+  if (aliasKeys.length > 0) {
+    return `canon:${aliasKeys.join('|')}`;
+  }
+
+  const id = resolveCanonicalId(name);
+  if (id) return `id:${id}`;
+
+  return `raw:${ingredientKey(name)}`;
+}
+
+export function buildPantryKeySet(pantryIngredients: string[]): Set<string> {
   const pantryKeys = new Set<string>();
   for (const item of pantryIngredients) {
     for (const alias of expandCanonicalKeys(item)) {
       pantryKeys.add(alias);
     }
   }
-  return [...needed].some((key) => pantryKeys.has(key));
+  return pantryKeys;
+}
+
+export function pantryHasIngredientInSet(pantryKeys: Set<string>, ingredientName: string): boolean {
+  for (const key of expandCanonicalKeys(ingredientName)) {
+    if (pantryKeys.has(key)) return true;
+  }
+  return false;
+}
+
+export function pantryHasIngredient(pantryIngredients: string[], ingredientName: string): boolean {
+  return pantryHasIngredientInSet(buildPantryKeySet(pantryIngredients), ingredientName);
 }
 
 export function removePantryIngredient(pantryIngredients: string[], ingredientName: string): string[] {
@@ -115,4 +143,21 @@ export function addPantryIngredient(pantryIngredients: string[], ingredientName:
 
 export function getEssentialPantryLabels(): string[] {
   return ALL_CANONICAL_ITEMS.map((item) => item.label);
+}
+
+/** Collapse alias/spelling duplicates while keeping first preferred label. */
+export function dedupePantryLabels(labels: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const label of labels) {
+    const trimmed = label.trim();
+    if (!trimmed) continue;
+    const key = pantryDedupeKey(trimmed);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(resolveCanonicalLabel(trimmed) ?? trimmed);
+  }
+
+  return result;
 }

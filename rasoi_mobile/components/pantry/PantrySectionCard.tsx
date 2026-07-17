@@ -1,16 +1,19 @@
 import * as Haptics from 'expo-haptics';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react-native';
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getPantrySectionIcon } from '@/components/pantry/pantrySectionMeta';
 import { colors, radius, shadows, spacing } from '@/constants/theme';
 import type { PantrySection } from '@/services/reference';
 import { useTheme } from '@/context/ThemeContext';
-import { pantryHasIngredient } from '@/utils/pantryCanonical';
+import {
+  buildPantryKeySet,
+  pantryHasIngredientInSet,
+} from '@/utils/pantryCanonical';
 
-function countStockedInSection(items: string[], pantryIngredients: string[]) {
-  return items.filter((item) => pantryHasIngredient(pantryIngredients, item)).length;
+function countStockedInSection(items: string[], pantryKeys: Set<string>) {
+  return items.filter((item) => pantryHasIngredientInSet(pantryKeys, item)).length;
 }
 
 type PantrySectionCardProps = {
@@ -32,7 +35,7 @@ type PantrySectionCardProps = {
   dense?: boolean;
 };
 
-export function PantrySectionCard({
+export function PantrySectionCardComponent({
   section,
   pantryIngredients,
   onToggle,
@@ -48,9 +51,13 @@ export function PantrySectionCard({
 }: PantrySectionCardProps) {
   const { colors: themeColors, isDark } = useTheme();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const stockedInSection = countStockedInSection(section.items, pantryIngredients);
+  const pantryKeys = useMemo(() => buildPantryKeySet(pantryIngredients), [pantryIngredients]);
+  const stockedInSection = countStockedInSection(section.items, pantryKeys);
   const sectionComplete = section.items.length > 0 && stockedInSection === section.items.length;
-  const missingItems = section.items.filter((item) => !pantryHasIngredient(pantryIngredients, item));
+  const missingItems = useMemo(
+    () => section.items.filter((item) => !pantryHasIngredientInSet(pantryKeys, item)),
+    [section.items, pantryKeys],
+  );
   const SectionIcon = getPantrySectionIcon(section.title);
   const useDense = dense || embedded;
   const columns = setupMode ? 2 : 3;
@@ -184,7 +191,7 @@ export function PantrySectionCard({
 
           <View style={[styles.grid, useDense && styles.gridDense, embedded && styles.gridEmbedded]}>
             {section.items.map((item) => {
-              const isSelected = pantryHasIngredient(pantryIngredients, item);
+              const isSelected = pantryHasIngredientInSet(pantryKeys, item);
               return (
                 <Pressable
                   key={item}
@@ -237,6 +244,8 @@ export function PantrySectionCard({
     </View>
   );
 }
+
+export const PantrySectionCard = memo(PantrySectionCardComponent);
 
 const styles = StyleSheet.create({
   card: {

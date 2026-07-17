@@ -92,18 +92,24 @@ export default function PantryScreen() {
 
   const setupSelectedCount = pantryIngredients.length;
 
-  const handleToggle = (item: string) => {
-    void Haptics.selectionAsync();
-    togglePantryIngredient(item);
-  };
+  const handleToggle = useCallback(
+    (item: string) => {
+      void Haptics.selectionAsync();
+      togglePantryIngredient(item);
+    },
+    [togglePantryIngredient],
+  );
 
-  const handleAddAll = (items: string[]) => {
-    for (const item of items) {
-      if (!pantryHasIngredient(pantryIngredients, item)) {
-        togglePantryIngredient(item);
+  const handleAddAll = useCallback(
+    (items: string[]) => {
+      for (const item of items) {
+        if (!pantryHasIngredient(pantryIngredients, item)) {
+          togglePantryIngredient(item);
+        }
       }
-    }
-  };
+    },
+    [pantryIngredients, togglePantryIngredient],
+  );
 
   const handleFinishPantrySetup = () => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
