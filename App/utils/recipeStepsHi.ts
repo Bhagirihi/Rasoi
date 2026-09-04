@@ -1,0 +1,39 @@
+/** Hindi cooking steps keyed by recipe id — legacy mock content only. */
+export const RECIPE_STEPS_HI: Record<string, string[]> = {
+  '1': [
+    'चावल और उड़द दाल 4–6 घंटे भिगोएँ; पीसकर रात भर खमीर उठाएँ।',
+    'आलू उबालकर मसala भरवाँ तैयार करें।',
+    'तवे पर पतला घोल फैलाकर आलू भरकर सुनहरा दोसा बनाएँ।',
+    'नारियल की चटनी के साथ गर्मागर्म परोसें।',
+  ],
+  '2': [
+    'प्याज़-टमाटर भूनकर काजू के साथ ग्रेवी बनाएँ।',
+    'मक्खन, क्रीम और मसाले डालकर उबालें।',
+    'पनीर डालकर हल्के हाथ से मिलाएँ।',
+    'नान या चावल के साथ परोसें।',
+  ],
+  '15': [
+    'रवा सूखा भूनकर अलग रखें।',
+    'तड़का: राई, कड़ी पत्ता, मूंगफली और सब्ज़ियाँ।',
+    'पानी, नमक और रवा डालकर लगातार चलाएँ।',
+    '3 मिनट धककर पकाएँ; चटनी के साथ परोसें।',
+  ],
+};
+
+export function getRecipeStepsHi(
+  recipeId: string,
+  _title: string,
+  recipe?: {
+    stepsHi?: string[];
+  },
+): string[] {
+  if (recipe?.stepsHi && recipe.stepsHi.length > 0) {
+    return recipe.stepsHi;
+  }
+
+  if (RECIPE_STEPS_HI[recipeId]) {
+    return RECIPE_STEPS_HI[recipeId];
+  }
+
+  return [];
+}

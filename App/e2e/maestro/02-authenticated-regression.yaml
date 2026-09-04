@@ -1,0 +1,79 @@
+# Precondition: install a QA build with a valid persisted test session.
+appId: com.bhagihiri.rasoiapp
+name: Rasoi authenticated navigation and state regression
+tags:
+  - regression
+  - authenticated
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 60000
+- takeScreenshot: screenshots/rasoi/home-portrait
+- swipe:
+    direction: DOWN
+    duration: 700
+- assertVisible:
+    id: screen-home
+- tapOn:
+    id: tab-recipes
+- extendedWaitUntil:
+    visible:
+      id: screen-recipes-tab
+    timeout: 30000
+- takeScreenshot: screenshots/rasoi/recipes
+- tapOn:
+    id: recipes-search-input
+- inputText: "paneer"
+- hideKeyboard
+- takeScreenshot: screenshots/rasoi/recipes-search
+- eraseText
+- inputText: "very-long-query-with-special-characters-123"
+- hideKeyboard
+- takeScreenshot: screenshots/rasoi/recipes-search-long
+- tapOn:
+    id: tab-plan
+- extendedWaitUntil:
+    visible:
+      id: screen-plan
+    timeout: 30000
+- takeScreenshot: screenshots/rasoi/meal-plan
+- tapOn:
+    id: tab-pantry
+- extendedWaitUntil:
+    visible:
+      id: screen-pantry
+    timeout: 30000
+- takeScreenshot: screenshots/rasoi/pantry
+- tapOn:
+    id: tab-saved
+- extendedWaitUntil:
+    visible:
+      id: screen-saved
+    timeout: 30000
+- takeScreenshot: screenshots/rasoi/saved
+- tapOn:
+    id: saved-offline-filter
+- takeScreenshot: screenshots/rasoi/saved-offline
+- openLink: rasoi://settings
+- extendedWaitUntil:
+    visible:
+      id: screen-settings
+    timeout: 30000
+- takeScreenshot: screenshots/rasoi/settings-light
+- tapOn:
+    id: settings-theme-dark
+- takeScreenshot: screenshots/rasoi/settings-dark
+- tapOn:
+    id: settings-theme-light
+- openLink: rasoi://paywall?qa=1
+- assertVisible: "Rasoi Plus"
+- takeScreenshot: screenshots/rasoi/paywall
+- pressKey: BACK
+- openLink: rasoi://
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 30000

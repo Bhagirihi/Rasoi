@@ -1,0 +1,377 @@
+// Reference only — schema is applied via Supabase SQL migrations (see rasoi_mobile/supabase/migrations/).
+// Backend uses @/lib/db (Supabase service role + pg), not Prisma.
+
+// Isolated from Supabase `public` tables (profiles → auth.users) and `auth` schema.
+enum UserRole {
+  USER
+  ADMIN
+
+  @@schema("rasoi")
+}
+
+model User {
+  id                     String    @id @default(cuid())
+  supabaseUserId         String?   @unique
+  email                  String?   @unique
+  phone                  String?   @unique
+  name                   String
+  gender                 String?
+  isGuest                Boolean   @default(false)
+  role                   UserRole  @default(USER)
+  isActive               Boolean   @default(true)
+  hasCompletedOnboarding Boolean   @default(false)
+  dietPreference         String    @default("Veg")
+  dietChoice             String    @default("Veg")
+  regionalCuisine        String    @default("All India")
+  favoriteCuisines       String    @default("[]")
+  notificationsEnabled   Boolean   @default(false)
+  timezone               String    @default("Asia/Kolkata")
+  city                   String?
+  state                  String?
+  latitude               Float?
+  longitude              Float?
+  locationUpdatedAt      DateTime?
+  pantryIngredients      String    @default("[]")
+  savedRecipeIds         String    @default("[]")
+  kitchenPreferences     String    @default("{}")
+  planTier               String    @default("free")
+  trialStartedAt         DateTime?
+  hasUsedTrial           Boolean   @default(false)
+  trialBonusDays         Int       @default(0)
+  yearlyPromoOfferTag    String?
+  termsAcceptedAt        DateTime?
+  termsAcceptedVersion   String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  pushTokens             PushToken[]
+  affiliateEvents        AffiliateEvent[]
+  sponsorEvents          SponsorEvent[]
+  mealNotificationLogs   MealNotificationLog[]
+  feedback               UserFeedback[]
+  promoRedemptions       PromoRedemption[]
+
+  @@schema("rasoi")
+}
+
+model PromoCode {
+  id               String    @id @default(cuid())
+  code             String    @unique
+  kind             String
+  trialExtendDays  Int?
+  playOfferTag     String?
+  maxRedemptions   Int       @default(10000)
+  redemptionCount  Int       @default(0)
+  expiresAt        DateTime?
+  active           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  redemptions      PromoRedemption[]
+
+  @@schema("rasoi")
+}
+
+model PromoRedemption {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promoCodeId  String
+  promoCode    PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  redeemedAt   DateTime  @default(now())
+  consumedAt   DateTime?
+
+  @@unique([userId, promoCodeId])
+  @@schema("rasoi")
+}
+
+model ProcessedWebhookEvent {
+  eventId   String   @id
+  source    String   @default("revenuecat")
+  eventType String
+  userId    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model MealNotificationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealSlot  String
+  dayKey    String
+  recipeId  String
+  sentAt    DateTime @default(now())
+
+  @@unique([userId, mealSlot, dayKey])
+  @@index([userId, sentAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model AffiliateEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  partner   String
+  context   String?
+  recipeId  String?
+  query     String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([partner, createdAt(sort: Desc)])
+  @@index([context, createdAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model SponsorEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  eventType String
+  brandName String
+  placement String
+  sponsorId String?
+  partner   String?
+  query     String?
+  city      String?
+  createdAt DateTime @default(now())
+
+  @@index([brandName, placement, createdAt(sort: Desc)])
+  @@index([eventType, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model PushToken {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expoPushToken String
+  platform      String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, expoPushToken])
+  @@schema("rasoi")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@schema("rasoi")
+}
+
+model Recipe {
+  id                String   @id @default(cuid())
+  title             String
+  prepTime          Int
+  calories          Int
+  region            String
+  kitchenStyleId    String   @default("north")
+  dietType          String
+  difficulty        String
+  imageUrl          String
+  ingredients       String
+  main_ingredients  String?
+  steps             String?
+  descriptionHi     String?
+  stepsHi           String?
+  primaryIngredient String?
+  popularityScore   Int      @default(50)
+  qualityScore      Int      @default(50)
+  published         Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([kitchenStyleId])
+  @@schema("rasoi")
+}
+
+model UserRecommendationCache {
+  id                 String   @id @default(cuid())
+  userId             String
+  dayKey             String
+  mealSlot           String
+  windowKey          String
+  algorithmVersion   String   @default("v1")
+  recipeIds          String   @default("[]")
+  reasons            String   @default("[]")
+  preferenceSnapshot String   @default("{}")
+  generatedAt        DateTime @default(now())
+
+  @@unique([userId, windowKey, algorithmVersion])
+  @@index([userId, windowKey])
+  @@schema("rasoi")
+}
+
+model UserRecommendationHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  recipeId  String
+  mealSlot  String
+  shownAt   DateTime @default(now())
+
+  @@index([userId, shownAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model UserRecipeView {
+  id       String   @id @default(cuid())
+  userId   String
+  recipeId String
+  viewedAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([userId, viewedAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model UserRecipeCooked {
+  id       String   @id @default(cuid())
+  userId   String
+  recipeId String
+  cookedAt DateTime @default(now())
+
+  @@unique([userId, recipeId])
+  @@index([userId, cookedAt(sort: Desc)])
+  @@schema("rasoi")
+}
+
+model Sponsor {
+  id           String   @id @default(cuid())
+  placement    String
+  brandName    String
+  productLabel String
+  tagline      String
+  logoUrl      String
+  cta          String   @default("Shop now")
+  searchQuery  String?
+  recipeId     String?
+  active       Boolean  @default(true)
+  priority     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@schema("rasoi")
+}
+
+model PartnerLink {
+  partnerId    String   @id
+  label        String
+  category     String
+  region       String   @default("IN")
+  deepLinkUrl  String
+  webUrl       String
+  active       Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+
+  @@index([region])
+  @@schema("rasoi")
+}
+
+model KitchenStyle {
+  id        String   @id
+  label     String
+  tagline   String
+  mood      String
+  region    String
+  heroImage String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("rasoi")
+}
+
+model RegionalCuisineOption {
+  label     String  @id
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  @@schema("rasoi")
+}
+
+model PantrySection {
+  id        String  @id
+  title     String
+  items     String
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
+
+  @@schema("rasoi")
+}
+
+model AppSettings {
+  id                        String   @id @default("default")
+  paymentsEnabled           Boolean  @default(false)
+  /// Optional semver floor — paywall only for apps >= this when paymentsEnabled.
+  paymentsMinAppVersion     String?
+  defaultPantryIngredients  String   @default("[]")
+  updatedAt                 DateTime @updatedAt
+
+  @@schema("rasoi")
+}
+
+model SponsorApplication {
+  id                 String   @id @default(cuid())
+  companyName        String
+  contactName        String
+  email              String
+  phone              String?
+  brandName          String
+  productDescription String
+  placementInterest  String
+  website            String?
+  message            String?
+  status             String   @default("pending")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@schema("rasoi")
+}
+
+model HomeAnnouncement {
+  id             String    @id
+  campaignKey    String    @unique
+  enabled        Boolean   @default(false)
+  title          String
+  body           String
+  imageUrl       String?
+  ctaLabel       String?
+  ctaLink        String?
+  presentation   String    @default("both")
+  startsAt       DateTime?
+  endsAt         DateTime?
+  minAppVersion  String?
+  audience       String    @default("all")
+  sortOrder      Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@schema("rasoi")
+}
+
+model UserFeedback {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category   String
+  message    String
+  name       String?
+  email      String?
+  appVersion String?
+  platform   String?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@schema("rasoi")
+}

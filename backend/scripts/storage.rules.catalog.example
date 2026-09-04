@@ -1,0 +1,29 @@
+rules_version = '2';
+// Example rules for catalog images migrated by scripts/migrate-images-to-firebase.ts
+// Deploy from Firebase Console → Storage → Rules, or:
+//   firebase deploy --only storage
+//
+// Public read for catalog; writes only via Admin SDK (service account).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /catalog/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /from-supabase/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /from-supabase-storage/{allPaths=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

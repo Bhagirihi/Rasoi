@@ -1,0 +1,11 @@
+
+# migration checkpoints
+scripts/.migrate-storage-s3-firebase-checkpoint.json
+firebase-service-account.json
+downloads/
+node_modules/
+.next/
+.env
+.env.local
+.env.*.local
+

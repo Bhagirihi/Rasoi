@@ -1,0 +1,34 @@
+.DS_Store
+**/.DS_Store
+
+# secrets & env
+**/.env
+**/.env.local
+**/.env.*.local
+**/*.pem
+**/*.jks
+**/*.keystore
+**/fcm-service-account.json
+**/firebase-service-account.json
+**/google-services.json
+**/google-play-service-account.json
+
+# dependencies & build
+**/node_modules/
+**/.next/
+**/dist/
+**/.expo/
+**/ios/Pods/
+**/android/app/build/
+backend/.tmp-ux/
+
+# local image / migration artifacts
+backend/downloads/
+backend/scripts/.migrate-storage-s3-firebase-checkpoint.json
+backend/scripts/downloads/
+backend/unique/
+**/Archive.zip
+**/*.apk
+**/*.aab
+backend/firebase-debug.log
+**/*.tsbuildinfo

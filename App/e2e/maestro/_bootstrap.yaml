@@ -1,0 +1,72 @@
+# Fresh install: login screen → register or sign-in → onboarding → home
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp:
+    clearState: true
+    permissions:
+      all: allow
+- runFlow:
+    when:
+      visible:
+        id: onboarding-skip-notify
+    commands:
+      - tapOn:
+          id: onboarding-skip-notify
+- runFlow:
+    when:
+      visible:
+        id: onboarding-skip-location
+    commands:
+      - tapOn:
+          id: onboarding-skip-location
+- runFlow:
+    file: _dismiss-permissions.yaml
+- runFlow:
+    when:
+      visible:
+        id: screen-onboarding
+    commands:
+      - runFlow:
+          file: _onboarding.yaml
+- runFlow:
+    when:
+      visible:
+        id: screen-trial-welcome
+    commands:
+      - tapOn:
+          id: trial-continue
+- runFlow:
+    when:
+      visible:
+        id: screen-pantry
+    commands:
+      - runFlow:
+          file: _skip-pantry-setup.yaml
+# Logged-in resume may land on home, onboarding, or login.
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 90000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: screen-home
+    commands:
+      - extendedWaitUntil:
+          notVisible:
+            text: "Opening Rasoi for you"
+          timeout: 120000
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: screen-onboarding
+          timeout: 60000
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: screen-login
+          timeout: 60000
+          optional: true
+- runFlow:
+    file: _dismiss-permissions.yaml

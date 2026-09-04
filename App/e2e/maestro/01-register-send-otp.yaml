@@ -1,0 +1,100 @@
+# TC-002: Register — contact → diet → kitchen → email OTP (verified in 02-register-verify.yaml)
+# Env: QA_NAME, QA_PHONE, QA_EMAIL
+appId: com.bhagihiri.rasoiapp
+---
+- runFlow:
+    file: _bootstrap-to-login.yaml
+- runFlow:
+    when:
+      visible:
+        id: login-go-register
+    commands:
+      - tapOn:
+          id: login-go-register
+- runFlow:
+    when:
+      visible: "Create account"
+    commands:
+      - tapOn: "Create account"
+- extendedWaitUntil:
+    visible:
+      id: screen-register
+    timeout: 15000
+- runFlow:
+    when:
+      visible:
+        id: register-name-input
+    commands:
+      - tapOn:
+          id: register-name-input
+      - inputText: ${QA_NAME}
+      - tapOn:
+          id: register-gender-male
+      - tapOn:
+          id: register-phone-input
+      - inputText: ${QA_PHONE}
+      - tapOn:
+          id: register-email-input
+      - inputText: ${QA_EMAIL}
+- runFlow:
+    when:
+      notVisible:
+        id: register-name-input
+    commands:
+      - tapOn: "e.g. Priya Sharma"
+      - inputText: ${QA_NAME}
+      - tapOn: "Male"
+      - tapOn: "9876543210"
+      - inputText: ${QA_PHONE}
+      - tapOn: "you@example.com"
+      - inputText: ${QA_EMAIL}
+- hideKeyboard
+- tapOn:
+    id: register-continue-contact
+- runFlow:
+    when:
+      notVisible:
+        id: register-continue-contact
+    commands:
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      id: onboarding-diet-veg
+    timeout: 15000
+- tapOn:
+    id: onboarding-diet-veg
+- tapOn:
+    id: register-continue-diet
+- runFlow:
+    when:
+      notVisible:
+        id: register-continue-diet
+    commands:
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      id: onboarding-cuisine-first
+    timeout: 15000
+- tapOn:
+    id: onboarding-cuisine-first
+- tapOn:
+    id: register-send-otp
+- runFlow:
+    when:
+      visible:
+        id: register-terms-checkbox
+    commands:
+      - tapOn:
+          id: register-terms-checkbox
+      - tapOn:
+          id: register-terms-continue
+- runFlow:
+    when:
+      visible: "I have read and agree"
+    commands:
+      - tapOn: "I have read and agree"
+      - tapOn: "Continue"
+- extendedWaitUntil:
+    visible:
+      text: "Verify your email"
+    timeout: 90000

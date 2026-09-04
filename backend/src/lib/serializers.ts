@@ -1,0 +1,130 @@
+import type { Recipe, Sponsor, User } from '@/lib/db/types';
+import { serializeUserPlan } from '@/lib/plan-serializer';
+import { parseKitchenPreferences } from '@/lib/kitchen-preferences';
+import type {
+  CuisineId,
+  DietChoice,
+  DietType,
+  Gender,
+  RecipeDifficulty,
+  RecipeIngredient,
+  RecipeResponse,
+  RecipeTag,
+  SponsorPlacement,
+  SponsorResponse,
+  UserProfileResponse,
+} from '@/lib/types';
+import { normalizeRecipeIngredients } from '@/lib/recipe-ingredients';
+import { parseMainIngredients } from '@/lib/recipe-main-ingredients';
+import { buildRecipeDescription, buildRecipeDescriptionHi } from '@/lib/recipe-description';
+
+export function parseJson<T>(value: string, fallback: T): T {
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+export function serializeRecipe(recipe: Recipe): RecipeResponse {
+  const ingredients = normalizeRecipeIngredients(recipe.ingredients);
+  const mainIngredients = parseMainIngredients(recipe.main_ingredients);
+  const steps = parseJson<string[]>(recipe.steps ?? '[]', []);
+  const storedStepsHi = parseJson<string[]>(recipe.stepsHi ?? '[]', []);
+  const storedDescHi = recipe.descriptionHi?.trim() ?? '';
+  const kitchenStyleId = recipe.kitchenStyleId as CuisineId;
+  const description = buildRecipeDescription({
+    title: recipe.title,
+    kitchenStyleId: recipe.kitchenStyleId,
+    dietType: recipe.dietType,
+    ingredients,
+    prepTime: recipe.prepTime,
+    difficulty: recipe.difficulty,
+    steps,
+  });
+
+  return {
+    id: recipe.id,
+    title: recipe.title,
+    prepTime: recipe.prepTime,
+    calories: recipe.calories,
+    region: recipe.region,
+    kitchenStyleId,
+    kitchenStyleIds: [kitchenStyleId],
+    dietType: recipe.dietType as DietType,
+    difficulty: recipe.difficulty as RecipeDifficulty,
+    description,
+    descriptionHi:
+      storedDescHi ||
+      buildRecipeDescriptionHi({
+        title: recipe.title,
+        kitchenStyleId: recipe.kitchenStyleId,
+        dietType: recipe.dietType,
+        ingredients,
+        prepTime: recipe.prepTime,
+        difficulty: recipe.difficulty,
+        steps,
+      }),
+    imageUrl: recipe.imageUrl,
+    tags: [] as RecipeTag[],
+    ingredients,
+    mainIngredients: mainIngredients.length > 0 ? mainIngredients : undefined,
+    steps,
+    stepsHi: storedStepsHi.length > 0 ? storedStepsHi : undefined,
+    published: recipe.published,
+    createdAt: recipe.createdAt.toISOString(),
+    updatedAt: recipe.updatedAt.toISOString(),
+  };
+}
+
+/** List/bootstrap payload — omit cooking steps to shrink mobile cold-start downloads. */
+export function serializeRecipeListItem(recipe: Recipe): RecipeResponse {
+  const full = serializeRecipe(recipe);
+  return { ...full, steps: [] };
+}
+
+export function serializeSponsor(sponsor: Sponsor): SponsorResponse {
+  return {
+    id: sponsor.id,
+    placement: sponsor.placement as SponsorPlacement,
+    brandName: sponsor.brandName,
+    productLabel: sponsor.productLabel,
+    tagline: sponsor.tagline,
+    logoUrl: sponsor.logoUrl,
+    cta: sponsor.cta,
+    searchQuery: sponsor.searchQuery ?? undefined,
+    recipeId: sponsor.recipeId ?? undefined,
+    active: sponsor.active,
+    priority: sponsor.priority,
+  };
+}
+
+export function serializeUser(user: User): UserProfileResponse {
+  return {
+    id: user.id,
+    email: user.email,
+    phone: user.phone,
+    name: user.name,
+    gender: (user.gender as Gender | null) ?? null,
+    isGuest: user.isGuest,
+    isActive: user.isActive ?? true,
+    hasCompletedOnboarding: user.hasCompletedOnboarding,
+    dietPreference: user.dietPreference as DietType,
+    dietChoice: user.dietChoice as DietChoice,
+    regionalCuisine: user.regionalCuisine,
+    favoriteCuisines: parseJson<CuisineId[]>(user.favoriteCuisines, []),
+    notificationsEnabled: user.notificationsEnabled,
+    city: user.city ?? null,
+    state: user.state ?? null,
+    latitude: user.latitude ?? null,
+    longitude: user.longitude ?? null,
+    locationUpdatedAt: user.locationUpdatedAt?.toISOString() ?? null,
+    termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
+    termsAcceptedVersion: user.termsAcceptedVersion ?? null,
+    createdAt: user.createdAt.toISOString(),
+  pantryIngredients: parseJson<string[]>(user.pantryIngredients, []),
+  savedRecipeIds: parseJson<string[]>(user.savedRecipeIds, []),
+  kitchenPreferences: parseKitchenPreferences(user.kitchenPreferences),
+  plan: serializeUserPlan(user),
+  };
+}

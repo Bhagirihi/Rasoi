@@ -1,0 +1,17 @@
+# Accept Terms & Privacy during register onboarding.
+appId: com.bhagihiri.rasoiapp
+---
+- extendedWaitUntil:
+    visible:
+      id: screen-legal-consent
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: legal-consent-checkbox
+    timeout: 15000
+- tapOn:
+    id: legal-consent-checkbox
+- tapOn:
+    id: legal-consent-continue
+- runFlow:
+    file: _dismiss-permissions.yaml

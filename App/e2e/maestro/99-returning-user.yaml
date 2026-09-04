@@ -1,0 +1,11 @@
+# Returning user: warm relaunch should skip Login and land on Home.
+appId: com.bhagihiri.rasoiapp
+---
+- launchApp:
+    stopApp: true
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 120000
+- assertVisible:
+    id: screen-home

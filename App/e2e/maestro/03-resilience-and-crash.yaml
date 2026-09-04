@@ -1,0 +1,50 @@
+# Precondition: QA build with monetization controls enabled and a persisted session.
+appId: com.bhagihiri.rasoiapp
+name: Rasoi offline, recovery, and crash fallback
+tags:
+  - regression
+  - resilience
+  - qa-build
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: screen-home
+    timeout: 60000
+- tapOn:
+    id: qa-toggle-offline
+- assertVisible: "offline"
+- takeScreenshot: screenshots/rasoi/home-offline
+- swipe:
+    direction: DOWN
+    duration: 700
+- takeScreenshot: screenshots/rasoi/home-offline-refresh
+- tapOn:
+    id: qa-toggle-offline
+- openLink: rasoi://settings
+- extendedWaitUntil:
+    visible:
+      id: screen-settings
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: settings-test-crash
+    direction: DOWN
+- tapOn:
+    id: settings-test-crash
+- extendedWaitUntil:
+    visible:
+      id: screen-crash-fallback
+    timeout: 10000
+- takeScreenshot: screenshots/rasoi/crash-fallback
+- assertVisible:
+    id: crash-retry
+- assertVisible:
+    id: crash-send-feedback
+- tapOn:
+    id: crash-retry
+- extendedWaitUntil:
+    visible:
+      id: screen-settings
+    timeout: 30000

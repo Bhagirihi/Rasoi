@@ -1,0 +1,36 @@
+# Dismiss common Android system permission dialogs (best-effort).
+appId: com.bhagihiri.rasoiapp
+---
+- extendedWaitUntil:
+    visible: "System UI isn't responding"
+    timeout: 8000
+    optional: true
+- runFlow:
+    when:
+      visible: "System UI isn't responding"
+    commands:
+      - tapOn: "Wait"
+- extendedWaitUntil:
+    visible: "No thanks"
+    timeout: 20000
+    optional: true
+- runFlow:
+    when:
+      visible: "No thanks"
+    commands:
+      - tapOn: "No thanks"
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+- runFlow:
+    when:
+      visible: "Only this time"
+    commands:
+      - tapOn: "Only this time"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"

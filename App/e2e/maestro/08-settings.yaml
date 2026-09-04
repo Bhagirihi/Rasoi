@@ -1,0 +1,22 @@
+# TC-012: Settings theme toggle
+appId: com.bhagihiri.rasoiapp
+---
+- tapOn:
+    id: tab-settings
+- extendedWaitUntil:
+    visible:
+      id: screen-settings
+    timeout: 20000
+- assertVisible:
+    id: screen-settings
+- scrollUntilVisible:
+    element:
+      id: settings-theme-dark
+    direction: DOWN
+    timeout: 30000
+- tapOn:
+    id: settings-theme-dark
+- tapOn:
+    id: settings-theme-light
+- assertVisible:
+    id: screen-settings

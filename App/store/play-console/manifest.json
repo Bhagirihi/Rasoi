@@ -1,0 +1,571 @@
+{
+  "$schema": "./manifest.schema.json",
+  "schemaVersion": 2,
+  "developerAccount": {
+    "displayName": "Karbh It Solutions"
+  },
+  "application": {
+    "playConsoleName": "Rasoi App: Aaj Kya Banaye?",
+    "defaultLanguage": "en-US",
+    "packageName": "com.bhagihiri.rasoiapp",
+    "expoSlug": "rasoi",
+    "expoOwner": "takeyshi",
+    "versionName": "1.0.16",
+    "versionCode": 17,
+    "category": "FOOD_AND_DRINK",
+    "appType": "APPLICATION",
+    "contentRating": "Everyone",
+    "defaultCountry": "IN",
+    "pricing": "FREE"
+  },
+  "localization": {
+    "apiPushed": [
+      "en-US",
+      "hi-IN",
+      "mr-IN",
+      "ta-IN",
+      "te-IN",
+      "gu-IN"
+    ],
+    "skipApiPush": [
+      "bn-IN"
+    ],
+    "skipApiPushReason": {
+      "bn-IN": "Bengali not available in Play Console store listing translations"
+    },
+    "playApiLocaleByManifestLocale": {
+      "gu-IN": "gu"
+    }
+  },
+  "playConsole": {
+    "tagsApiSupported": false,
+    "tags": [
+      "Recipes",
+      "Cooking",
+      "Food & drink",
+      "Meal planning",
+      "Lifestyle",
+      "Health & fitness"
+    ],
+    "competitorTagReference": {
+      "com.company.rasoiplan": {
+        "title": "Rasoi Plan",
+        "inferredTags": [
+          "Meal planning",
+          "Recipes",
+          "Cooking",
+          "Food & drink",
+          "Lifestyle"
+        ],
+        "source": "Gujarati weekly meal planner; Jain/Swaminarayan diet"
+      },
+      "com.rasoiai.app": {
+        "title": "Rasoi AI - AI Powered Kitchen",
+        "inferredTags": [
+          "Recipes",
+          "Cooking",
+          "Meal planning",
+          "Food & drink",
+          "Health & fitness",
+          "Lifestyle"
+        ],
+        "source": "AI pantry recipes, weekly planner, nutrition/IFCT, Indian regional dishes"
+      },
+      "com.apnirasoi.customer.android": {
+        "title": "Apni Rasoi",
+        "inferredTags": [
+          "Food delivery",
+          "Restaurants"
+        ],
+        "source": "Restaurant food delivery — not applicable to Rasoi recipe app; do not add",
+        "skipForRasoi": true
+      },
+      "rasoiRecommendedTags": [
+        "Recipes",
+        "Cooking",
+        "Food & drink",
+        "Meal planning",
+        "Lifestyle",
+        "Health & fitness"
+      ]
+    }
+  },
+  "operatorActions": [
+    {
+      "id": "set-play-tags",
+      "type": "play_console_manual",
+      "consolePath": "Grow users → Store settings → App category and tags",
+      "applyTagsFrom": "playConsole.tags"
+    },
+    {
+      "id": "title-experiment",
+      "type": "play_console_manual",
+      "consolePath": "Grow users → Store listing experiments",
+      "experimentId": "titleExperimentVariants"
+    }
+  ],
+  "titleExperimentVariants": {
+    "active": "Rasoi App: Aaj Kya Banaye?",
+    "variants": [
+      {
+        "id": "A",
+        "title": "Rasoi App: Aaj Kya Banaye?",
+        "rationale": "Brand + intent hook — owns rasoi / aaj kya banaye search (22 chars)."
+      },
+      {
+        "id": "B",
+        "title": "Rasoi - Indian Recipe App",
+        "rationale": "Generic keyword density — Indian recipe app for broad discovery (25 chars)."
+      }
+    ]
+  },
+  "storeListing": {
+    "title": "Rasoi App: Aaj Kya Banaye?",
+    "shortDescription": "Indian recipe app — Aaj kya banaye? Pantry match %, Veg & Jain. 1,200+ dishes.",
+    "fullDescription": "Rasoi — India's home cooking companion. Aaj kya banaye? Get dinner ideas from your pantry with recipe match %, Veg & Jain filters, and 1,200+ Gujarati & regional recipes.\n\nEvery evening, the same question: Aaj kya banaye? No more scrolling recipe blogs or staring at an empty fridge — whether you need a quick weeknight dinner, a Jain-safe thali, or something the kids will actually eat, Rasoi picks for you and reminds you before it's too late.\n\nWHY CHOOSE RASOI?\n\n• Tonight's picks — personalised suggestions for breakfast, lunch, dinner & late-night\n• Cook from your pantry — add ingredients at home and see recipe match % instantly\n• 1,200+ Indian recipes — Gujarati, Punjabi, South Indian, Bengali, Maharashtrian & more\n• Diet filters — Veg, Jain, Egg & Non-Veg so every household eats right\n• Regional cuisines — 15 kitchen styles including Kathiyawadi, Surti, North & South Indian\n• Quick filters — under 20 minutes, kid-friendly, leftover-friendly & budget picks\n• Daily meal reminders — gentle nudges so planning dinner becomes a habit, not a scramble\n• Save favourites — build your family's go-to rotation for busy weeks\n\nHOW IT WORKS\n\n1. Set your diet, region, and favourite cuisines during onboarding\n2. Add what's in your pantry — dal, rice, paneer, sabzi, masalas\n3. Get daily picks matched to your kitchen and preferences\n4. Cook tonight's dish or explore 1,200+ everyday Indian recipes\n\nPERFECT FOR\n\n• Homemakers tired of deciding what to cook every day\n• Working professionals who want quick, practical dinner ideas\n• New cooks learning regional family recipes\n• Jain & pure-veg households needing safe, filtered suggestions\n• Anyone who has ever opened the fridge and thought — aaj kya banaye?\n\nRASOI PLUS (OPTIONAL)\n\nUpgrade for an ad-free experience and one-tap grocery & food delivery links via Blinkit, Zepto, Instamart, Zomato & Swiggy. Core recipes, pantry matching, and daily picks are free to start.\n\nSEARCH & DISCOVER\n\nFind Rasoi when you search: aaj kya banaye app, what to cook today, dinner recipe app India, Indian recipe app, veg recipe app India, Jain recipe app, Gujarati recipe app, cook from pantry app, pantry recipe matcher, ingredients based recipes, Kathiyawadi recipes, Surti recipes, quick recipes under 20 minutes, meal reminder app, weeknight dinner ideas, and Indian home cooking app.\n\nRasoi may use your city (optional) for local recipe relevance.\n\nWebsite: https://rasoiapplication.in\nPrivacy: https://rasoiapplication.in/privacy\nTerms: https://rasoiapplication.in/terms\nSupport: cooking@rasoiapplication.in\n\nDownload the Rasoi app today — stop wondering what to cook. Start cooking.",
+    "website": "https://rasoiapplication.in",
+    "email": "cooking@rasoiapplication.in",
+    "privacyPolicyUrl": "https://rasoiapplication.in/privacy"
+  },
+  "localizedListings": {
+    "hi-IN": {
+      "title": "Rasoi App: Aaj Kya Banaye?",
+      "shortDescription": "भारतीय रेसिपी ऐप — आज क्या बनाएं? पैंट्री मैच %, वेज जैन। 1,200+ डिश।",
+      "fullDescription": "Rasoi — भारत की होम कुकिंग ऐप। आज क्या बनाएं? पैंट्री मैच %, गुजराती और क्षेत्रीय रेसिपी, वेज़ और जैन फ़िल्टर — 1,200+ भारतीय व्यंजन।\n\nहर शाम एक ही सवाल: आज क्या बनाएं?\n\nRasoi आपकी रोज़ाना भारतीय रसोई साथी है — आपकी रसोई, आहार और पसंदीदा क्षेत्रीय स्वाद के अनुसार स्मार्ट भोजन सुझाव। अब खाली फ्रिज देखकर परेशान न हों।\n\nचाहे जल्दी वीकनाइट डिनर चाहिए, जैन सेफ थाली, या बच्चों को पसंद आने वाला खाना — Rasoi आपके लिए चुनता है और समय पर याद दिलाता है।\n\nRASOI क्यों चुनें?\n\n• आज की पसंद — नाश्ता, दोपहर, रात का खाना और लेट-नाइट स्नैक्स\n• अपनी रसोई से पकाएं — सामग्री जोड़ें और तुरंत रेसिपी मैच % देखें\n• 1,200+ भारतीय रेसिपी — गुजराती, पंजाबी, दक्षिण भारतीय, बंगाली, महाराष्ट्रीयन और अधिक\n• आहार फ़िल्टर — शाकाहारी, जैन, अंडा और मांसाहारी\n• क्षेत्रीय व्यंजन — काठियावाड़ी, सूरती, उत्तर और दक्षिण भारतीय सहित 15 शैलियाँ\n• क्विक फ़िल्टर — 20 मिनट से कम, बच्चों के लिए, बचे हुए खाने से, बजट फ्रेंडली\n• दैनिक रिमाइंडर — डिनर प्लानिंग आदत बनाएं\n• पसंदीदा सेव करें — परिवार की फेवरेट डिशेज़ एक जगह\n\nकैसे काम करता है\n\n1. ऑनबोर्डिंग में आहार, क्षेत्र और पसंदीदा व्यंजन चुनें\n2. रसोई की सामग्री जोड़ें — दाल, चावल, पनीर, सब्ज़ी, मसाले\n3. रोज़ाना सुझाव पाएं जो आपकी रसोई से मेल खाते हों\n4. आज की डिश पकाएं या 1,200+ रोज़मर्रा की भारतीय रेसिपी देखें\n\nकिसके लिए बेहतरीन\n\n• रोज़ खाना तय करने से थकी गृहिणियाँ\n• व्यस्त प्रोफेशनल जिन्हें जल्दी डिनर आइडिया चाहिए\n• नए रसोइये जो परिवार की रेसिपी सीख रहे हैं\n• जैन और शुद्ध शाकाहारी परिवार\n• हर वो व्यक्ति जिसने सोचा हो — आज क्या बनाएं?\n\nRASOI PLUS (वैकल्पिक)\n\nविज्ञापन-मुक्त अनुभव और Blinkit, Zepto, Instamart, Zomato व Swiggy लिंक। मुख्य रेसिपी, पैंट्री मैच और दैनिक सुझाव मुफ़्त में शुरू करें।\n\nखोजें और पाएं\n\nRasoi पर खोजें: आज क्या बनाएं ऐप, आज क्या बनाएं, रात का खाना रेसिपी, भारतीय रेसिपी ऐप, वेज रेसिपी ऐप, जैन रेसिपी ऐप, गुजराती रेसिपी ऐप, पैंट्री से रेसिपी, पैंट्री मैच, काठियावाड़ी रेसिपी, 20 मिनट रेसिपी, डिनर आइडिया, और रोज़मर्रा की भारतीय रसोई।\n\nवेबसाइट: https://rasoiapplication.in\nगोपनीयता: https://rasoiapplication.in/privacy\nसहायता: cooking@rasoiapplication.in\n\nRasoi app डाउनलोड करें — आज क्या बनाएं, अब और सोचना नहीं।"
+    },
+    "gu-IN": {
+      "title": "Rasoi App: Aaj Kya Banaye?",
+      "shortDescription": "ભારતીય રેસિપી એપ — આજે શું બનાવું? પેન્ટ્રી મેચ %, જૈન વેજ. 1,200+",
+      "fullDescription": "Rasoi — ગુજરાતની હોમ કુકિંગ એપ. Jamvanu? આજે શું બનાવું? પેન્ટ્રી મેચ %, જૈન અને વેજ ફિલ્ટર સાથે 1,200+ ભારતીય રેસિપી.\n\nદર સાંજે એક જ સવાલ: આજે શું બનાવું?\n\nRasoi તમારી રોજિંદા ભારતીય રસોઈ સાથી છે — તમારી રસોઈ, આહાર અને પ્રાદેશિક સ્વાદ મુજબ સ્માર્ટ ભોજન સૂચનો.\n\nકાઠિયાવાડી, સૂરતી, જૈન સેફ થાળી અથવા બાળકોને ગમે તેવું — Rasoi તમારા માટે પસંદ કરે છે અને સમયસર યાદ અપાવે છે.\n\nશા માટે RASOI?\n\n• આજની પસંદ — નાસ્તો, લંચ, ડિનર અને લેટ-નાઇટ\n• રસોઈમાંથી રાંધો — સામગ્રી ઉમેરો અને તરત રેસિપી મેચ % જુઓ\n• 1,200+ ભારતીય રેસિપી — ગુજરાતી, પંજાબી, દક્ષિણ ભારતીય, બંગાળી, મહારાષ્ટ્રીયન\n• આહાર ફિલ્ટર — શાકાહારી, જૈન, ઇંડા અને માંસાહારી\n• પ્રાદેશિક વાનગીઓ — કાઠિયાવાડી, સૂરતી, ઉત્તર અને દક્ષિણ ભારતીય\n• ઝડપી ફિલ્ટર — 20 મિનિટથી ઓછું, બાળકો માટે, બચેલા ખાણાથી\n• દૈનિક રિમાઇન્ડર — ડિનર પ્લાનિંગ આદત બનાવો\n• ફેવરિટ સેવ — પરિવારની પસંદીદા ડિશ એક જગ્યાએ\n\nકેવી રીતે કામ કરે છે\n\n1. ઓનબોર્ડિંગમાં આહાર, પ્રદેશ અને પસંદીદા વાનગીઓ પસંદ કરો\n2. રસોઈની સામગ્રી ઉમેરો — દાળ, ચોખા, પનીર, શાકભાજી, મસાલા\n3. દરરોજ સૂચનો મેળવો જે તમારી રસોઈ સાથે મેળ ખાય\n4. આજની ડિશ રાંધો અથવા 1,200+ રોજિંદા ભારતીય રેસિપી જુઓ\n\nશોધો અને શોધો\n\nRasoi પર શોધો: jamvanu, jamvanu recipe, આજે શું બનાવું, ગુજરાતી રેસિપી એપ, જૈન રેસિપી, કાઠિયાવાડી રેસિપી, સૂરતી રેસિપી, પેન્ટ્રી રેસિપી, ભોજન યોજના, અને ભારતીય રસોઈ એપ.\n\nવેબસાઇટ: https://rasoiapplication.in\nગોપનીયતા: https://rasoiapplication.in/privacy\nસહાય: cooking@rasoiapplication.in\n\nRasoi app ડાઉનલોડ કરો — આજે શું બનાવું, હવે વિચારવાની જરૂર નથી."
+    },
+    "mr-IN": {
+      "title": "Rasoi App: Aaj Kya Banaye?",
+      "shortDescription": "भारतीय रेसिपी अॅप — आज काय बनवायचे? पॅन्ट्री मॅच %, वेज जैन. 1,200+",
+      "fullDescription": "दररोज संध्याकाळी एकच प्रश्न: आज काय बनवायचे?\n\nRasoi तुमचा दैनंदिन भारतीय स्वयंपाक साथी — तुमच्या पॅन्ट्री, आहार आणि प्रादेशिक चवीनुसार स्मार्ट जेवण सूचना. 1,200+ भारतीय पाककृती.\n\nमहाराष्ट्रीयन, कोकणी, जैन सेफ थाळी किंवा मुलांना आवडेल असे — Rasoi तुमच्यासाठी निवडते.\n\nRASOI का?\n\n• आजची निवड — नाश्ता, दुपारचे जेवण, रात्रीचे जेवण\n• पॅन्ट्रीमधून शिजवा — साहित्य जोडा आणि लगेच रेसिपी मॅच % पहा\n• 1,200+ भारतीय पाककृती — गुजराती, पंजाबी, दक्षिण भारतीय, बंगाली, मराठी\n• आहार फिल्टर — शाकाहारी, जैन, अंडा आणि मांसाहारी\n• प्रादेशिक पाककला — महाराष्ट्रीयन, कोकणी, उत्तर आणि दक्षिण भारतीय\n• दैनिक रिमाइंडर — जेवणाचे नियोजन सोपे करा\n\nशोधा आणि शोधा\n\nRasoi वर शोधा: आज काय बनवायचे, मराठी रेसिपी ऐप, जैन रेसिपी, महाराष्ट्रीयन रेसिपी, पॅन्ट्री रेसिपी, जेवण योजना, आणि भारतीय स्वयंपाक ऐप.\n\nवेबसाइट: https://rasoiapplication.in\nगोपनीयता: https://rasoiapplication.in/privacy\nसहाय्य: cooking@rasoiapplication.in"
+    },
+    "ta-IN": {
+      "title": "Rasoi App: Aaj Kya Banaye?",
+      "shortDescription": "இந்தியன் ரெசிபி ஆப் — இன்று என்ன சமை? பேண்ட்ரி மேட்ச் %, சைவம் ஜைன். 1,200+",
+      "fullDescription": "ஒவ்வொரு மாலையும் ஒரே கேள்வி: இன்று என்ன சமைக்கலாம்?\n\nRasoi உங்கள் தினசரி இந்திய சமையல் துணை — உங்கள் சமையலறை, உணவு விருப்பம் மற்றும் பிராந்திய சுவைக்கு ஏற்ப ஸ்மார்ட் உணவு பரிந்துரைகள். 1,200+ இந்திய சமையல்.\n\nதென்னிந்திய, சைவம், ஜைன் & முட்டை வடிப்புகள் — Rasoi உங்களுக்காக தேர்வு செய்கிறது.\n\nஏன் RASOI?\n\n• இன்றைய தேர்வு — காலை, மதியம், இரவு உணவு\n• சமையலறையிலிருந்து சமையுங்கள் — பொருட்கள் சேர்த்து உடனே பொருத்த % பாருங்கள்\n• 1,200+ இந்திய சமையல் — தமிழ், தெலுங்கு, குஜராத்தி, பஞ்சாபி, வங்காளி\n• உணவு வடிப்பான்கள் — சைவம், ஜைன், முட்டை & அசைவம்\n• தினசரி நினைவூட்டல் — இரவு உணவு திட்டமிடல்\n\nதேடல்\n\nRasoi-யில் தேடுங்கள்: இன்று என்ன சமை, தமிழ் ரெசிபி ஆப், சைவ ரெசிபி, ஜைன் ரெசிபி, பேண்ட்ரி ரெசிபி, இரவு உணவு யோசனை, இந்திய சமையல் ஆப்.\n\nவலைத்தளம்: https://rasoiapplication.in\nதனியுரிமை: https://rasoiapplication.in/privacy\nஆதரவு: cooking@rasoiapplication.in"
+    },
+    "te-IN": {
+      "title": "Rasoi App: Aaj Kya Banaye?",
+      "shortDescription": "ఇండియన్ రెసిపీ యాప్ — ఈరోజు ఏం వండాలి? పాంట్రీ మ్యాచ్ %, జైన్. 1,200+",
+      "fullDescription": "ప్రతి సాయంత్రం ఒకే ప్రశ్న: ఈరోజు ఏం వండాలి?\n\nRasoi మీ రోజువారీ భారతీయ వంట సహచరుడు — మీ పాంట్రీ, ఆహారం మరియు ప్రాంతీయ రుచులకు తగిన స్మార్ట్ భోజన సూచనలు. 1,200+ భారతీయ వంటకాలు.\n\nఆంధ్ర, తెలంగాణ, శాకాహార & జైన్ ఫిల్టర్లు — Rasoi మీ కోసం ఎంచుకుంటుంది.\n\nఎందుకు RASOI?\n\n• నేటి ఎంపిక — అల్పాహారం, మధ్యాహ్నం, రాత్రి భోజనం\n• పాంట్రీ నుంచి వండండి — పదార్థాలు జోడించి వెంటనే మ్యాచ్ % చూడండి\n• 1,200+ భారతీయ వంటకాలు — తెలుగు, తమిళం, గుజరాతీ, పంజాబీ, బెంగాలీ\n• ఆహార ఫిల్టర్లు — శాకాహారం, జైన్, గుడ్డు & మాంసాహారం\n• రోజువారీ రిమైండర్ — భోజన ప్రణాళిక\n\nశోధన\n\nRasoi లో శోధించండి: ఈరోజు ఏం వండాలి, తెలుగు రెసిపీ యాప్, శాకాహార రెసిపీ, జైన్ రెసిపీ, పాంట్రీ రెసిపీ, భోజన ప్రణాళిక, భారతీయ వంట యాప్.\n\nవెబ్‌సైట్: https://rasoiapplication.in\nగోప్యత: https://rasoiapplication.in/privacy\nమద్దతు: cooking@rasoiapplication.in"
+    },
+    "bn-IN": {
+      "title": "Rasoi App: Aaj Kya Banaye?",
+      "shortDescription": "ভারতীয় রেসিপি অ্যাপ — আজ কী রান্না? প্যান্ট্রি ম্যাচ %, ভেজ জৈন. 1,200+",
+      "fullDescription": "প্রতিদিন সন্ধ্যায় একই প্রশ্ন: আজ কী রান্না করব?\n\nRasoi আপনার দৈনন্দিন ভারতীয় রান্নার সঙ্গী — আপনার প্যান্ট্রি, খাদ্যাভ্যাস ও আঞ্চলিক স্বাদ অনুযায়ী স্মার্ট খাবারের পরামর্শ. 1,200+ ভারতীয় রেসিপি.\n\nবাঙালি, পূর্ব ভারতীয়, শাকাহারী ও জৈন ফিল্টার — Rasoi আপনার জন্য বেছে নেয়।\n\nকেন RASOI?\n\n• আজকের পছন্দ — সকাল, দুপুর, রাতের খাবার\n• প্যান্ট্রি থেকে রান্না — উপকরণ যোগ করুন এবং তৎক্ষণাৎ ম্যাচ % দেখুন\n• 1,200+ ভারতীয় রেসিপি — বাঙালি, গুজরাটি, পাঞ্জাবি, দক্ষিণ ভারতীয়, মারাঠি\n• খাদ্য ফিল্টার — শাকাহারী, জৈন, ডিম ও মাংসাহারী\n• দৈনিক রিমাইন্ডার — ডিনার পরিকল্পনা\n\nঅনুসন্ধান\n\nRasoi-তে খুঁজুন: আজ কী রান্না, বাংলা রেসিপি অ্যাপ, শাকাহারী রেসিপি, জৈন রেসিপি, প্যান্ট্রি রেসিপি, ডিনার আইডিয়া, ভারতীয় রান্না অ্যাপ.\n\nওয়েবসাইট: https://rasoiapplication.in\nগোপনীয়তা: https://rasoiapplication.in/privacy\nসহায়তা: cooking@rasoiapplication.in"
+    }
+  },
+  "asoKeywordBank": {
+    "headTerms": [
+      "Rasoi app",
+      "rasoi app download",
+      "aaj kya banaye",
+      "aaj kya banaye app",
+      "what to cook today",
+      "dinner recipe app India",
+      "Indian recipe app",
+      "everyday cooking ideas"
+    ],
+    "mealPlanning": [
+      "dinner menu planner",
+      "daily meal suggestions",
+      "what to cook tonight",
+      "meal reminder app",
+      "weeknight dinner ideas",
+      "breakfast lunch dinner recipes"
+    ],
+    "dietLifestyle": [
+      "veg recipe app India",
+      "Jain recipe app",
+      "pure veg recipes",
+      "vegetarian dinner ideas",
+      "Jain food recipes",
+      "kids friendly recipes"
+    ],
+    "regionalPanIndian": [
+      "North Indian recipes",
+      "South Indian recipes",
+      "Punjabi recipes app",
+      "Bengali recipes",
+      "Maharashtrian recipes"
+    ],
+    "regionalGujarati": [
+      "Gujarati recipe app",
+      "Kathiyawadi recipes",
+      "Surti recipes",
+      "Gujarati thali ideas",
+      "Jain Gujarati recipes"
+    ],
+    "featureDifferentiated": [
+      "cook from pantry app",
+      "pantry recipe matcher",
+      "ingredients based recipes",
+      "quick recipes under 20 minutes",
+      "Indian home cooking app"
+    ]
+  },
+  "declarations": {
+    "ads": true,
+    "inAppPurchases": true,
+    "subscriptions": true,
+    "locationPermission": {
+      "accessCoarseLocation": true,
+      "accessFineLocation": true,
+      "optional": true,
+      "purpose": "city_for_local_recipes_and_sponsor_reach"
+    },
+    "targetAudienceChildrenUnder13": false,
+    "playAppSigning": true
+  },
+  "dataSafety": {
+    "accountDeletion": {
+      "deleteAccountUrl": "https://rasoiapplication.in/delete-account",
+      "partialDeletionWithoutAccountDelete": false
+    },
+    "collection": {
+      "collectsOrSharesData": true,
+      "encryptedInTransit": true,
+      "accountCreationMethods": [
+        "usernameAndOtherAuthentication"
+      ],
+      "notSold": true
+    },
+    "dataTypes": {
+      "approximateLocation": {
+        "playLabel": "Approximate location",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS"
+        ]
+      },
+      "name": {
+        "playLabel": "Name",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
+      },
+      "emailAddress": {
+        "playLabel": "Email address",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
+      },
+      "userIds": {
+        "playLabel": "User IDs",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS",
+          "ACCOUNT_MANAGEMENT"
+        ]
+      },
+      "phoneNumber": {
+        "playLabel": "Phone number",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
+      },
+      "otherInfo": {
+        "playLabel": "Other info",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
+      },
+      "purchaseHistory": {
+        "playLabel": "Purchase history",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": false,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ACCOUNT_MANAGEMENT"
+        ]
+      },
+      "appInteractions": {
+        "playLabel": "App interactions",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS"
+        ]
+      },
+      "inAppSearchHistory": {
+        "playLabel": "In-app search history",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY",
+          "ANALYTICS"
+        ]
+      },
+      "otherUserGeneratedContent": {
+        "playLabel": "Other user-generated content",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "APP_FUNCTIONALITY"
+        ]
+      },
+      "crashLogs": {
+        "playLabel": "Crash logs",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "ANALYTICS",
+          "APP_FUNCTIONALITY"
+        ]
+      },
+      "diagnostics": {
+        "playLabel": "Diagnostics",
+        "collected": true,
+        "shared": false,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "ANALYTICS",
+          "APP_FUNCTIONALITY"
+        ]
+      },
+      "deviceOrOtherIds": {
+        "playLabel": "Device or other IDs",
+        "collected": true,
+        "shared": true,
+        "ephemeral": false,
+        "optional": true,
+        "purposes": [
+          "ADVERTISING",
+          "ANALYTICS"
+        ]
+      }
+    }
+  },
+  "contentRatingSurvey": {
+    "category": "REFERENCE_NEWS_EDUCATIONAL_OTHER",
+    "violence": false,
+    "sexuality": false,
+    "language": false,
+    "controlledSubstances": false,
+    "gambling": false,
+    "userGeneratedContent": false,
+    "locationSharing": true,
+    "locationSharingOptional": true,
+    "locationSharingScope": "city_level",
+    "digitalPurchases": true
+  },
+  "monetization": {
+    "entitlementId": "rasoi_plus",
+    "revenueCat": {
+      "offering": "default",
+      "packages": {
+        "monthly": "$rc_monthly",
+        "annual": "$rc_annual"
+      },
+      "playProducts": {
+        "monthly": "rasoi_plus_monthly:monthly",
+        "yearly": "rasoi_plus_yearly:yearly"
+      }
+    },
+    "tiers": {
+      "free": {
+        "id": "free",
+        "label": "Free",
+        "billingSource": null,
+        "durationDays": null,
+        "isPlayFreeTrial": false,
+        "features": {
+          "ads": true,
+          "partners": false
+        }
+      },
+      "trial": {
+        "id": "trial",
+        "label": "Trial",
+        "billingSource": "in_app_api",
+        "durationDays": 3,
+        "isPlayFreeTrial": false,
+        "features": {
+          "ads": true,
+          "partners": true
+        }
+      },
+      "paid": {
+        "id": "paid",
+        "label": "Rasoi Plus",
+        "billingSource": "play_subscription",
+        "durationDays": null,
+        "isPlayFreeTrial": false,
+        "features": {
+          "ads": false,
+          "partners": true
+        },
+        "productIds": [
+          "rasoi_plus_monthly",
+          "rasoi_plus_yearly"
+        ]
+      }
+    },
+    "products": [
+      {
+        "productId": "rasoi_plus_monthly",
+        "tierId": "paid",
+        "basePlanId": "monthly",
+        "billingPeriod": "P1M",
+        "priceInr": 49,
+        "title": "Rasoi Plus Monthly",
+        "description": "Monthly Rasoi Plus — ad-free recipes and delivery partner links.",
+        "benefits": [
+          "No ads anywhere in the app",
+          "Blinkit, Zepto & Instamart grocery checkout",
+          "Zomato & Swiggy food delivery links"
+        ]
+      },
+      {
+        "productId": "rasoi_plus_yearly",
+        "tierId": "paid",
+        "basePlanId": "yearly",
+        "billingPeriod": "P1Y",
+        "priceInr": 499,
+        "title": "Rasoi Plus Yearly",
+        "description": "Yearly Rasoi Plus — save 15% vs paying monthly.",
+        "benefits": [
+          "No ads anywhere in the app",
+          "Blinkit, Zepto & Instamart grocery checkout",
+          "Zomato & Swiggy food delivery links",
+          "Best value — ₹42/mo billed yearly"
+        ]
+      }
+    ]
+  },
+  "assets": {
+    "icon": "rasoi_mobile/assets/images/icon.png",
+    "adaptiveIconForeground": "rasoi_mobile/assets/images/android-icon-foreground.png",
+    "featureGraphic": {
+      "path": "rasoi_mobile/store/play-console/marketing/rasoi-banner-aaj-kya-banaye.png",
+      "width": 1024,
+      "height": 500
+    },
+    "phoneScreenshots": [
+      "docs/marketing/app-store-screenshots/play-store-upload/01-01-hook-never-wonder-what-to-cook.png",
+      "docs/marketing/app-store-screenshots/play-store-upload/02-02-problem-confused-about-dinner.png",
+      "docs/marketing/app-store-screenshots/play-store-upload/03-03-feature-cook-with-ingredients.png",
+      "docs/marketing/app-store-screenshots/play-store-upload/04-04-feature-regional-recipes.png",
+      "docs/marketing/app-store-screenshots/play-store-upload/05-05-feature-fits-today.png",
+      "docs/marketing/app-store-screenshots/play-store-upload/06-06-social-proof-home-cooks.png",
+      "docs/marketing/app-store-screenshots/play-store-upload/07-07-lifestyle-family-time.png",
+      "docs/marketing/app-store-screenshots/play-store-upload/08-08-cta-download-today.png"
+    ],
+    "screenshotPipeline": {
+      "sourceDir": "rasoi_mobile/screenshots",
+      "generateCommand": "npm run generate",
+      "outputDir": "rasoi_mobile/app-store-assets"
+    },
+    "screenshotOrder": [
+      "01-hero",
+      "02-todays-picks",
+      "03-pantry-match",
+      "04-indian-regions",
+      "05-smart-filters",
+      "06-cook-shop-order",
+      "07-personalization",
+      "08-final"
+    ]
+  },
+  "build": {
+    "easProfile": "production",
+    "buildType": "app-bundle",
+    "easProjectId": "01de1672-85ce-4ad7-83d7-7fc958fc5659"
+  },
+  "openTesting": {
+    "trackStatus": "active",
+    "countries": [
+      "IN"
+    ],
+    "testerLimit": "unlimited",
+    "optInUrl": "https://play.google.com/apps/testing/com.bhagihiri.rasoiapp",
+    "versionCodeLink": "https://play.google.com/apps/test/com.bhagihiri.rasoiapp/10",
+    "storeListingUrl": "https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp",
+    "release": {
+      "versionName": "1.0.16",
+      "versionCode": 17
+    }
+  },
+  "firebaseIntegrations": {
+    "projectId": "rasoi-app-prod",
+    "primaryGoogleAccount": "devsp1901@gmail.com",
+    "consoleUrl": "https://console.firebase.google.com/u/0/project/rasoi-app-prod/overview",
+    "androidAppId": "1:304365765846:android:85492c6a6786f4cec27577",
+    "admob": {
+      "publisherCode": "pub-4173581536398147",
+      "androidAppId": "ca-app-pub-4173581536398147~9898362276",
+      "googleAccount": "my.website.email2@gmail.com",
+      "status": "pending_console_link",
+      "verifiedAt": "2026-06-21",
+      "requiresConsoleAction": true
+    },
+    "googlePlay": {
+      "developerAccount": "Karbh It Solutions",
+      "status": "linked",
+      "verifiedAt": "2026-06-21"
+    },
+    "googleAnalytics": {
+      "status": "enabled",
+      "verifiedAt": "2026-06-21"
+    },
+    "googleAds": {
+      "admobAccountLink": false,
+      "firebaseLink": "via_google_analytics",
+      "verifiedAt": "2026-06-21",
+      "requiresConsoleAction": true
+    },
+    "docsPath": "rasoi_mobile/docs/FIREBASE_INTEGRATIONS.md"
+  },
+  "sourceFiles": [
+    "rasoi_mobile/app.json",
+    "rasoi_mobile/constants/payments.ts",
+    "rasoi_mobile/constants/plans.ts",
+    "rasoi_mobile/constants/revenuecat.ts",
+    "rasoi_mobile/services/payments/revenueCatClient.ts",
+    "rasoi_backend/src/lib/legal-content.ts"
+  ]
+}

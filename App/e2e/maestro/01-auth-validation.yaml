@@ -1,0 +1,47 @@
+appId: com.bhagihiri.rasoiapp
+name: Rasoi authentication validation
+tags:
+  - smoke
+  - auth
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: screen-login
+    timeout: 30000
+- takeScreenshot: screenshots/rasoi/login-empty
+- tapOn:
+    id: login-send-otp
+- assertVisible: "Enter a valid email address."
+- tapOn:
+    id: login-email-input
+- inputText: "not-an-email"
+- hideKeyboard
+- tapOn:
+    id: login-send-otp
+- assertVisible: "Enter a valid email address."
+- eraseText
+- inputText: "qa+special@example.com"
+- hideKeyboard
+- takeScreenshot: screenshots/rasoi/login-valid-email
+- tapOn:
+    id: login-go-register
+- extendedWaitUntil:
+    visible:
+      id: screen-register
+    timeout: 10000
+- takeScreenshot: screenshots/rasoi/register
+- tapOn:
+    id: register-name-input
+- inputText: "A very long QA user name with symbols apostrophe dash"
+- hideKeyboard
+- tapOn:
+    id: register-email-input
+- inputText: "invalid"
+- hideKeyboard
+- tapOn:
+    id: register-phone-input
+- inputText: "123"
+- hideKeyboard
+- takeScreenshot: screenshots/rasoi/register-invalid-values

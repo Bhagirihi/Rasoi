@@ -1,0 +1,22 @@
+# TC-013: Logout returns to login
+appId: com.bhagihiri.rasoiapp
+---
+- tapOn:
+    id: tab-settings
+- scrollUntilVisible:
+    element:
+      id: settings-logout
+    direction: DOWN
+    timeout: 45000
+- tapOn:
+    id: settings-logout
+- extendedWaitUntil:
+    visible:
+      text: "Log out?"
+    timeout: 15000
+- tapOn:
+    id: settings-logout-confirm
+- extendedWaitUntil:
+    visible:
+      id: screen-login
+    timeout: 30000

@@ -1,0 +1,20 @@
+# Pantry setup Skip/Continue sit below the fold — scroll before tapping.
+appId: com.bhagihiri.rasoiapp
+---
+- extendedWaitUntil:
+    visible:
+      id: screen-pantry
+    timeout: 60000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: screen-pantry
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: pantry-setup-skip
+          direction: DOWN
+          timeout: 45000
+      - tapOn:
+          id: pantry-setup-skip

@@ -1,0 +1,62 @@
+import type { PlanTier } from '@/constants/plans';
+import type { CuisineId, DietChoice } from '@/constants/theme';
+import type { Gender } from '@/constants/genderOptions';
+import type { DietType } from '@/data/mockRecipes';
+
+export type SponsorPlacement = 'home' | 'recipes' | 'pantry' | 'saved' | 'recipe';
+
+export interface UserProfileResponse {
+  id: string;
+  email: string | null;
+  phone: string | null;
+  name: string;
+  gender: Gender | null;
+  isGuest: boolean;
+  isActive?: boolean;
+  hasCompletedOnboarding: boolean;
+  dietPreference: DietType;
+  dietChoice: DietChoice;
+  regionalCuisine: string;
+  favoriteCuisines: CuisineId[];
+  notificationsEnabled: boolean;
+  city: string | null;
+  state: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  locationUpdatedAt: string | null;
+  pantryIngredients: string[];
+  savedRecipeIds: string[];
+  kitchenPreferences: {
+    allergyExclusions?: string[];
+    householdSize?: number;
+    freePartnerShopsUsed?: number;
+    freePartnerShopsMonthKey?: string;
+  };
+  plan: {
+    planTier: PlanTier;
+    trialStartedAt: string | null;
+    hasUsedTrial: boolean;
+    trialBonusDays: number;
+    yearlyPromoOfferTag: string | null;
+  };
+}
+
+export interface AuthResponse {
+  /** Legacy Rasoi JWT — omitted when Supabase-direct auth is active. */
+  token?: string;
+  user: UserProfileResponse;
+}
+
+export interface SponsorResponse {
+  id: string;
+  placement: SponsorPlacement;
+  brandName: string;
+  productLabel: string;
+  tagline: string;
+  logoUrl: string;
+  cta: string;
+  searchQuery?: string;
+  recipeId?: string;
+  active: boolean;
+  priority: number;
+}

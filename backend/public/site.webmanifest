@@ -1,0 +1,27 @@
+{
+  "name": "Rasoi - Indian Recipe App",
+  "short_name": "Rasoi",
+  "description": "Rasoi — Indian recipe app with pantry match, Aaj kya banaye picks, and regional dishes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0908",
+  "theme_color": "#FF6B35",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "/rasoi-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

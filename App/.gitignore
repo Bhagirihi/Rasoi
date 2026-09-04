@@ -1,0 +1,17 @@
+# Secrets & local artifacts — never commit
+fcm-service-account.json
+google-services.json
+firebase-debug.log
+.env
+.env.local
+.env.*.local
+*.jks
+*.keystore
+google-play-service-account.json
+
+# Native / build
+android/app/build/
+ios/Pods/
+dist/
+.expo/
+node_modules/

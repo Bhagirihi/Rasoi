@@ -1,0 +1,14 @@
+# Resend login OTP when already on the OTP step (session continuation).
+appId: com.bhagihiri.rasoiapp
+---
+- extendedWaitUntil:
+    visible:
+      text: "Check your email"
+    timeout: 15000
+- tapOn:
+    text: "Resend code"
+- extendedWaitUntil:
+    visible:
+      text: "A new code was sent"
+    timeout: 60000
+    optional: true

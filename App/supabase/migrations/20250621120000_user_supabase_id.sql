@@ -1,0 +1,5 @@
+-- Prisma rasoi.User column — apply via: cd rasoi_backend && npm run db:push
+-- Enables guest sessions in Supabase Auth (anonymous) linked to rasoi.User.supabaseUserId
+--
+-- Also enable in Supabase Dashboard:
+-- Authentication → Providers → Anonymous sign-ins → Enable

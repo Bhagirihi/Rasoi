@@ -1,0 +1,32 @@
+# TC-015: Login verify OTP (continues current session — no launchApp)
+# Env: QA_OTP
+appId: com.bhagihiri.rasoiapp
+---
+- extendedWaitUntil:
+    visible:
+      text: "Check your email"
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: login-otp-input
+    commands:
+      - tapOn:
+          id: login-otp-input
+      - eraseText
+      - inputText: ${QA_OTP}
+- runFlow:
+    when:
+      notVisible:
+        id: login-otp-input
+    commands:
+      - tapOn: "123456"
+      - eraseText
+      - inputText: ${QA_OTP}
+- hideKeyboard
+- tapOn:
+    text: "Sign in"
+- runFlow:
+    file: _reach-home.yaml
+- assertVisible:
+    id: screen-home

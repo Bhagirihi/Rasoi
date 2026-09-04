@@ -1,0 +1,11 @@
+# TC-011: Pantry tab
+appId: com.bhagihiri.rasoiapp
+---
+- tapOn:
+    id: tab-pantry
+- extendedWaitUntil:
+    visible:
+      id: screen-pantry
+    timeout: 20000
+- assertVisible:
+    id: screen-pantry
