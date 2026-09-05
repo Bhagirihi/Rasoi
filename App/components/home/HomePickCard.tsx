@@ -323,7 +323,9 @@ export default function HomePickCard({
               ]}
             >
               <Text style={styles.orderBtnText} numberOfLines={1}>
-                Order missing
+                {missing.length <= 2
+                  ? `Buy ${missing.length} missing`
+                  : "Order missing"}
               </Text>
               <ChevronRight
                 size={14}

@@ -31,7 +31,7 @@ export const PLAN_FEATURE_LIMITS: Record<PlanTier, PlanFeatureLimits> = {
     recentCooksLimit: 0,
   },
   trial: {
-    homePickCount: 4,
+    homePickCount: 2,
     homeShuffleDailyLimit: 3,
     maxPlanDayOffset: 2,
     planShuffleDailyLimit: 3,
@@ -39,11 +39,11 @@ export const PLAN_FEATURE_LIMITS: Record<PlanTier, PlanFeatureLimits> = {
     offlineRecipeLimit: 5,
     notificationSlotIds: ['rasoi-daily-breakfast', 'rasoi-daily-dinner'],
     allergyFilter: false,
-    seasonalRailMode: 'basic',
+    seasonalRailMode: 'none',
     recentCooksLimit: 4,
   },
   paid: {
-    homePickCount: 4,
+    homePickCount: 2,
     homeShuffleDailyLimit: null,
     maxPlanDayOffset: 2,
     planShuffleDailyLimit: null,
@@ -51,13 +51,14 @@ export const PLAN_FEATURE_LIMITS: Record<PlanTier, PlanFeatureLimits> = {
     offlineRecipeLimit: 30,
     notificationSlotIds: 'all',
     allergyFilter: true,
-    seasonalRailMode: 'full',
+    seasonalRailMode: 'none',
     recentCooksLimit: 8,
   },
 };
 
+/** Extra Home recipes beyond the 2 hero picks. Capped at 0 to keep Home fetch at 2. */
 export const SEASONAL_RAIL_PICK_COUNTS: Record<SeasonalRailMode, number> = {
   none: 0,
-  basic: 2,
-  full: 3,
+  basic: 0,
+  full: 0,
 };

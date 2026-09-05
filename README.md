@@ -5,7 +5,7 @@
 Rasoi is an Indian home-cooking app: regional recipes, pantry match, saved favourites, and one-tap grocery / food delivery for missing ingredients. Built for real Indian kitchens — Veg, Jain, Egg, and Non-Veg.
 
 [![Live website](https://img.shields.io/badge/Live-rasoiapplication.in-22c55e?style=for-the-badge)](https://rasoiapplication.in)
-[![Google Play](https://img.shields.io/badge/Google_Play-Open_testing-3DDC84?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/apps/testing/com.bhagihiri.rasoiapp)
+[![Google Play](https://img.shields.io/badge/Google_Play-Get_it-3DDC84?style=for-the-badge&logo=googleplay&logoColor=white)](https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp)
 
 <p align="center">
   <img src="App/assets/images/icon.png" alt="Rasoi icon" width="96" />
@@ -31,8 +31,7 @@ Rasoi is an Indian home-cooking app: regional recipes, pantry match, saved favou
 | **Website** | [rasoiapplication.in](https://rasoiapplication.in) |
 | **Download page** | [rasoiapplication.in/download](https://rasoiapplication.in/download) |
 | **Play Store landing** | [rasoiapplication.in/play-store](https://rasoiapplication.in/play-store) |
-| **Google Play (open testing)** | [Join testing — `com.bhagihiri.rasoiapp`](https://play.google.com/apps/testing/com.bhagihiri.rasoiapp) |
-| **Play listing** | [Store page](https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp) |
+| **Google Play** | [Store listing — `com.bhagihiri.rasoiapp`](https://play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp) |
 | **Recipe guides** | [rasoiapplication.in/indian-recipe-app](https://rasoiapplication.in/indian-recipe-app) |
 | **US / Canada / Australia** | [/indian-recipe-app-usa](https://rasoiapplication.in/indian-recipe-app-usa) · [/indian-recipe-app-canada](https://rasoiapplication.in/indian-recipe-app-canada) · [/indian-recipe-app-australia](https://rasoiapplication.in/indian-recipe-app-australia) |
 

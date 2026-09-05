@@ -86,7 +86,6 @@ export default function HomeScreen() {
     recipesError,
     rankingReady,
     rankedRecipes,
-    refreshRecipes,
     refreshHomePicks,
     topPick,
     lateNightPick,
@@ -168,12 +167,11 @@ export default function HomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refreshRecipes();
       await tryHomeShuffle(() => refreshHomePicks(true));
     } finally {
       setRefreshing(false);
     }
-  }, [refreshRecipes, refreshHomePicks, tryHomeShuffle]);
+  }, [refreshHomePicks, tryHomeShuffle]);
 
   const topPickPantryMatch = useMemo(() => {
     if (!displayTopPick) return 0;
@@ -410,7 +408,8 @@ export default function HomeScreen() {
           {heroIntroFinished &&
           discoveryReady &&
           !recipesError &&
-          recipes.length === 0 ? (
+          recipes.length === 0 &&
+          !displayTopPick ? (
             <EmptyState
               icon={Timer}
               title="No recipes yet"

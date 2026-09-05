@@ -6,7 +6,7 @@ import { dietChoiceToDietType } from '@/utils/recipeFilters';
 import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
 import type { CuisineId } from '@/constants/theme';
 
-const OFFLINE_CACHE_KEY = '@rasoi/recommendations_offline_v1';
+const OFFLINE_CACHE_KEY = '@rasoi/recommendations_offline_v2';
 
 type ApiRecipeRow = {
   id: string;
@@ -84,12 +84,6 @@ export function mapRecommendationPicks(response: RecommendationsResponse): {
   reasons: string[];
   lateNightPick?: Recipe;
   lateNightReason?: string;
-  seasonalRail?: {
-    id: string;
-    title: string;
-    subtitle: string;
-    picks: Recipe[];
-  };
 } {
   const picks = response.picks.map((p) => mapApiRecipe(p.recipe));
   const reasons = response.picks.map((p) => p.reason);
@@ -97,21 +91,11 @@ export function mapRecommendationPicks(response: RecommendationsResponse): {
     ? mapApiRecipe(response.lateNightPick.recipe)
     : undefined;
 
-  const seasonalRail = response.seasonalRail
-    ? {
-        id: response.seasonalRail.id,
-        title: response.seasonalRail.title,
-        subtitle: response.seasonalRail.subtitle,
-        picks: response.seasonalRail.picks.map((p) => mapApiRecipe(p.recipe)),
-      }
-    : undefined;
-
   return {
     picks,
     reasons,
     lateNightPick,
     lateNightReason: response.lateNightPick?.reason,
-    seasonalRail,
   };
 }
 
@@ -122,7 +106,7 @@ export async function saveOfflineRecommendations(
   try {
     const raw = await AsyncStorage.getItem(OFFLINE_CACHE_KEY);
     const store = raw ? (JSON.parse(raw) as Record<string, RecommendationsResponse>) : {};
-    store[windowKey] = payload;
+    store[windowKey] = { ...payload, seasonalRail: undefined };
     const keys = Object.keys(store);
     if (keys.length > 16) {
       for (const key of keys.slice(0, keys.length - 16)) {

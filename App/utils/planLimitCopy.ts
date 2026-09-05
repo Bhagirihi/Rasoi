@@ -94,7 +94,7 @@ export function partnerCheckoutLimitCopy(): { title: string; message: string } {
 export function planLimitFootnote(limits: PlanFeatureLimits, effectiveTier: PlanTier): string | null {
   if (effectiveTier === 'paid') return null;
   if (effectiveTier === 'trial') {
-    return 'Trial: 4 home picks · 3 shuffles/day · 25 saves · 5 offline · 2 reminder slots';
+    return 'Trial: 2 home picks · 3 shuffles/day · 25 saves · 5 offline · 2 reminder slots';
   }
   return 'Free: 2 home picks · 1 shuffle/day · today-only plan · 10 saves · dinner reminder';
 }

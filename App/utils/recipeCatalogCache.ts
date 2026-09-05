@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Recipe } from '@/data/mockRecipes';
 import type { PaginationMeta } from '@/types/pagination';
 
-const CACHE_KEY = '@rasoi/recipe_catalog_pages_v1';
+const CACHE_KEY = '@rasoi/recipe_catalog_pages_v2';
 /** Reuse cached list pages unless older than this (cuts repeat Supabase egress on cold start). */
 export const RECIPE_CATALOG_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 

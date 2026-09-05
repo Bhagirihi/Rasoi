@@ -17,6 +17,7 @@ import { normalizeRecipeIngredients } from '@/utils/recipeIngredients';
 import { parseMainIngredients } from '@/utils/recipeMainIngredients';
 import {
   RECIPE_PAGE_SIZE,
+  PLAN_MENU_SIZE,
   type PaginatedItems,
   type PaginationMeta,
 } from '@/types/pagination';
@@ -271,6 +272,7 @@ export async function fetchPublishedRecipesPage(
   offset = 0,
   limit = RECIPE_PAGE_SIZE,
   bypassCache = false,
+  persistCache = true,
 ): Promise<PaginatedItems<Recipe>> {
   const filterKey = recipeCatalogFilterKey(filters ?? {});
   if (!bypassCache) {
@@ -293,8 +295,17 @@ export async function fetchPublishedRecipesPage(
     page = await fetchPublishedRecipesPageFromApi(filters, offset, limit);
   }
 
-  void saveCachedRecipePage(filterKey, offset, page.items, page.pagination);
+  if (persistCache) {
+    void saveCachedRecipePage(filterKey, offset, page.items, page.pagination);
+  }
   return page;
+}
+
+export async function fetchPlanMenuRecipes(
+  filters?: RecipeFetchFilters,
+): Promise<Recipe[]> {
+  const page = await fetchPublishedRecipesPage(filters, 0, PLAN_MENU_SIZE, true, false);
+  return page.items.slice(0, PLAN_MENU_SIZE);
 }
 
 export async function fetchPublishedRecipes(filters?: RecipeFetchFilters): Promise<Recipe[]> {

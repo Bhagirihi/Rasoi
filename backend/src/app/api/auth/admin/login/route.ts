@@ -10,14 +10,27 @@ export async function POST(request: Request) {
     const body = await request.json();
     const input = adminLoginSchema.parse(body);
 
-    const admin = await db.admin.findUnique({ where: { email: input.email } });
-    if (!admin) {
-      return jsonError('Invalid email or password', 401);
+    let admin = null;
+    if (input.email) {
+      admin = await db.admin.findUnique({ where: { email: input.email } });
+      if (!admin || !(await bcrypt.compare(input.password, admin.passwordHash))) {
+        return jsonError('Invalid password', 401);
+      }
+    } else {
+      const admins = await db.admin.findMany();
+      for (const candidate of admins) {
+        if (await bcrypt.compare(input.password, candidate.passwordHash)) {
+          admin = candidate;
+          break;
+        }
+      }
+      if (!admin) {
+        return jsonError('Invalid password', 401);
+      }
     }
 
-    const valid = await bcrypt.compare(input.password, admin.passwordHash);
-    if (!valid) {
-      return jsonError('Invalid email or password', 401);
+    if (!admin) {
+      return jsonError('Invalid password', 401);
     }
 
     const token = await signToken({ sub: admin.id, type: 'admin', name: admin.name }, '7d');

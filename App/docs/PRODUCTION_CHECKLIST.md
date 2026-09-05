@@ -14,6 +14,7 @@ Track release readiness for sideload beta and Play Store launch.
 | 7 | Monetization decision | ✅ Admin toggle | `/admin/payments` — OFF = no paywall, partners unlocked, ads + sponsors on |
 | 8 | Production keystore (Play Store) | ✅ Done | EAS production keystore `def8a336-40b7-46f1-a6f9-a61bcfc89cc1` |
 | 9 | `buildType: app-bundle` (Play Store) | ✅ Configured | `eas.json` production profile → `app-bundle`; use `preview` profile for sideload APK |
+| 10 | Leave **open testing** live | ⚠️ Console | Pantry-first home + Hindi dish search are in the app. Keep the Play track on **open testing** so the public listing URL works (`play.google.com/store/apps/details?id=com.bhagihiri.rasoiapp`). Production promote can wait. |
 
 ---
 

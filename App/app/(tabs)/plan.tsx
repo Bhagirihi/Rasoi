@@ -10,7 +10,7 @@ import {
   Sun,
   Sunrise,
 } from "lucide-react-native";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { RefreshControl, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -33,11 +33,12 @@ import {
 import { layout, scrollIndicator, spacing, colors } from "@/constants/theme";
 import { testIds } from "@/constants/testIds";
 import { useAppContext } from "@/context/AppContext";
-import { useRecipes } from "@/context/RecipesContext";
 import { useTonightRecipes } from "@/context/TonightRecipesContext";
 import { useTheme } from "@/context/ThemeContext";
 import { usePlacementSponsor } from "@/hooks/usePlacementSponsor";
 import type { Recipe } from "@/data/mockRecipes";
+import { fetchPlanMenuRecipes } from "@/services/recipes";
+import { formatUserFacingApiError } from "@/utils/api";
 import type { MealSlot } from "@/utils/mealTime";
 import {
   buildMenuForDate,
@@ -156,16 +157,13 @@ function PlanTabContent() {
   const { showLockedPlanDay } = usePlanLimitDialog();
   const { trySaveRecipe } = useSaveRecipeGate();
   const { tryShuffle: tryPlanShuffle } = useShuffleGate("plan");
-  const {
-    recipes,
-    loading: recipesLoading,
-    error: recipesError,
-    refreshRecipes,
-  } = useRecipes();
   const { topPick, alsoFor, lateNightPick } = useTonightRecipes();
   const { sponsor: planSponsor, loading: planSponsorLoading } =
     usePlacementSponsor("plan");
 
+  const [planRecipes, setPlanRecipes] = useState<Recipe[]>([]);
+  const [planLoading, setPlanLoading] = useState(true);
+  const [planError, setPlanError] = useState<string | null>(null);
   const [selectedDayOffset, setSelectedDayOffset] = useState<PlanDayOffset>(0);
   const [shuffleSaltByOffset, setShuffleSaltByOffset] = useState<
     Record<PlanDayOffset, number>
@@ -176,18 +174,43 @@ function PlanTabContent() {
   const selectedDay =
     planDays.find((day) => day.offset === selectedDayOffset) ?? planDays[0];
 
+  const loadPlanRecipes = useCallback(async () => {
+    setPlanError(null);
+    try {
+      const items = await fetchPlanMenuRecipes({
+        dietChoice,
+        region: regionalCuisine,
+      });
+      setPlanRecipes(items);
+    } catch (caught) {
+      setPlanError(
+        formatUserFacingApiError(
+          caught,
+          "Could not load your menu. Pull to refresh when you are back online.",
+        ),
+      );
+    } finally {
+      setPlanLoading(false);
+    }
+  }, [dietChoice, regionalCuisine]);
+
+  useEffect(() => {
+    setPlanLoading(true);
+    void loadPlanRecipes();
+  }, [loadPlanRecipes]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refreshRecipes();
+      await loadPlanRecipes();
     } finally {
       setRefreshing(false);
     }
-  }, [refreshRecipes]);
+  }, [loadPlanRecipes]);
 
   const eligibleRecipes = useMemo(() => {
-    if (recipes.length === 0) return [];
-    return filterRecipes(recipes, {
+    if (planRecipes.length === 0) return [];
+    return filterRecipes(planRecipes, {
       dietPreference: dietChoiceToFilter(dietChoice),
       dietChoice,
       regionalCuisine,
@@ -197,7 +220,7 @@ function PlanTabContent() {
       allergyExclusions: effectiveAllergyExclusions,
     });
   }, [
-    recipes,
+    planRecipes,
     dietChoice,
     regionalCuisine,
     favoriteCuisines,
@@ -290,7 +313,7 @@ function PlanTabContent() {
     router.push("/(tabs)/pantry");
   }, [router]);
 
-  const showSkeleton = recipesLoading && menu.length === 0;
+  const showSkeleton = planLoading && menu.length === 0;
   const mealsSectionTitle =
     selectedDayOffset === 0
       ? "Today's meals"
@@ -338,12 +361,12 @@ function PlanTabContent() {
           onLockedDay={handleLockedPlanDay}
         />
 
-        {!recipesLoading && recipesError && menu.length === 0 ? (
+        {!planLoading && planError && menu.length === 0 ? (
           <View style={styles.errorBlock}>
             <EmptyState
               icon={ChefHat}
               title="Could not load your menu"
-              subtitle={recipesError}
+              subtitle={planError}
             />
             <PrimaryButton
               label="Try again"

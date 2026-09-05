@@ -10,8 +10,8 @@ export const APP_STORE_LISTING = {
   heroLead: "Rasoi — India's home cooking companion.",
   heroBody:
     'Dinner ideas from your pantry — match %, Veg & Jain filters, and 1,200+ regional recipes.',
-  heroTrust: 'Open testing on Google Play · 1,200+ Indian recipes',
-  liveBadge: 'Open testing on Google Play — free for Android',
+  heroTrust: 'On Google Play · 1,200+ Indian recipes',
+  liveBadge: 'Free on Google Play for Android',
   whyChoose: [
     {
       title: "Tonight's picks",

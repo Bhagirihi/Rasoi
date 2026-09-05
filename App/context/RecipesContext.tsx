@@ -67,11 +67,13 @@ const FOREGROUND_RECIPE_REFRESH_MS = 15 * 60 * 1000;
 
 export function RecipesProvider({ children }: { children: ReactNode }) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const catalogRequestedRef = useRef(false);
 
   const listFiltersRef = useRef<RecipeFetchFilters>({
     dietChoice: "Veg",
@@ -148,6 +150,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
 
   const refreshRecipes = useCallback(
     async (options?: { bypassCache?: boolean }) => {
+      catalogRequestedRef.current = true;
       const generation = ++fetchGenerationRef.current;
       loadingMoreRef.current = false;
       setLoadingMore(false);
@@ -202,6 +205,10 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      if (!catalogRequestedRef.current) {
+        return;
+      }
+
       nextOffsetRef.current = 0;
       hasMoreRef.current = false;
       void refreshRecipes();
@@ -212,6 +219,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       if (state !== "active") return;
+      if (!catalogRequestedRef.current) return;
 
       const now = Date.now();
       if (now - lastForegroundRefreshRef.current < FOREGROUND_RECIPE_REFRESH_MS)
@@ -232,6 +240,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       }
       realtimeRefreshTimerRef.current = setTimeout(() => {
         realtimeRefreshTimerRef.current = null;
+        if (!catalogRequestedRef.current) return;
         void refreshRecipes({ bypassCache: true });
       }, 2500);
     },

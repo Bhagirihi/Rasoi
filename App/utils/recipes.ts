@@ -244,7 +244,7 @@ export function scoreRecipeForTonight(
     options.pantryKeys,
   );
   const regionalScore = getRegionalMatchPercent(recipe.region, options.regionalCuisine);
-  let score = pantryScore * 0.65 + regionalScore * 0.25;
+  let score = pantryScore * 0.85 + regionalScore * 0.1;
   if (recipe.prepTime <= 20) score += 8;
   if (recipe.tags.includes('leftover')) score += 4;
   return score;

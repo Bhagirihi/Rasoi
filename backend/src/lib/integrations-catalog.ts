@@ -33,7 +33,7 @@ export const INTEGRATION_EMAIL_EXCLUSIONS: EmailExclusionNote[] = [
   {
     label: 'admin@rasoi.app',
     detail:
-      'Admin console login only (/admin). Not shown to app users. Override seed with ADMIN_EMAIL in backend .env.',
+      'Admin console login only (/admin). Password-only — no email. Override seed with ADMIN_PASSWORD in backend .env.',
   },
   {
     label: 'my.website.email2@gmail.com',

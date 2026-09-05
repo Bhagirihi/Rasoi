@@ -3,12 +3,11 @@ import { usePathname, useRouter } from 'expo-router';
 
 import { useAppContext } from '@/context/AppContext';
 import { useNetworkConnectivity } from '@/context/NetworkConnectivityContext';
-import { useRecipes } from '@/context/RecipesContext';
 import { useTonightRecipes } from '@/context/TonightRecipesContext';
 
 /**
  * When the device goes offline:
- * 1. Refresh catalog/picks so Home can fall back to downloads.
+ * 1. Refresh home picks so Home can fall back to downloads.
  * 2. If the user's plan includes offline cooking and they have downloads,
  *    redirect to Saved → Offline ready.
  */
@@ -22,13 +21,11 @@ export default function OfflineModeRefreshBridge() {
     offlineRecipeIds,
     planLimits,
   } = useAppContext();
-  const { refreshRecipes } = useRecipes();
   const { refreshHomePicks } = useTonightRecipes();
   const wasOfflineRef = useRef(false);
 
   useEffect(() => {
     if (isOffline && !wasOfflineRef.current) {
-      void refreshRecipes({ bypassCache: true });
       void refreshHomePicks(false);
 
       const planAllowsOffline = planLimits.offlineRecipeLimit > 0;
@@ -57,7 +54,6 @@ export default function OfflineModeRefreshBridge() {
     planLimits.offlineRecipeLimit,
     offlineRecipeIds.length,
     pathname,
-    refreshRecipes,
     refreshHomePicks,
     router,
   ]);

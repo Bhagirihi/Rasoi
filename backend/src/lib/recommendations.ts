@@ -573,7 +573,7 @@ export async function getUserRecommendations(
       mealSlot: 'breakfast',
       windowKey: mealWindow.tomorrowBreakfastWindowKey,
       dayKey: mealWindow.dayKey,
-      count: HOME_PICK_COUNT,
+      count: 1,
       excludeRecipeIds: [
         ...manualExclude,
         ...(lateNight.picks[0] ? [lateNight.picks[0].recipe.id] : []),

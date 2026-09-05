@@ -2,13 +2,7 @@ import { NextRequest } from 'next/server';
 
 import { getUserFromRequest } from '@/lib/auth';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
-import { db } from '@/lib/db';
-import { getLocalTimeParts } from '@/lib/meal-time';
 import { getUserRecommendations } from '@/lib/recommendations';
-import {
-  buildSeasonalRailPicks,
-  getSeasonalRailConfig,
-} from '@/lib/seasonal-rail';
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,32 +25,6 @@ export async function GET(request: NextRequest) {
       excludeRecipeIds,
     });
 
-    const { month, day } = getLocalTimeParts(timezone);
-    const seasonalConfig = getSeasonalRailConfig(month, day);
-    let seasonalRail: {
-      id: string;
-      title: string;
-      subtitle: string;
-      picks: ReturnType<typeof buildSeasonalRailPicks>;
-    } | null = null;
-
-    if (seasonalConfig) {
-      const recipes = await db.recipe.findMany({
-        where: { published: true },
-        orderBy: { popularityScore: 'desc' },
-        take: 2000,
-      });
-      const picks = buildSeasonalRailPicks(user, recipes, seasonalConfig, 3);
-      if (picks.length > 0) {
-        seasonalRail = {
-          id: seasonalConfig.id,
-          title: seasonalConfig.title,
-          subtitle: seasonalConfig.subtitle,
-          picks,
-        };
-      }
-    }
-
     return jsonOk({
       algorithmVersion: result.primary.algorithmVersion,
       mealSlot: result.primary.mealSlot,
@@ -64,7 +32,7 @@ export async function GET(request: NextRequest) {
       dayKey: result.primary.dayKey,
       picks: result.primary.picks,
       lateNightPick: result.lateNight?.picks[0],
-      seasonalRail,
+      seasonalRail: null,
       mealWindow: {
         slot: result.mealWindow.slot,
         windowKey: result.mealWindow.windowKey,

@@ -3,9 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Recipe } from '@/data/mockRecipes';
 import { scoreRecipeForMealSlot, type MealSlot } from '@/utils/mealTime';
 
-const STORAGE_KEY = '@rasoi/home_meal_picks_v5';
+const STORAGE_KEY = '@rasoi/home_meal_picks_v6';
 const LEGACY_STORAGE_KEY = '@rasoi/home_meal_picks_v4';
-const HOME_PICK_COUNT = 4;
+const HOME_PICK_COUNT = 2;
 const MAX_CACHE_ENTRIES = 12;
 
 type CachedHomePicksStore = {

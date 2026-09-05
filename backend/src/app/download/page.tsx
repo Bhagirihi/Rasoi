@@ -54,14 +54,14 @@ export default function DownloadPage() {
 
           <div className="mx-auto mt-12 max-w-3xl text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
-              Open testing on Google Play
+              Google Play
             </p>
             <h1 className="font-display mt-4 text-4xl font-semibold leading-tight tracking-tight lg:text-5xl">
               Download {APP_NAME} on Google Play
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-landing-muted">
-              {APP_NAME} is in open testing on Google Play. Install for regional recipes, smart
-              pantry matching, saved favourites, and automatic updates.
+              Install {APP_NAME} for regional recipes, smart pantry matching, Hindi dish search,
+              saved favourites, and automatic updates.
             </p>
           </div>
 

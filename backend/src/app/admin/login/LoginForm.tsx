@@ -9,7 +9,6 @@ import { AdminCard, PrimaryButton } from '@/app/admin/_components/ui';
 
 export default function LoginForm() {
   const toast = useToast();
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,12 +21,12 @@ export default function LoginForm() {
       const response = await fetch('/api/auth/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ password }),
       });
 
       const result = await response.json();
       if (!response.ok || !result.ok) {
-        toast.error(result.error ?? 'Invalid credentials');
+        toast.error(result.error ?? 'Invalid password');
         return;
       }
 
@@ -59,26 +58,6 @@ export default function LoginForm() {
       <AdminCard className="relative z-10 border-[#3a312a] bg-[#1c1714]/95 p-8 text-admin-cream backdrop-blur-sm">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="admin-email" className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c9b8a8]">
-              Email address
-            </label>
-            <input
-              id="admin-email"
-              name="email"
-              type="text"
-              inputMode="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-              disabled={loading}
-              placeholder="you@company.com"
-              className={`${inputClassName} !text-black`}
-              style={{ color: '#000000', WebkitTextFillColor: '#000000' }}
-            />
-          </div>
-
-          <div>
             <div className="flex items-center justify-between gap-2">
               <label htmlFor="admin-password" className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c9b8a8]">
                 Password
@@ -96,11 +75,13 @@ export default function LoginForm() {
               name="password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
+              autoFocus
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
+              minLength={6}
               disabled={loading}
-              placeholder="Enter your password"
+              placeholder="Enter admin password"
               className={`${inputClassName} !text-black`}
               style={{ color: '#000000', WebkitTextFillColor: '#000000' }}
             />

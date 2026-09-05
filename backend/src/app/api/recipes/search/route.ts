@@ -6,6 +6,7 @@ import { isJainSafeRecipe } from '@/lib/jain-safe';
 import { buildPaginationMeta, parsePaginationParams } from '@/lib/pagination';
 import { dietChoiceToDietType } from '@/lib/recipe-filters';
 import { recipeMatchesSearchQuery } from '@/lib/recipe-search-query';
+import { localizeRecipeTitleToHindi } from '@/lib/recipe-content-hi';
 import { serializeRecipeListItem } from '@/lib/serializers';
 
 export async function GET(request: NextRequest) {
@@ -49,7 +50,10 @@ export async function GET(request: NextRequest) {
       recipeMatchesSearchQuery(
         {
           title: recipe.title,
+          titleHi: localizeRecipeTitleToHindi(recipe.title),
           description: '',
+          descriptionHi: recipe.descriptionHi,
+          stepsHi: recipe.stepsHi,
           region: recipe.region,
           dietType: recipe.dietType,
           tags: [],

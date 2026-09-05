@@ -89,8 +89,8 @@ export const PAID_PLAN_FEATURES = [
   'Unlimited saved recipes — keep every favourite dish',
   'Download up to 30 recipes for offline cooking (steps & ingredients)',
   'Unlimited Blinkit, Zepto, Instamart, Zomato & Swiggy checkout',
-  '4 home picks with unlimited shuffle',
-  'Allergy filter, all meal reminders & full seasonal picks',
+  '2 home picks with unlimited shuffle',
+  'Allergy filter & all meal reminders',
   'No ads anywhere in the app',
 ] as const;
 

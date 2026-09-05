@@ -18,7 +18,7 @@ export default function RecipeBlogPlayStoreCta({ dishName }: RecipeBlogPlayStore
       aria-label="Download Rasoi app"
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
-        Open testing on Google Play
+        Google Play
       </p>
       <h2 className="font-display mt-4 text-2xl font-semibold leading-tight tracking-tight lg:text-3xl">
         Cook {dishName} with Rasoi on Android

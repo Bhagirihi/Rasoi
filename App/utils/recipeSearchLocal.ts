@@ -15,11 +15,11 @@ const SEARCH_SYNONYMS: Record<string, string[]> = {
   chana: ['chickpea', 'chole'],
   chole: ['chickpea', 'chana'],
   cottage: ['paneer'],
-  paneer: ['cottage cheese'],
-  okra: ['bhindi'],
-  bhindi: ['okra'],
-  lentil: ['dal', 'daal'],
-  dal: ['lentil', 'daal'],
+  paneer: ['cottage cheese', 'पनीर'],
+  okra: ['bhindi', 'भिंडी'],
+  bhindi: ['okra', 'भिंडी'],
+  lentil: ['dal', 'daal', 'दाल'],
+  dal: ['lentil', 'daal', 'दाल'],
   daal: ['dal', 'lentil'],
   potato: ['aloo'],
   aloo: ['potato'],
@@ -27,12 +27,53 @@ const SEARCH_SYNONYMS: Record<string, string[]> = {
   tamatar: ['tomato'],
   onion: ['pyaz'],
   pyaz: ['onion'],
-  rice: ['chawal'],
+  rice: ['chawal', 'चावल'],
   chawal: ['rice'],
   cumin: ['jeera'],
   jeera: ['cumin'],
   turmeric: ['haldi'],
   haldi: ['turmeric'],
+  paratha: ['पराठा'],
+  biryani: ['बिरयानी'],
+};
+
+const HINDI_DISH_ALIASES: Record<string, string[]> = {
+  पनीर: ['paneer'],
+  दाल: ['dal', 'daal'],
+  आलू: ['aloo', 'potato'],
+  पराठा: ['paratha'],
+  बिरयानी: ['biryani'],
+  पुलाव: ['pulao'],
+  रोटी: ['roti', 'chapati'],
+  चपाती: ['chapati'],
+  दोसा: ['dosa'],
+  इडली: ['idli'],
+  पोहा: ['poha'],
+  खिचड़ी: ['khichdi'],
+  छोले: ['chole', 'chana'],
+  राजमा: ['rajma'],
+  पालक: ['palak'],
+  गोभी: ['gobhi'],
+  भिंडी: ['bhindi', 'okra'],
+  मटर: ['matar'],
+  चावल: ['rice'],
+  करी: ['curry'],
+  मसाला: ['masala'],
+  टिक्का: ['tikka'],
+  कबाब: ['kebab'],
+  थेपला: ['thepla'],
+  ढोकला: ['dhokla'],
+  हांडवो: ['handvo'],
+  कढ़ी: ['kadhi'],
+  सांभर: ['sambar'],
+  रसम: ['rasam'],
+  चाट: ['chaat'],
+  उपमा: ['upma'],
+  बटर: ['butter'],
+  चिकन: ['chicken'],
+  मछली: ['fish'],
+  मटन: ['mutton'],
+  अंडा: ['egg'],
 };
 
 export type RecipeSearchSuggestionKind = 'dish' | 'ingredient' | 'tag';
@@ -53,6 +94,13 @@ export function expandRecipeSearchTerms(query: string): string[] {
   const tokens = normalized.split(/\s+/).filter(Boolean);
   for (const token of tokens) terms.add(token);
 
+  for (const [hi, english] of Object.entries(HINDI_DISH_ALIASES)) {
+    if (normalized.includes(hi)) {
+      terms.add(hi);
+      for (const word of english) terms.add(word);
+    }
+  }
+
   for (const [key, synonyms] of Object.entries(SEARCH_SYNONYMS)) {
     if (
       normalized.includes(key) ||
@@ -69,7 +117,7 @@ export function expandRecipeSearchTerms(query: string): string[] {
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
-    .split(/[^a-z0-9]+/i)
+    .split(/[^\p{L}\p{N}]+/u)
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
 }
@@ -188,6 +236,19 @@ export function scoreRecipeSearchMatch(
       fuzzy: allowFuzzy ? 12 : 0,
     }),
   );
+
+  if (recipe.descriptionHi) {
+    score = Math.max(
+      score,
+      scoreTextMatch(normalized, terms, recipe.descriptionHi, {
+        exact: 90,
+        prefix: 80,
+        contains: 70,
+        synonym: 64,
+        fuzzy: fuzzyWeight,
+      }),
+    );
+  }
 
   for (const tag of recipe.tags) {
     score = Math.max(

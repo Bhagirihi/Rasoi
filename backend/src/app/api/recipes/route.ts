@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       view === 'list' || view === 'mobile' ? serializeRecipeListItem : serializeRecipe;
 
     const { limit, offset } = parsePaginationParams(searchParams, {
-      defaultLimit: 100,
+      defaultLimit: 45,
       maxLimit: 200,
     });
 

@@ -1,5 +1,5 @@
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { Search, Timer } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
@@ -108,6 +108,14 @@ function RecipesTabContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [pantryMatchSortActive, setPantryMatchSortActive] = useState(true);
   const lastLoggedSearch = useRef("");
+
+  useFocusEffect(
+    useCallback(() => {
+      if (recipes.length === 0) {
+        void refreshRecipes();
+      }
+    }, [recipes.length, refreshRecipes]),
+  );
 
   const listRecipes = useMemo(
     () => (moreRecipes.length > 0 ? moreRecipes : rankedRecipes),

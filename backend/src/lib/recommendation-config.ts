@@ -1,5 +1,5 @@
 /** Bump when recommendation logic changes — invalidates stale caches. */
-export const RECOMMENDATION_ALGORITHM_VERSION = 'v2';
+export const RECOMMENDATION_ALGORITHM_VERSION = 'v3';
 
 /** Days to avoid re-showing a recipe that appeared in recommendation history. */
 export const RECOMMENDATION_HISTORY_EXCLUDE_DAYS = 7;
@@ -13,4 +13,4 @@ export const RECENT_SAVE_EXCLUDE_DAYS = 5;
 /** Days to deprioritize recently cooked recipes. */
 export const RECENT_COOKED_EXCLUDE_DAYS = 14;
 
-export const HOME_PICK_COUNT = 4;
+export const HOME_PICK_COUNT = 2;

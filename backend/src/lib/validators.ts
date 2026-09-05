@@ -253,7 +253,7 @@ export const pushTokenSchema = z.object({
 });
 
 export const adminLoginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional(),
   password: z.string().min(6),
 });
 
