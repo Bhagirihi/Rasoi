@@ -1,6 +1,7 @@
 import { ChefHat } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, StyleSheet, View, type ImageStyle, type StyleProp } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, type ImageStyle, type StyleProp } from 'react-native';
+import { Image } from 'expo-image';
 
 import { colors } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
@@ -13,6 +14,18 @@ type RecipeImageProps = {
   /** Use on dark hero cards so the fallback matches the gradient. */
   tone?: 'default' | 'onDark';
 };
+
+/**
+ * Prefetch hero images for the first screen so list scrolling never waits on
+ * the network. expo-image dedupes against its memory-disk cache, so repeated
+ * calls are cheap.
+ */
+export function prefetchRecipeImages(uris: Array<string | undefined | null>): void {
+  for (const raw of uris.slice(0, 12)) {
+    const uri = raw?.trim();
+    if (uri) void Image.prefetch(uri).catch(() => undefined);
+  }
+}
 
 export default function RecipeImage({ uri, style, tone = 'default' }: RecipeImageProps) {
   const { semantic } = useTheme();
@@ -61,9 +74,12 @@ export default function RecipeImage({ uri, style, tone = 'default' }: RecipeImag
         key={`${normalizedUri}-${attempt}`}
         source={{ uri: normalizedUri }}
         style={StyleSheet.absoluteFill}
-        resizeMode="cover"
+        contentFit="cover"
+        // memory-disk: list images survive scroll-away and app restarts without
+        // re-download; remounts on retry hit the cache instead of the network.
+        cachePolicy="memory-disk"
         onLoadStart={() => setLoading(true)}
-        onLoadEnd={() => setLoading(false)}
+        onLoad={() => setLoading(false)}
         onError={handleError}
       />
       {loading ? (

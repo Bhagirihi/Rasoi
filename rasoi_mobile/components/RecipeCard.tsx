@@ -1,6 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { Bookmark } from "lucide-react-native";
+import { memo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import MissingShopInline, {
@@ -40,7 +41,7 @@ interface RecipeCardProps {
   onPantryPress?: () => void;
 }
 
-export default function RecipeCard({
+function RecipeCard({
   recipe,
   testID,
   variant,
@@ -449,3 +450,9 @@ const styles = StyleSheet.create({
     lineHeight: 15,
   },
 });
+
+// Memoized: the recipe list re-renders on every scroll tick (viewability,
+// search input), and an unmemoized card re-renders with it. Props are stable
+// scalars/callbacks from the list screen, so memo() skips the vast majority
+// of re-renders.
+export default memo(RecipeCard);

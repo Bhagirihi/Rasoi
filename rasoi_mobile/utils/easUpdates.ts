@@ -56,7 +56,7 @@ export async function checkForEasUpdateOnLaunch(
     }
     return 'deferred';
   } catch (error) {
-    console.warn('[eas-update] launch check failed', error);
+    if (__DEV__) console.warn('[eas-update] launch check failed', error);
     return 'none';
   }
 }

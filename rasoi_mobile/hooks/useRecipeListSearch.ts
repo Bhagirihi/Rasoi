@@ -38,6 +38,16 @@ export function useRecipeListSearch({
 
   const trimmedQuery = query.trim();
 
+  // The local search path re-scores the whole catalog synchronously on every
+  // keystroke (term expansion + tokenization + Levenshtein per recipe). Debounce
+  // the query feeding the local useMemos so typing stays at 60fps; the remote
+  // call keeps its own 400ms debounce below.
+  const [debouncedQuery, setDebouncedQuery] = useState(trimmedQuery);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(trimmedQuery), 200);
+    return () => clearTimeout(timer);
+  }, [trimmedQuery]);
+
   useEffect(() => {
     if (trimmedQuery.length < 2) {
       setRemoteResults([]);
@@ -77,19 +87,19 @@ export function useRecipeListSearch({
   }, [trimmedQuery, dietChoice, regionalCuisine]);
 
   const suggestions = useMemo(
-    () => getRecipeSearchSuggestions(suggestionCatalog, trimmedQuery, 6),
-    [suggestionCatalog, trimmedQuery],
+    () => getRecipeSearchSuggestions(suggestionCatalog, debouncedQuery, 6),
+    [suggestionCatalog, debouncedQuery],
   );
 
   const resolved = useMemo(
     () =>
       resolveRecipeListSearch({
-        query: trimmedQuery,
+        query: debouncedQuery,
         listRecipes,
         remoteResults,
         remoteSettled,
       }),
-    [trimmedQuery, listRecipes, remoteResults, remoteSettled],
+    [debouncedQuery, listRecipes, remoteResults, remoteSettled],
   );
 
   return {

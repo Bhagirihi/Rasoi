@@ -3,7 +3,13 @@ import {
   ADMOB_IOS_APP_ID as IOS_APP_ID,
 } from './admobAppIds.js';
 
-/** AdMob IDs — owned by my.website.email2@gmail.com (pub-4173581536398147). */
+/**
+ * AdMob IDs — owned by my.website.email2@gmail.com (pub-4173581536398147).
+ *
+ * Single source of truth: constants/admobAppIds.js (shared by app.config.ts
+ * for the native plugin config and by this module at runtime). Do not
+ * duplicate IDs in app.json.
+ */
 export const ADMOB_GOOGLE_ACCOUNT = 'my.website.email2@gmail.com';
 
 export const ADMOB_ANDROID_APP_ID = ANDROID_APP_ID;
