@@ -4,7 +4,16 @@ import { Platform } from 'react-native';
 
 const OTA_FIRST_SESSION_KEY = 'rasoi:ota_first_session_done';
 
-export type EasUpdateLaunchResult = 'reloaded' | 'none' | 'skipped';
+export type EasUpdateLaunchResult = 'reloaded' | 'none' | 'skipped' | 'deferred';
+
+export type EasUpdateOptions = {
+  /**
+   * Called after an update is downloaded, before reloading. Return true to
+   * reload now. Defaults to auto-reload. Pass a user prompt here — a broken
+   * JS update applied silently can crash-loop with no rollback path.
+   */
+  confirmReload?: () => Promise<boolean>;
+};
 
 /** OTA applies only on release native builds — not Metro, Expo Go, or web. */
 export function isEasUpdateSupported(): boolean {
@@ -15,10 +24,13 @@ export function isEasUpdateSupported(): boolean {
 }
 
 /**
- * Check EAS Update on cold start. Downloads and reloads when an update is available.
+ * Check EAS Update on cold start. Downloads the update, then reloads only with
+ * user consent (see confirmReload).
  * Call once during launch splash so users get JS fixes without a new APK/AAB.
  */
-export async function checkForEasUpdateOnLaunch(): Promise<EasUpdateLaunchResult> {
+export async function checkForEasUpdateOnLaunch(
+  options?: EasUpdateOptions,
+): Promise<EasUpdateLaunchResult> {
   if (!isEasUpdateSupported()) return 'skipped';
 
   const Updates = await import('expo-updates');
@@ -36,8 +48,13 @@ export async function checkForEasUpdateOnLaunch(): Promise<EasUpdateLaunchResult
     if (!check.isAvailable) return 'none';
 
     await Updates.fetchUpdateAsync();
-    await Updates.reloadAsync();
-    return 'reloaded';
+
+    const confirm = options?.confirmReload ?? (async () => true);
+    if (await confirm()) {
+      await Updates.reloadAsync();
+      return 'reloaded';
+    }
+    return 'deferred';
   } catch (error) {
     console.warn('[eas-update] launch check failed', error);
     return 'none';

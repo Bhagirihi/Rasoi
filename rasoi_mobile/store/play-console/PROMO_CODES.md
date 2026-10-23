@@ -1,14 +1,17 @@
 # Rasoi Plus promo codes
 
-**Do not commit live codes to public docs.** Share codes privately with users/influencers.
+**Do not commit live codes.** This file is a template only — real codes live in
+`rasoi."PromoCode"` (Supabase) and are shared privately with users/influencers.
+(The launch codes were previously committed here by mistake; they have been
+removed and should be rotated in Supabase.)
 
 ## Launch codes (seeded in Supabase)
 
 | Code | Effect | Who can redeem |
 |------|--------|----------------|
-| `MK7Q4VN2` | +5 days on in-app trial | Active trial only |
-| `RT9H6WP8` | +10 days on in-app trial | Active trial only |
-| `JX5L3KC7` | 5% off yearly Rasoi Plus | Not already on paid plan |
+| `<TRIAL_5D_CODE>` | +5 days on in-app trial | Active trial only |
+| `<TRIAL_10D_CODE>` | +10 days on in-app trial | Active trial only |
+| `<YEARLY_5PCT_CODE>` | 5% off yearly Rasoi Plus | Not already on paid plan |
 
 Trial codes extend `trialBonusDays` on the server. Yearly code sets `yearlyPromoOfferTag` → Play offer `promo-yearly-5`.
 
@@ -29,4 +32,4 @@ Update rows in `rasoi."PromoCode"` (deactivate old, insert new). Codes are case-
 
 ## API
 
-`POST /api/users/me/promo/redeem` — body `{ "code": "MK7Q4VN2" }`, requires auth + payments enabled.
+`POST /api/users/me/promo/redeem` — body `{ "code": "<TRIAL_5D_CODE>" }`, requires auth + payments enabled.

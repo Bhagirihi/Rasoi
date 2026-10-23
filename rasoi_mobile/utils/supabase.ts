@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient, type Session, type SupabaseClient } from '@supabase/supabase-js';
 
+import { getSecureItem, removeSecureItem, setSecureItem } from '@/utils/secureStorage';
 import { createSupabaseDebugFetch } from '@/utils/supabaseDebugFetch';
 
 let client: SupabaseClient | null = null;
@@ -10,6 +10,17 @@ let sessionCache: Session | null | undefined;
 function updateSessionCache(session: Session | null): void {
   sessionCache = session;
 }
+
+/**
+ * Supabase auth storage backed by encrypted SecureStore (chunked, so large
+ * sessions fit the Android value-size limit). Legacy AsyncStorage sessions are
+ * migrated automatically by secureStorage on first read.
+ */
+const secureAuthStorage = {
+  getItem: (key: string) => getSecureItem(key),
+  setItem: (key: string, value: string) => setSecureItem(key, value),
+  removeItem: (key: string) => removeSecureItem(key),
+};
 
 export function getSupabaseClient(): SupabaseClient | null {
   const url = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim();
@@ -22,7 +33,7 @@ export function getSupabaseClient(): SupabaseClient | null {
   if (!client) {
     client = createClient(url, key, {
       auth: {
-        storage: AsyncStorage,
+        storage: secureAuthStorage,
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,

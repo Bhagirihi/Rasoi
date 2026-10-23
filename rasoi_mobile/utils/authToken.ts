@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { getSecureItem, removeSecureItem, setSecureItem } from '@/utils/secureStorage';
+
 const AUTH_TOKEN_KEY = '@rasoi/auth_token';
 const RASOI_USER_ID_KEY = '@rasoi/user_id';
 const LOGGED_OUT_KEY = '@rasoi/user_logged_out';
@@ -12,27 +14,29 @@ export async function getAuthToken(): Promise<string | null> {
   if (tokenCache !== undefined) {
     return tokenCache;
   }
-  const token = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
+  // Auth tokens live in encrypted SecureStore (not plain AsyncStorage) so
+  // they are not extractable from backups or rooted devices.
+  const token = await getSecureItem(AUTH_TOKEN_KEY);
   tokenCache = token;
   return token;
 }
 
 export async function saveAuthToken(token: string): Promise<void> {
   tokenCache = token;
-  await AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+  await setSecureItem(AUTH_TOKEN_KEY, token);
   await AsyncStorage.removeItem(LOGGED_OUT_KEY);
 }
 
 /** Persist token without blocking the auth critical path (memory cache is updated first). */
 export function persistAuthToken(token: string): void {
   tokenCache = token;
-  void AsyncStorage.setItem(AUTH_TOKEN_KEY, token);
+  void setSecureItem(AUTH_TOKEN_KEY, token);
   void AsyncStorage.removeItem(LOGGED_OUT_KEY);
 }
 
 export async function clearAuthToken(): Promise<void> {
   tokenCache = null;
-  await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+  await removeSecureItem(AUTH_TOKEN_KEY);
 }
 
 export function saveRasoiUserId(userId: string): void {

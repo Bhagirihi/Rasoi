@@ -106,15 +106,34 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // Release keystore is NEVER committed (*.jks is gitignored).
+            // Provide via environment (CI/EAS) or gradle.properties:
+            //   RASOI_KEYSTORE_FILE, RASOI_KEYSTORE_PASSWORD, RASOI_KEY_ALIAS, RASOI_KEY_PASSWORD
+            // Generate once: keytool -genkeypair -v -keystore rasoi-release.jks -alias rasoi -keyalg RSA -keysize 2048 -validity 10000
+            def ksFile = System.getenv('RASOI_KEYSTORE_FILE') ?: findProperty('RASOI_KEYSTORE_FILE')
+            if (ksFile) {
+                storeFile file(ksFile)
+                storePassword System.getenv('RASOI_KEYSTORE_PASSWORD') ?: findProperty('RASOI_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('RASOI_KEY_ALIAS') ?: findProperty('RASOI_KEY_ALIAS')
+                keyPassword System.getenv('RASOI_KEY_PASSWORD') ?: findProperty('RASOI_KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Use the real release keystore when configured; fall back to debug
+            // signing ONLY for local sideload builds. Play Store uploads MUST
+            // use a release keystore (debug-signed artifacts are rejected and
+            // cannot upgrade existing installs).
+            def releaseReady = signingConfigs.release.keyAlias != null && signingConfigs.release.storeFile != null
+            if (!releaseReady) {
+                logger.warn('[rasoi] No release keystore configured (RASOI_KEYSTORE_FILE) — signing release build with DEBUG key. Do not publish this artifact.')
+            }
+            signingConfig releaseReady ? signingConfigs.release : signingConfigs.debug
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds

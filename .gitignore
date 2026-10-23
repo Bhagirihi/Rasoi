@@ -31,6 +31,7 @@ backups/supabase/
 
 # Mobile secrets injected at build time (never commit live values)
 rasoi_mobile/config/google-services.json
+rasoi_mobile/google-services.json
 rasoi_mobile/config/GoogleService-Info.plist
 
 # Committed build artifacts (use GitHub Releases for distribution instead)
