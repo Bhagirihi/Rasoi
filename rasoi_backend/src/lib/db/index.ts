@@ -91,6 +91,13 @@ function createDbClient(): DbClient {
     $transaction: async <T>(
       arg: ((tx: DbClient) => Promise<T>) | readonly Promise<unknown>[],
     ): Promise<T | unknown[]> => {
+      // WARNING: this is sequential execution, NOT an atomic database
+      // transaction. The PostgREST-based repositories cannot join a single
+      // transaction, so a failure half-way through does NOT roll back.
+      // Do not rely on this for multi-step writes. Instead, make each step
+      // idempotent and order-safe: unique-key guards that turn double-runs
+      // into catchable conflicts (see promo-codes.ts), and conditional
+      // UPDATEs that act as the serialization point.
       if (typeof arg === 'function') {
         return arg(createDbClient());
       }

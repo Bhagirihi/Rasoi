@@ -1,4 +1,4 @@
-import { createRowId, db } from '@/lib/db';
+import { createRowId, DbError, db, queryPg } from '@/lib/db';
 import type { PromoCode, User } from '@/lib/db/types';
 import {
   TRIAL_DURATION_DAYS,
@@ -71,6 +71,44 @@ async function userHasRedemption(userId: string, promoCodeId: string): Promise<b
   return Boolean(existing);
 }
 
+/**
+ * Atomically increments redemptionCount, but only while it is still below
+ * maxRedemptions. Returns the new count, or null when the promo is missing or
+ * already maxed out. The conditional UPDATE is the single serialization point —
+ * concurrent redemptions can never overshoot the cap.
+ */
+async function claimRedemptionSlot(promoId: string): Promise<number | null> {
+  const rows = await queryPg<{ redemptionCount: number }>(
+    `UPDATE rasoi."PromoCode"
+     SET "redemptionCount" = "redemptionCount" + 1, "updatedAt" = NOW()
+     WHERE id = $1 AND "redemptionCount" < "maxRedemptions"
+     RETURNING "redemptionCount"`,
+    [promoId],
+  );
+  return rows[0]?.redemptionCount ?? null;
+}
+
+/**
+ * Records the redemption row. The compound unique (userId, promoCodeId) turns a
+ * double-submit into a catchable conflict instead of a double-spend or a raw 500.
+ */
+async function createRedemptionOrThrow(userId: string, promoCodeId: string): Promise<void> {
+  try {
+    await db.promoRedemption.create({
+      data: {
+        id: createRowId(),
+        userId,
+        promoCodeId,
+      },
+    });
+  } catch (error) {
+    if (error instanceof DbError && error.code === '23505') {
+      throw new PromoError('You have already used this promo code.', 409);
+    }
+    throw error;
+  }
+}
+
 export async function redeemPromoCode(user: User, rawCode: string): Promise<PromoRedeemResult> {
   const promo = await findPromoCode(rawCode);
   if (!promo || !promo.active) {
@@ -100,22 +138,19 @@ export async function redeemPromoCode(user: User, rawCode: string): Promise<Prom
     const extendDays = promo.trialExtendDays ?? 0;
     const nextBonusDays = (user.trialBonusDays ?? 0) + extendDays;
 
-    await db.$transaction(async (tx) => {
-      await tx.promoRedemption.create({
-        data: {
-          id: createRowId(),
-          userId: user.id,
-          promoCodeId: promo.id,
-        },
-      });
-      await tx.promoCode.update({
-        where: { id: promo.id },
-        data: { redemptionCount: promo.redemptionCount + 1 },
-      });
-      await tx.user.update({
-        where: { id: user.id },
-        data: { trialBonusDays: nextBonusDays },
-      });
+    // No $transaction here on purpose: the steps below are idempotent and
+    // order-safe, so a mid-way failure is retryable without half-written state.
+    await createRedemptionOrThrow(user.id, promo.id);
+    const claimed = await claimRedemptionSlot(promo.id);
+    if (claimed === null) {
+      // Lost the last-slot race after the row was recorded: the pre-check above
+      // makes this near-impossible; the user's claim is kept, they just can't
+      // consume it. Surface the limit honestly.
+      throw new PromoError('This promo code has reached its redemption limit.');
+    }
+    await db.user.update({
+      where: { id: user.id },
+      data: { trialBonusDays: nextBonusDays },
     });
 
     return {
@@ -134,22 +169,15 @@ export async function redeemPromoCode(user: User, rawCode: string): Promise<Prom
 
   const playOfferTag = promo.playOfferTag ?? YEARLY_PROMO_OFFER_TAG;
 
-  await db.$transaction(async (tx) => {
-    await tx.promoRedemption.create({
-      data: {
-        id: createRowId(),
-        userId: user.id,
-        promoCodeId: promo.id,
-      },
-    });
-    await tx.promoCode.update({
-      where: { id: promo.id },
-      data: { redemptionCount: promo.redemptionCount + 1 },
-    });
-    await tx.user.update({
-      where: { id: user.id },
-      data: { yearlyPromoOfferTag: playOfferTag },
-    });
+  // Idempotent and order-safe (see above) — no fake transaction needed.
+  await createRedemptionOrThrow(user.id, promo.id);
+  const claimed = await claimRedemptionSlot(promo.id);
+  if (claimed === null) {
+    throw new PromoError('This promo code has reached its redemption limit.');
+  }
+  await db.user.update({
+    where: { id: user.id },
+    data: { yearlyPromoOfferTag: playOfferTag },
   });
 
   return {

@@ -1,4 +1,4 @@
-import { db } from '@/lib/db';
+import { db, DbError } from '@/lib/db';
 import { getAutoTrialWriteForNewUser, getAutoTrialWriteIfEligible } from '@/lib/auto-trial';
 import { getDefaultPantryIngredients } from '@/lib/app-settings';
 import { signToken } from '@/lib/auth';
@@ -212,8 +212,9 @@ export async function POST(request: NextRequest) {
 
     const defaultPantry = existing ? null : await getDefaultPantryIngredients();
 
-    const user = existing
-      ? await db.user.update({
+    let user;
+    if (existing) {
+      user = await db.user.update({
           where: { id: existing.id },
           data: {
             name: input.name,
@@ -226,8 +227,10 @@ export async function POST(request: NextRequest) {
             ...(!existing.hasCompletedOnboarding ? onboardingData : {}),
             ...trialUpdate,
           },
-        })
-      : await db.user.create({
+        });
+    } else {
+      try {
+        user = await db.user.create({
           data: {
             name: input.name,
             phone: input.phone ?? null,
@@ -242,6 +245,19 @@ export async function POST(request: NextRequest) {
             ...trialUpdate,
           },
         });
+      } catch (error) {
+        // Concurrent signups can both pass the conflict pre-checks above; the
+        // DB unique constraints on email/phone are the real gate. Surface a
+        // clean 409 instead of a raw 500.
+        if (error instanceof DbError && error.code === '23505') {
+          return jsonError(
+            'This email or phone is already registered. Please log in instead.',
+            409,
+          );
+        }
+        throw error;
+      }
+    }
 
     const token = await signToken({ sub: user.id, type: 'user' });
 

@@ -50,6 +50,22 @@ export async function deleteUserAccount(userId: string): Promise<boolean> {
     }
   }
 
+  // Explicit child deletes: don't rely on FK ON DELETE CASCADE — the schema is
+  // maintained by hand with no migration runner, so cascade behavior on prod
+  // is unverified. Deleting children first is safe either way.
+  await Promise.all([
+    db.pushToken.deleteMany({ where: { userId } }),
+    db.affiliateEvent.deleteMany({ where: { userId } }),
+    db.sponsorEvent.deleteMany({ where: { userId } }),
+    db.mealNotificationLog.deleteMany({ where: { userId } }),
+    db.userFeedback.deleteMany({ where: { userId } }),
+    db.promoRedemption.deleteMany({ where: { userId } }),
+    db.userRecommendationCache.deleteMany({ where: { userId } }),
+    db.userRecommendationHistory.deleteMany({ where: { userId } }),
+    db.userRecipeView.deleteMany({ where: { userId } }),
+    db.userRecipeCooked.deleteMany({ where: { userId } }),
+  ]);
+
   await db.user.delete({ where: { id: userId } });
   return true;
 }

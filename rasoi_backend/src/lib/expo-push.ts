@@ -1,5 +1,7 @@
 import Expo, { type ExpoPushMessage, type ExpoPushTicket } from 'expo-server-sdk';
 
+import { db } from '@/lib/db';
+
 const expo = new Expo();
 
 export interface MealPushPayload {
@@ -125,4 +127,52 @@ export async function sendExpoPushMessages(messages: ExpoPushMessage[]): Promise
   }
 
   return results;
+}
+
+/**
+ * Polls Expo for delivery receipts of previously sent tickets and deactivates
+ * tokens Expo reports as DeviceNotRegistered. Call after sendExpoPushMessages
+ * (build a ticketId -> token map from its results) so dead tokens stop
+ * accumulating — every meal slot (5x/day) would otherwise keep wasting sends,
+ * and Expo throttles accounts with too many dead-token deliveries.
+ *
+ * Returns the number of tokens deactivated.
+ */
+export async function deactivateDeadPushTokens(
+  ticketToToken: Map<string, string>,
+): Promise<number> {
+  const ticketIds = [...ticketToToken.keys()];
+  if (ticketIds.length === 0) return 0;
+
+  const deadTokens = new Set<string>();
+  for (let i = 0; i < ticketIds.length; i += 100) {
+    const chunk = ticketIds.slice(i, i + 100);
+    let receipts: Awaited<ReturnType<typeof expo.getPushNotificationReceiptsAsync>>;
+    try {
+      receipts = await expo.getPushNotificationReceiptsAsync(chunk);
+    } catch {
+      continue;
+    }
+    for (const [ticketId, receipt] of Object.entries(receipts)) {
+      if (
+        receipt.status === 'error' &&
+        receipt.details?.error === 'DeviceNotRegistered'
+      ) {
+        const token = ticketToToken.get(ticketId);
+        if (token) deadTokens.add(token);
+      }
+    }
+  }
+
+  for (const token of deadTokens) {
+    try {
+      await db.pushToken.updateMany({
+        where: { expoPushToken: token, active: true },
+        data: { active: false },
+      });
+    } catch {
+      // Best-effort cleanup; never fail the caller.
+    }
+  }
+  return deadTokens.size;
 }
