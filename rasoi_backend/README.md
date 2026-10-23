@@ -51,12 +51,7 @@ Admin/API tables live in the **`rasoi` PostgreSQL schema** so they do not confli
 
 Open [http://localhost:3000](http://localhost:3000) for the landing page, or [http://localhost:3000/admin](http://localhost:3000/admin) for the dashboard.
 
-Default admin credentials (from seed):
-
-- Email: `admin@rasoi.app`
-- Password: `rasoi-admin123`
-
-Change `ADMIN_PASSWORD` in `.env` before seeding production.
+Default admin account (from seed): set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` **before** seeding — the seed refuses to run without `ADMIN_PASSWORD`.
 
 ## Deploy to Vercel + Supabase
 
@@ -171,6 +166,6 @@ curl "http://localhost:3000/api/sponsors?placement=pantry"
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key for `@/lib/db` |
 | `JWT_SECRET` | Signs user and admin JWTs |
 | `ADMIN_EMAIL` | Optional seed admin email |
-| `ADMIN_PASSWORD` | Optional seed admin password |
+| `ADMIN_PASSWORD` | **Required** seed admin password — seed refuses to run without it |
 
 See `.env.example` for Supabase URI format.
