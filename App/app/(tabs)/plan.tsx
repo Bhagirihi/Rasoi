@@ -2,6 +2,7 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import {
+  CalendarDays,
   ChefHat,
   Cookie,
   Moon,
@@ -334,6 +335,12 @@ function PlanTabContent() {
           onLockedDay={handleLockedPlanDay}
         />
 
+        <PrimaryButton
+          label="My week plan"
+          icon={CalendarDays}
+          onPress={() => router.push("/planner-week")}
+        />
+
         {!recipesLoading && recipesError && menu.length === 0 ? (
           <View style={styles.errorBlock}>
             <EmptyState
@@ -434,3 +441,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
 });
+

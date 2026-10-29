@@ -5,6 +5,7 @@ export const testIds = {
   tabPlan: 'tab-plan',
   tabPantry: 'tab-pantry',
   tabSaved: 'tab-saved',
+  tabGrocery: 'tab-grocery',
   tabSettings: 'tab-settings',
 
   screenHome: 'screen-home',
@@ -94,3 +95,4 @@ export const testIds = {
   deleteReasonContinue: 'delete-reason-continue',
   deleteReasonCancel: 'delete-reason-cancel',
 } as const;
+

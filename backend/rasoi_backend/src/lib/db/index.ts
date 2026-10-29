@@ -3,9 +3,13 @@ import type {
   Admin,
   AffiliateEvent,
   AppSettings,
+  GroceryList,
+  GroceryListItem,
   HomeAnnouncement,
   KitchenStyle,
   MealNotificationLog,
+  MealPlan,
+  MealPlanItem,
   PantrySection,
   PartnerLink,
   ProcessedWebhookEvent,
@@ -50,6 +54,10 @@ type DbClient = {
   sponsorApplication: Repository<SponsorApplication>;
   processedWebhookEvent: Repository<ProcessedWebhookEvent>;
   mealNotificationLog: Repository<MealNotificationLog>;
+  mealPlan: Repository<MealPlan>;
+  mealPlanItem: Repository<MealPlanItem>;
+  groceryList: Repository<GroceryList>;
+  groceryListItem: Repository<GroceryListItem>;
   promoCode: Repository<PromoCode>;
   promoRedemption: Repository<PromoRedemption>;
   userRecommendationCache: Repository<UserRecommendationCache>;
@@ -81,6 +89,10 @@ function createDbClient(): DbClient {
     sponsorApplication: createRepository<SponsorApplication>('SponsorApplication'),
     processedWebhookEvent: createRepository<ProcessedWebhookEvent>('ProcessedWebhookEvent'),
     mealNotificationLog: createRepository<MealNotificationLog>('MealNotificationLog'),
+    mealPlan: createRepository<MealPlan>('MealPlan'),
+    mealPlanItem: createRepository<MealPlanItem>('MealPlanItem'),
+    groceryList: createRepository<GroceryList>('GroceryList'),
+    groceryListItem: createRepository<GroceryListItem>('GroceryListItem'),
     promoCode: createRepository<PromoCode>('PromoCode'),
     promoRedemption: createRepository<PromoRedemption>('PromoRedemption'),
     userRecommendationCache: createRepository<UserRecommendationCache>('UserRecommendationCache'),
@@ -112,3 +124,4 @@ function createDbClient(): DbClient {
 
 /** Supabase-backed data access layer (Prisma replacement). */
 export const db = createDbClient();
+

@@ -22,7 +22,7 @@ import RecipeMethodTimeline from "@/components/recipe/RecipeMethodTimeline";
 import PartnerUpsellCard from "@/components/PartnerUpsellCard";
 import RecipeSafetyDisclaimer from "@/components/RecipeSafetyDisclaimer";
 import TrialPartnerBanner from "@/components/TrialPartnerBanner";
-import { PlanBadge } from "@/components/ui/Primitives";
+import { PlanBadge, PrimaryButton } from "@/components/ui/Primitives";
 import { SCREENSHOT_MODE } from "@/constants/screenshotMode";
 import { appFonts } from "@/constants/fonts";
 import {
@@ -426,6 +426,18 @@ export default function RecipeDetailScreen() {
           offlineTestId={testIds.recipeOfflineButton}
         />
 
+        <View style={{ paddingHorizontal: spacing.lg, paddingTop: spacing.md }}>
+          <PrimaryButton
+            label="Add to week plan"
+            onPress={() =>
+              router.push({
+                pathname: "/planner-week",
+                params: { recipeId: recipe.id, title: recipe.title },
+              })
+            }
+          />
+        </View>
+
         <View
           style={[
             styles.sheet,
@@ -730,3 +742,4 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 });
+

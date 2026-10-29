@@ -34,6 +34,12 @@ export type User = {
   termsAcceptedAt: Date | null;
   termsAcceptedVersion: string | null;
   kitchenPreferences: string;
+  householdSize: number;
+  servingsDefault: number;
+  dailyCalorieTarget: number | null;
+  maxPrepTimeMin: number | null;
+  allergies: string;
+  dislikedIngredients: string;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -53,6 +59,52 @@ export type MealNotificationLog = {
   dayKey: string;
   recipeId: string;
   sentAt: Date;
+};
+
+export type MealPlan = {
+  id: string;
+  userId: string;
+  weekStart: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type MealPlanItem = {
+  id: string;
+  planId: string;
+  userId: string;
+  date: string;
+  mealSlot: string;
+  recipeId: string;
+  servings: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type GroceryList = {
+  id: string;
+  userId: string;
+  planId: string | null;
+  weekStart: string;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type GroceryListItem = {
+  id: string;
+  listId: string;
+  userId: string;
+  name: string;
+  section: string;
+  isStaple: boolean;
+  checked: boolean;
+  active: boolean;
+  sourceRecipeIds: string;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
 export type AffiliateEvent = {
@@ -366,3 +418,4 @@ export type AffiliateEventWithUser = AffiliateEvent & {
 export type UserFeedbackWithUser = UserFeedback & {
   user?: Pick<User, 'id' | 'name' | 'email' | 'phone'> | null;
 };
+

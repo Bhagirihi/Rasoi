@@ -1,7 +1,7 @@
 import { Redirect, Tabs, usePathname } from 'expo-router';
 import { useMemo } from 'react';
 import { Platform } from 'react-native';
-import { Bookmark, BookOpen, CalendarDays, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
+import { Bookmark, BookOpen, CalendarDays, ChefHat, Refrigerator, Settings, ShoppingCart } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PantryNudgeBridge from '@/components/pantry/PantryNudgeBridge';
@@ -121,6 +121,14 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="grocery"
+        options={{
+          title: 'Grocery',
+          tabBarButtonTestID: testIds.tabGrocery,
+          tabBarIcon: ({ color, size }) => <ShoppingCart color={color} size={size - 2} />,
+        }}
+      />
+      <Tabs.Screen
         name="saved"
         options={{
           title: 'Saved',
@@ -143,3 +151,4 @@ export default function TabLayout() {
     </>
   );
 }
+
