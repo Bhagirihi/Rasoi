@@ -483,7 +483,16 @@ export async function attachRelations<T extends Record<string, unknown>>(
     const nestedOrderBy = opts.orderBy;
     const nestedTake = opts.take;
 
-    let childQuery = rasoiDb().from(relationDef.table).select('*').in(relationDef.fk, parentIds);
+    // Project the relation query to the requested columns plus the fk used
+    // for matching. Rows are still picked to the requested columns below,
+    // so the returned shape is unchanged — only the transfer shrinks.
+    const childCols = nestedSelect
+      ? [...new Set([...(columnsFromSelect(nestedSelect) ?? []), relationDef.fk])]
+      : null;
+    let childQuery = rasoiDb()
+      .from(relationDef.table)
+      .select(childCols ? childCols.join(',') : '*')
+      .in(relationDef.fk, parentIds);
     for (const [key, val] of Object.entries(nestedWhere)) {
       childQuery = applyFieldFilter(childQuery, key, val);
     }
@@ -551,18 +560,23 @@ export async function attachParentRelations<T extends Record<string, unknown>>(
 
     const opts = typeof spec === 'object' ? spec : {};
     const nestedSelect = opts.select;
+    const parentKey = relationDef.parentKey ?? 'id';
 
+    // Same projection as child relations: requested columns plus the key
+    // used for matching. The pick below still trims to requested columns.
+    const parentCols = nestedSelect
+      ? [...new Set([...(columnsFromSelect(nestedSelect) ?? []), parentKey])]
+      : null;
     const parentQuery = rasoiDb()
       .from(relationDef.table)
-      .select('*')
-      .in(relationDef.parentKey ?? 'id', fkValues);
+      .select(parentCols ? parentCols.join(',') : '*')
+      .in(parentKey, fkValues);
 
     const { data, error } = await parentQuery;
     throwIfError(error, `${meta.table}.${relationName}`);
 
     const parentMeta = getTableMeta(relationDef.table);
     let parents = parseRows<Record<string, unknown>>(data, parentMeta);
-    const parentKey = relationDef.parentKey ?? 'id';
 
     if (nestedSelect) {
       const allowed = columnsFromSelect(nestedSelect);
@@ -669,3 +683,4 @@ export function upsertPayload(
 ): Record<string, unknown> {
   return { ...create, ...update };
 }
+

@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { queryPg } from '@/lib/db/pg';
 import type { SponsorEventWithUser } from '@/lib/db/types';
 import {
   buildSponsorEventWhere,
@@ -61,6 +62,33 @@ function aggregateRows(
     .sort((a, b) => b.impressions - a.impressions);
 }
 
+/**
+ * Brand counts for the sponsor filter dropdown. Previously this used the
+ * repository groupBy, which fetches the ENTIRE SponsorEvent table and
+ * aggregates in JS — every impression/tap event ever, on every page load
+ * that renders the dropdown. One SQL aggregate returns just one row per
+ * brand. Falls back to groupBy if the SQL path fails, so a pooler issue
+ * degrades to slow instead of empty.
+ */
+async function getSponsorEventBrandCounts(): Promise<
+  Array<{ brandName: string; _count: { _all: number } }>
+> {
+  try {
+    const rows = await queryPg<{ brandName: string; count: string }>(
+      'SELECT "brandName", COUNT(*) AS count FROM rasoi."SponsorEvent" GROUP BY "brandName"',
+    );
+    return rows.map((row) => ({
+      brandName: row.brandName,
+      _count: { _all: Number(row.count) },
+    }));
+  } catch {
+    return db.sponsorEvent.groupBy({
+      by: ['brandName'],
+      _count: { _all: true },
+    });
+  }
+}
+
 export async function getSponsorBrandOptions(): Promise<SponsorBrandOption[]> {
   try {
     const [configuredSponsors, eventBrands] = await Promise.all([
@@ -68,10 +96,7 @@ export async function getSponsorBrandOptions(): Promise<SponsorBrandOption[]> {
         select: { brandName: true, active: true },
         orderBy: [{ priority: 'desc' }, { brandName: 'asc' }],
       }),
-      db.sponsorEvent.groupBy({
-        by: ['brandName'],
-        _count: { _all: true },
-      }),
+      getSponsorEventBrandCounts(),
     ]);
 
     const map = new Map<string, SponsorBrandOption>();
@@ -205,3 +230,4 @@ export async function getSponsorEventsForExport(filters: SponsorAnalyticsFilters
     return [];
   }
 }
+

@@ -3,6 +3,7 @@ import { formatPlanTierLabel } from '@/app/admin/_components/admin-users-types';
 import { DIET_CHOICE_LABELS, type DietChoice } from '@/lib/recipe-filters';
 import { listSupabaseAuthUsers } from '@/lib/supabase-auth-users';
 import { db } from '@/lib/db';
+import { queryPg } from '@/lib/db/pg';
 import type { UserWithRelations } from '@/lib/db/types';
 import { serializeUserPlan } from '@/lib/plan-serializer';
 import { serializeUser } from '@/lib/serializers';
@@ -125,39 +126,83 @@ export async function loadRasoiUsersWithPushCounts(
   }));
 }
 
-/** Merge rasoi.User rows with Supabase Auth users (service role API). */
+/** Merge rasoi.User rows with Supabase Auth users (service role API).
+ *
+ * Pagination happens in the database, not in JS. The rasoi page is fetched
+ * with an expanded window that provably contains every rasoi row of the
+ * merged page: a rasoi row at merged position p has rasoi-rank in
+ * [p - authOnlyCount, p], so fetching rasoi ranks
+ * [max(0, skip - authOnlyCount), skip + take) plus all auth-only rows,
+ * then sorting and slicing, yields the exact page. The window is
+ * pageSize + authOnlyCount rows instead of the whole User table.
+ * Totals come from COUNT queries, not from fetched rows.
+ * The auth-only diff uses a narrow two-column query (not full User rows),
+ * and the auth list itself is cached (see listSupabaseAuthUsers).
+ * If the linked-ids query fails, auth-only rows are hidden rather than
+ * guessed — a failed diff must never duplicate synced users as auth-only.
+ */
 export async function loadAdminMemberRows(
   where: Record<string, unknown>,
   options?: { includeAuthOnly?: boolean; take?: number; skip?: number },
 ): Promise<{ rows: AdminUserRow[]; total: number }> {
   const includeAuthOnly = options?.includeAuthOnly ?? true;
-
-  const [rasoiUsers, authUsers] = await Promise.all([
-    loadRasoiUsersWithPushCounts(where),
-    includeAuthOnly ? listSupabaseAuthUsers().catch(() => []) : Promise.resolve([]),
-  ]);
-
-  const syncedRows = rasoiUsers.map(toAdminUserRow);
-  const linkedSupabaseIds = new Set(
-    syncedRows.map((row) => row.supabaseUserId).filter((id): id is string => Boolean(id)),
-  );
-  const linkedEmails = new Set(
-    syncedRows.map((row) => row.email?.toLowerCase()).filter((email): email is string => Boolean(email)),
-  );
-
-  const authOnlyRows = authUsers
-    .filter((auth) => !linkedSupabaseIds.has(auth.id))
-    .filter((auth) => !auth.email || !linkedEmails.has(auth.email.toLowerCase()))
-    .map(authOnlyRow);
-
-  const allRows = [...authOnlyRows, ...syncedRows].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-
   const skip = options?.skip ?? 0;
   const take = options?.take;
-  const rows =
-    take != null ? allRows.slice(skip, skip + take) : allRows.slice(skip);
 
-  return { rows, total: allRows.length };
+  const [authUsers, linked] = await Promise.all([
+    includeAuthOnly ? listSupabaseAuthUsers().catch(() => []) : Promise.resolve([]),
+    includeAuthOnly
+      ? queryPg<{ supabaseUserId: string | null; email: string | null }>(
+          'SELECT "supabaseUserId", email FROM rasoi."User"',
+        ).catch(() => null)
+      : Promise.resolve([]),
+  ]);
+
+  const linkedSupabaseIds = new Set(
+    (linked ?? [])
+      .map((row) => row.supabaseUserId)
+      .filter((id): id is string => Boolean(id)),
+  );
+  const linkedEmails = new Set(
+    (linked ?? [])
+      .map((row) => row.email?.toLowerCase())
+      .filter((email): email is string => Boolean(email)),
+  );
+
+  const authOnlyRows =
+    linked === null
+      ? []
+      : authUsers
+          .filter((auth) => !linkedSupabaseIds.has(auth.id))
+          .filter((auth) => !auth.email || !linkedEmails.has(auth.email.toLowerCase()))
+          .map(authOnlyRow);
+
+  if (take == null) {
+    // Unpaginated caller: previous behaviour (whole table, merged, sorted).
+    const rasoiUsers = await loadRasoiUsersWithPushCounts(where);
+    const allRows = [...authOnlyRows, ...rasoiUsers.map(toAdminUserRow)].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+    return { rows: allRows.slice(skip), total: allRows.length };
+  }
+
+  const authCount = authOnlyRows.length;
+  // Rasoi rows that can appear in merged window [skip, skip + take) have
+  // rasoi-rank in [skip - authCount, skip + take).
+  const windowSkip = Math.max(0, skip - authCount);
+  const windowTake = skip + take - windowSkip;
+
+  const [rasoiUsers, rasoiTotal] = await Promise.all([
+    loadRasoiUsersWithPushCounts(where, { take: windowTake, skip: windowSkip }),
+    db.user.count({ where }),
+  ]);
+
+  const merged = [...authOnlyRows, ...rasoiUsers.map(toAdminUserRow)].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
+  // Every rasoi row ranked below windowSkip sorts before the window, so the
+  // window starts at local index skip - windowSkip.
+  const pageStart = skip - windowSkip;
+  return { rows: merged.slice(pageStart, pageStart + take), total: rasoiTotal + authCount };
 }
+
