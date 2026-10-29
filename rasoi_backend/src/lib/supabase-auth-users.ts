@@ -45,7 +45,19 @@ export async function getSupabaseAuthUserById(
   };
 }
 
+const AUTH_LIST_TTL_MS = 5 * 60 * 1000;
+
+let cachedAuthUsers: { at: number; users: ListedAuthUser[] } | null = null;
+
 export async function listSupabaseAuthUsers(maxPages = 20): Promise<ListedAuthUser[]> {
+  // The auth list changes slowly (a new signup, a completed sync) but is
+  // fetched on every unfiltered /admin/users page view. Cache it briefly.
+  // Module-level cache: per serverless instance, so a cold instance still
+  // pays one full listing — acceptable for an admin page.
+  if (cachedAuthUsers && Date.now() - cachedAuthUsers.at < AUTH_LIST_TTL_MS) {
+    return cachedAuthUsers.users;
+  }
+
   const supabase = createSupabaseAdmin();
   const collected: ListedAuthUser[] = [];
   const perPage = 1000;
@@ -71,7 +83,11 @@ export async function listSupabaseAuthUsers(maxPages = 20): Promise<ListedAuthUs
     if (data.users.length < perPage) break;
   }
 
-  return collected.sort(
+  const sorted = collected.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
+  // Only cache successful listings; a failed listing must not poison the cache.
+  cachedAuthUsers = { at: Date.now(), users: sorted };
+  return sorted;
 }
+

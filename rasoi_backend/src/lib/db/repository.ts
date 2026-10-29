@@ -79,7 +79,15 @@ export function createRepository<T extends Record<string, unknown>>(tableName: s
   return {
     async findUnique(args: FindArgs): Promise<T | null> {
       const { topLevel, relations } = mergeSelectInclude(args.select, args.include);
-      let query = rasoiDb().from(meta.table).select('*');
+      // Project the requested columns into the PostgREST query instead of
+      // fetching '*' and trimming in JS. Safe: pickColumns already trims
+      // returned rows to topLevel today, so callers never see more than
+      // these fields. Relations need the pk/fk on the row for attachment
+      // (finalizeRows picks before attaching), so keep '*' when any
+      // relation is requested.
+      const hasRelations = Object.keys(relations).length > 0;
+      const selectCols = topLevel && !hasRelations ? topLevel.join(',') : '*';
+      let query = rasoiDb().from(meta.table).select(selectCols);
       query = applyWhere(query, args.where, meta);
       const { data, error } = await query.maybeSingle();
       throwIfError(error, `${meta.table}.findUnique`);
@@ -96,7 +104,11 @@ export function createRepository<T extends Record<string, unknown>>(tableName: s
 
     async findMany(args: FindArgs = {}): Promise<T[]> {
       const { topLevel, relations } = mergeSelectInclude(args.select, args.include);
-      let query = rasoiDb().from(meta.table).select('*');
+      // Same projection rule as findUnique: only when no relations are
+      // attached, so pk/fk columns needed for attachment are never dropped.
+      const hasRelations = Object.keys(relations).length > 0;
+      const selectCols = topLevel && !hasRelations ? topLevel.join(',') : '*';
+      let query = rasoiDb().from(meta.table).select(selectCols);
       query = applyWhere(query, args.where, meta);
       query = applyOrderBy(query, args.orderBy);
       if (args.skip != null && args.take != null) {
@@ -213,3 +225,4 @@ export function createRepository<T extends Record<string, unknown>>(tableName: s
 }
 
 export type Repository<T extends Record<string, unknown>> = ReturnType<typeof createRepository<T>>;
+

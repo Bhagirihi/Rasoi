@@ -100,12 +100,20 @@ export default function MarketLanding({ market }: MarketLandingProps) {
                     </Link>
                   </>
                 ) : (
-                  <a
-                    href="#features"
-                    className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
-                  >
-                    Explore features
-                  </a>
+                  <>
+                    <a
+                      href="/download"
+                      className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
+                    >
+                      Get it on Google Play
+                    </a>
+                    <a
+                      href="#features"
+                      className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-landing-gold/50"
+                    >
+                      Explore features
+                    </a>
+                  </>
                 )}
                 {isIndia ? (
                   <Link
@@ -302,11 +310,6 @@ export default function MarketLanding({ market }: MarketLandingProps) {
                       label={LEGAL_CONTACT_EMAIL}
                       className="font-semibold text-landing-saffron hover:text-landing-ink"
                     />
-                    <span className="text-[#d9d0c4]"> · </span>
-                    <span className="text-landing-muted">
-                      Phone example ({market.label}):{' '}
-                      <span className="font-semibold text-landing-ink">{market.sponsorPhonePlaceholder}</span>
-                    </span>
                   </p>
                 </div>
                 <SponsorApplyForm
@@ -369,3 +372,4 @@ export default function MarketLanding({ market }: MarketLandingProps) {
     </div>
   );
 }
+
