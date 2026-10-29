@@ -20,5 +20,12 @@ export function handleApiError(error: unknown) {
   }
 
   console.error(error);
+  // Backend error monitoring: forwards to Sentry when SENTRY_DSN is set
+  // (see instrumentation.ts). Fire-and-forget — never breaks the response.
+  if (process.env.SENTRY_DSN) {
+    import('@sentry/nextjs')
+      .then((Sentry) => Sentry.captureException(error))
+      .catch(() => {});
+  }
   return jsonError('Internal server error', 500);
 }

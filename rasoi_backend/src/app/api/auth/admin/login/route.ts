@@ -4,9 +4,17 @@ import { db } from '@/lib/db';
 import { signToken } from '@/lib/auth';
 import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { adminLoginSchema } from '@/lib/validators';
+import { enforceRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: Request) {
   try {
+    // Brute-force + CPU-DoS guard: bcrypt.compare is expensive, so every
+    // attempt must be rate-limited (this was the one sensitive route missing it).
+    const limited = enforceRateLimit(request, 'auth-admin-login', 10, 60_000);
+    if (!limited.ok) {
+      return jsonError('Too many login attempts. Please try again shortly.', 429);
+    }
+
     const body = await request.json();
     const input = adminLoginSchema.parse(body);
 

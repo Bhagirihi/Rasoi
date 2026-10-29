@@ -86,7 +86,6 @@
     "experiments": {
       "typedRoutes": true
     },
-    "runtimeVersion": "1.0.9",
     "updates": {
       "url": "https://u.expo.dev/01de1672-85ce-4ad7-83d7-7fc958fc5659",
       "checkAutomatically": "NEVER",

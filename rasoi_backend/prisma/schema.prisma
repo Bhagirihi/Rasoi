@@ -191,6 +191,7 @@ model Recipe {
   updatedAt         DateTime @updatedAt
 
   @@index([kitchenStyleId])
+  @@index([published, popularityScore(sort: Desc)])
   @@schema("rasoi")
 }
 

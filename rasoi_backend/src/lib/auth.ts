@@ -22,8 +22,9 @@ export type TokenPayload = {
   name?: string;
 };
 
-/** Long-lived until explicit logout; Supabase sessions refresh independently on mobile. */
-export async function signToken(payload: TokenPayload, expiresIn = '400d') {
+/** Short-lived by default — a leaked token should not stay valid for months.
+ *  Supabase sessions refresh independently on mobile. */
+export async function signToken(payload: TokenPayload, expiresIn = '30d') {
   return new SignJWT({
     type: payload.type,
     ...(payload.name ? { name: payload.name } : {}),
@@ -86,17 +87,17 @@ export async function getUserFromRequest(request: NextRequest) {
   const token = getBearerToken(request);
   if (!token) return null;
 
-  const supabaseUser = await getUserFromSupabaseToken(token);
-  if (supabaseUser) {
-    return supabaseUser;
+  // Verify the local Rasoi JWT first: no network round-trip and no hard
+  // dependency on Supabase Auth for the common path.
+  const payload = await verifyToken(token);
+  if (payload?.type === 'user') {
+    const user = await db.user.findUnique({ where: { id: payload.sub } });
+    if (user && user.isActive) return user;
+    return null;
   }
 
-  const payload = await verifyToken(token);
-  if (!payload || payload.type !== 'user') return null;
-
-  const user = await db.user.findUnique({ where: { id: payload.sub } });
-  if (!user || !user.isActive) return null;
-  return user;
+  // Fall back to Supabase-issued tokens.
+  return getUserFromSupabaseToken(token);
 }
 
 export async function getAdminFromRequest(request: NextRequest) {
@@ -117,9 +118,7 @@ export async function getAdminFromCookies() {
   const payload = await verifyToken(token);
   if (!payload || payload.type !== 'admin') return null;
 
-  if (payload.name) {
-    return { id: payload.sub, name: payload.name, email: '' };
-  }
-
+  // Always check the DB: a deleted admin's cookie must stop working
+  // immediately, not keep working until the 7-day token expires.
   return db.admin.findUnique({ where: { id: payload.sub } });
 }

@@ -350,10 +350,13 @@ function pickDiverseRecipes(
 }
 
 async function loadPublishedRecipes(): Promise<Recipe[]> {
+  // Bounded: full rows are scored in JS on every cache miss. The popularity
+  // ordering means the long tail rarely matters; the trigram index migration
+  // is the long-term fix for DB-side search.
   return db.recipe.findMany({
     where: { published: true },
     orderBy: { popularityScore: 'desc' },
-    take: 5000,
+    take: 2000,
   });
 }
 

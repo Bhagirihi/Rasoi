@@ -2,7 +2,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useState, type ComponentType, type ReactNode } from 'react';
-import { LogBox, View } from 'react-native';
+import { LogBox, View, Alert } from 'react-native';
 import { useFonts, Fraunces_700Bold } from '@expo-google-fonts/fraunces';
 import {
   DMSans_400Regular,
@@ -159,9 +159,24 @@ function RootLayoutInner({
   }, []);
 
   // Defer OTA reload until after first paint so paid-ad cold starts stay fast.
+  // The reload itself needs user consent: a silently-applied broken JS update
+  // can crash-loop with no rollback.
   useEffect(() => {
     if (!launchDone) return;
-    void checkForEasUpdateOnLaunch().catch(() => undefined);
+    void checkForEasUpdateOnLaunch({
+      confirmReload: () =>
+        new Promise((resolve) => {
+          Alert.alert(
+            'Update available',
+            'A new version of Rasoi is ready. Restart now to apply it?',
+            [
+              { text: 'Later', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Restart now', onPress: () => resolve(true) },
+            ],
+            { cancelable: true, onDismiss: () => resolve(false) },
+          );
+        }),
+    }).catch(() => undefined);
   }, [launchDone]);
 
   const beginSplashDismiss = useCallback(() => {

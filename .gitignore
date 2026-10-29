@@ -21,12 +21,28 @@ rasoi_mobile/android/.gradle/
 .env
 .env.local
 .env.*.local
+.env.development
 backups/supabase/
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+
+# Mobile secrets injected at build time (never commit live values)
+rasoi_mobile/config/google-services.json
+rasoi_mobile/google-services.json
+rasoi_mobile/config/GoogleService-Info.plist
+
+# Committed build artifacts (use GitHub Releases for distribution instead)
+rasoi_mobile/build-*.aab
+rasoi_mobile/build-*.apk
+
+# Backend local junk (dev databases, analysis dumps, build info)
+rasoi_backend/dev.db*
+rasoi_backend/*.tsbuildinfo
+rasoi_backend/*-analysis.json
+rasoi_backend/recipe-duplicate*.json
 
 # Python / tooling
 .venv/

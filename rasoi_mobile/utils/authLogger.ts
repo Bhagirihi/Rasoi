@@ -1,3 +1,5 @@
+import { captureException } from '@/utils/sentry';
+
 const PREFIX = '[RasoiAuth]';
 
 export function maskEmail(email: string): string {
@@ -15,5 +17,19 @@ export function authLog(step: string, details?: Record<string, unknown>): void {
 
 export function authError(step: string, error: unknown, details?: Record<string, unknown>): void {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(PREFIX, step, { ...details, message, error });
+  if (__DEV__) {
+    console.error(PREFIX, step, { ...details, message, error });
+    return;
+  }
+  // Production: report to Sentry with masked details only — never console.log
+  // raw auth internals, and never log response bodies on auth paths.
+  try {
+    captureException(error instanceof Error ? error : new Error(message), {
+      area: 'auth',
+      step,
+      ...(details ?? {}),
+    });
+  } catch {
+    // Monitoring must never break auth.
+  }
 }

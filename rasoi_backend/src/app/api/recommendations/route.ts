@@ -9,6 +9,7 @@ import {
   buildSeasonalRailPicks,
   getSeasonalRailConfig,
 } from '@/lib/seasonal-rail';
+import { enforceRateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,6 +18,14 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const force = searchParams.get('force') === 'true';
+    if (force) {
+      // force=true bypasses the recommendation cache and re-scores the whole
+      // catalog — the most expensive thing an authenticated user can trigger.
+      const limited = enforceRateLimit(request, `recommendations-force:${user.id}`, 6, 600_000);
+      if (!limited.ok) {
+        return jsonError('Too many regeneration requests. Please try again shortly.', 429);
+      }
+    }
     const timezone = searchParams.get('timezone')?.trim() || user.timezone || 'Asia/Kolkata';
     const excludeRecipeIds =
       searchParams
@@ -44,7 +53,7 @@ export async function GET(request: NextRequest) {
       const recipes = await db.recipe.findMany({
         where: { published: true },
         orderBy: { popularityScore: 'desc' },
-        take: 2000,
+        take: 500,
       });
       const picks = buildSeasonalRailPicks(user, recipes, seasonalConfig, 3);
       if (picks.length > 0) {

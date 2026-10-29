@@ -383,15 +383,20 @@ export function applyWhere(
 
   if (Array.isArray(resolved.OR)) {
     const parts: string[] = [];
+    // Values are interpolated into the PostgREST `.or()` filter string, so
+    // every value must be URL-encoded: an unencoded `,` would inject extra OR
+    // branches (filter injection). Wildcards for `like` are added outside the
+    // encoded value so they survive encoding.
+    const enc = (v: unknown) => encodeURIComponent(String(v));
     for (const branch of resolved.OR as Record<string, unknown>[]) {
       for (const [field, val] of Object.entries(branch)) {
         if (val === undefined) continue;
         if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
           const f = val as Record<string, unknown>;
-          if ('equals' in f) parts.push(`${field}.eq.${f.equals}`);
-          else if ('contains' in f) parts.push(`${field}.like.%${f.contains}%`);
+          if ('equals' in f) parts.push(`${field}.eq.${enc(f.equals)}`);
+          else if ('contains' in f) parts.push(`${field}.like.%${enc(f.contains)}%`);
         } else {
-          parts.push(`${field}.eq.${val}`);
+          parts.push(`${field}.eq.${enc(val)}`);
         }
       }
     }

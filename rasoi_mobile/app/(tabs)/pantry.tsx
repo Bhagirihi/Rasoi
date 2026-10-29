@@ -155,7 +155,11 @@ export default function PantryScreen() {
         {...scrollIndicator}
         keyboardShouldPersistTaps="handled"
         scrollEventThrottle={100}
-        onScroll={() => setAdScrollGeneration((value) => value + 1)}
+        // Bump the ad-visibility generation only when scrolling settles: the
+        // old onScroll handler re-rendered the whole screen ~10x/sec while
+        // scrolling, each triggering a measureInWindow bridge call.
+        onMomentumScrollEnd={() => setAdScrollGeneration((value) => value + 1)}
+        onScrollEndDrag={() => setAdScrollGeneration((value) => value + 1)}
         contentContainerStyle={[
           styles.content,
           { paddingBottom: scrollBottomPadding },

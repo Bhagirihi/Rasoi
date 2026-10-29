@@ -19,6 +19,7 @@ import QuickFiltersSection, {
   getQuickFilterLabels,
 } from "@/components/QuickFiltersSection";
 import RecipeCard from "@/components/RecipeCard";
+import { prefetchRecipeImages } from "@/components/RecipeImage";
 import RecipeListSkeleton from "@/components/RecipeListSkeleton";
 import { FlatListWithFloatingIndicator } from "@/components/ScrollableScreen";
 import SponsorOrAd from "@/components/SponsorOrAd";
@@ -137,6 +138,29 @@ function RecipesTabContent() {
     return sortRecipesByPantryMatch(searchedMoreRecipes, pantryIngredients);
   }, [searchedMoreRecipes, pantryMatchSortActive, pantryIngredients]);
 
+  // Precompute per-row derived data once per list change. The old renderItem
+  // recomputed getRecipePickReason + getPantryMatchPercent for every row on
+  // every render (including every scroll tick) — the main list jank source.
+  const displayRows = useMemo(
+    () =>
+      displayRecipes.map((recipe) => ({
+        recipe,
+        pickReason: getRecipePickReason(recipe, {
+          regionalCuisine,
+          pantryIngredients,
+          dietChoice,
+          mealSlot: meal.slot,
+        }),
+        pantryMatchPercent: getPantryMatchPercent(recipe, pantryIngredients),
+      })),
+    [displayRecipes, regionalCuisine, pantryIngredients, dietChoice, meal.slot],
+  );
+
+  // Warm the image cache for the first screen of results.
+  useEffect(() => {
+    prefetchRecipeImages(displayRecipes.map((recipe) => recipe.imageUrl));
+  }, [displayRecipes]);
+
   const recipeAdIndices = useRecipeListAdIndices(displayRecipes, {
     stableSeed: "recipes-tab",
   });
@@ -184,10 +208,10 @@ function RecipesTabContent() {
     return getPantryMatchPercent(sheetRecipe, pantryIngredients);
   }, [sheetRecipe, pantryIngredients]);
 
-  const openCookTonight = (recipe: Recipe) => {
+  const openCookTonight = useCallback((recipe: Recipe) => {
     setCookTonightTarget(recipe);
     setCookTonightVisible(true);
-  };
+  }, []);
 
   const closeCookTonight = () => {
     setCookTonightVisible(false);
@@ -213,17 +237,20 @@ function RecipesTabContent() {
     setPantryMatchSortActive(true);
   };
 
-  const openShopModal = (
-    recipe: Recipe,
-    missing: string[],
-    partner: AffiliatePartner = "blinkit",
-  ) => {
-    if (missing.length === 0 || !showPartners) return;
-    setModalPartner(partner);
-    setModalRecipe(recipe);
-    setModalMissing(missing);
-    setModalVisible(true);
-  };
+  const openShopModal = useCallback(
+    (
+      recipe: Recipe,
+      missing: string[],
+      partner: AffiliatePartner = "blinkit",
+    ) => {
+      if (missing.length === 0 || !showPartners) return;
+      setModalPartner(partner);
+      setModalRecipe(recipe);
+      setModalMissing(missing);
+      setModalVisible(true);
+    },
+    [showPartners],
+  );
 
   const listBottomPadding = keyboardVisible
     ? keyboardHeight + tabBarHeight + spacing.xxxl
@@ -233,35 +260,54 @@ function RecipesTabContent() {
   const showListSkeleton =
     !discoveryReady && displayRecipes.length === 0 && !recipesError;
 
-  const renderItem = ({ item, index }: { item: Recipe; index: number }) => (
-    <View>
-      {recipeAdIndices.has(index) && (
-        <SponsorOrAd
-          sponsor={recipesSponsor}
-          loading={recipesSponsorLoading}
-          placement="recipes"
-          compact
-          lazyLoad
-          isViewable={viewableIndices.has(index)}
-          style={styles.listSponsorInset}
+  const renderItem = useCallback(
+    ({
+      item,
+      index,
+    }: {
+      item: (typeof displayRows)[number];
+      index: number;
+    }) => (
+      <View>
+        {recipeAdIndices.has(index) && (
+          <SponsorOrAd
+            sponsor={recipesSponsor}
+            loading={recipesSponsorLoading}
+            placement="recipes"
+            compact
+            lazyLoad
+            isViewable={viewableIndices.has(index)}
+            style={styles.listSponsorInset}
+          />
+        )}
+        <RecipeCard
+          recipe={item.recipe}
+          testID={index === 0 ? testIds.recipeCardFirst : undefined}
+          variant="list"
+          pickReason={item.pickReason}
+          pantryMatchPercent={item.pantryMatchPercent}
+          onShopMissing={openShopModal}
+          onCookTonight={openCookTonight}
+          cookCtaLabel={meal.cookCta}
         />
-      )}
-      <RecipeCard
-        recipe={item}
-        testID={index === 0 ? testIds.recipeCardFirst : undefined}
-        variant="list"
-        pickReason={getRecipePickReason(item, {
-          regionalCuisine,
-          pantryIngredients,
-          dietChoice,
-          mealSlot: meal.slot,
-        })}
-        pantryMatchPercent={getPantryMatchPercent(item, pantryIngredients)}
-        onShopMissing={openShopModal}
-        onCookTonight={openCookTonight}
-        cookCtaLabel={meal.cookCta}
-      />
-    </View>
+      </View>
+    ),
+    [
+      recipeAdIndices,
+      recipesSponsor,
+      recipesSponsorLoading,
+      viewableIndices,
+      openShopModal,
+      openCookTonight,
+      meal.cookCta,
+    ],
+  );
+
+  // Hoisted: an inline arrow here creates a new component identity per render,
+  // remounting every separator on each render.
+  const renderSeparator = useCallback(
+    () => <View style={styles.itemGap} />,
+    [],
   );
 
   return (
@@ -271,8 +317,14 @@ function RecipesTabContent() {
       testID={testIds.screenRecipesTab}
     >
       <FlatListWithFloatingIndicator
-        data={displayRecipes}
-        keyExtractor={(item) => item.id}
+        data={displayRows}
+        keyExtractor={(item) => item.recipe.id}
+        renderItem={renderItem}
+        // Perf tuning: defaults keep ~10 screens of heavy cards mounted.
+        windowSize={9}
+        maxToRenderPerBatch={6}
+        initialNumToRender={6}
+        removeClippedSubviews
         {...scrollIndicator}
         viewabilityConfig={viewabilityConfig}
         onViewableItemsChanged={onViewableItemsChanged}
@@ -302,7 +354,7 @@ function RecipesTabContent() {
           { paddingBottom: listBottomPadding },
           displayRecipes.length === 0 && styles.listContentEmpty,
         ]}
-        ItemSeparatorComponent={() => <View style={styles.itemGap} />}
+        ItemSeparatorComponent={renderSeparator}
         ListHeaderComponent={
           <View style={styles.screenSections}>
             <AppTabHeader

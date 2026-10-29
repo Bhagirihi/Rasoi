@@ -39,6 +39,18 @@ if [[ "$MISSING" -eq 1 ]]; then
   fi
 fi
 
+if [[ -z "${RASOI_KEYSTORE_FILE:-}" ]]; then
+  echo "[rasoi] Warning: RASOI_KEYSTORE_FILE is not set — the release build will be signed with the DEBUG key."
+  echo "        Do NOT publish this APK to the Play Store. Generate a release keystore once:"
+  echo "          keytool -genkeypair -v -keystore rasoi-release.jks -alias rasoi -keyalg RSA -keysize 2048 -validity 10000"
+  echo "        then export RASOI_KEYSTORE_FILE, RASOI_KEYSTORE_PASSWORD, RASOI_KEY_ALIAS, RASOI_KEY_PASSWORD."
+  echo ""
+  read -r -p "Continue with debug-signed build? [y/N] " CONFIRM
+  if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
 expo prebuild --platform android
 cd android
 ./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a

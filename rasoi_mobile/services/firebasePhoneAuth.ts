@@ -16,6 +16,9 @@ function maskPhone(digits: string): string {
 }
 
 export function isPhoneVerificationSkipped(): boolean {
+  // Dev-only escape hatch: the flag alone is not enough — it must also be a
+  // dev build. Otherwise a misbuilt release APK could claim any phone number.
+  if (!__DEV__) return false;
   const flag = process.env.EXPO_PUBLIC_SKIP_PHONE_VERIFY?.trim().toLowerCase();
   return flag === '1' || flag === 'true';
 }

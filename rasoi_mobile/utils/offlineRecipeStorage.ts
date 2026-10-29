@@ -2,85 +2,131 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Recipe } from '@/data/mockRecipes';
 
-const STORAGE_KEY = '@rasoi/offline_recipes_v1';
+/**
+ * Offline-saved recipes.
+ *
+ * Each recipe lives under its own AsyncStorage key so saves/removes never
+ * rewrite the whole collection (the old single-blob format did a full
+ * JSON.parse + JSON.stringify per save, and grew unbounded against
+ * AsyncStorage's ~6MB Android limit). An index key tracks insertion order for
+ * LRU eviction; the collection is capped at MAX_OFFLINE_RECIPES.
+ *
+ * Images stay remote URLs — offline recipes render imageless unless the URL
+ * is already in the expo-image disk cache (see RecipeImage).
+ */
+
+const LEGACY_STORAGE_KEY = '@rasoi/offline_recipes_v1';
+const KEY_PREFIX = '@rasoi/offline_recipe/';
+const INDEX_KEY = '@rasoi/offline_recipe_index_v1';
+const MAX_OFFLINE_RECIPES = 50;
 
 type OfflineRecipeEntry = {
   recipe: Recipe;
   downloadedAt: number;
 };
 
-type OfflineRecipeStore = {
-  order: string[];
-  recipes: Record<string, OfflineRecipeEntry>;
-};
-
-function emptyStore(): OfflineRecipeStore {
-  return { order: [], recipes: {} };
+async function readIndex(): Promise<string[]> {
+  try {
+    const raw = await AsyncStorage.getItem(INDEX_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) return parsed.filter((id) => typeof id === 'string');
+    }
+  } catch {
+    // Corrupt index — rebuild from legacy data below.
+  }
+  return migrateLegacyStore();
 }
 
-function readStore(raw: string | null): OfflineRecipeStore {
-  if (!raw) return emptyStore();
+/** One-time migration from the old single-blob format. */
+async function migrateLegacyStore(): Promise<string[]> {
   try {
-    const parsed = JSON.parse(raw) as OfflineRecipeStore;
-    if (!parsed || typeof parsed.recipes !== 'object' || !Array.isArray(parsed.order)) {
-      return emptyStore();
+    const raw = await AsyncStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as {
+      order?: string[];
+      recipes?: Record<string, OfflineRecipeEntry>;
+    };
+    const order = Array.isArray(parsed.order) ? parsed.order : [];
+    const recipes = parsed.recipes ?? {};
+    const migrated: string[] = [];
+    for (const id of order.slice(-MAX_OFFLINE_RECIPES)) {
+      const entry = recipes[id];
+      if (!entry?.recipe) continue;
+      await AsyncStorage.setItem(KEY_PREFIX + id, JSON.stringify(entry));
+      migrated.push(id);
     }
-    return parsed;
+    await AsyncStorage.setItem(INDEX_KEY, JSON.stringify(migrated));
+    await AsyncStorage.removeItem(LEGACY_STORAGE_KEY);
+    return migrated;
   } catch {
-    return emptyStore();
+    return [];
   }
 }
 
-async function loadStore(): Promise<OfflineRecipeStore> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  return readStore(raw);
+async function writeIndex(order: string[]): Promise<void> {
+  await AsyncStorage.setItem(INDEX_KEY, JSON.stringify(order));
 }
 
-async function persistStore(store: OfflineRecipeStore): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+async function readEntry(id: string): Promise<OfflineRecipeEntry | null> {
+  try {
+    const raw = await AsyncStorage.getItem(KEY_PREFIX + id);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as OfflineRecipeEntry;
+    if (!parsed?.recipe?.id) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 export async function listOfflineRecipeIds(): Promise<string[]> {
-  const store = await loadStore();
-  return [...store.order];
+  return readIndex();
 }
 
 export async function getOfflineRecipe(id: string): Promise<Recipe | null> {
-  const store = await loadStore();
-  return store.recipes[id]?.recipe ?? null;
+  const entry = await readEntry(id);
+  return entry?.recipe ?? null;
 }
 
 export async function getAllOfflineRecipes(): Promise<Recipe[]> {
-  const store = await loadStore();
-  return store.order
-    .map((id) => store.recipes[id]?.recipe)
-    .filter((recipe): recipe is Recipe => recipe != null);
+  const order = await readIndex();
+  const recipes: Recipe[] = [];
+  for (const id of order) {
+    const entry = await readEntry(id);
+    if (entry) recipes.push(entry.recipe);
+  }
+  return recipes;
 }
 
 export async function saveOfflineRecipe(recipe: Recipe): Promise<void> {
-  const store = await loadStore();
-  const now = Date.now();
-  const existing = store.recipes[recipe.id];
+  const existing = await readEntry(recipe.id);
+  await AsyncStorage.setItem(
+    KEY_PREFIX + recipe.id,
+    JSON.stringify({
+      recipe,
+      downloadedAt: existing?.downloadedAt ?? Date.now(),
+    } satisfies OfflineRecipeEntry),
+  );
 
-  store.recipes[recipe.id] = {
-    recipe,
-    downloadedAt: existing?.downloadedAt ?? now,
-  };
-  store.order = store.order.filter((id) => id !== recipe.id);
-  store.order.push(recipe.id);
+  const order = (await readIndex()).filter((id) => id !== recipe.id);
+  order.push(recipe.id);
 
-  await persistStore(store);
+  // LRU eviction: drop oldest first so the store never grows unbounded.
+  while (order.length > MAX_OFFLINE_RECIPES) {
+    const evicted = order.shift();
+    if (evicted) await AsyncStorage.removeItem(KEY_PREFIX + evicted);
+  }
+  await writeIndex(order);
 }
 
 export async function removeOfflineRecipe(id: string): Promise<void> {
-  const store = await loadStore();
-  if (!store.recipes[id]) return;
-
-  delete store.recipes[id];
-  store.order = store.order.filter((recipeId) => recipeId !== id);
-  await persistStore(store);
+  await AsyncStorage.removeItem(KEY_PREFIX + id);
+  await writeIndex((await readIndex()).filter((recipeId) => recipeId !== id));
 }
 
 export async function clearOfflineRecipes(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+  const order = await readIndex();
+  await Promise.all(order.map((id) => AsyncStorage.removeItem(KEY_PREFIX + id)));
+  await AsyncStorage.multiRemove([INDEX_KEY, LEGACY_STORAGE_KEY]);
 }

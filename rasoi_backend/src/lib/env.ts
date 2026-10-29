@@ -18,6 +18,7 @@ export function getJwtSecretBytes(): Uint8Array {
 }
 
 export function isStubBillingAllowed(): boolean {
-  if (isProduction()) return process.env.ALLOW_STUB_BILLING === '1';
-  return process.env.ALLOW_STUB_BILLING !== '0';
+  // Explicit opt-in only, in every environment — stub billing grants
+  // planTier 'paid' for free, so it must never be default-on.
+  return process.env.ALLOW_STUB_BILLING === '1';
 }

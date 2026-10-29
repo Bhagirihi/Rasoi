@@ -10,8 +10,15 @@ import { syncPublicKitchenStyle } from '../src/lib/sync-public-kitchen-style';
 import { KITCHEN_STYLE_RECIPES } from './kitchen-style-recipes';
 
 async function main() {
+  // The seed must never run with a default password: the admin account is
+  // brute-forceable otherwise, and the old default was published in the README.
   const adminEmail = process.env.ADMIN_EMAIL ?? 'admin@rasoi.app';
-  const adminPassword = process.env.ADMIN_PASSWORD ?? 'rasoi-admin123';
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    throw new Error(
+      'ADMIN_PASSWORD must be set to seed the admin account. Refusing to seed with a default password.',
+    );
+  }
   const passwordHash = await bcrypt.hash(adminPassword, 10);
 
   await db.admin.upsert({
@@ -24,10 +31,18 @@ async function main() {
     },
   });
 
-  const recipeIds = KITCHEN_STYLE_RECIPES.map((recipe) => recipe.id);
-  await db.recipe.deleteMany({
-    where: { id: { notIn: recipeIds } },
-  });
+  // The seed is non-destructive by default: it only upserts. Recipe deletion is
+  // a separate, explicitly destructive dev-only operation — admin-added recipes
+  // must survive a normal seed run (this once wiped every non-seed recipe).
+  if (process.env.SEED_RESET === '1') {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('SEED_RESET=1 is not allowed in production.');
+    }
+    const recipeIds = KITCHEN_STYLE_RECIPES.map((recipe) => recipe.id);
+    await db.recipe.deleteMany({
+      where: { id: { notIn: recipeIds } },
+    });
+  }
 
   for (const recipe of KITCHEN_STYLE_RECIPES) {
     await db.recipe.upsert({
