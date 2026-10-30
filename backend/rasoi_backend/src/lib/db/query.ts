@@ -63,6 +63,54 @@ const TABLE_META: Record<string, TableMeta> = {
       user: { table: 'User', fk: 'userId', parentKey: 'id' },
     },
   },
+  MealPlan: {
+    table: 'MealPlan',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: { userId_weekStart: ['userId', 'weekStart'] },
+    dateFields: new Set(['createdAt', 'updatedAt']),
+    hasUpdatedAt: true,
+    relations: {
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+    },
+  },
+  MealPlanItem: {
+    table: 'MealPlanItem',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: { planId_date_mealSlot: ['planId', 'date', 'mealSlot'] },
+    dateFields: new Set(['createdAt', 'updatedAt']),
+    hasUpdatedAt: true,
+    relations: {
+      plan: { table: 'MealPlan', fk: 'planId', parentKey: 'id' },
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+      recipe: { table: 'Recipe', fk: 'recipeId', parentKey: 'id' },
+    },
+  },
+  GroceryList: {
+    table: 'GroceryList',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: { userId_weekStart: ['userId', 'weekStart'] },
+    dateFields: new Set(['createdAt', 'updatedAt']),
+    hasUpdatedAt: true,
+    relations: {
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+      plan: { table: 'MealPlan', fk: 'planId', parentKey: 'id' },
+    },
+  },
+  GroceryListItem: {
+    table: 'GroceryListItem',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: {},
+    dateFields: new Set(['createdAt', 'updatedAt']),
+    hasUpdatedAt: true,
+    relations: {
+      list: { table: 'GroceryList', fk: 'listId', parentKey: 'id' },
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+    },
+  },
   AffiliateEvent: {
     table: 'AffiliateEvent',
     pk: 'id',
@@ -688,4 +736,5 @@ export function upsertPayload(
 ): Record<string, unknown> {
   return { ...create, ...update };
 }
+
 

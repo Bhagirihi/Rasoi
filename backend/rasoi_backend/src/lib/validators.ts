@@ -194,6 +194,42 @@ export const planUpdateSchema = z.object({
   hasUsedTrial: z.boolean().optional(),
 });
 
+/** PMPG: week-plan generate/fetch. weekStart is a Monday 'YYYY-MM-DD' key. */
+export const plannerWeekSchema = z.object({
+  weekStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+/** PMPG: add (or swap) one day/slot in a week plan. */
+export const plannerItemSchema = z.object({
+  planId: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  mealSlot: z.enum(['breakfast', 'lunch', 'snack', 'dinner', 'lateNight']),
+  recipeId: z.string().min(1),
+  servings: z.number().int().min(1).max(20).optional(),
+});
+
+/** PMPG: cooked / skipped / planned / removed (removed hides the slot). */
+export const plannerItemStatusSchema = z.object({
+  id: z.string().min(1),
+  status: z.enum(['planned', 'cooked', 'skipped', 'removed']),
+});
+
+/** PMPG: grocery check-off. */
+export const groceryItemCheckSchema = z.object({
+  id: z.string().min(1),
+  checked: z.boolean(),
+});
+
+/** PMPG: planner profile fields (arrays stored as JSON strings on User). */
+export const plannerProfileSchema = z.object({
+  householdSize: z.number().int().min(1).max(30).optional(),
+  servingsDefault: z.number().int().min(1).max(20).optional(),
+  dailyCalorieTarget: z.number().int().min(500).max(6000).nullable().optional(),
+  maxPrepTimeMin: z.number().int().min(5).max(300).nullable().optional(),
+  allergies: z.array(z.string().min(1).max(64)).max(50).optional(),
+  dislikedIngredients: z.array(z.string().min(1).max(64)).max(100).optional(),
+});
+
 export const promoRedeemSchema = z.object({
   code: z.string().trim().min(4).max(32),
 });
@@ -419,3 +455,4 @@ export const homeAnnouncementCreateSchema = z.object({
 export const homeAnnouncementUpdateSchema = homeAnnouncementCreateSchema.omit({ campaignKey: true }).extend({
   campaignKey: homeAnnouncementCreateSchema.shape.campaignKey.optional(),
 });
+

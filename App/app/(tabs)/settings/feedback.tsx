@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Mail, User } from 'lucide-react-native';
@@ -30,7 +30,7 @@ type FieldError = 'category' | 'message' | 'email' | 'general' | null;
 
 export default function FeedbackScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors: themeColors, screenBackground } = useTheme();
   const { userName, userEmail } = useAppContext();
 
@@ -355,3 +355,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
+

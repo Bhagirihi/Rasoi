@@ -16,6 +16,7 @@ import {
   buildMealNotificationBody,
 } from '@/lib/recipe-ranking';
 import { pickPushRecipeForUser } from '@/lib/recommendations';
+import { getPlannedMealForSlot } from '@/lib/meal-planner';
 import { fetchAllRecipesBatched } from '@/lib/recipes-paginated';
 import { parseJson, serializeRecipe } from '@/lib/serializers';
 import type { CuisineId, RecipeResponse } from '@/lib/types';
@@ -219,21 +220,27 @@ export async function runMealNotifications(
 
       const sentTodayIds = await getSentRecipeIdsToday(user.id, mealSlot, dayKey);
 
-      const pick = await pickPushRecipeForUser(
-        {
-          id: user.id,
-          dietChoice: user.dietChoice,
-          regionalCuisine: user.regionalCuisine,
-          favoriteCuisines: user.favoriteCuisines,
-          pantryIngredients: user.pantryIngredients,
-          kitchenPreferences: '{}',
-          timezone: user.timezone,
-          savedRecipeIds: '[]',
-        },
-        mealSlot,
-        dayKey,
-        sentTodayIds,
-      );
+      // PMPG: a planned week-plan meal wins over a generated pick. The
+      // plan item is 'planned' only (cooked / skipped / removed are not
+      // re-sent); without one, fall back to the recommendation engine.
+      const plannedRecipe = await getPlannedMealForSlot(user.id, dayKey, mealSlot);
+      const pick = plannedRecipe
+        ? { recipe: plannedRecipe, reason: 'From your week plan' }
+        : await pickPushRecipeForUser(
+            {
+              id: user.id,
+              dietChoice: user.dietChoice,
+              regionalCuisine: user.regionalCuisine,
+              favoriteCuisines: user.favoriteCuisines,
+              pantryIngredients: user.pantryIngredients,
+              kitchenPreferences: '{}',
+              timezone: user.timezone,
+              savedRecipeIds: '[]',
+            },
+            mealSlot,
+            dayKey,
+            sentTodayIds,
+          );
 
       if (!pick) {
         result.skippedNoRecipe += 1;
@@ -305,3 +312,4 @@ export async function runMealNotifications(
   result.slotsProcessed = [...slotSet];
   return result;
 }
+

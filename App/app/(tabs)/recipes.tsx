@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { useRouter } from "expo-router";
 import { Search, Timer } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
@@ -69,7 +69,7 @@ export default function RecipesTabScreen() {
 
 function RecipesTabContent() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { keyboardHeight, keyboardVisible } = useKeyboardInset();
   const { colors: themeColors, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
@@ -617,3 +617,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+
