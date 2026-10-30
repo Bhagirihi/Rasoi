@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { InteractionManager } from 'react-native';
+import { runAfterInteractions } from '@/utils/runAfterInteractions';
 
 import { useAppContext } from '@/context/AppContext';
 import { useReferenceData } from '@/context/ReferenceContext';
@@ -80,7 +80,7 @@ export function usePantryScreenData() {
     }
 
     let cancelled = false;
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = runAfterInteractions(() => {
       const collected = collectPlanMenuRecipes(
         eligiblePlanRecipes,
         DEFAULT_SHUFFLE,
@@ -165,3 +165,4 @@ export function usePantryScreenData() {
     preferenceSummary,
   };
 }
+
