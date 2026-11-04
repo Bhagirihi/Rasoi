@@ -10,7 +10,7 @@ import * as SecureStore from 'expo-secure-store';
  */
 
 const CHUNK_SIZE = 1500;
-const COUNT_SUFFIX = '::n';
+const COUNT_SUFFIX = '.n';
 
 async function readChunks(key: string): Promise<string | null> {
   const countRaw = await SecureStore.getItemAsync(key + COUNT_SUFFIX);
@@ -19,7 +19,7 @@ async function readChunks(key: string): Promise<string | null> {
   if (!Number.isInteger(count) || count <= 0) return null;
   let out = '';
   for (let i = 0; i < count; i++) {
-    const part = await SecureStore.getItemAsync(`${key}::${i}`);
+    const part = await SecureStore.getItemAsync(`${key}.${i}`);
     if (part == null) return null;
     out += part;
   }
@@ -32,16 +32,16 @@ async function writeChunks(key: string, value: string): Promise<void> {
   // pointing at the old (still valid) chunks.
   for (let i = 0; i < count; i++) {
     await SecureStore.setItemAsync(
-      `${key}::${i}`,
+      `${key}.${i}`,
       value.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE),
     );
   }
   await SecureStore.setItemAsync(key + COUNT_SUFFIX, String(count));
   // Remove stale chunks left by a previously longer value.
   for (let i = count; ; i++) {
-    const stale = await SecureStore.getItemAsync(`${key}::${i}`);
+    const stale = await SecureStore.getItemAsync(`${key}.${i}`);
     if (stale == null) break;
-    await SecureStore.deleteItemAsync(`${key}::${i}`);
+    await SecureStore.deleteItemAsync(`${key}.${i}`);
   }
 }
 
@@ -52,7 +52,7 @@ async function clearChunks(key: string): Promise<void> {
   const count = Number(countRaw);
   if (Number.isInteger(count) && count > 0) {
     for (let i = 0; i < count + 8; i++) {
-      await SecureStore.deleteItemAsync(`${key}::${i}`);
+      await SecureStore.deleteItemAsync(`${key}.${i}`);
     }
   }
 }
@@ -79,3 +79,4 @@ export async function removeSecureItem(key: string): Promise<void> {
   // Also clear any legacy unencrypted copy.
   await AsyncStorage.removeItem(key);
 }
+
