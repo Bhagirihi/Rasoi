@@ -40,6 +40,7 @@ import {
   SettingsQuickTile,
 } from "@/components/settings/SettingsBlocks";
 import { AppTabHeader } from "@/components/AppTabHeader";
+import StreakChip from "@/components/StreakChip";
 import AppHeaderBackButton from "@/components/AppHeaderBackButton";
 import {
   PAID_PLAN_MONTHLY_PRICE,
@@ -441,6 +442,8 @@ export default function SettingsScreen() {
           isGuest={isGuest}
           onPress={openEditProfile}
         />
+
+        {!isGuest && <StreakChip />}
 
         {pendingEmailVerification ? (
           <Pressable
