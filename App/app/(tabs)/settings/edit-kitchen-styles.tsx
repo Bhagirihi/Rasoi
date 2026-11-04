@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import * as Haptics from 'expo-haptics';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
@@ -19,7 +19,7 @@ import { cuisinesToRegion, getSelectableKitchenStyles } from '@/utils/kitchenSty
 
 export default function EditKitchenStylesScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors: themeColors, colorScheme, screenBackground } = useTheme();
   const prefVariant = colorScheme === 'dark' ? 'dark' : 'light';
   const { showDialog } = useAppDialog();
@@ -180,3 +180,5 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 });
+
+
