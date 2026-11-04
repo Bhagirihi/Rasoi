@@ -315,11 +315,31 @@ export async function sendRecipeSavedNotification(recipeTitle: string): Promise<
   });
 }
 
+/**
+ * Single choke point for local meal reminders.
+ *
+ * The server Expo push is the single source of truth for meal picks: when
+ * this device has an active push token synced to the server
+ * (`serverPushActive`), local reminders are NOT scheduled — and any
+ * previously scheduled ones are cancelled, so users upgrading from an older
+ * build stop getting two notifications at each meal time. Local reminders
+ * remain only as a fallback when there is no synced server token (remote
+ * push unavailable, e.g. Expo Go, or token registration failed).
+ *
+ * `enabled` (the notifications toggle) still gates both paths: off cancels
+ * local reminders, exactly as before. Returns true only when local
+ * reminders were actually scheduled.
+ */
 export async function syncDailyReminder(
   enabled: boolean,
   slotIds: readonly string[] | 'all' = ['rasoi-daily-breakfast', 'rasoi-daily-dinner'],
+  serverPushActive = false,
 ): Promise<boolean> {
   if (!enabled) {
+    await cancelDailyReminder();
+    return false;
+  }
+  if (serverPushActive) {
     await cancelDailyReminder();
     return false;
   }
@@ -456,3 +476,4 @@ export async function getLastNotificationResponse(): Promise<NotificationRespons
 
   return Notifications.getLastNotificationResponseAsync();
 }
+

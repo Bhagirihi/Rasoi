@@ -658,10 +658,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
-    void syncDailyReminder(notificationsEnabled, planLimits.notificationSlotIds);
-    if (isLoggedIn && hasCompletedOnboarding) {
-      void syncPushTokenToServer(notificationsEnabled);
-    }
+    // Token sync first: local reminders are the fallback, so the decision
+    // must use this launch's sync outcome, not a stale guess. Guests and
+    // pre-onboarding users have no server token, so they keep local
+    // reminders. Note syncPushTokenToServer(false) returns ok:true for a
+    // deactivation, so serverPushActive also requires the toggle to be on.
+    void (async () => {
+      let serverPushActive = false;
+      if (isLoggedIn && hasCompletedOnboarding) {
+        const tokenSync = await syncPushTokenToServer(notificationsEnabled);
+        serverPushActive = notificationsEnabled && tokenSync.ok;
+      }
+      void syncDailyReminder(
+        notificationsEnabled,
+        planLimits.notificationSlotIds,
+        serverPushActive,
+      );
+    })();
   }, [
     isHydrated,
     isLoggedIn,
@@ -681,7 +694,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
           await refreshUserProfileFromServer();
         })();
         if (notificationsEnabled && hasCompletedOnboarding) {
-          void syncPushTokenToServer(true);
+          // A token sync that succeeds here (e.g. after an offline launch
+          // fell back to local reminders) must also drop those locals, or
+          // the user is pinged twice until the next hydration run.
+          void (async () => {
+            const tokenSync = await syncPushTokenToServer(true);
+            void syncDailyReminder(
+              notificationsEnabled,
+              planLimits.notificationSlotIds,
+              tokenSync.ok,
+            );
+          })();
         }
       }
     });
@@ -692,6 +715,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isLoggedIn,
     hasCompletedOnboarding,
     notificationsEnabled,
+    planLimits.notificationSlotIds,
     refreshUserProfileFromServer,
     syncPushTokenToServer,
   ]);
@@ -805,18 +829,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setFavoriteCuisines(payload.favoriteCuisines);
       setNotificationsEnabledState(payload.notificationsEnabled);
 
-      void syncDailyReminder(payload.notificationsEnabled).then((scheduled) => {
-        if (scheduled && payload.notificationsEnabled) {
-          void sendDailyReminderThankYouNotification();
-        }
-      });
-
       let showTrialWelcome = false;
       const session = await getSupabaseSession();
       const legacyToken = await getAuthToken();
+      let serverPushActive = false;
       if (session?.access_token || legacyToken) {
         await syncPendingOnboarding();
-        await syncPushTokenToServer(payload.notificationsEnabled);
+        const tokenSync = await syncPushTokenToServer(payload.notificationsEnabled);
+        serverPushActive = payload.notificationsEnabled && tokenSync.ok;
+      }
+
+      // Local reminders only as a fallback; the thank-you still fires when
+      // reminders are on via either path (server picks carry the same
+      // personalized picks the message promises).
+      const scheduled = await syncDailyReminder(
+        payload.notificationsEnabled,
+        undefined,
+        serverPushActive,
+      );
+      if ((scheduled || serverPushActive) && payload.notificationsEnabled) {
+        void sendDailyReminderThankYouNotification();
       }
 
       // Honor soft-paywall flag set at signup (do not hardcode false).
@@ -1229,7 +1261,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         return { ok: false, reason: tokenSync.reason };
       }
 
-      void syncDailyReminder(true);
+      // Token is synced, so server meal picks are live: do not schedule
+      // local reminders (syncDailyReminder cancels any stale ones).
+      void syncDailyReminder(true, undefined, true);
       setNotificationsEnabledState(true);
       if (isLoggedIn) {
         const user = await updateUserProfile({ notificationsEnabled: true });
@@ -1588,3 +1622,4 @@ export function useAppContext(): AppContextValue {
   }
   return context;
 }
+
