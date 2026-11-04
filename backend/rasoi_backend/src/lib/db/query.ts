@@ -158,6 +158,17 @@ const TABLE_META: Record<string, TableMeta> = {
       user: { table: 'User', fk: 'userId', parentKey: 'id' },
     },
   },
+  CookDay: {
+    table: 'CookDay',
+    pk: 'id',
+    uniqueFields: ['id'],
+    compoundUniques: { userId_dayKey: ['userId', 'dayKey'] },
+    dateFields: new Set(['cookedAt']),
+    hasUpdatedAt: false,
+    relations: {
+      user: { table: 'User', fk: 'userId', parentKey: 'id' },
+    },
+  },
   Sponsor: {
     table: 'Sponsor',
     pk: 'id',
@@ -688,4 +699,3 @@ export function upsertPayload(
 ): Record<string, unknown> {
   return { ...create, ...update };
 }
-
