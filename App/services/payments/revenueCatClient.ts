@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 import type { CustomerInfo, PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 
+import { isExpoGo } from '@/utils/expoGo';
+
 import {
   REVENUECAT_ENTITLEMENT_ID,
   REVENUECAT_PACKAGE_ANNUAL,
@@ -32,6 +34,8 @@ async function getPurchasesModule(): Promise<PurchasesModule> {
 
 export async function configureRevenueCat(): Promise<boolean> {
   if (!isRevenueCatSupported()) return false;
+  // RevenueCat's native module is not in the Expo Go binary.
+  if (isExpoGo()) return false;
   if (configured) return true;
 
   const apiKey = getRevenueCatApiKey(
@@ -317,3 +321,4 @@ export async function restoreRevenueCatPurchases(): Promise<{
     storeProductId: getActiveSubscriptionStoreProductId(customerInfo),
   };
 }
+

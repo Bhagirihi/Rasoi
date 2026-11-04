@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/react-native';
 
+import { isExpoGo } from '@/utils/expoGo';
 import { recordFirebaseError } from '@/utils/firebase';
 
 const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN?.trim();
@@ -29,7 +30,8 @@ function shouldEnableSentry(): boolean {
 }
 
 export function initSentry(): void {
-  if (initialized || !shouldEnableSentry()) {
+  // Sentry's native SDK is not in the Expo Go binary.
+  if (initialized || isExpoGo() || !shouldEnableSentry()) {
     return;
   }
 
@@ -197,3 +199,4 @@ export function addSentryBreadcrumb(
 }
 
 export { Sentry };
+
