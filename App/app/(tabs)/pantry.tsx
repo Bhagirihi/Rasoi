@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -82,7 +82,7 @@ function PantrySectionLabel({
 
 export default function PantryScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors: themeColors, screenBackground } = useTheme();
   const {
     pantryIngredients,
@@ -564,3 +564,5 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
 });
+
+

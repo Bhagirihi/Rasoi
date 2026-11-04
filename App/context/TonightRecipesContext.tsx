@@ -9,7 +9,7 @@ import React, {
   useState,
   type ReactNode,
 } from 'react';
-import { InteractionManager } from 'react-native';
+import { runAfterInteractions } from '@/utils/runAfterInteractions';
 
 import { useAppContext } from '@/context/AppContext';
 import { useRecipes } from '@/context/RecipesContext';
@@ -351,7 +351,7 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = runAfterInteractions(() => {
       const scanPool = pickPool.slice(0, READY_TO_COOK_SCAN_LIMIT);
       const count = countFullyStockedRecipes(scanPool, {
         dietPreference: dietChoiceToFilter(dietChoice),
@@ -406,3 +406,5 @@ export function useTonightRecipes(): TonightRecipesContextValue {
   }
   return context;
 }
+
+

@@ -1,27 +1,14 @@
 import { Redirect, Tabs, usePathname } from 'expo-router';
 import { useMemo } from 'react';
-import { Platform } from 'react-native';
 import { Bookmark, BookOpen, CalendarDays, ChefHat, Refrigerator, Settings } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import PantryNudgeBridge from '@/components/pantry/PantryNudgeBridge';
 import TabIdleWarmup from '@/components/TabIdleWarmup';
+import { getTabBarLayout } from '@/constants/tabBar';
 import { testIds } from '@/constants/testIds';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppContext } from '@/context/AppContext';
-
-const TAB_BAR_TOP_PADDING = 8;
-const TAB_BAR_BODY_HEIGHT = Platform.OS === 'ios' ? 49 : 48;
-
-function getTabBarLayout(bottomInset: number) {
-  const paddingBottom = Math.max(bottomInset, Platform.OS === 'ios' ? 24 : 8);
-
-  return {
-    height: TAB_BAR_BODY_HEIGHT + TAB_BAR_TOP_PADDING + paddingBottom,
-    paddingBottom,
-    paddingTop: TAB_BAR_TOP_PADDING,
-  };
-}
 
 export default function TabLayout() {
   const { colors, screenBackground } = useTheme();
@@ -143,3 +130,4 @@ export default function TabLayout() {
     </>
   );
 }
+

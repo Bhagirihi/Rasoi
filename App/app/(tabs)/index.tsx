@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { useRouter } from "expo-router";
 import { Timer } from "lucide-react-native";
 import { useMemo, useState, useCallback, useEffect } from "react";
@@ -71,7 +71,7 @@ const PICK_SECTION_GAP = spacing.md;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors: themeColors, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
   const { openBrandSearch } = usePartners();
@@ -533,3 +533,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+

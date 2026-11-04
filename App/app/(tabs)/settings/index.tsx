@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import {
@@ -90,7 +90,7 @@ function formatCuisineLabels(
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors, colorScheme, setColorScheme, screenBackground } = useTheme();
   const { kitchenStyles } = useReferenceData();
   const {
@@ -835,3 +835,4 @@ const styles = StyleSheet.create({
     height: spacing.md,
   },
 });
+

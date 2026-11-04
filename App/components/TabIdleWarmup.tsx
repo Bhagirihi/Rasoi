@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { InteractionManager } from 'react-native';
+
+import { runAfterInteractions } from '@/utils/runAfterInteractions';
 
 /** After Home settles, prefetch lower-traffic tabs so first tap feels instant. */
 export default function TabIdleWarmup() {
@@ -10,7 +11,7 @@ export default function TabIdleWarmup() {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const task = InteractionManager.runAfterInteractions(() => {
+    const task = runAfterInteractions(() => {
       timer = setTimeout(() => {
         if (cancelled) return;
         void router.prefetch('/(tabs)/plan');
@@ -28,3 +29,5 @@ export default function TabIdleWarmup() {
 
   return null;
 }
+
+

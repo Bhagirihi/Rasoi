@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import { useRouter } from "expo-router";
 import { useMemo, useState, useCallback } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -33,7 +33,7 @@ import {
 
 export default function SavedScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const meal = getMealContext();
   const { colors: themeColors, screenBackground } = useTheme();
   const { pantryIngredients, dietChoice, regionalCuisine, showPartners, offlineRecipeIds } =
@@ -308,3 +308,5 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
 });
+
+
