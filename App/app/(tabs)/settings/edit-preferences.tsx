@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import * as Haptics from 'expo-haptics';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Bell, ChefHat, Leaf } from 'lucide-react-native';
@@ -43,7 +43,7 @@ import { DAILY_REMINDER_MEAL_SUMMARY, DAILY_REMINDER_TIME_LABEL, ensureNotificat
 
 export default function EditPreferencesScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors: themeColors, colorScheme, screenBackground } = useTheme();
   const { showDialog } = useAppDialog();
   const {
@@ -397,3 +397,5 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
   },
 });
+
+

@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { Mail, Phone, User } from 'lucide-react-native';
@@ -28,7 +28,7 @@ type FieldError = 'name' | 'phone' | 'general' | null;
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors: themeColors, screenBackground } = useTheme();
   const { userName, userPhone, userEmail, isGuest, updateProfile } =
     useAppContext();
@@ -320,3 +320,5 @@ const styles = StyleSheet.create({
     color: colors.charcoal,
   },
 });
+
+
