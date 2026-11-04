@@ -3,6 +3,7 @@ import type {
   Admin,
   AffiliateEvent,
   AppSettings,
+  CookDay,
   HomeAnnouncement,
   KitchenStyle,
   MealNotificationLog,
@@ -56,6 +57,7 @@ type DbClient = {
   userRecommendationHistory: Repository<UserRecommendationHistory>;
   userRecipeView: Repository<UserRecipeView>;
   userRecipeCooked: Repository<UserRecipeCooked>;
+  cookDay: Repository<CookDay>;
   $transaction: {
     <T>(fn: (tx: DbClient) => Promise<T>): Promise<T>;
     (operations: readonly Promise<unknown>[]): Promise<unknown[]>;
@@ -87,6 +89,7 @@ function createDbClient(): DbClient {
     userRecommendationHistory: createRepository<UserRecommendationHistory>('UserRecommendationHistory'),
     userRecipeView: createRepository<UserRecipeView>('UserRecipeView'),
     userRecipeCooked: createRepository<UserRecipeCooked>('UserRecipeCooked'),
+    cookDay: createRepository<CookDay>('CookDay'),
 
     $transaction: async <T>(
       arg: ((tx: DbClient) => Promise<T>) | readonly Promise<unknown>[],

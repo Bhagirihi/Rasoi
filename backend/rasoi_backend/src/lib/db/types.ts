@@ -155,6 +155,13 @@ export type UserRecipeCooked = {
   cookedAt: Date;
 };
 
+export type CookDay = {
+  id: string;
+  userId: string;
+  dayKey: string;
+  cookedAt: Date;
+};
+
 export type Sponsor = {
   id: string;
   placement: string;

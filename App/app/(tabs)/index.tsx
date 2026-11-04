@@ -26,6 +26,7 @@ import HomePickCard, {
 import HomeRecipeRowSkeleton from "@/components/home/HomeRecipeRowSkeleton";
 import { ScrollViewWithFloatingIndicator } from "@/components/ScrollableScreen";
 import SponsorOrAd from "@/components/SponsorOrAd";
+import StreakChip from "@/components/StreakChip";
 import TrialCountdownBanner from "@/components/TrialCountdownBanner";
 import HomeAnnouncementBridge from "@/components/home/HomeAnnouncementBridge";
 import HomeQaMonetizationBar from "@/components/home/HomeQaMonetizationBar";
@@ -296,6 +297,8 @@ export default function HomeScreen() {
             userCity ? `${subtitle} · Picks near ${userCity}` : subtitle
           }
         />
+
+        {!isGuest && <StreakChip />}
 
         <View style={styles.sections}>
           <HomeQaMonetizationBar />

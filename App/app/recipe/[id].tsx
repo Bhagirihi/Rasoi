@@ -1,6 +1,6 @@
 import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Flame } from "lucide-react-native";
+import { Check, Flame } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,7 +22,7 @@ import RecipeMethodTimeline from "@/components/recipe/RecipeMethodTimeline";
 import PartnerUpsellCard from "@/components/PartnerUpsellCard";
 import RecipeSafetyDisclaimer from "@/components/RecipeSafetyDisclaimer";
 import TrialPartnerBanner from "@/components/TrialPartnerBanner";
-import { PlanBadge } from "@/components/ui/Primitives";
+import { PlanBadge, PrimaryButton } from "@/components/ui/Primitives";
 import { SCREENSHOT_MODE } from "@/constants/screenshotMode";
 import { appFonts } from "@/constants/fonts";
 import {
@@ -49,6 +49,7 @@ import {
 } from "@/utils/recipes";
 import { shareRecipeOnWhatsApp } from "@/utils/shareRecipe";
 import { logRecipeView, logRecipeCooked } from "@/services/recommendations";
+import { markRecipeCooked } from "@/services/streak";
 import { PAYWALL_HREF } from "@/utils/routes";
 import { getOfflineRecipe } from "@/utils/offlineRecipeStorage";
 import type { AffiliatePartner } from "@/utils/affiliate";
@@ -97,6 +98,7 @@ export default function RecipeDetailScreen() {
   const [recipeSponsorLoading, setRecipeSponsorLoading] = useState(true);
   const [adScrollGeneration, setAdScrollGeneration] = useState(0);
   const [cookMode, setCookMode] = useState(startInCookMode);
+  const [cookedToday, setCookedToday] = useState(false);
   const [stepsLang, setStepsLang] = useState<"en" | "hi">("en");
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(
     () => new Set(),
@@ -206,6 +208,7 @@ export default function RecipeDetailScreen() {
 
   useEffect(() => {
     cookedLoggedRef.current = false;
+    setCookedToday(false);
   }, [recipeId]);
 
   useEffect(() => {
@@ -302,6 +305,13 @@ export default function RecipeDetailScreen() {
       }
       return next;
     });
+  };
+
+  const handleCookedPress = () => {
+    if (!recipe || cookedToday) return;
+    void markRecipeCooked(recipe.id)
+      .then(() => setCookedToday(true))
+      .catch(() => undefined);
   };
 
   const toggleCookMode = () => {
@@ -435,6 +445,13 @@ export default function RecipeDetailScreen() {
             },
           ]}
         >
+          <PrimaryButton
+            label={cookedToday ? "Cooked today" : "I cooked this"}
+            icon={Check}
+            onPress={handleCookedPress}
+            disabled={cookedToday}
+          />
+
           <RecipeDetailHeader
             recipe={recipe}
             pantryMatchPercent={pantryMatchPercent}
