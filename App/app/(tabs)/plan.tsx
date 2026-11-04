@@ -1,4 +1,4 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useTabBarHeight } from '@/hooks/useTabBarHeight';
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import {
@@ -139,7 +139,7 @@ export default function PlanScreen() {
 
 function PlanTabContent() {
   const router = useRouter();
-  const tabBarHeight = useBottomTabBarHeight();
+  const tabBarHeight = useTabBarHeight();
   const { colors: themeColors, screenBackground } = useTheme();
   const {
     dietChoice,
@@ -434,3 +434,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
 });
+
