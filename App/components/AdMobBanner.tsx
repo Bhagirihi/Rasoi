@@ -38,18 +38,26 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
 
     let cancelled = false;
 
-    void import('react-native-google-mobile-ads')
-      .then((mod) => {
+    // NOTE: Metro can evaluate a dynamically-imported native module
+    // synchronously (importAll), so a missing native module throws out of the
+    // import() call itself — a .catch() on the promise cannot catch that.
+    // The try/catch around await import() catches both the synchronous throw
+    // and a rejected import, so Expo Go never red-screens on ads.
+    const loadAdsModule = async () => {
+      try {
+        const mod = await import('react-native-google-mobile-ads');
         if (!cancelled) {
           setAdsModule({
             BannerAd: mod.BannerAd,
             BannerAdSize: mod.BannerAdSize,
           });
         }
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setAdsModule(null);
-      });
+      }
+    };
+
+    void loadAdsModule();
 
     return () => {
       cancelled = true;
@@ -122,3 +130,4 @@ const styles = StyleSheet.create({
     opacity: 0,
   },
 });
+
