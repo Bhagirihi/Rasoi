@@ -92,7 +92,9 @@ export function createRepository<T extends Record<string, unknown>>(tableName: s
       const { data, error } = await query.maybeSingle();
       throwIfError(error, `${meta.table}.findUnique`);
       if (!data) return null;
-      const row = parseRow<T>(data as Record<string, unknown>, meta);
+      // `data` is typed GenericStringError (Supabase marker for untyped
+      // dynamic-table rows); at runtime it is the real row.
+      const row = parseRow<T>(data as unknown as Record<string, unknown>, meta);
       const [final] = await finalizeRows([row], meta, topLevel, relations);
       return final;
     },

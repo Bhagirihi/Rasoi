@@ -519,7 +519,13 @@ export async function attachRelations<T extends Record<string, unknown>>(
     throwIfError(error, `${meta.table}.${relationName}`);
 
     const childMeta = getTableMeta(relationDef.table);
-    let children = parseRows<Record<string, unknown>>(data, childMeta);
+    // Supabase types untyped dynamic-table rows as GenericStringError[];
+    // at runtime `data` is the real row array (or null). Cast to the
+    // record shape parseRows expects.
+    let children = parseRows<Record<string, unknown>>(
+      data as unknown as Record<string, unknown>[] | null,
+      childMeta,
+    );
 
     if (nestedSelect) {
       const allowed = columnsFromSelect(nestedSelect);
@@ -592,7 +598,12 @@ export async function attachParentRelations<T extends Record<string, unknown>>(
     throwIfError(error, `${meta.table}.${relationName}`);
 
     const parentMeta = getTableMeta(relationDef.table);
-    let parents = parseRows<Record<string, unknown>>(data, parentMeta);
+    // See above: Supabase's GenericStringError[] marker type for
+    // untyped dynamic-table rows; runtime data is the real rows.
+    let parents = parseRows<Record<string, unknown>>(
+      data as unknown as Record<string, unknown>[] | null,
+      parentMeta,
+    );
 
     if (nestedSelect) {
       const allowed = columnsFromSelect(nestedSelect);

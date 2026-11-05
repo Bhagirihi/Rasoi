@@ -82,10 +82,16 @@ async function getSponsorEventBrandCounts(): Promise<
       _count: { _all: Number(row.count) },
     }));
   } catch {
-    return db.sponsorEvent.groupBy({
+    // groupBy's return type doesn't name the `by` field (Record<string, string>),
+    // so map it to the declared shape explicitly.
+    const grouped = await db.sponsorEvent.groupBy({
       by: ['brandName'],
       _count: { _all: true },
     });
+    return grouped.map((row) => ({
+      brandName: row.brandName,
+      _count: { _all: row._count._all },
+    }));
   }
 }
 
