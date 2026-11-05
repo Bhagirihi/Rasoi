@@ -6,6 +6,7 @@
     "@expo-google-fonts/dm-sans": "^0.4.2",
     "@expo-google-fonts/fraunces": "^0.4.1",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "^12.0.1",
     "@react-native-firebase/analytics": "^24.1.1",
     "@react-native-firebase/app": "^24.1.1",
     "@react-native-firebase/auth": "^24.1.1",
@@ -19,16 +20,15 @@
     "expo-constants": "~58.0.12",
     "expo-font": "~58.0.0",
     "expo-haptics": "~58.0.0",
+    "expo-image": "~58.0.0",
     "expo-linear-gradient": "~58.0.0",
     "expo-linking": "~58.0.13",
     "expo-location": "~58.0.0",
     "expo-notifications": "~58.0.0",
     "expo-router": "~58.0.19",
-    "expo-splash-screen": "~58.0.9",
     "expo-secure-store": "~58.0.0",
-    "expo-image": "~58.0.0",
+    "expo-splash-screen": "~58.0.9",
     "expo-status-bar": "~58.0.0",
-    "@react-native-community/netinfo": "^12.0.1",
     "expo-store-review": "~58.0.0",
     "expo-updates": "~58.0.19",
     "lottie-react-native": "~7.3.1",
@@ -42,7 +42,7 @@
     "react-native-safe-area-context": "~5.10.1",
     "react-native-screens": "~4.30.0",
     "react-native-svg": "15.12.1",
-    "react-native-web": "~0.21.0",
+    "react-native-web": "^0.21.4",
     "react-native-worklets": "0.13.0"
   },
   "devDependencies": {
@@ -86,5 +86,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint ."
   },
-  "private": true
+  "private": true,
+  "allowScripts": {
+    "@sentry/cli@3.5.0": true,
+    "@firebase/util@1.15.1": true,
+    "protobufjs@7.6.4": true
+  }
 }

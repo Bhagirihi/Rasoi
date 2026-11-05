@@ -16,6 +16,7 @@ import {
   getPersonalizedPantrySections,
   type PantryPreferenceSummary,
 } from '@/utils/pantryPersonalization';
+import { ingredientKey } from '@/utils/recipeIngredients';
 
 export type PantryPersonalSection = {
   title: string;

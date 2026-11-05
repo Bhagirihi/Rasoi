@@ -5,7 +5,7 @@ import { colors, spacing } from '@/constants/theme';
 import { useAppContext } from '@/context/AppContext';
 import { useTheme } from '@/context/ThemeContext';
 import { getAdMobBannerUnitId } from '@/constants/admob';
-import { isAdMobNativeAvailable } from '@/utils/admob';
+import { isAdMobNativeAvailable, whenMobileAdsReady } from '@/utils/admob';
 
 type BannerModule = {
   BannerAd: React.ComponentType<{
@@ -15,7 +15,11 @@ type BannerModule = {
     onAdLoaded?: (dimensions: { width: number; height: number }) => void;
     onAdFailedToLoad?: (error: Error) => void;
   }>;
-  BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: string };
+  BannerAdSize: {
+    BANNER: string;
+    ANCHORED_ADAPTIVE_BANNER: string;
+    INLINE_ADAPTIVE_BANNER?: string;
+  };
 };
 
 interface AdMobBannerProps {
@@ -27,6 +31,7 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
   const { showAds } = useAppContext();
   const { colors: themeColors, isDark } = useTheme();
   const [adsModule, setAdsModule] = useState<BannerModule | null>(null);
+  const [sdkReady, setSdkReady] = useState(false);
   const [adFailed, setAdFailed] = useState(false);
   const [adLoaded, setAdLoaded] = useState(false);
 
@@ -38,13 +43,12 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
 
     let cancelled = false;
 
-    // NOTE: Metro can evaluate a dynamically-imported native module
-    // synchronously (importAll), so a missing native module throws out of the
-    // import() call itself — a .catch() on the promise cannot catch that.
-    // The try/catch around await import() catches both the synchronous throw
-    // and a rejected import, so Expo Go never red-screens on ads.
     const loadAdsModule = async () => {
       try {
+        await whenMobileAdsReady();
+        if (cancelled) return;
+        setSdkReady(true);
+
         const mod = await import('react-native-google-mobile-ads');
         if (!cancelled) {
           setAdsModule({
@@ -53,7 +57,10 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
           });
         }
       } catch {
-        if (!cancelled) setAdsModule(null);
+        if (!cancelled) {
+          setAdsModule(null);
+          setSdkReady(false);
+        }
       }
     };
 
@@ -75,7 +82,7 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
     return null;
   }
 
-  if (!adsModule) {
+  if (!sdkReady || !adsModule) {
     return null;
   }
 
@@ -83,28 +90,40 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
   const adBorderWidth = isDark ? 1.5 : 1;
 
   const { BannerAd, BannerAdSize } = adsModule;
+  // Fixed 320x50 — most reliable for in-ScrollView slots (anchored adaptive
+  // expects a screen edge; inline adaptive needs an explicit max height).
+  const unitId = getAdMobBannerUnitId(Platform.OS, placement);
 
   return (
     <View
       style={[
         styles.wrap,
-        !adLoaded && styles.wrapHidden,
+        !adLoaded && styles.wrapLoading,
         {
           backgroundColor: themeColors.white,
           borderColor: adBorder,
-          borderWidth: adBorderWidth,
+          borderWidth: adLoaded ? adBorderWidth : 0,
         },
       ]}
     >
       <BannerAd
-        unitId={getAdMobBannerUnitId(Platform.OS, placement)}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+        unitId={unitId}
+        size={BannerAdSize.BANNER}
         onAdLoaded={() => {
+          if (__DEV__) {
+            console.log('[AdMob] banner loaded', { placement, unitId });
+          }
           setAdLoaded(true);
           onVisibilityChange?.(true);
         }}
-        onAdFailedToLoad={() => {
+        onAdFailedToLoad={(error) => {
+          if (__DEV__) {
+            console.warn('[AdMob] banner failed', {
+              placement,
+              unitId,
+              message: error?.message ?? String(error),
+            });
+          }
           setAdFailed(true);
           onVisibilityChange?.(false);
         }}
@@ -123,11 +142,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-  wrapHidden: {
-    height: 0,
+  wrapLoading: {
+    minHeight: 50,
+    opacity: 0.01,
     marginVertical: 0,
-    borderWidth: 0,
-    opacity: 0,
   },
 });
-

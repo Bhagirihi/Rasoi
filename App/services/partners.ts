@@ -16,7 +16,10 @@ export type PartnerLinkResponse = {
   updatedAt?: string;
 };
 
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
 let cachedLinks: PartnerLinkResponse[] | null = null;
+let cachedAt = 0;
 let loadPromise: Promise<PartnerLinkResponse[]> | null = null;
 
 async function loadPartnerLinksFromSupabase(): Promise<PartnerLinkResponse[]> {
@@ -43,7 +46,11 @@ async function loadPartnerLinksFromSupabase(): Promise<PartnerLinkResponse[]> {
 }
 
 export async function loadPartnerLinks(force = false): Promise<PartnerLinkResponse[]> {
-  if (cachedLinks && !force) {
+  if (
+    cachedLinks &&
+    !force &&
+    Date.now() - cachedAt < CACHE_TTL_MS
+  ) {
     return cachedLinks;
   }
 
@@ -55,6 +62,7 @@ export async function loadPartnerLinks(force = false): Promise<PartnerLinkRespon
     if (isDirectSupabaseCatalogEnabled()) {
       try {
         cachedLinks = await loadPartnerLinksFromSupabase();
+        cachedAt = Date.now();
         return cachedLinks;
       } catch (error) {
         console.warn('[partners] Supabase read failed, falling back to API', error);
@@ -63,6 +71,7 @@ export async function loadPartnerLinks(force = false): Promise<PartnerLinkRespon
 
     const links = await apiFetch<PartnerLinkResponse[]>('/api/partners?region=IN');
     cachedLinks = links.filter((link) => link.active);
+    cachedAt = Date.now();
     return cachedLinks;
   })()
     .catch((error) => {

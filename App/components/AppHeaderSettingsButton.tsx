@@ -15,7 +15,8 @@ export default function AppHeaderSettingsButton() {
     <Pressable
       onPress={() => {
         void Haptics.selectionAsync();
-        router.push('/(tabs)/settings');
+        // settings tab uses href:null — navigate (not push) so the hidden tab activates
+        router.navigate('/(tabs)/settings');
       }}
       hitSlop={10}
       testID={testIds.tabSettings}

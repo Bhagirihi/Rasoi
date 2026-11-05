@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SponsorResponse } from '@/types/api';
 import { apiFetch } from '@/utils/api';
 import { getRasoiDb, isDirectSupabaseCatalogEnabled } from '@/utils/rasoiDb';
@@ -25,6 +26,49 @@ function mapSponsor(sponsor: SponsorResponse): SponsorCardData {
 }
 
 export type SponsorScreenPlacement = 'home' | 'recipes' | 'pantry' | 'saved';
+
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const STORAGE_PREFIX = 'rasoi_sponsor_v1_';
+
+type CacheEntry = {
+  value: SponsorCardData | null;
+  fetchedAt: number;
+};
+
+const memoryCache = new Map<string, CacheEntry>();
+const inflight = new Map<string, Promise<SponsorCardData | null>>();
+
+function cacheKey(placement: string, recipeId?: string): string {
+  return recipeId ? `${placement}:${recipeId}` : placement;
+}
+
+function storageKey(key: string): string {
+  return `${STORAGE_PREFIX}${key.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+}
+
+async function readDisk(key: string): Promise<SponsorCardData | null | undefined> {
+  try {
+    const raw = await AsyncStorage.getItem(storageKey(key));
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as CacheEntry;
+    if (!parsed || typeof parsed.fetchedAt !== 'number') return undefined;
+    if (Date.now() - parsed.fetchedAt > CACHE_TTL_MS) return undefined;
+    memoryCache.set(key, parsed);
+    return parsed.value;
+  } catch {
+    return undefined;
+  }
+}
+
+async function writeDisk(key: string, value: SponsorCardData | null): Promise<void> {
+  const entry: CacheEntry = { value, fetchedAt: Date.now() };
+  memoryCache.set(key, entry);
+  try {
+    await AsyncStorage.setItem(storageKey(key), JSON.stringify(entry));
+  } catch {
+    // ignore
+  }
+}
 
 async function fetchSponsorsFromSupabase(
   placement: SponsorScreenPlacement | 'recipe',
@@ -58,7 +102,7 @@ async function fetchSponsorsFromSupabase(
   }));
 }
 
-export async function fetchSponsor(
+async function fetchSponsorNetwork(
   placement: SponsorScreenPlacement | 'recipe',
   recipeId?: string,
 ): Promise<SponsorCardData | null> {
@@ -91,6 +135,64 @@ export async function fetchSponsor(
 
   const top = candidates[0];
   return top ? mapSponsor(top) : null;
+}
+
+/**
+ * Placement sponsors rarely change. Memory + AsyncStorage TTL (5 min) and
+ * in-flight dedupe prevent Home/tabs from each firing duplicate Sponsor GETs.
+ */
+export async function fetchSponsor(
+  placement: SponsorScreenPlacement | 'recipe',
+  recipeId?: string,
+  force = false,
+): Promise<SponsorCardData | null> {
+  const key = cacheKey(placement, recipeId);
+
+  if (!force) {
+    const mem = memoryCache.get(key);
+    if (mem && Date.now() - mem.fetchedAt < CACHE_TTL_MS) {
+      return mem.value;
+    }
+    const pending = inflight.get(key);
+    if (pending) return pending;
+    const disk = await readDisk(key);
+    if (disk !== undefined) return disk;
+  }
+
+  const existing = inflight.get(key);
+  if (existing && !force) return existing;
+
+  const promise = (async () => {
+    try {
+      const value = await fetchSponsorNetwork(placement, recipeId);
+      await writeDisk(key, value);
+      return value;
+    } catch {
+      const mem = memoryCache.get(key);
+      return mem?.value ?? null;
+    } finally {
+      inflight.delete(key);
+    }
+  })();
+
+  inflight.set(key, promise);
+  return promise;
+}
+
+/** Drop cache after Realtime Sponsor changes. */
+export function invalidateSponsorCache(placement?: string): void {
+  if (placement) {
+    for (const key of [...memoryCache.keys()]) {
+      if (key === placement || key.startsWith(`${placement}:`)) {
+        memoryCache.delete(key);
+        inflight.delete(key);
+        void AsyncStorage.removeItem(storageKey(key)).catch(() => undefined);
+      }
+    }
+    return;
+  }
+  memoryCache.clear();
+  inflight.clear();
 }
 
 export function fetchHomeSponsor(): Promise<SponsorCardData | null> {

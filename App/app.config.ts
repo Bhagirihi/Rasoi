@@ -109,8 +109,13 @@ export default (): ExpoConfig => ({
       ...(easProjectId ? { projectId: easProjectId } : {}),
     },
   },
-  android: {
-    ...base.android,
-    ...(hasGoogleServices ? { googleServicesFile: googleServicesPath } : {}),
-  },
+  android: (() => {
+    const android = { ...base.android };
+    if (hasGoogleServices) {
+      android.googleServicesFile = googleServicesPath;
+    } else {
+      delete android.googleServicesFile;
+    }
+    return android;
+  })(),
 });

@@ -130,12 +130,12 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
   const [groceryPartners, setGroceryPartners] = useState<GroceryPartnerCard[]>([]);
   const [deliveryPartners, setDeliveryPartners] = useState<DeliveryPartnerCard[]>([]);
 
-  const refreshPartners = useCallback(async () => {
+  const refreshPartners = useCallback(async (force = false) => {
     setLoading(true);
     setError(null);
 
     try {
-      const links = await loadPartnerLinks(true);
+      const links = await loadPartnerLinks(force);
       const cards = buildCards(links);
       setPartnerLinks(links);
       setGroceryPartners(cards.groceryPartners);
@@ -153,13 +153,14 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refreshPartners();
+    void refreshPartners(false);
   }, [refreshPartners]);
 
+  // Foreground: reuse TTL cache — do not force a PartnerLink round-trip every resume.
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
-        void refreshPartners();
+        void refreshPartners(false);
       }
     });
 
@@ -167,7 +168,7 @@ export function PartnersProvider({ children }: { children: ReactNode }) {
   }, [refreshPartners]);
 
   useRasoiRealtimeTables(['PartnerLink'], () => {
-    void refreshPartners();
+    void refreshPartners(true);
   }, 'partners');
 
   const ensurePartnerAccess = useCallback(() => {

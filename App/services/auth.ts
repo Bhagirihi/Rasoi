@@ -147,7 +147,7 @@ export async function syncSupabaseAccount(
 
     if (response.token) {
       const { persistAuthToken } = await import('@/utils/authToken');
-      persistAuthToken(response.token);
+      await persistAuthToken(response.token);
     } else {
       finishSupabaseAuth(response.user);
     }

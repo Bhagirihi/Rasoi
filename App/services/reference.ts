@@ -56,33 +56,61 @@ function parseAppConfigRow(
 }
 
 /** Always fetch payment flags live — never trust the 30-minute reference disk cache for this. */
-export async function loadAppConfigFresh(): Promise<ReferenceData['appConfig']> {
-  try {
-    if (isDirectSupabaseCatalogEnabled()) {
-      const db = getRasoiDb();
-      const { data, error } = await db
-        .from('AppSettings')
-        .select('paymentsEnabled, paymentsMinAppVersion, defaultPantryIngredients')
-        .eq('id', 'default')
-        .maybeSingle();
-      if (error) throw error;
-      return parseAppConfigRow(
-        data?.paymentsEnabled,
-        data?.defaultPantryIngredients,
-        data?.paymentsMinAppVersion,
-      );
-    }
+let appConfigCache: ReferenceData['appConfig'] | null = null;
+let appConfigCachedAt = 0;
+let appConfigInflight: Promise<ReferenceData['appConfig']> | null = null;
+const APP_CONFIG_TTL_MS = 5 * 60 * 1000;
 
-    const data = await apiFetch<ReferenceData>('/api/reference');
-    return {
-      ...DEFAULT_APP_CONFIG,
-      ...data.appConfig,
-      paymentsMinAppVersion: data.appConfig?.paymentsMinAppVersion?.trim() || null,
-    };
-  } catch (error) {
-    console.warn('[reference] Could not refresh app config', error);
-    return cachedReference?.appConfig ?? DEFAULT_APP_CONFIG;
+export async function loadAppConfigFresh(force = false): Promise<ReferenceData['appConfig']> {
+  if (
+    !force &&
+    appConfigCache &&
+    Date.now() - appConfigCachedAt < APP_CONFIG_TTL_MS
+  ) {
+    return appConfigCache;
   }
+  if (!force && appConfigInflight) {
+    return appConfigInflight;
+  }
+
+  appConfigInflight = (async () => {
+    try {
+      if (isDirectSupabaseCatalogEnabled()) {
+        const db = getRasoiDb();
+        const { data, error } = await db
+          .from('AppSettings')
+          .select('paymentsEnabled, paymentsMinAppVersion, defaultPantryIngredients')
+          .eq('id', 'default')
+          .maybeSingle();
+        if (error) throw error;
+        const parsed = parseAppConfigRow(
+          data?.paymentsEnabled,
+          data?.defaultPantryIngredients,
+          data?.paymentsMinAppVersion,
+        );
+        appConfigCache = parsed;
+        appConfigCachedAt = Date.now();
+        return parsed;
+      }
+
+      const data = await apiFetch<ReferenceData>('/api/reference');
+      const parsed = {
+        ...DEFAULT_APP_CONFIG,
+        ...data.appConfig,
+        paymentsMinAppVersion: data.appConfig?.paymentsMinAppVersion?.trim() || null,
+      };
+      appConfigCache = parsed;
+      appConfigCachedAt = Date.now();
+      return parsed;
+    } catch (error) {
+      console.warn('[reference] Could not refresh app config', error);
+      return appConfigCache ?? cachedReference?.appConfig ?? DEFAULT_APP_CONFIG;
+    } finally {
+      appConfigInflight = null;
+    }
+  })();
+
+  return appConfigInflight;
 }
 
 async function mergeFreshAppConfig(data: ReferenceData): Promise<ReferenceData> {

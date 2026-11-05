@@ -39,7 +39,7 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -96,5 +96,9 @@
         "projectId": "01de1672-85ce-4ad7-83d7-7fc958fc5659"
       }
     }
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-4173581536398147~9898362276",
+    "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }

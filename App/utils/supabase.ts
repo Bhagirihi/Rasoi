@@ -66,7 +66,11 @@ export function warmSupabaseClient(): void {
 
   if (sessionCache === undefined) {
     void supabase.auth.getSession().then(({ data }) => {
-      updateSessionCache(data.session);
+      // Only cache a real session here. Caching `null` from a warm race can
+      // make later getSupabaseSession() skip SecureStore and drop login.
+      if (data.session) {
+        updateSessionCache(data.session);
+      }
     });
   }
 }

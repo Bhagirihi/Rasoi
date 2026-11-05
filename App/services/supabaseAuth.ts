@@ -339,6 +339,13 @@ export async function verifyEmailOtp(
 
   setSupabaseSessionCache(session);
   await clearRememberedOtpType(normalizedEmail, flow);
+  // Ensure the logged-out gate cannot block cold-start restore after a fresh OTP.
+  const { clearUserLoggedOut, persistAuthToken } = await import('@/utils/authToken');
+  await clearUserLoggedOut();
+  // Backup access token for hydrate when SecureStore session read races on cold start.
+  await persistAuthToken(session.access_token);
+  // Re-read so persistSession has flushed to SecureStore before navigation continues.
+  await supabase.auth.getSession();
 
   authLog('verifyEmailOtp:success', {
     email: maskEmail(normalizedEmail),

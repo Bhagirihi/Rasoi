@@ -198,9 +198,44 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
     excludeOnRefreshRef.current = [];
     const reservedRecipeIds = [...new Set([...excludeRecipeIds, ...planRecipeIds])];
 
+    const applyMappedPicks = (
+      mapped: ReturnType<typeof mapRecommendationPicks>,
+      markReady: boolean,
+    ) => {
+      const deduped = dedupeHomePicks(mapped.picks, mapped.lateNightPick);
+      const seasonalPickCount = SEASONAL_RAIL_PICK_COUNTS[planLimits.seasonalRailMode];
+      setSeasonalRail(
+        mapped.seasonalRail && seasonalPickCount > 0
+          ? {
+              ...mapped.seasonalRail,
+              picks: mapped.seasonalRail.picks.slice(0, seasonalPickCount),
+            }
+          : null,
+      );
+      if (mealWindow.isOvernightDual) {
+        setLateNightPick(deduped.lateNightPick);
+      } else {
+        setLateNightPick(undefined);
+      }
+      setHomePicks(deduped.picks.slice(0, homePickCount));
+      setPickReasons(mapped.reasons);
+      if (markReady) {
+        setHomePicksReady(deduped.picks.length > 0);
+      }
+      return deduped.picks.length > 0;
+    };
+
     const loadPicks = async () => {
       try {
       if (userId) {
+        // Cache-first: paint Home immediately from last offline picks, then refresh.
+        if (!shouldForce) {
+          const offline = await loadOfflineRecommendations(mealWindow.windowKey);
+          if (offline && !cancelled) {
+            applyMappedPicks(mapRecommendationPicks(offline), true);
+          }
+        }
+
         try {
           const response = await fetchRecommendations({
             force: shouldForce,
@@ -209,45 +244,19 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           if (cancelled) return;
 
           const mapped = mapRecommendationPicks(response);
-          const deduped = dedupeHomePicks(mapped.picks, mapped.lateNightPick);
           await saveOfflineRecommendations(mealWindow.windowKey, response);
-          const seasonalPickCount = SEASONAL_RAIL_PICK_COUNTS[planLimits.seasonalRailMode];
-          setSeasonalRail(
-            mapped.seasonalRail && seasonalPickCount > 0
-              ? {
-                  ...mapped.seasonalRail,
-                  picks: mapped.seasonalRail.picks.slice(0, seasonalPickCount),
-                }
-              : null,
-          );
 
-          if (deduped.picks.length > 0) {
-            if (mealWindow.isOvernightDual) {
-              setLateNightPick(deduped.lateNightPick);
-              setHomePicks(deduped.picks.slice(0, homePickCount));
-              setPickReasons(mapped.reasons);
-              setHomePicksReady(true);
-              return;
-            }
-
-            setLateNightPick(undefined);
-              setHomePicks(deduped.picks.slice(0, homePickCount));
-            setPickReasons(mapped.reasons);
-            setHomePicksReady(true);
+          if (applyMappedPicks(mapped, true)) {
             return;
           }
           // API returned no picks — fall through to local meal picks below.
         } catch {
-          const offline = await loadOfflineRecommendations(mealWindow.windowKey);
-          if (offline && !cancelled) {
-            const mapped = mapRecommendationPicks(offline);
-            const deduped = dedupeHomePicks(mapped.picks, mapped.lateNightPick);
-            setSeasonalRail(mapped.seasonalRail ?? null);
-              setHomePicks(deduped.picks.slice(0, homePickCount));
-            setPickReasons(mapped.reasons);
-            setLateNightPick(deduped.lateNightPick);
-            setHomePicksReady(deduped.picks.length > 0);
-            return;
+          if (!cancelled) {
+            const offline = await loadOfflineRecommendations(mealWindow.windowKey);
+            if (offline) {
+              applyMappedPicks(mapRecommendationPicks(offline), true);
+              return;
+            }
           }
         }
       }

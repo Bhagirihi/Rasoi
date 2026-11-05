@@ -27,11 +27,14 @@ export async function saveAuthToken(token: string): Promise<void> {
   await AsyncStorage.removeItem(LOGGED_OUT_KEY);
 }
 
-/** Persist token without blocking the auth critical path (memory cache is updated first). */
-export function persistAuthToken(token: string): void {
+/**
+ * Persist token for cold-start restore. Prefer awaiting this on login so a
+ * quick process kill cannot drop the session before SecureStore finishes.
+ */
+export async function persistAuthToken(token: string): Promise<void> {
   tokenCache = token;
-  void setSecureItem(AUTH_TOKEN_KEY, token);
-  void AsyncStorage.removeItem(LOGGED_OUT_KEY);
+  await setSecureItem(AUTH_TOKEN_KEY, token);
+  await AsyncStorage.removeItem(LOGGED_OUT_KEY);
 }
 
 export async function clearAuthToken(): Promise<void> {
