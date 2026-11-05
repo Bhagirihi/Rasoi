@@ -4,6 +4,7 @@
     "slug": "rasoi",
     "owner": "takeyshi",
     "version": "1.0.14",
+    "runtimeVersion": "1.0.14",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rasoi",
@@ -102,3 +103,4 @@
     "ios_app_id": "ca-app-pub-3940256099942544~1458002511"
   }
 }
+
