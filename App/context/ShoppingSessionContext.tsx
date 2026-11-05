@@ -41,9 +41,16 @@ type ReturnPromptState = {
   recipeTitle?: string;
 };
 
+type CompletedShopPrompt = {
+  recipeId: string;
+  recipeTitle?: string;
+};
+
 type ShoppingSessionContextValue = {
   session: ShoppingSession | null;
   returnPrompt: ReturnPromptState | null;
+  /** Set when the last missing item is shopped — drives the “start cooking” CTA. */
+  completedShopPrompt: CompletedShopPrompt | null;
   shoppedCount: number;
   totalCount: number;
   startSession: (input: StartSessionInput) => Promise<void>;
@@ -51,6 +58,7 @@ type ShoppingSessionContextValue = {
   confirmAddLastItem: () => Promise<void>;
   dismissReturnPrompt: () => Promise<void>;
   finishShopping: () => Promise<void>;
+  clearCompletedShopPrompt: () => void;
   getSessionProgress: (recipeId?: string) => { shopped: number; total: number } | null;
   getNextShoppingItem: (recipeId?: string) => string | null;
 };
@@ -93,6 +101,9 @@ export function ShoppingSessionProvider({ children }: { children: ReactNode }) {
   const { pantryIngredients, togglePantryIngredient } = useAppContext();
   const [session, setSession] = useState<ShoppingSession | null>(null);
   const [returnPrompt, setReturnPrompt] = useState<ReturnPromptState | null>(null);
+  const [completedShopPrompt, setCompletedShopPrompt] = useState<CompletedShopPrompt | null>(
+    null,
+  );
   const awaitingReturnRef = useRef(false);
   const sessionRef = useRef<ShoppingSession | null>(null);
 
@@ -190,6 +201,12 @@ export function ShoppingSessionProvider({ children }: { children: ReactNode }) {
       };
 
       if (remainingShoppingItems(next).length === 0) {
+        if (next.kind === 'recipe' && next.recipeId) {
+          setCompletedShopPrompt({
+            recipeId: next.recipeId,
+            recipeTitle: next.recipeTitle,
+          });
+        }
         await persistSession(null);
         return;
       }
@@ -227,6 +244,10 @@ export function ShoppingSessionProvider({ children }: { children: ReactNode }) {
     await persistSession(null);
   }, [persistSession]);
 
+  const clearCompletedShopPrompt = useCallback(() => {
+    setCompletedShopPrompt(null);
+  }, []);
+
   const shoppedCount = session?.shoppedItems.length ?? 0;
   const totalCount = session?.orderedItems.length ?? 0;
 
@@ -255,6 +276,7 @@ export function ShoppingSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       session,
       returnPrompt,
+      completedShopPrompt,
       shoppedCount,
       totalCount,
       startSession,
@@ -262,12 +284,14 @@ export function ShoppingSessionProvider({ children }: { children: ReactNode }) {
       confirmAddLastItem,
       dismissReturnPrompt,
       finishShopping,
+      clearCompletedShopPrompt,
       getSessionProgress,
       getNextShoppingItem,
     }),
     [
       session,
       returnPrompt,
+      completedShopPrompt,
       shoppedCount,
       totalCount,
       startSession,
@@ -275,6 +299,7 @@ export function ShoppingSessionProvider({ children }: { children: ReactNode }) {
       confirmAddLastItem,
       dismissReturnPrompt,
       finishShopping,
+      clearCompletedShopPrompt,
       getSessionProgress,
       getNextShoppingItem,
     ],

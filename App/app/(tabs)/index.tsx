@@ -121,10 +121,11 @@ export default function HomeScreen() {
 
   const handleNotInterested = useCallback(
     (recipe: Recipe) => {
+      // Dismiss must not burn the free daily shuffle quota — only refresh picks.
       void dismissRecommendation(recipe.id).catch(() => undefined);
-      void tryHomeShuffle(() => refreshHomePicks(true));
+      void refreshHomePicks(true);
     },
-    [refreshHomePicks, tryHomeShuffle],
+    [refreshHomePicks],
   );
 
   const openRecipeSuggestion = useCallback(
@@ -298,7 +299,13 @@ export default function HomeScreen() {
           }
         />
 
-        {!isGuest && <StreakChip />}
+        {!isGuest && (
+          <StreakChip
+            onPress={() => {
+              if (displayTopPick) openCookTonight(displayTopPick);
+            }}
+          />
+        )}
 
         <View style={styles.sections}>
           <HomeQaMonetizationBar />

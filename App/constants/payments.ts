@@ -97,7 +97,7 @@ export function getRevenueCatApiKey(platform: 'ios' | 'android' | 'web'): string
 export type PaywallCompareCell = boolean | string;
 
 export const PAYWALL_COMPARE_FOOTNOTE =
-  'Free after trial: 2 partner shops/month · today-only plan · 10 saves · 1 home shuffle/day · dinner reminder. Trial: full 3-day plan, unlimited partners & 5 offline downloads for 15 days.';
+  'Free after trial: 2 partner shops/month · today-only plan · 10 saves · 1 home shuffle/day · breakfast + dinner reminders · basic seasonal. Trial: full 3-day plan, unlimited partners & 5 offline downloads for 15 days.';
 
 export const PAYWALL_COMPARE_ROWS: ReadonlyArray<{
   label: string;
@@ -118,7 +118,7 @@ export const PAYWALL_COMPARE_ROWS: ReadonlyArray<{
   { label: '3-day meal plan', free: 'Today only', trial: true, paid: true },
   { label: 'Saved recipes', free: '10', trial: '25', paid: 'Unlimited' },
   { label: 'Offline downloads', free: false, trial: '5', paid: '30' },
-  { label: 'Meal reminders', free: 'Dinner', trial: '2 slots', paid: 'All slots' },
+  { label: 'Meal reminders', free: 'Breakfast + dinner', trial: '2 slots', paid: 'All slots' },
   { label: 'Allergy filter', free: false, trial: false, paid: true },
-  { label: 'Seasonal & smart rails', free: false, trial: 'Basic', paid: 'Full' },
+  { label: 'Seasonal & smart rails', free: 'Basic', trial: 'Basic', paid: 'Full' },
 ];

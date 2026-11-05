@@ -46,7 +46,7 @@ export const DAILY_REMINDER_SLOTS = [
     minute: 0,
     label: '6 AM',
     title: "What's for breakfast?",
-    body: 'Plan your morning pick on Rasoi — breakfast in about 2 hours.',
+    body: 'Open Rasoi for today’s breakfast pick — tap to cook when you’re ready.',
   },
   {
     id: 'rasoi-daily-lunch',
@@ -54,7 +54,7 @@ export const DAILY_REMINDER_SLOTS = [
     minute: 30,
     label: '10:30 AM',
     title: 'Planning lunch?',
-    body: 'See your top lunch pick on Rasoi — lunch in about 2 hours.',
+    body: 'Your lunch pick is waiting on Home — open Rasoi to cook or shop missing items.',
   },
   {
     id: 'rasoi-daily-snack',
@@ -62,7 +62,7 @@ export const DAILY_REMINDER_SLOTS = [
     minute: 0,
     label: '2 PM',
     title: 'Time for a snack?',
-    body: 'Quick snack ideas matched to your kitchen — plan ahead.',
+    body: 'Quick snack ideas matched to your kitchen — open Rasoi to cook now.',
   },
   {
     id: 'rasoi-daily-dinner',
@@ -70,7 +70,7 @@ export const DAILY_REMINDER_SLOTS = [
     minute: 30,
     label: '5:30 PM',
     title: "What's for dinner?",
-    body: "Plan tonight's top pick on Rasoi — dinner in about 2 hours.",
+    body: "Tonight’s top pick is on Home — open Rasoi to start cooking.",
   },
   {
     id: 'rasoi-daily-late-night',
@@ -78,7 +78,7 @@ export const DAILY_REMINDER_SLOTS = [
     minute: 0,
     label: '8 PM',
     title: 'Still cooking tonight?',
-    body: 'Browse quick recipes on Rasoi before you call it a night.',
+    body: 'Open Rasoi for a quick late-night pick before you call it a night.',
   },
 ] as const;
 
@@ -151,6 +151,10 @@ export function getNavigationFromNotificationResponse(
   const actionId = response.actionIdentifier;
 
   if (data?.type === 'daily_reminder') {
+    // Prefer a concrete recipe deep-link when the payload includes one.
+    if (data.recipeId) {
+      return { type: 'recipe', recipeId: data.recipeId, cook: true };
+    }
     return { type: 'home_tab' };
   }
 
@@ -261,7 +265,12 @@ export async function scheduleDailyReminder(
           title: slot.title,
           body: slot.body,
           sound: true,
-          data: { type: 'daily_reminder' },
+          // Opens Home; when a recipeId is later attached by server pushes,
+          // getNavigationFromNotificationResponse routes to cook mode.
+          data: {
+            type: 'daily_reminder',
+            mealSlot: slot.id.replace('rasoi-daily-', ''),
+          },
         },
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes.DAILY,

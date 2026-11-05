@@ -1,10 +1,18 @@
 import { ChefHat } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View, type ImageStyle, type StyleProp } from 'react-native';
-import { Image } from 'expo-image';
+import {
+  ActivityIndicator,
+  Image as RNImage,
+  StyleSheet,
+  View,
+  type ImageStyle,
+  type StyleProp,
+} from 'react-native';
+import { Image as ExpoImage } from 'expo-image';
 
 import { colors } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
+import { getRecipeImageCandidates, getRecipeImageSource } from '@/utils/recipeImage';
 
 const MAX_LOAD_ATTEMPTS = 3;
 
@@ -16,32 +24,45 @@ type RecipeImageProps = {
 };
 
 /**
- * Prefetch hero images for the first screen so list scrolling never waits on
- * the network. expo-image dedupes against its memory-disk cache, so repeated
- * calls are cheap.
+ * Prefetch via expo-image cache. Display uses RN Image + wsrv baseline proxy
+ * (progressive catalog JPEGs paint black on Android otherwise).
  */
 export function prefetchRecipeImages(uris: Array<string | undefined | null>): void {
   for (const raw of uris.slice(0, 12)) {
     const uri = raw?.trim();
-    if (uri) void Image.prefetch(uri).catch(() => undefined);
+    if (!uri) continue;
+    const [primary] = getRecipeImageCandidates(uri);
+    if (!primary) continue;
+    void ExpoImage.prefetch(primary).catch(() => undefined);
   }
 }
 
 export default function RecipeImage({ uri, style, tone = 'default' }: RecipeImageProps) {
   const { semantic } = useTheme();
   const normalizedUri = uri?.trim() ?? '';
+  const candidates = getRecipeImageCandidates(normalizedUri);
   const [failed, setFailed] = useState(false);
+  const [candidateIndex, setCandidateIndex] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const [loading, setLoading] = useState(Boolean(normalizedUri));
 
   useEffect(() => {
     setFailed(false);
+    setCandidateIndex(0);
     setAttempt(0);
     setLoading(Boolean(normalizedUri));
   }, [normalizedUri]);
 
+  const activeUri = candidates[Math.min(candidateIndex, Math.max(candidates.length - 1, 0))] ?? '';
+
   const handleError = () => {
     setLoading(false);
+    if (candidateIndex + 1 < candidates.length) {
+      setCandidateIndex((value) => value + 1);
+      setAttempt(0);
+      setLoading(true);
+      return;
+    }
     if (attempt + 1 < MAX_LOAD_ATTEMPTS) {
       setTimeout(() => setAttempt((value) => value + 1), 400);
       return;
@@ -49,7 +70,7 @@ export default function RecipeImage({ uri, style, tone = 'default' }: RecipeImag
     setFailed(true);
   };
 
-  if (!normalizedUri || failed) {
+  if (!normalizedUri || failed || !activeUri) {
     const onDark = tone === 'onDark';
     return (
       <View
@@ -70,14 +91,11 @@ export default function RecipeImage({ uri, style, tone = 'default' }: RecipeImag
 
   return (
     <View style={style}>
-      <Image
-        key={`${normalizedUri}-${attempt}`}
-        source={{ uri: normalizedUri }}
+      <RNImage
+        key={`${activeUri}-${attempt}`}
+        source={getRecipeImageSource(activeUri)}
         style={StyleSheet.absoluteFill}
-        contentFit="cover"
-        // memory-disk: list images survive scroll-away and app restarts without
-        // re-download; remounts on retry hit the cache instead of the network.
-        cachePolicy="memory-disk"
+        resizeMode="cover"
         onLoadStart={() => setLoading(true)}
         onLoad={() => setLoading(false)}
         onError={handleError}

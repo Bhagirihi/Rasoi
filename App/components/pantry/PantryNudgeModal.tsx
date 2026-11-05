@@ -1,4 +1,4 @@
-import { Refrigerator, ShoppingBag, X } from 'lucide-react-native';
+import { ChefHat, Refrigerator, ShoppingBag, X } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -12,22 +12,30 @@ import { PANTRY_NUDGE_WINDOWS } from '@/utils/pantryNudgeWindows';
 type PantryNudgeModalProps = {
   visible: boolean;
   window: PantryNudgeWindow;
+  recipeTitle?: string;
   onDismiss: () => void;
   onCheckPantry: () => void;
   onOrderMissing: () => void;
+  onCookTonight?: () => void;
 };
 
 export default function PantryNudgeModal({
   visible,
   window,
+  recipeTitle,
   onDismiss,
   onCheckPantry,
   onOrderMissing,
+  onCookTonight,
 }: PantryNudgeModalProps) {
   const insets = useSafeAreaInsets();
   const { colors: themeColors } = useTheme();
   const windowLabel =
     PANTRY_NUDGE_WINDOWS.find((entry) => entry.id === window)?.label ?? 'Today';
+
+  const body = recipeTitle
+    ? `${windowLabel} reminder — a few ingredients for ${recipeTitle} may still be missing. Update your pantry or order them before you cook.`
+    : `${windowLabel} reminder — some ingredients for your meals may still be missing. Update your pantry or order staples in minutes.`;
 
   return (
     <SmoothModal visible={visible} onClose={onDismiss} variant="center" dismissOnBackdrop>
@@ -56,22 +64,31 @@ export default function PantryNudgeModal({
         </View>
 
         <Text style={[styles.title, { color: themeColors.charcoal }]}>
-          Check your pantry?
+          {recipeTitle ? 'Ready for today’s pick?' : 'Check your pantry?'}
         </Text>
-        <Text style={[styles.body, { color: themeColors.muted }]}>
-          {windowLabel} reminder — some ingredients for your meals may still be missing.
-          Update your pantry or order staples in minutes.
-        </Text>
+        <Text style={[styles.body, { color: themeColors.muted }]}>{body}</Text>
 
-        <Pressable
-          onPress={onCheckPantry}
-          style={styles.primaryBtn}
-          accessibilityRole="button"
-          accessibilityLabel="Open pantry"
-        >
-          <Refrigerator size={18} color={colors.white} strokeWidth={2.2} />
-          <Text style={styles.primaryBtnText}>Check pantry</Text>
-        </Pressable>
+        {onCookTonight && recipeTitle ? (
+          <Pressable
+            onPress={onCookTonight}
+            style={styles.primaryBtn}
+            accessibilityRole="button"
+            accessibilityLabel={`Cook ${recipeTitle}`}
+          >
+            <ChefHat size={18} color={colors.white} strokeWidth={2.2} />
+            <Text style={styles.primaryBtnText}>Cook {recipeTitle}</Text>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={onCheckPantry}
+            style={styles.primaryBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Open pantry"
+          >
+            <Refrigerator size={18} color={colors.white} strokeWidth={2.2} />
+            <Text style={styles.primaryBtnText}>Check pantry</Text>
+          </Pressable>
+        )}
 
         <Pressable
           onPress={onOrderMissing}
@@ -83,9 +100,22 @@ export default function PantryNudgeModal({
           <Text style={styles.secondaryBtnText}>Order missing items</Text>
         </Pressable>
 
-        <Pressable onPress={onDismiss} style={styles.dismissBtn}>
-          <Text style={[styles.dismissText, { color: themeColors.muted }]}>Not now</Text>
-        </Pressable>
+        {onCookTonight && recipeTitle ? (
+          <Pressable
+            onPress={onCheckPantry}
+            style={styles.dismissBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Open pantry"
+          >
+            <Text style={[styles.dismissText, { color: themeColors.muted }]}>
+              Check pantry instead
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable onPress={onDismiss} style={styles.dismissBtn}>
+            <Text style={[styles.dismissText, { color: themeColors.muted }]}>Not now</Text>
+          </Pressable>
+        )}
       </View>
     </SmoothModal>
   );

@@ -1,8 +1,9 @@
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import { useAppContext } from '@/context/AppContext';
+import { useTonightRecipes } from '@/context/TonightRecipesContext';
 import { usePantryScreenData } from '@/hooks/usePantryScreenData';
 import { isAnnouncementModalActive } from '@/utils/announcementModalGate';
 import {
@@ -13,6 +14,7 @@ import {
   getActivePantryNudgeWindow,
   type PantryNudgeWindow,
 } from '@/utils/pantryNudgeWindows';
+import { partitionIngredients } from '@/utils/recipes';
 import { PAYWALL_HREF } from '@/utils/routes';
 
 const SHOW_DELAY_MS = 900;
@@ -28,8 +30,20 @@ export function usePantryDayNudge() {
     pendingEmailVerification,
     emailVerificationModalVisible,
     showPartners,
+    pantryIngredients,
   } = useAppContext();
   const { restockItems } = usePantryScreenData();
+  const { topPick } = useTonightRecipes();
+
+  const tonightMissing = useMemo(() => {
+    if (!topPick) return [] as string[];
+    return partitionIngredients(topPick, pantryIngredients).missing;
+  }, [topPick, pantryIngredients]);
+
+  // Prefer ingredients missing for tonight's pick; fall back to broader restock list.
+  const missingItems = tonightMissing.length > 0 ? tonightMissing : restockItems;
+  const focusRecipeTitle = tonightMissing.length > 0 ? topPick?.title : undefined;
+  const focusRecipeId = tonightMissing.length > 0 ? topPick?.id : undefined;
 
   const [visible, setVisible] = useState(false);
   const [activeWindow, setActiveWindow] = useState<PantryNudgeWindow | null>(null);
@@ -63,7 +77,7 @@ export function usePantryDayNudge() {
         pendingEmailVerification ||
         emailVerificationModalVisible ||
         isAnnouncementModalActive() ||
-        restockItems.length === 0
+        missingItems.length === 0
       ) {
         return;
       }
@@ -91,7 +105,7 @@ export function usePantryDayNudge() {
     pendingTrialWelcome,
     pendingEmailVerification,
     emailVerificationModalVisible,
-    restockItems.length,
+    missingItems.length,
     visible,
     clearTimer,
   ]);
@@ -137,16 +151,26 @@ export function usePantryDayNudge() {
     }
   }, [dismiss, showPartners, router]);
 
+  const handleCookTonight = useCallback(async () => {
+    await dismiss();
+    if (focusRecipeId) {
+      router.push(`/recipe/${focusRecipeId}?cook=1`);
+      return;
+    }
+    router.push('/(tabs)');
+  }, [dismiss, focusRecipeId, router]);
+
   return {
     visible,
     activeWindow,
-    missingItems: restockItems,
+    missingItems,
+    focusRecipeTitle,
+    focusRecipeId,
     shopModalVisible,
     setShopModalVisible,
     dismiss,
     handleCheckPantry,
     handleOrderMissing,
+    handleCookTonight,
   };
 }
-
-

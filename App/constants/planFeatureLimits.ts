@@ -25,10 +25,11 @@ export const PLAN_FEATURE_LIMITS: Record<PlanTier, PlanFeatureLimits> = {
     planShuffleDailyLimit: 0,
     savedRecipeLimit: 10,
     offlineRecipeLimit: 0,
-    notificationSlotIds: ['rasoi-daily-dinner'],
+    // Soften post-trial cliff: breakfast + dinner reminders, basic seasonal rail.
+    notificationSlotIds: ['rasoi-daily-breakfast', 'rasoi-daily-dinner'],
     allergyFilter: false,
-    seasonalRailMode: 'none',
-    recentCooksLimit: 0,
+    seasonalRailMode: 'basic',
+    recentCooksLimit: 2,
   },
   trial: {
     homePickCount: 4,

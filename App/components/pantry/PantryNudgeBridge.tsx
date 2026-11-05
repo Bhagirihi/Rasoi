@@ -10,11 +10,13 @@ export default function PantryNudgeBridge() {
     visible,
     activeWindow,
     missingItems,
+    focusRecipeTitle,
     shopModalVisible,
     setShopModalVisible,
     dismiss,
     handleCheckPantry,
     handleOrderMissing,
+    handleCookTonight,
   } = usePantryDayNudge();
 
   useDismissOnBlur(useCallback(() => setShopModalVisible(false), [setShopModalVisible]));
@@ -29,15 +31,18 @@ export default function PantryNudgeBridge() {
         <PantryNudgeModal
           visible={visible}
           window={activeWindow}
+          recipeTitle={focusRecipeTitle}
           onDismiss={() => void dismiss()}
           onCheckPantry={() => void handleCheckPantry()}
           onOrderMissing={() => void handleOrderMissing()}
+          onCookTonight={() => void handleCookTonight()}
         />
       ) : null}
 
       <AffiliateCheckoutModal
         visible={shopModalVisible}
         onClose={() => setShopModalVisible(false)}
+        recipeTitle={focusRecipeTitle}
         missingIngredients={missingItems}
         variant="pantry"
       />

@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Check, Flame } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import RecipeDetailSkeleton from "@/components/RecipeDetailSkeleton";
@@ -48,6 +48,11 @@ import {
   countMatchableIngredients,
 } from "@/utils/recipes";
 import { shareRecipeOnWhatsApp } from "@/utils/shareRecipe";
+import {
+  isMidTrialValueMomentEligible,
+} from "@/utils/maybeTrialValueMoment";
+import { markTrialValueMomentShown } from "@/utils/trialValueMoment";
+import { submitAppStoreRating } from "@/utils/storeReview";
 import { logRecipeView, logRecipeCooked } from "@/services/recommendations";
 import { markRecipeCooked } from "@/services/streak";
 import { PAYWALL_HREF } from "@/utils/routes";
@@ -76,6 +81,9 @@ export default function RecipeDetailScreen() {
     isRecipeOffline,
     showPartners,
     partnersInTrialMode,
+    effectiveTier,
+    trialStartedAt,
+    trialBonusDays,
   } = useAppContext();
   const { trySaveRecipe } = useSaveRecipeGate();
   const { tryToggleOfflineRecipe } = useOfflineRecipeGate();
@@ -310,7 +318,48 @@ export default function RecipeDetailScreen() {
   const handleCookedPress = () => {
     if (!recipe || cookedToday) return;
     void markRecipeCooked(recipe.id)
-      .then(() => setCookedToday(true))
+      .then(async (streak) => {
+        setCookedToday(true);
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        const streakLabel =
+          streak.current > 1
+            ? `${streak.current}-day streak — nice work!`
+            : "Logged — keep cooking tomorrow to start a streak.";
+
+        const midTrial = await isMidTrialValueMomentEligible({
+          effectiveTier,
+          trialStartedAt,
+          trialBonusDays,
+        });
+
+        const buttons: {
+          text: string;
+          style?: "cancel" | "default";
+          onPress?: () => void;
+        }[] = [
+          { text: "Done", style: "cancel" },
+          {
+            text: "Rate Rasoi",
+            onPress: () => {
+              void submitAppStoreRating();
+            },
+          },
+        ];
+
+        if (midTrial) {
+          buttons.push({
+            text: "See Plus",
+            onPress: () => {
+              void markTrialValueMomentShown();
+              router.push(PAYWALL_HREF);
+            },
+          });
+          void markTrialValueMomentShown();
+        }
+
+        Alert.alert("Cooked!", streakLabel, buttons);
+      })
       .catch(() => undefined);
   };
 

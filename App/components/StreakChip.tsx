@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 import { Flame } from "lucide-react-native";
 
@@ -7,11 +7,16 @@ import { colors, radius, spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { fetchStreak, type CookingStreak } from "@/services/streak";
 
+type StreakChipProps = {
+  /** Opens cook sheet for tonight’s pick — turns streak into a habit CTA. */
+  onPress?: () => void;
+};
+
 /**
  * Self-contained streak pill: fetches on focus, renders nothing while
  * loading or on error (guests and offline states simply show no chip).
  */
-export default function StreakChip() {
+export default function StreakChip({ onPress }: StreakChipProps) {
   const { colors: themeColors } = useTheme();
   const [streak, setStreak] = useState<CookingStreak | null>(null);
 
@@ -25,6 +30,40 @@ export default function StreakChip() {
 
   if (!streak) return null;
 
+  const atRisk = streak.current > 0 && !streak.cookedToday;
+  const label = streak.current > 0
+    ? atRisk
+      ? `Keep your ${streak.current}-day streak — cook today’s pick`
+      : `${streak.current}-day streak · cooked today`
+    : "Start your streak — cook something today";
+
+  const content = (
+    <>
+      <Flame size={16} color={colors.primary} />
+      <Text style={[styles.text, { color: themeColors.charcoal }]}>{label}</Text>
+    </>
+  );
+
+  if (onPress && (atRisk || streak.current === 0)) {
+    return (
+      <Pressable
+        testID="streak-chip"
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        style={[
+          styles.chip,
+          {
+            backgroundColor: themeColors.white,
+            borderColor: themeColors.border,
+          },
+        ]}
+      >
+        {content}
+      </Pressable>
+    );
+  }
+
   return (
     <View
       testID="streak-chip"
@@ -36,14 +75,7 @@ export default function StreakChip() {
         },
       ]}
     >
-      <Flame size={16} color={colors.primary} />
-      <Text style={[styles.text, { color: themeColors.charcoal }]}>
-        {streak.current > 0
-          ? `${streak.current}-day streak${
-              streak.cookedToday ? " · cooked today" : ""
-            }`
-          : "Start your streak — cook something today"}
-      </Text>
+      {content}
     </View>
   );
 }

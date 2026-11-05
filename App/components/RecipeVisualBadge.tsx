@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Clock, Gauge } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
-  Image,
+  Image as RNImage,
   StyleSheet,
   Text,
   View,
@@ -12,7 +12,11 @@ import {
 
 import { colors, radius, spacing } from '@/constants/theme';
 import type { Recipe } from '@/data/mockRecipes';
-import { getRecipeImageUrl } from '@/utils/recipeImage';
+import {
+  getRecipeImageCandidates,
+  getRecipeImageSource,
+  getRecipeImageUrl,
+} from '@/utils/recipeImage';
 import { getRecipeVisualIdentity } from '@/utils/recipeVisualIdentity';
 
 export type RecipeVisualBadgeVariant =
@@ -32,6 +36,11 @@ type RecipeVisualBadgeProps = {
   topScrim?: boolean;
 };
 
+/**
+ * RN Image + baseline JPEG proxy. Progressive catalog JPEGs paint black on
+ * Android without onError; wsrv.nl re-encodes to baseline first, original second.
+ * Using RN Image (not expo-image) so Android BitmapFactory decodes the proxy JPEG.
+ */
 function RecipePhoto({
   uri,
   onError,
@@ -41,13 +50,30 @@ function RecipePhoto({
   onError: () => void;
   resizeMode?: 'cover' | 'contain';
 }) {
+  const candidates = getRecipeImageCandidates(uri);
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [uri]);
+
+  const activeUri = candidates[Math.min(index, candidates.length - 1)] ?? uri;
+  const source = getRecipeImageSource(activeUri);
+
   return (
-    <Image
-      source={{ uri }}
-      style={StyleSheet.absoluteFillObject}
+    <RNImage
+      key={activeUri}
+      source={source}
+      style={styles.photoFill}
       resizeMode={resizeMode}
-      onError={onError}
       accessibilityIgnoresInvertColors
+      onError={() => {
+        if (index + 1 < candidates.length) {
+          setIndex((value) => value + 1);
+          return;
+        }
+        onError();
+      }}
     />
   );
 }
@@ -96,7 +122,7 @@ export default function RecipeVisualBadge({
             <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.35)']}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
             <DietChip
               label={visual.dietLabel}
@@ -109,7 +135,7 @@ export default function RecipeVisualBadge({
             colors={visual.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 0, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           >
             <DietChip
               label={visual.dietLabel}
@@ -134,7 +160,7 @@ export default function RecipeVisualBadge({
             <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
             <LinearGradient
               colors={['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.42)']}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
             <DietChip
               label={visual.dietLabel}
@@ -147,7 +173,7 @@ export default function RecipeVisualBadge({
             colors={visual.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           >
             <DietChip
               label={visual.dietLabel}
@@ -172,7 +198,7 @@ export default function RecipeVisualBadge({
             <RecipePhoto uri={imageUrl!} onError={() => setImageFailed(true)} />
             <LinearGradient
               colors={['transparent', 'rgba(0,0,0,0.65)']}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
             <View style={[styles.dietDot, styles.dietDotTile, { backgroundColor: visual.dietColor }]} />
             <Text style={styles.tileCaption} numberOfLines={1}>
@@ -184,7 +210,7 @@ export default function RecipeVisualBadge({
             colors={visual.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           >
             <View style={[styles.dietDot, styles.dietDotTile, { backgroundColor: visual.dietColor }]} />
             <Text style={styles.tileEmoji}>{visual.emoji}</Text>
@@ -215,7 +241,7 @@ export default function RecipeVisualBadge({
             colors={visual.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           >
             <Text style={styles.backdropEmoji}>{visual.emoji}</Text>
           </LinearGradient>
@@ -234,7 +260,7 @@ export default function RecipeVisualBadge({
               colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0.78)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
-              style={StyleSheet.absoluteFillObject}
+              style={StyleSheet.absoluteFill}
             />
           </>
         ) : (
@@ -242,7 +268,7 @@ export default function RecipeVisualBadge({
             colors={visual.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
         )}
         {!showImage ? (
@@ -297,6 +323,15 @@ export function RecipeTagChips({ recipe }: RecipeTagChipsProps) {
 }
 
 const styles = StyleSheet.create({
+  photoFill: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+  },
   strip: {
     width: 104,
     alignSelf: 'stretch',
