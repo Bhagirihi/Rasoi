@@ -25,9 +25,20 @@ type BannerModule = {
 interface AdMobBannerProps {
   placement?: string;
   onVisibilityChange?: (visible: boolean) => void;
+  /**
+   * Called on every load failure (banner fill failure, or the ads module /
+   * SDK failing to initialise). The parent owns the retry decision — this
+   * banner must not own a retry timer, because a failed banner is unmounted
+   * by SponsorOrAd and the timer would be cleared before it fires.
+   */
+  onAdFailedToLoad?: (error: Error) => void;
 }
 
-export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBannerProps) {
+export default function AdMobBanner({
+  placement,
+  onVisibilityChange,
+  onAdFailedToLoad,
+}: AdMobBannerProps) {
   const { showAds } = useAppContext();
   const { colors: themeColors, isDark } = useTheme();
   const [adsModule, setAdsModule] = useState<BannerModule | null>(null);
@@ -56,10 +67,13 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
             BannerAdSize: mod.BannerAdSize,
           });
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
           setAdsModule(null);
           setSdkReady(false);
+          // SDK/module init failure is a load failure like any other — let
+          // the parent decide whether to retry it.
+          onAdFailedToLoad?.(error instanceof Error ? error : new Error(String(error)));
         }
       }
     };
@@ -70,7 +84,7 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
       cancelled = true;
       onVisibilityChange?.(false);
     };
-  }, [showAds, onVisibilityChange]);
+  }, [showAds, onVisibilityChange, onAdFailedToLoad]);
 
   useEffect(() => {
     setAdFailed(false);
@@ -126,6 +140,7 @@ export default function AdMobBanner({ placement, onVisibilityChange }: AdMobBann
           }
           setAdFailed(true);
           onVisibilityChange?.(false);
+          onAdFailedToLoad?.(error);
         }}
       />
     </View>

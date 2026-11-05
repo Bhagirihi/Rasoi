@@ -28,6 +28,14 @@ function mapSponsor(sponsor: SponsorResponse): SponsorCardData {
 export type SponsorScreenPlacement = 'home' | 'recipes' | 'pantry' | 'saved';
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
+
+/**
+ * Sponsor fetch must never hang the ad slot: a stalled fetch holds
+ * `loading=true` in usePlacementSponsor, so SponsorOrAd keeps returning null
+ * and the AdMob fallback never mounts. 5s bounds both the direct Supabase
+ * read and the API fallback (worst case ~10s total, then stale cache / null).
+ */
+const SPONSOR_FETCH_TIMEOUT_MS = 5000;
 const STORAGE_PREFIX = 'rasoi_sponsor_v1_';
 
 type CacheEntry = {
@@ -73,33 +81,41 @@ async function writeDisk(key: string, value: SponsorCardData | null): Promise<vo
 async function fetchSponsorsFromSupabase(
   placement: SponsorScreenPlacement | 'recipe',
 ): Promise<SponsorResponse[]> {
-  const { data, error } = await getRasoiDb()
-    .from('Sponsor')
-    .select(
-      'id, placement, brandName, productLabel, tagline, logoUrl, cta, searchQuery, recipeId, active, priority',
-    )
-    .eq('placement', placement)
-    .eq('active', true)
-    .order('priority', { ascending: false })
-    .order('createdAt', { ascending: false });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), SPONSOR_FETCH_TIMEOUT_MS);
 
-  if (error) {
-    throw new Error(error.message);
+  try {
+    const { data, error } = await getRasoiDb()
+      .from('Sponsor')
+      .select(
+        'id, placement, brandName, productLabel, tagline, logoUrl, cta, searchQuery, recipeId, active, priority',
+      )
+      .eq('placement', placement)
+      .eq('active', true)
+      .order('priority', { ascending: false })
+      .order('createdAt', { ascending: false })
+      .abortSignal(controller.signal);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      placement: row.placement as SponsorResponse['placement'],
+      brandName: row.brandName,
+      productLabel: row.productLabel,
+      tagline: row.tagline,
+      logoUrl: row.logoUrl,
+      cta: row.cta,
+      searchQuery: row.searchQuery ?? undefined,
+      recipeId: row.recipeId ?? undefined,
+      active: row.active,
+      priority: row.priority,
+    }));
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    placement: row.placement as SponsorResponse['placement'],
-    brandName: row.brandName,
-    productLabel: row.productLabel,
-    tagline: row.tagline,
-    logoUrl: row.logoUrl,
-    cta: row.cta,
-    searchQuery: row.searchQuery ?? undefined,
-    recipeId: row.recipeId ?? undefined,
-    active: row.active,
-    priority: row.priority,
-  }));
 }
 
 async function fetchSponsorNetwork(
@@ -115,11 +131,15 @@ async function fetchSponsorNetwork(
       console.warn('[sponsors] Supabase read failed, falling back to API', error);
       sponsors = await apiFetch<SponsorResponse[]>(
         `/api/sponsors?placement=${placement}&active=true`,
+        undefined,
+        { timeoutMs: SPONSOR_FETCH_TIMEOUT_MS },
       );
     }
   } else {
     sponsors = await apiFetch<SponsorResponse[]>(
       `/api/sponsors?placement=${placement}&active=true`,
+      undefined,
+      { timeoutMs: SPONSOR_FETCH_TIMEOUT_MS },
     );
   }
 

@@ -6,9 +6,21 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { spacing } from '@/constants/theme';
+import { getAdMobBannerUnitId } from '@/constants/admob';
 import { useAppContext } from '@/context/AppContext';
+import { logFirebaseEvent } from '@/utils/firebase';
+import { addSentryBreadcrumb, captureMessage } from '@/utils/sentry';
 import { logSponsorEvent } from '@/services/sponsorEvents';
 import { isAdMobNativeAvailable } from '@/utils/admob';
+
+/**
+ * One automatic reload after the first banner failure (fill / network blip).
+ * The retry lives in THIS parent — not in AdMobBanner — because a failed
+ * banner is unmounted here, which would clear a child-owned timer before it
+ * fires (the one-shot slot death). Bumping `adAttempt` remounts AdMobBanner
+ * with a fresh load; the timer survives because this component stays mounted.
+ */
+const AD_RETRY_DELAY_MS = 2500;
 
 type SponsorOrAdProps = {
   sponsor: SponsorCardData | null;
@@ -23,6 +35,12 @@ type SponsorOrAdProps = {
   isViewable?: boolean;
 };
 
+function adErrorMessage(error: unknown): string {
+  if (error instanceof Error && error.message) return error.message.slice(0, 180);
+  if (typeof error === 'string') return error.slice(0, 180);
+  return 'unknown';
+}
+
 export default function SponsorOrAd({
   sponsor,
   placement,
@@ -34,18 +52,110 @@ export default function SponsorOrAd({
 }: SponsorOrAdProps) {
   const { showAds, userCity } = useAppContext();
   const [adVisible, setAdVisible] = useState(false);
-  const [adResolved, setAdResolved] = useState(false);
+  /**
+   * Final decision reached: an ad loaded, or the single retry was used and it
+   * failed again. Only then is the slot hidden. A bare `false` from
+   * onVisibilityChange is NOT a decision — it also fires on unmount / before
+   * the SDK is ready — so it must never hide the slot on its own.
+   */
+  const [adSettled, setAdSettled] = useState(false);
+  /** 1-based load attempt; bumped to remount AdMobBanner for the single retry. */
+  const [adAttempt, setAdAttempt] = useState(1);
+  /** True while the retry delay is running — render nothing, stay mounted. */
+  const [retryPending, setRetryPending] = useState(false);
   const loggedImpressionRef = useRef<string | null>(null);
+  const retryUsedRef = useRef(false);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const attemptRef = useRef(1);
+  const loggedLoadedAttemptRef = useRef(0);
 
-  const handleAdVisibility = useCallback((visible: boolean) => {
-    setAdVisible(visible);
-    setAdResolved(true);
+  const clearRetryTimer = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
   }, []);
 
+  const handleAdVisibility = useCallback(
+    (visible: boolean) => {
+      if (!visible) {
+        // Not a failure by itself (unmount / SDK not ready yet). The real
+        // failure signal is onAdFailedToLoad, which decides retry vs give up.
+        setAdVisible(false);
+        return;
+      }
+
+      setAdVisible(true);
+      setAdSettled(true);
+      clearRetryTimer();
+      if (loggedLoadedAttemptRef.current !== attemptRef.current) {
+        loggedLoadedAttemptRef.current = attemptRef.current;
+        void logFirebaseEvent('admob_banner_loaded', {
+          placement,
+          attempt: attemptRef.current,
+          unit_suffix: getAdMobBannerUnitId(Platform.OS, placement).slice(-12),
+        });
+      }
+    },
+    [clearRetryTimer, placement],
+  );
+
+  const handleAdFailedToLoad = useCallback(
+    (error: Error) => {
+      const attempt = attemptRef.current;
+      const message = adErrorMessage(error);
+      const unitId = getAdMobBannerUnitId(Platform.OS, placement);
+      const willRetry = !retryUsedRef.current;
+
+      addSentryBreadcrumb('admob_banner_failed', 'admob', {
+        placement,
+        unitId,
+        attempt,
+        willRetry,
+        message,
+      });
+      void logFirebaseEvent('admob_banner_failed', {
+        placement,
+        attempt,
+        will_retry: willRetry ? 1 : 0,
+        // Keep unit id short for Analytics param limits
+        unit_suffix: unitId.slice(-12),
+      });
+
+      if (!willRetry) {
+        // Second failure — give up and hide the slot for this placement.
+        setAdVisible(false);
+        setAdSettled(true);
+        captureMessage(`admob_banner_failed: ${placement}`, 'warning');
+        return;
+      }
+
+      retryUsedRef.current = true;
+      setAdVisible(false);
+      setRetryPending(true);
+      clearRetryTimer();
+      retryTimerRef.current = setTimeout(() => {
+        retryTimerRef.current = null;
+        attemptRef.current += 1;
+        setAdAttempt(attemptRef.current);
+        setRetryPending(false);
+      }, AD_RETRY_DELAY_MS);
+    },
+    [clearRetryTimer, placement],
+  );
+
   useEffect(() => {
+    clearRetryTimer();
+    retryUsedRef.current = false;
+    attemptRef.current = 1;
+    loggedLoadedAttemptRef.current = 0;
     setAdVisible(false);
-    setAdResolved(false);
-  }, [placement, sponsor?.id]);
+    setAdSettled(false);
+    setRetryPending(false);
+    setAdAttempt(1);
+  }, [placement, sponsor?.id, clearRetryTimer]);
+
+  useEffect(() => () => clearRetryTimer(), [clearRetryTimer]);
 
   useEffect(() => {
     if (!sponsor) return;
@@ -87,14 +197,20 @@ export default function SponsorOrAd({
     showAds && Platform.OS !== 'web' && isAdMobNativeAvailable();
 
   if (!canShowAd) return null;
-  if (adResolved && !adVisible) return null;
+  if (adSettled && !adVisible) return null;
+  if (retryPending) return null;
 
   const shouldMountAd = !lazyLoad || isViewable;
   if (!shouldMountAd) return null;
 
   return (
     <View style={style}>
-      <AdMobBanner placement={placement} onVisibilityChange={handleAdVisibility} />
+      <AdMobBanner
+        key={`${placement}-${adAttempt}`}
+        placement={placement}
+        onVisibilityChange={handleAdVisibility}
+        onAdFailedToLoad={handleAdFailedToLoad}
+      />
       {adVisible ? (
         <View style={styles.pitchWrap}>
           <SponsorPitchLink />
