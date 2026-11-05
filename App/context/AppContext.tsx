@@ -517,8 +517,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       void syncPushTokenToServer(onboardingDone ? notificationsOn : false);
 
+      // Honor soft-paywall flag (signup + guest→register both set this before finish).
+      const showTrialWelcome = await loadPendingTrialWelcome();
+
       return {
-        showTrialWelcome: false,
+        showTrialWelcome,
         hasCompletedOnboarding: onboardingDone,
         userCity: resolvedCity,
       };
@@ -917,15 +920,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (pendingOnboarding && user.hasCompletedOnboarding) {
           pendingOnboardingRef.current = null;
         }
-        const isNewSignup = otpFlow === 'signup';
-        if (isNewSignup) {
-          pendingPantrySetupRef.current = true;
-          setPendingPantrySetup(true);
-          // Soft paywall before pantry for every new registered account.
+        const isFreshEmailSignup = otpFlow === 'signup';
+        const isGuestUpgrade = otpFlow === 'guest_upgrade';
+        // Soft paywall for every newly registered account — including guest→register.
+        if (isFreshEmailSignup || isGuestUpgrade) {
           await setPendingTrialWelcome(true);
         }
+        if (isFreshEmailSignup) {
+          pendingPantrySetupRef.current = true;
+          setPendingPantrySetup(true);
+        }
         const nav = await finishAuthAfterSync(user);
-        if (isNewSignup) {
+        if (isFreshEmailSignup) {
           setPantryIngredients([]);
           void updatePantryIngredients([]).then(applyUserProfile).catch((error) => {
             authError('signup:clear_default_pantry_failed', error);
@@ -937,6 +943,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           userId: user.id.slice(0, 8),
           pendingSync: Boolean(pendingOnboardingRef.current),
           showTrialWelcome: nav.showTrialWelcome,
+          otpFlow,
         });
         void logFirebaseEvent('sign_up', { method: isGuestUser ? 'email_guest_upgrade' : 'email' });
         return nav;
