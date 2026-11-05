@@ -10,6 +10,6 @@ export async function register() {
   Sentry.init({
     dsn,
     tracesSampleRate: 0.1,
-    sendDefaultPii: false,
   });
 }
+
