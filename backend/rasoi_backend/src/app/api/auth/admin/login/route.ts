@@ -1,3 +1,4 @@
+import type { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 
 import { db } from '@/lib/db';
@@ -6,7 +7,7 @@ import { jsonOk, jsonError, handleApiError } from '@/lib/api';
 import { adminLoginSchema } from '@/lib/validators';
 import { enforceRateLimit } from '@/lib/rate-limit';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // Brute-force + CPU-DoS guard: bcrypt.compare is expensive, so every
     // attempt must be rate-limited (this was the one sensitive route missing it).
@@ -42,3 +43,4 @@ export async function POST(request: Request) {
     return handleApiError(error);
   }
 }
+
