@@ -17,7 +17,7 @@ import {
   fetchRecipeById,
   type RecipeFetchFilters,
 } from "@/services/recipes";
-import { RECIPE_PAGE_SIZE } from "@/types/pagination";
+import { RECIPE_HOME_PAGE_SIZE, RECIPE_PAGE_SIZE } from "@/types/pagination";
 import { formatUserFacingApiError, warmApiConnection } from "@/utils/api";
 import { getOfflineRecipe } from "@/utils/offlineRecipeStorage";
 import { useRasoiRealtimeTables } from "@/utils/realtime";
@@ -147,10 +147,12 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
+      // First page is the smaller home page: the hero only needs the top pick
+      // + a few cards. Load-more pagination still uses RECIPE_PAGE_SIZE.
       const firstPage = await fetchPublishedRecipesPage(
         filters,
         0,
-        RECIPE_PAGE_SIZE,
+        RECIPE_HOME_PAGE_SIZE,
         options?.bypassCache ?? false,
       );
       if (generation !== fetchGenerationRef.current) return;
@@ -193,6 +195,15 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     },
     [refreshRecipes],
   );
+
+  // Prefetch the first page with the default filters in parallel with
+  // profile hydration (AppContext). Before this, the first recipe request
+  // waited for session validation + profile load to finish. When the profile
+  // arrives, syncRecipeFilters refetches only if the filters differ from
+  // these defaults.
+  useEffect(() => {
+    void refreshRecipes();
+  }, [refreshRecipes]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {

@@ -65,6 +65,10 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
   const [refreshNonce, setRefreshNonce] = useState(0);
   const forceNextRefreshRef = useRef(false);
   const excludeOnRefreshRef = useRef<string[]>([]);
+  /** windowKey|profileKey of the picks currently on screen. */
+  const lastPicksKeyRef = useRef('');
+  /** Server-fetch key already requested, so effect re-runs don't re-hit the API. */
+  const serverFetchKeyRef = useRef('');
   const homePicksRef = useRef<Recipe[]>([]);
   const lateNightPickRef = useRef<Recipe | undefined>(undefined);
 
@@ -191,12 +195,20 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    setHomePicksReady(false);
     const shouldForce = forceNextRefreshRef.current;
     forceNextRefreshRef.current = false;
     const excludeRecipeIds = shouldForce ? excludeOnRefreshRef.current : [];
     excludeOnRefreshRef.current = [];
     const reservedRecipeIds = [...new Set([...excludeRecipeIds, ...planRecipeIds])];
+    const picksKey = `${mealWindow.windowKey}|${profileKey}`;
+    // Stale-while-revalidate: keep the current picks on screen while the same
+    // meal window re-validates (e.g. the recipes just finished loading). Only
+    // show the skeleton when the window/profile actually changed or the user
+    // forced a refresh — otherwise the hero flickers back to loading on
+    // every effect re-run.
+    if (shouldForce || picksKey !== lastPicksKeyRef.current) {
+      setHomePicksReady(false);
+    }
 
     const applyMappedPicks = (
       mapped: ReturnType<typeof mapRecommendationPicks>,
@@ -225,51 +237,18 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
       return deduped.picks.length > 0;
     };
 
-    const loadPicks = async () => {
-      try {
-      if (userId) {
-        // Cache-first: paint Home immediately from last offline picks, then refresh.
-        if (!shouldForce) {
-          const offline = await loadOfflineRecommendations(mealWindow.windowKey);
-          if (offline && !cancelled) {
-            applyMappedPicks(mapRecommendationPicks(offline), true);
-          }
-        }
+    // Server picks with no entries must not wipe the picks already on screen
+    // (the API can return empty while the local pool still has picks).
+    const applyServerPicks = (
+      mapped: ReturnType<typeof mapRecommendationPicks>,
+    ): boolean => {
+      if (mapped.picks.length === 0 && !mapped.lateNightPick) return false;
+      return applyMappedPicks(mapped, true);
+    };
 
-        try {
-          const response = await fetchRecommendations({
-            force: shouldForce,
-            excludeRecipeIds: reservedRecipeIds.length > 0 ? reservedRecipeIds : undefined,
-          });
-          if (cancelled) return;
-
-          const mapped = mapRecommendationPicks(response);
-          await saveOfflineRecommendations(mealWindow.windowKey, response);
-
-          if (applyMappedPicks(mapped, true)) {
-            return;
-          }
-          // API returned no picks — fall through to local meal picks below.
-        } catch {
-          if (!cancelled) {
-            const offline = await loadOfflineRecommendations(mealWindow.windowKey);
-            if (offline) {
-              applyMappedPicks(mapRecommendationPicks(offline), true);
-              return;
-            }
-          }
-        }
-      }
-
-      if (recipesLoading || pickPool.length === 0) {
-        setHomePicks([]);
-        setPickReasons([]);
-        setLateNightPick(undefined);
-        setSeasonalRail(null);
-        setHomePicksReady(false);
-        return;
-      }
-
+    // Local picks from the recipe pool. Only touches state when it produces
+    // picks, so an empty local result never wipes cached server picks.
+    const applyLocalPicks = async (): Promise<boolean> => {
       if (mealWindow.isOvernightDual && mealWindow.tomorrowBreakfastWindowKey) {
         const latePicks = await resolveHomeMealPicks({
           recipes: pickPool,
@@ -294,12 +273,13 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
           forceRegenerate: shouldForce,
         });
         const deduped = dedupeHomePicks(tomorrowPicks, late);
-        if (cancelled) return;
+        if (cancelled) return false;
+        if (!deduped.lateNightPick || deduped.picks.length === 0) return false;
         setLateNightPick(deduped.lateNightPick);
         setHomePicks(deduped.picks);
         setPickReasons([]);
-        setHomePicksReady(Boolean(deduped.lateNightPick) && deduped.picks.length > 0);
-        return;
+        setHomePicksReady(true);
+        return true;
       }
 
       const picks = await resolveHomeMealPicks({
@@ -311,12 +291,72 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
         excludeRecipeIds: reservedRecipeIds.length > 0 ? reservedRecipeIds : undefined,
         forceRegenerate: shouldForce,
       });
-      if (cancelled) return;
+      if (cancelled) return false;
       const deduped = dedupeHomePicks(picks);
+      if (deduped.picks.length === 0) return false;
       setLateNightPick(undefined);
       setHomePicks(deduped.picks);
       setPickReasons([]);
-      setHomePicksReady(deduped.picks.length > 0);
+      setHomePicksReady(true);
+      return true;
+    };
+
+    const loadPicks = async () => {
+      try {
+        let painted = false;
+
+        // 1. Offline server picks (logged-in users): paint immediately from cache.
+        if (userId && !shouldForce) {
+          const offline = await loadOfflineRecommendations(mealWindow.windowKey);
+          if (offline && !cancelled) {
+            if (applyServerPicks(mapRecommendationPicks(offline))) {
+              lastPicksKeyRef.current = picksKey;
+              painted = true;
+            }
+          }
+        }
+
+        // 2. Local picks from the (possibly cached) recipe pool — computed
+        // now, without waiting for the server. This is the fast path for
+        // guests, who have no offline picks.
+        if (!cancelled && pickPool.length > 0) {
+          if (await applyLocalPicks()) {
+            lastPicksKeyRef.current = picksKey;
+            painted = true;
+          }
+        }
+
+        // 3. Server picks in the background (once per window, or when
+        // forced): they replace the local picks when they arrive. The hero
+        // never blocks on this request.
+        const serverKey = shouldForce ? `${picksKey}|force:${refreshNonce}` : picksKey;
+        if (!cancelled && (shouldForce || serverFetchKeyRef.current !== serverKey)) {
+          serverFetchKeyRef.current = serverKey;
+          void fetchRecommendations({
+            force: shouldForce,
+            excludeRecipeIds: reservedRecipeIds.length > 0 ? reservedRecipeIds : undefined,
+          })
+            .then(async (response) => {
+              if (cancelled || response.windowKey !== mealWindow.windowKey) return;
+              await saveOfflineRecommendations(mealWindow.windowKey, response);
+              if (cancelled) return;
+              if (applyServerPicks(mapRecommendationPicks(response))) {
+                lastPicksKeyRef.current = picksKey;
+              }
+            })
+            .catch(() => undefined);
+        }
+
+        // Nothing to show yet (no pool, no cached picks): stay in the
+        // loading state. The effect re-runs when the recipes arrive.
+        if (
+          !cancelled &&
+          !painted &&
+          homePicksRef.current.length === 0 &&
+          pickPool.length === 0
+        ) {
+          setHomePicksReady(false);
+        }
       } finally {
         if (!cancelled && shouldForce) {
           setPicksRefreshing(false);
@@ -346,7 +386,10 @@ export function TonightRecipesProvider({ children }: { children: ReactNode }) {
 
   const topPick = homePicks[0];
   const alsoFor = homePicks.slice(1, homePickCount);
-  const rankingReady = !recipesLoading && homePicksReady;
+  // The hero no longer waits for the recipe list when picks are already on
+  // screen (offline/server picks carry full recipe objects). Local picks are
+  // computed from the pool, so they already imply the list has loaded.
+  const rankingReady = homePicksReady && (!recipesLoading || homePicks.length > 0);
 
   const [readyToCookCount, setReadyToCookCount] = useState(0);
   const [readyToCookReady, setReadyToCookReady] = useState(false);

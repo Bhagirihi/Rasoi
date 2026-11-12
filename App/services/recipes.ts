@@ -102,7 +102,10 @@ function applyFetchFilters(recipes: Recipe[], filters?: RecipeFetchFilters): Rec
 function buildPublishedRecipeQuery(filters?: RecipeFetchFilters) {
   let query = getRasoiDb()
     .from('Recipe')
-    .select(RECIPE_LIST_COLUMNS, { count: 'exact' })
+    // 'planned' (planner estimate) instead of 'exact': the list only needs an
+    // approximate total for pagination, and 'exact' makes Postgres count the
+    // whole filtered set (~7,900 rows) on every page fetch.
+    .select(RECIPE_LIST_COLUMNS, { count: 'planned' })
     .eq('published', true);
 
   const region = filters?.region?.trim();

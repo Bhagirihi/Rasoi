@@ -12,3 +12,10 @@ export type PaginatedItems<T> = {
 };
 
 export const RECIPE_PAGE_SIZE = 100;
+
+/**
+ * First page for the home feed. The hero only needs the top pick + a few
+ * cards, so the cold-start page fetch is smaller than the full list page.
+ * Pagination (load more) still uses RECIPE_PAGE_SIZE.
+ */
+export const RECIPE_HOME_PAGE_SIZE = 40;

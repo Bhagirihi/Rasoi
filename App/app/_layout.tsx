@@ -42,7 +42,8 @@ import { TonightRecipesProvider } from '@/context/TonightRecipesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { initializeMobileAds } from '@/utils/admob';
 import { warmApiConnection } from '@/utils/api';
-import { checkForEasUpdateOnLaunch } from '@/utils/easUpdates';
+import { checkForEasUpdateOnLaunch, type EasUpdateLaunchResult } from '@/utils/easUpdates';
+import { checkForPlayAppUpdateOnLaunch } from '@/utils/playAppUpdate';
 import { ensureTelemetryStarted } from '@/utils/telemetry';
 import { Sentry } from '@/utils/sentry';
 import { warmRasoiRealtime } from '@/utils/realtime';
@@ -163,20 +164,28 @@ function RootLayoutInner({
   // can crash-loop with no rollback.
   useEffect(() => {
     if (!launchDone) return;
-    void checkForEasUpdateOnLaunch({
-      confirmReload: () =>
-        new Promise((resolve) => {
-          Alert.alert(
-            'Update available',
-            'A new version of Rasoi is ready. Restart now to apply it?',
-            [
-              { text: 'Later', style: 'cancel', onPress: () => resolve(false) },
-              { text: 'Restart now', onPress: () => resolve(true) },
-            ],
-            { cancelable: true, onDismiss: () => resolve(false) },
-          );
-        }),
-    }).catch(() => undefined);
+    void (async () => {
+      const ota: EasUpdateLaunchResult = await checkForEasUpdateOnLaunch({
+        confirmReload: () =>
+          new Promise((resolve) => {
+            Alert.alert(
+              'Update available',
+              'A new version of Rasoi is ready. Restart now to apply it?',
+              [
+                { text: 'Later', style: 'cancel', onPress: () => resolve(false) },
+                { text: 'Restart now', onPress: () => resolve(true) },
+              ],
+              { cancelable: true, onDismiss: () => resolve(false) },
+            );
+          }),
+      }).catch((): EasUpdateLaunchResult => 'none');
+      // One update prompt at a time: only ask about a Play Store update when
+      // no OTA update exists (even a deferred one — the user already said
+      // "later" to an update this launch).
+      if (ota === 'none' || ota === 'skipped') {
+        await checkForPlayAppUpdateOnLaunch().catch(() => undefined);
+      }
+    })();
   }, [launchDone]);
 
   const beginSplashDismiss = useCallback(() => {
