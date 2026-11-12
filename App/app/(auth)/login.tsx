@@ -39,7 +39,7 @@ type FieldError = "email" | "otp" | "general" | null;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { sendLoginEmailOtp, verifyLoginEmailOtp, pendingPantrySetup } =
+  const { sendLoginEmailOtp, verifyLoginEmailOtp, signInAsGuest, pendingPantrySetup } =
     useAppContext();
 
   const [step, setStep] = useState<LoginStep>("email");
@@ -48,6 +48,7 @@ export default function LoginScreen() {
   const [fieldError, setFieldError] = useState<FieldError>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGuestSubmitting, setIsGuestSubmitting] = useState(false);
   const [emailDeliveryBlocked, setEmailDeliveryBlocked] = useState(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const emailInputRef = useRef<TextInput>(null);
@@ -216,6 +217,30 @@ export default function LoginScreen() {
     setErrorMessage("");
   };
 
+  const handleContinueAsGuest = async () => {
+    setFieldError(null);
+    setErrorMessage("");
+    setIsGuestSubmitting(true);
+    let succeeded = false;
+    try {
+      authLog("login:guest_start");
+      const nav = await signInAsGuest();
+      authLog("login:guest_success");
+      succeeded = true;
+      void navigateAfterAuth(nav);
+    } catch (error) {
+      authError("login:guest_failed", error);
+      setFieldError("general");
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Could not continue as guest. Please try again.",
+      );
+    } finally {
+      if (!succeeded) setIsGuestSubmitting(false);
+    }
+  };
+
   return (
     <View style={styles.root}>
       <AuthAtmosphere />
@@ -364,11 +389,11 @@ export default function LoginScreen() {
 
               <Pressable
                 onPress={step === "email" ? handleSendOtp : handleVerifyOtp}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isGuestSubmitting}
                 testID={step === "email" ? testIds.loginSendOtp : testIds.loginVerifyOtp}
                 style={[
                   styles.submitWrap,
-                  isSubmitting && styles.buttonDisabled,
+                  (isSubmitting || isGuestSubmitting) && styles.buttonDisabled,
                 ]}
               >
                 <LinearGradient
@@ -386,8 +411,27 @@ export default function LoginScreen() {
 
             {step === "email" ? (
               <Pressable
+                onPress={handleContinueAsGuest}
+                disabled={isSubmitting || isGuestSubmitting}
+                testID={testIds.loginGuest}
+                style={[
+                  styles.guestWrap,
+                  (isSubmitting || isGuestSubmitting) && styles.buttonDisabled,
+                ]}
+              >
+                <Text style={styles.guestText}>
+                  {isGuestSubmitting ? "Continuing as guest…" : "Continue as guest"}
+                </Text>
+                <Text style={styles.guestSubtext}>
+                  Explore recipes without signing in
+                </Text>
+              </Pressable>
+            ) : null}
+
+            {step === "email" ? (
+              <Pressable
                 onPress={() => router.push("/(auth)/register")}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isGuestSubmitting}
                 style={styles.switchAuthWrap}
                 testID={testIds.loginGoRegister}
               >
@@ -556,6 +600,20 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  guestWrap: {
+    alignItems: "center",
+    gap: 2,
+    paddingVertical: spacing.sm,
+  },
+  guestText: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: colors.primary,
+  },
+  guestSubtext: {
+    fontSize: 13,
+    color: colors.dark.textMuted,
   },
   switchAuthWrap: {
     alignItems: "center",

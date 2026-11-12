@@ -40,6 +40,7 @@ export const testIds = {
   loginEmailInput: 'login-email-input',
   loginOtpInput: 'login-otp-input',
   loginGoRegister: 'login-go-register',
+  loginGuest: 'login-guest',
   registerPhoneOtpInput: 'register-phone-otp-input',
   registerVerifyPhoneOtp: 'register-verify-phone-otp',
   registerResendPhoneOtp: 'register-resend-phone-otp',

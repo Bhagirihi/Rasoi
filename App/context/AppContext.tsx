@@ -16,7 +16,7 @@ import type { Gender } from '@/constants/genderOptions';
 import { useReferenceData } from '@/context/ReferenceContext';
 import { useRecipes } from '@/context/RecipesContext';
 import { DietType, Recipe } from '@/data/mockRecipes';
-import { logoutSession, syncSupabaseAccount } from '@/services/auth';
+import { loginAsGuestUser, logoutSession, syncSupabaseAccount } from '@/services/auth';
 import { purchaseRasoiPlusDefault, restoreRasoiPlus } from '@/services/payments';
 import type { PurchaseFlowResult } from '@/services/payments/types';
 import { getSupabaseSession, sendEmailOtp, sendLoginEmailOtp, verifyEmailOtp, ensureValidSupabaseSession } from '@/services/supabaseAuth';
@@ -169,6 +169,7 @@ interface AppContextValue extends ResolvedPlan {
     options?: { acceptedTerms?: boolean; phoneVerified?: boolean; gender?: Gender },
   ) => Promise<AuthNavigationResult>;
   verifyLoginEmailOtp: (email: string, otp: string) => Promise<AuthNavigationResult>;
+  signInAsGuest: () => Promise<AuthNavigationResult>;
   updateProfile: (name: string, phone: string) => Promise<void>;
   syncUserLocation: (snapshot: UserLocationSnapshot) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -986,6 +987,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [finishAuthAfterSync],
   );
 
+  /**
+   * Guest mode: enters the app without an email or OTP. The backend
+   * (loginAsGuestUser → rasoi-auth-guest / /api/auth/guest) creates a guest
+   * profile; anonymous Supabase sign-in is attempted but not required — the
+   * guest still works when it is disabled. A guest can later register from
+   * the Home banner, which upgrades this same account.
+   */
+  const signInAsGuest = useCallback(async () => {
+    authLog('signInAsGuest:start');
+    try {
+      const { user } = await loginAsGuestUser();
+      const nav = await finishAuthAfterSync(user);
+      authLog('signInAsGuest:success', { onboardingDone: nav.hasCompletedOnboarding });
+      void logFirebaseEvent('login', { method: 'guest' });
+      return nav;
+    } catch (error) {
+      authError('signInAsGuest:failed', error);
+      throw error;
+    }
+  }, [finishAuthAfterSync]);
+
   const openEmailVerificationModal = useCallback(() => {
     setEmailVerificationModalVisible(true);
   }, []);
@@ -1503,6 +1525,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sendLoginEmailOtp: sendLoginEmailOtpCode,
       verifyEmailOtpAndLogin,
       verifyLoginEmailOtp,
+      signInAsGuest,
       updateProfile,
       syncUserLocation,
       logout,
@@ -1578,6 +1601,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sendLoginEmailOtpCode,
       verifyEmailOtpAndLogin,
       verifyLoginEmailOtp,
+      signInAsGuest,
       updateProfile,
       syncUserLocation,
       logout,
