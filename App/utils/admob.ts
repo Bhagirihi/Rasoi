@@ -12,6 +12,25 @@ export function isAdMobNativeAvailable(): boolean {
 let initPromise: Promise<void> | null = null;
 
 /**
+ * Bound how long Mobile Ads SDK init may stall the banner. Without this, a
+ * hung initialize() leaves the banner waiting forever: no request is made,
+ * no failure is reported, no retry happens, nothing is logged — the exact
+ * "0 requests in 7 days" symptom. A timeout rejects like any other init
+ * failure, so the banner's parent retries once and the failure is logged.
+ */
+const MOBILE_ADS_INIT_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) clearTimeout(timer);
+  });
+}
+
+/**
  * Resolves once Mobile Ads SDK init (+ test-device config in __DEV__) finishes.
  * Banner components should await this before mounting BannerAd.
  */
@@ -41,7 +60,11 @@ export async function initializeMobileAds(): Promise<void> {
       });
     }
 
-    await mobileAds().initialize();
+    await withTimeout(
+      mobileAds().initialize(),
+      MOBILE_ADS_INIT_TIMEOUT_MS,
+      'MobileAds.initialize',
+    );
   })().catch((error) => {
     initPromise = null;
     throw error;

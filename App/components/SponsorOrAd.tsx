@@ -3,6 +3,7 @@ import SponsorPitchLink from '@/components/SponsorPitchLink';
 import SponsorRail from '@/components/SponsorRail';
 import type { SponsorCardData } from '@/services/sponsors';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { spacing } from '@/constants/theme';
@@ -144,7 +145,7 @@ export default function SponsorOrAd({
     [clearRetryTimer, placement],
   );
 
-  useEffect(() => {
+  const resetAttempts = useCallback(() => {
     clearRetryTimer();
     retryUsedRef.current = false;
     attemptRef.current = 1;
@@ -153,7 +154,24 @@ export default function SponsorOrAd({
     setAdSettled(false);
     setRetryPending(false);
     setAdAttempt(1);
-  }, [placement, sponsor?.id, clearRetryTimer]);
+  }, [clearRetryTimer]);
+
+  useEffect(() => {
+    resetAttempts();
+  }, [placement, sponsor?.id, resetAttempts]);
+
+  /**
+   * Self-heal: after the single retry fails, the slot stays hidden for the
+   * session (tabs keep this screen mounted, so the placement/sponsor reset
+   * above never fires). When the user comes back to this screen, try again —
+   * but only if the slot previously gave up without showing an ad, so a
+   * visible ad is never reloaded.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      if (adSettled && !adVisible) resetAttempts();
+    }, [adSettled, adVisible, resetAttempts]),
+  );
 
   useEffect(() => () => clearRetryTimer(), [clearRetryTimer]);
 
