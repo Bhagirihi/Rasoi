@@ -175,6 +175,42 @@ export async function signInAnonymously(): Promise<Session> {
   return data.session;
 }
 
+/**
+ * Password sign-in for accounts that have a password (currently only the
+ * reviewer test account). OTP remains the default for everyone else.
+ * Returns the session; throws a user-facing error on bad credentials.
+ */
+export async function signInWithEmailPassword(email: string, password: string): Promise<Session> {
+  const normalizedEmail = email.trim().toLowerCase();
+  assertLoginAllowedEmail(normalizedEmail);
+  if (!password) {
+    throw new Error('Enter your password.');
+  }
+  authLog('signInWithEmailPassword:start', { email: maskEmail(normalizedEmail) });
+
+  const supabase = requireSupabaseClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: normalizedEmail,
+    password,
+  });
+
+  if (error) {
+    authError('signInWithEmailPassword:supabase_error', error, {
+      status: error.status,
+      code: error.code,
+    });
+    throw new Error('Invalid email or password. Check both and try again.');
+  }
+
+  if (!data.session?.access_token) {
+    throw new Error('Sign-in failed. Please try again.');
+  }
+
+  setSupabaseSessionCache(data.session);
+  authLog('signInWithEmailPassword:success', { userId: data.user?.id?.slice(0, 8) });
+  return data.session;
+}
+
 export async function sendEmailOtp(name: string, phone: string, email: string): Promise<void> {
   const normalizedEmail = email.trim().toLowerCase();
   assertAllowedEmail(normalizedEmail);

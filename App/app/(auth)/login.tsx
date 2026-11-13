@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import { ArrowLeft, Mail } from "lucide-react-native";
+import { ArrowLeft, Lock, Mail } from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import {
   Keyboard,
@@ -34,17 +34,18 @@ import { getLoginEmailValidationError } from "@/utils/identityValidation";
 import { normalizeEmail } from "@/utils/storage";
 import { resolvePostAuthHref } from "@/utils/authNavigation";
 
-type LoginStep = "email" | "otp";
-type FieldError = "email" | "otp" | "general" | null;
+type LoginStep = "email" | "otp" | "password";
+type FieldError = "email" | "otp" | "password" | "general" | null;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { sendLoginEmailOtp, verifyLoginEmailOtp, signInAsGuest, pendingPantrySetup } =
+  const { sendLoginEmailOtp, verifyLoginEmailOtp, signInAsGuest, signInWithPassword, pendingPantrySetup } =
     useAppContext();
 
   const [step, setStep] = useState<LoginStep>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [password, setPassword] = useState("");
   const [fieldError, setFieldError] = useState<FieldError>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -213,6 +214,7 @@ export default function LoginScreen() {
   const backToEmail = () => {
     setStep("email");
     setOtp("");
+    setPassword("");
     setFieldError(null);
     setErrorMessage("");
   };
@@ -241,6 +243,39 @@ export default function LoginScreen() {
     }
   };
 
+  const handleSignInWithPassword = async () => {
+    const validationError = getLoginEmailValidationError(email);
+    if (validationError) {
+      setFieldError("email");
+      setErrorMessage(validationError);
+      return;
+    }
+    if (!password) {
+      setFieldError("password");
+      setErrorMessage("Enter your password.");
+      return;
+    }
+    setFieldError(null);
+    setErrorMessage("");
+    setIsSubmitting(true);
+    let succeeded = false;
+    try {
+      authLog("login:password_start", { email: maskEmail(email) });
+      const nav = await signInWithPassword(email, password);
+      authLog("login:password_success");
+      succeeded = true;
+      void navigateAfterAuth(nav);
+    } catch (error) {
+      authError("login:password_failed", error);
+      const message =
+        error instanceof Error ? error.message : "Could not sign in. Please try again.";
+      setFieldError(message.toLowerCase().includes("password") ? "password" : "general");
+      setErrorMessage(message);
+    } finally {
+      if (!succeeded) setIsSubmitting(false);
+    }
+  };
+
   return (
     <View style={styles.root}>
       <AuthAtmosphere />
@@ -257,12 +292,16 @@ export default function LoginScreen() {
               ? [
                   { message: 'Signing you in', subtitle: 'Verifying your code and loading your profile' },
                 ]
-              : [
-                  {
-                    message: 'Sending your code',
-                    subtitle: 'Check your inbox — it usually arrives in a few seconds',
-                  },
-                ]
+              : step === 'password'
+                ? [
+                    { message: 'Signing you in', subtitle: 'Checking your password and loading your profile' },
+                  ]
+                : [
+                    {
+                      message: 'Sending your code',
+                      subtitle: 'Check your inbox — it usually arrives in a few seconds',
+                    },
+                  ]
           }
         />
         <ScrollViewWithFloatingIndicator
@@ -280,7 +319,7 @@ export default function LoginScreen() {
               <Text style={styles.brand}>Rasoi</Text>
             </View>
 
-            {step === "otp" && (
+            {(step === "otp" || step === "password") && (
               <Pressable onPress={backToEmail} style={styles.backRow}>
                 <ArrowLeft size={16} color={colors.primary} />
                 <Text style={styles.backText}>Change email</Text>
@@ -288,12 +327,18 @@ export default function LoginScreen() {
             )}
 
             <Text style={styles.title}>
-              {step === "email" ? "Welcome back" : "Check your email"}
+              {step === "email"
+                ? "Welcome back"
+                : step === "otp"
+                  ? "Check your email"
+                  : "Welcome back"}
             </Text>
             <Text style={styles.subtitle}>
               {step === "email"
                 ? "Sign in with your registered email — we’ll send a one-time code. No password needed."
-                : `Enter the code sent to ${normalizeEmail(email)}`}
+                : step === "otp"
+                  ? `Enter the code sent to ${normalizeEmail(email)}`
+                  : "Enter your password to sign in."}
             </Text>
 
             <View style={styles.formPanel}>
@@ -329,7 +374,7 @@ export default function LoginScreen() {
                     />
                   </View>
                 </View>
-              ) : (
+              ) : step === "otp" ? (
                 <View style={styles.field}>
                   <Text style={styles.label}>
                     Verification code <Text style={styles.labelRequired}>*</Text>
@@ -367,6 +412,69 @@ export default function LoginScreen() {
                     <Text style={styles.resendText}>Resend code</Text>
                   </Pressable>
                 </View>
+              ) : (
+                <>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>
+                      Email <Text style={styles.labelRequired}>*</Text>
+                    </Text>
+                    <View
+                      style={[
+                        styles.inputRow,
+                        fieldError === "email" && styles.inputRowError,
+                      ]}
+                    >
+                      <Mail size={18} color={colors.dark.textMuted} />
+                      <TextInput
+                        value={email}
+                        onChangeText={(value) => {
+                          setEmail(value);
+                          if (fieldError === "email") setFieldError(null);
+                        }}
+                        placeholder="you@example.com"
+                        placeholderTextColor={colors.dark.buttonDisabledText}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        returnKeyType="done"
+                        submitBehavior="submit"
+                        onSubmitEditing={handleSignInWithPassword}
+                        style={styles.input}
+                        testID={testIds.loginEmailInput}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.field}>
+                    <Text style={styles.label}>
+                      Password <Text style={styles.labelRequired}>*</Text>
+                    </Text>
+                    <View
+                      style={[
+                        styles.inputRow,
+                        fieldError === "password" && styles.inputRowError,
+                      ]}
+                    >
+                      <Lock size={18} color={colors.dark.textMuted} />
+                      <TextInput
+                        value={password}
+                        onChangeText={(value) => {
+                          setPassword(value);
+                          if (fieldError === "password") setFieldError(null);
+                        }}
+                        placeholder="Your password"
+                        placeholderTextColor={colors.dark.buttonDisabledText}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        secureTextEntry
+                        returnKeyType="done"
+                        submitBehavior="submit"
+                        onSubmitEditing={handleSignInWithPassword}
+                        style={styles.input}
+                        testID={testIds.loginPasswordInput}
+                      />
+                    </View>
+                  </View>
+                </>
               )}
 
               {errorMessage.length > 0 && (
@@ -388,9 +496,21 @@ export default function LoginScreen() {
               )}
 
               <Pressable
-                onPress={step === "email" ? handleSendOtp : handleVerifyOtp}
+                onPress={
+                  step === "email"
+                    ? handleSendOtp
+                    : step === "otp"
+                      ? handleVerifyOtp
+                      : handleSignInWithPassword
+                }
                 disabled={isSubmitting || isGuestSubmitting}
-                testID={step === "email" ? testIds.loginSendOtp : testIds.loginVerifyOtp}
+                testID={
+                  step === "email"
+                    ? testIds.loginSendOtp
+                    : step === "otp"
+                      ? testIds.loginVerifyOtp
+                      : testIds.loginPasswordSubmit
+                }
                 style={[
                   styles.submitWrap,
                   (isSubmitting || isGuestSubmitting) && styles.buttonDisabled,
@@ -430,6 +550,24 @@ export default function LoginScreen() {
 
             {step === "email" ? (
               <Pressable
+                onPress={() => {
+                  setStep("password");
+                  setFieldError(null);
+                  setErrorMessage("");
+                }}
+                disabled={isSubmitting || isGuestSubmitting}
+                style={styles.switchAuthWrap}
+                testID={testIds.loginGoPassword}
+              >
+                <Text style={styles.switchAuthText}>
+                  Have a password?{" "}
+                  <Text style={styles.switchAuthLink}>Sign in with password instead</Text>
+                </Text>
+              </Pressable>
+            ) : null}
+
+            {step === "email" ? (
+              <Pressable
                 onPress={() => router.push("/(auth)/register")}
                 disabled={isSubmitting || isGuestSubmitting}
                 style={styles.switchAuthWrap}
@@ -438,6 +576,23 @@ export default function LoginScreen() {
                 <Text style={styles.switchAuthText}>
                   New to Rasoi?{" "}
                   <Text style={styles.switchAuthLink}>Create account</Text>
+                </Text>
+              </Pressable>
+            ) : step === "password" ? (
+              <Pressable
+                onPress={() => {
+                  setStep("email");
+                  setPassword("");
+                  setFieldError(null);
+                  setErrorMessage("");
+                }}
+                disabled={isSubmitting || isGuestSubmitting}
+                style={styles.switchAuthWrap}
+                testID={testIds.loginGoCode}
+              >
+                <Text style={styles.switchAuthText}>
+                  Prefer a code?{" "}
+                  <Text style={styles.switchAuthLink}>Use a sign-in code instead</Text>
                 </Text>
               </Pressable>
             ) : (

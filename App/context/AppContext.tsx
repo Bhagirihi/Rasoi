@@ -19,7 +19,7 @@ import { DietType, Recipe } from '@/data/mockRecipes';
 import { loginAsGuestUser, logoutSession, syncSupabaseAccount } from '@/services/auth';
 import { purchaseRasoiPlusDefault, restoreRasoiPlus } from '@/services/payments';
 import type { PurchaseFlowResult } from '@/services/payments/types';
-import { getSupabaseSession, sendEmailOtp, sendLoginEmailOtp, verifyEmailOtp, ensureValidSupabaseSession } from '@/services/supabaseAuth';
+import { getSupabaseSession, sendEmailOtp, sendLoginEmailOtp, verifyEmailOtp, ensureValidSupabaseSession, signInWithEmailPassword } from '@/services/supabaseAuth';
 import {
   completeUserOnboarding,
   deactivatePushTokens,
@@ -170,6 +170,7 @@ interface AppContextValue extends ResolvedPlan {
   ) => Promise<AuthNavigationResult>;
   verifyLoginEmailOtp: (email: string, otp: string) => Promise<AuthNavigationResult>;
   signInAsGuest: () => Promise<AuthNavigationResult>;
+  signInWithPassword: (email: string, password: string) => Promise<AuthNavigationResult>;
   updateProfile: (name: string, phone: string) => Promise<void>;
   syncUserLocation: (snapshot: UserLocationSnapshot) => Promise<boolean>;
   logout: () => Promise<void>;
@@ -1008,6 +1009,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [finishAuthAfterSync]);
 
+  /**
+   * Password sign-in (reviewer test account). Mirrors verifyLoginEmailOtp:
+   * the session is synced to a rasoi.User profile the same way, so a
+   * password login lands on the same home/onboarding flow as an OTP login.
+   */
+  const signInWithPassword = useCallback(
+    async (email: string, password: string) => {
+      authLog('signInWithPassword:start');
+      try {
+        const session = await signInWithEmailPassword(email, password);
+        const meta = session.user?.user_metadata as Record<string, unknown> | undefined;
+        const metaName = typeof meta?.name === 'string' ? meta.name.trim() : '';
+        const metaPhone = typeof meta?.phone === 'string' ? meta.phone : '';
+        const fallbackName =
+          email.split('@')[0]?.replace(/[^a-zA-Z\s]/g, ' ').trim() || 'Rasoi User';
+        const name = metaName.length >= 2 ? metaName : fallbackName.length >= 2 ? fallbackName : 'Rasoi User';
+        const phone = metaPhone.replace(/\D/g, '').replace(/^91/, '').slice(0, 10);
+        const pendingOnboarding = pendingOnboardingRef.current ?? undefined;
+        const { user } = await syncSupabaseAccount(session.access_token, name, phone, {
+          onboarding: pendingOnboarding,
+        });
+        if (pendingOnboarding && user.hasCompletedOnboarding) {
+          pendingOnboardingRef.current = null;
+        }
+        const nav = await finishAuthAfterSync(user);
+        authLog('signInWithPassword:success', { onboardingDone: nav.hasCompletedOnboarding });
+        void logFirebaseEvent('login', { method: 'password' });
+        return nav;
+      } catch (error) {
+        authError('signInWithPassword:failed', error);
+        throw error;
+      }
+    },
+    [finishAuthAfterSync],
+  );
+
   const openEmailVerificationModal = useCallback(() => {
     setEmailVerificationModalVisible(true);
   }, []);
@@ -1526,6 +1563,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       verifyEmailOtpAndLogin,
       verifyLoginEmailOtp,
       signInAsGuest,
+      signInWithPassword,
       updateProfile,
       syncUserLocation,
       logout,
@@ -1602,6 +1640,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       verifyEmailOtpAndLogin,
       verifyLoginEmailOtp,
       signInAsGuest,
+      signInWithPassword,
       updateProfile,
       syncUserLocation,
       logout,
