@@ -61,6 +61,7 @@
     "android": "expo run:android",
     "android:apk": "expo prebuild --platform android && cd android && ./gradlew assembleDebug && mkdir -p ../dist && cp app/build/outputs/apk/debug/app-debug.apk ../dist/rasoi-debug.apk",
     "android:release-apk": "bash scripts/build-release-apk.sh",
+    "build:local": "eas build --platform android --profile production --local",
     "ota": "eas update --channel production --environment production --platform android",
     "ota:development": "eas update --channel development --environment development --platform android",
     "ota:preview": "eas update --channel preview --environment preview --platform android",
