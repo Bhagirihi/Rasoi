@@ -1,4 +1,5 @@
 import type { SeoGuidePage } from '@/lib/seo-content-pages';
+import { RECIPE_LIBRARY_LABEL } from '@/lib/app-download';
 import { MARKET_PATHS } from '@/lib/markets';
 
 /** City-level diaspora SEO guides — indexed at /{slug}, auto-added to sitemap. */
@@ -83,7 +84,7 @@ export const SEO_CITY_GUIDE_PAGES: SeoGuidePage[] = [
       {
         question: 'Is Rasoi useful for Vancouver and Surrey cooks?',
         answer:
-          'Yes. Rasoi is built for Indian home cooking anywhere in Canada — pantry match, Veg and Jain filters, and 5,000+ regional recipes.',
+          `Yes. Rasoi is built for Indian home cooking anywhere in Canada — pantry match, Veg and Jain filters, and ${RECIPE_LIBRARY_LABEL} regional recipes.`,
       },
     ],
     marketId: 'CA',

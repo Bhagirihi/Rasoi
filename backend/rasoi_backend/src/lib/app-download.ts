@@ -8,8 +8,10 @@ export const APP_NAME = 'Rasoi - Indian Recipe App';
 
 export const APP_SHORT_NAME = 'Rasoi';
 
-/** Marketing-safe recipe library size — keep in sync with Play Store manifest. */
-export const RECIPE_LIBRARY_LABEL = '5,000+' as const;
+/** Marketing-safe recipe library size — keep in sync with the live catalog
+ *  (verified 2026-11-20: 7,938 published recipes in Supabase rasoi.Recipe)
+ *  and the Play Store listing. Rounds down to 7,900+ so it stays true. */
+export const RECIPE_LIBRARY_LABEL = '7,900+' as const;
 
 export const APP_DEVELOPER = 'Karbh It Solutions';
 

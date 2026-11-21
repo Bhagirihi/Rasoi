@@ -81,16 +81,23 @@ export default function MarketLanding({ market }: MarketLandingProps) {
                   <>
                     <a
                       href={PLAY_STORE_LISTING_URL}
+                      target="_blank"
                       className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
                       rel="noopener noreferrer"
                     >
-                      Get it on Google Play
+                      Get it free on Google Play
                     </a>
                     <Link
                       href={PLAY_STORE_SEO_PATH}
                       className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-landing-gold/50"
                     >
                       Play Store listing
+                    </Link>
+                    <Link
+                      href="/download"
+                      className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-landing-gold/50"
+                    >
+                      Download the app
                     </Link>
                     <Link
                       href="/indian-recipe-app"
@@ -102,11 +109,19 @@ export default function MarketLanding({ market }: MarketLandingProps) {
                 ) : (
                   <>
                     <a
-                      href="/download"
+                      href={PLAY_STORE_LISTING_URL}
+                      target="_blank"
                       className="rounded-full bg-[#14110f] px-6 py-3 text-sm font-semibold text-[#f5f0e8] transition hover:bg-[#1c1714]"
+                      rel="noopener noreferrer"
                     >
-                      Get it on Google Play
+                      Get it free on Google Play
                     </a>
+                    <Link
+                      href="/download"
+                      className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-landing-gold/50"
+                    >
+                      Download options
+                    </Link>
                     <a
                       href="#features"
                       className="rounded-full border border-[#d9d0c4] px-6 py-3 text-sm font-semibold transition hover:border-landing-gold/50"
