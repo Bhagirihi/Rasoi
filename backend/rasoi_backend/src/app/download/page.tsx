@@ -11,10 +11,18 @@ import {
   PLAY_STORE_SEO_PATH,
 } from '@/lib/app-download';
 import { absoluteUrl, downloadMetadata, mobileAppJsonLd, softwareApplicationJsonLd } from '@/lib/seo';
+import { resolveRequestMarketId } from '@/lib/request-market';
 
 export const metadata = downloadMetadata;
 
-export default function DownloadPage() {
+export default async function DownloadPage() {
+  const marketId = await resolveRequestMarketId();
+  const isIndia = marketId === 'IN';
+  // Shop missing ingredients / partner checkout is India-only: hide its
+  // feature card from visitors outside India.
+  const features = isIndia
+    ? APP_FEATURES
+    : APP_FEATURES.filter((feature) => feature.title !== 'Partner checkout');
   return (
     <div className="landing-grain min-h-screen text-landing-ink">
       <JsonLd data={mobileAppJsonLd(absoluteUrl('/download'))} />
@@ -90,10 +98,11 @@ export default function DownloadPage() {
             <h2 className="font-display mt-3 text-4xl font-semibold">What you get with Rasoi</h2>
             <p className="mt-4 max-w-2xl text-landing-muted">
               A beautifully simple Indian recipe app built for real home kitchens — discover
-              dishes, match your pantry, and shop missing ingredients in one flow.
+              dishes, match your pantry
+              {isIndia ? ', and shop missing ingredients in one flow.' : ' in one flow.'}
             </p>
             <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {APP_FEATURES.map((feature) => (
+              {features.map((feature) => (
                 <article
                   key={feature.title}
                   className="rounded-[1.25rem] border border-landing-border bg-white p-6 shadow-sm"

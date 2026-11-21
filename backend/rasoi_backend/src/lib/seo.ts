@@ -29,7 +29,7 @@ export const DEFAULT_TITLE =
   `${APP_NAME} | Indian Recipe App — Pantry Match & Regional Dishes`;
 
 export const DEFAULT_DESCRIPTION =
-  `${APP_NAME} is a free Indian home-cooking app for Android. Match recipes to your pantry, browse ${RECIPE_LIBRARY_LABEL} regional dishes, and shop missing ingredients via Blinkit, Zepto, Instamart, Zomato, or Swiggy.`;
+  `${APP_NAME} is a free Indian home-cooking app for Android. Match recipes to your pantry, browse ${RECIPE_LIBRARY_LABEL} regional dishes, and shop missing ingredients in India via Blinkit, Zepto, Instamart, Zomato, or Swiggy.`;
 
 export const DEFAULT_KEYWORDS = [
   APP_NAME,
@@ -207,7 +207,7 @@ export const FAQ_ITEMS = [
   {
     question: 'Is Rasoi free to download?',
     answer:
-      `Yes. ${APP_NAME} is free on Google Play at rasoiapplication.in${PLAY_STORE_SEO_PATH} or rasoiapplication.in/download. Rasoi Plus adds partner checkout (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a ${TRIAL_DURATION_DAYS}-day trial.`,
+      `Yes. ${APP_NAME} is free on Google Play at rasoiapplication.in${PLAY_STORE_SEO_PATH} or rasoiapplication.in/download. Rasoi Plus adds partner checkout in India (Blinkit, Zepto, Instamart, Zomato, Swiggy) with a ${TRIAL_DURATION_DAYS}-day trial.`,
   },
   {
     question: 'Which Indian cuisines does Rasoi support?',
@@ -222,7 +222,7 @@ export const FAQ_ITEMS = [
   {
     question: 'Can I order missing ingredients from Rasoi?',
     answer:
-      'With Rasoi Plus, tap missing items on a recipe to open Blinkit, Zepto, or Instamart. You can also jump to Zomato or Swiggy when you prefer delivery.',
+      'In India, with Rasoi Plus, tap missing items on a recipe to open Blinkit, Zepto, or Instamart. You can also jump to Zomato or Swiggy when you prefer delivery.',
   },
 ] as const;
 
@@ -302,7 +302,7 @@ export const downloadMetadata: Metadata = {
   ...buildPageMetadata({
     title: `Download ${APP_NAME} on Google Play | Android Recipe App`,
     description:
-      `Download ${APP_NAME} free on Google Play for Android. Indian recipe app with pantry match, ${RECIPE_LIBRARY_LABEL} regional dishes, meal reminders, and partner checkout — available in India, USA, Canada & Australia.`,
+      `Download ${APP_NAME} free on Google Play for Android. Indian recipe app with pantry match, ${RECIPE_LIBRARY_LABEL} regional dishes, meal reminders, and partner checkout in India.`,
     path: '/download',
     keywords: [
       'download Rasoi Aaj Kya Banaye',
@@ -321,7 +321,7 @@ export const downloadMetadata: Metadata = {
 };
 
 export const PLAY_STORE_PAGE_DESCRIPTION =
-  `Install ${APP_NAME} from Google Play — free Indian home-cooking app by Karbh It Solutions. ${RECIPE_LIBRARY_LABEL} Gujarati, Marathi, Tamil, Telugu & Bengali recipes, pantry match %, Veg & Jain filters, meal planning & Blinkit/Zepto checkout.`;
+  `Install ${APP_NAME} from Google Play — free Indian home-cooking app by Karbh It Solutions. ${RECIPE_LIBRARY_LABEL} Gujarati, Marathi, Tamil, Telugu & Bengali recipes, pantry match %, Veg & Jain filters, meal planning & Blinkit/Zepto checkout in India.`;
 
 export const playStoreMetadata: Metadata = {
   ...buildPageMetadata({
@@ -365,7 +365,7 @@ export const PLAY_STORE_FAQ_ITEMS = [
   {
     question: `Is ${APP_NAME} free on the Play Store?`,
     answer:
-      'Yes. Rasoi is free to install on Android via Google Play. Rasoi Plus (₹49/month or ₹499/year) adds ad-free browsing and partner grocery or delivery checkout.',
+      'Yes. Rasoi is free to install on Android via Google Play. Rasoi Plus (₹49/month or ₹499/year) adds ad-free browsing and partner grocery or delivery checkout in India.',
   },
   {
     question: `What does ${APP_NAME} do?`,
@@ -448,7 +448,7 @@ export function softwareApplicationJsonLd(pageUrl: string = PLAY_STORE_LISTING_U
       'Pantry-to-recipe matching',
       `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
       'Veg, Jain, Egg, Non-Veg filters',
-      'Partner grocery checkout via Blinkit, Zepto, Instamart',
+      'Partner grocery checkout via Blinkit, Zepto, Instamart (India only)',
     ],
   };
 }
@@ -524,7 +524,7 @@ export function mobileAppJsonLd(pageUrl: string = SITE_URL) {
       'Pantry-to-recipe matching',
       `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
       'Veg, Jain, Egg, Non-Veg filters',
-      'Partner grocery checkout via Blinkit, Zepto, Instamart',
+      'Partner grocery checkout via Blinkit, Zepto, Instamart (India only)',
       'Food delivery via Zomato and Swiggy',
       'Daily meal reminders',
     ],
@@ -699,15 +699,16 @@ export function marketWebSiteJsonLd(market: MarketConfig) {
 }
 
 export function marketSoftwareJsonLd(market: MarketConfig) {
-  const partnerNames = market.partners.map((p) => p.name).join(', ');
   const featureList = [
     'Aaj kya banaye — tonight\'s meal picks',
     'Pantry-to-recipe matching',
     `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
     'Veg, Jain, Egg, Non-Veg filters',
-    market.partnersStatus === 'live'
-      ? `Partner checkout: ${partnerNames}`
-      : `Grocery partners rolling out: ${partnerNames}`,
+    // Shop missing ingredients is India-only: never list partner checkout
+    // (or "rolling out") for other markets.
+    ...(market.partnersStatus === 'live'
+      ? [`Partner checkout: ${market.partners.map((p) => p.name).join(', ')}`]
+      : []),
     'Daily meal planning guides on rasoiapplication.in',
   ];
 
@@ -741,7 +742,6 @@ export function marketSoftwareJsonLd(market: MarketConfig) {
 
 /** @deprecated Use marketSoftwareJsonLd — kept for Play/download pages */
 export function marketMobileAppJsonLd(market: MarketConfig) {
-  const partnerNames = market.partners.map((p) => p.name).join(', ');
   return {
     '@context': 'https://schema.org',
     '@type': 'MobileApplication',
@@ -771,7 +771,11 @@ export function marketMobileAppJsonLd(market: MarketConfig) {
       'Pantry-to-recipe matching',
       `${RECIPE_LIBRARY_LABEL} recipes across 15 regional Indian cuisines`,
       'Veg, Jain, Egg, Non-Veg filters',
-      `Partner checkout: ${partnerNames}`,
+      // Shop missing ingredients is India-only: never list partner checkout
+      // for other markets.
+      ...(market.partnersStatus === 'live'
+        ? [`Partner checkout: ${market.partners.map((p) => p.name).join(', ')}`]
+        : []),
       'Daily meal reminders',
     ],
   };

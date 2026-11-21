@@ -96,22 +96,10 @@ export const MARKET_SHORT_PATHS = {
   NZ: '/nz',
 } as const;
 
-const WEB_INTERNATIONAL_FAQ_BASE = (
-  country: string,
-  partners: string,
-): MarketFaq[] => [
+const WEB_INTERNATIONAL_FAQ_BASE = (country: string): MarketFaq[] => [
   {
     question: `Can I use Rasoi in ${country}?`,
     answer: `Yes. Rasoi is built for Indian home cooks in ${country} — regional recipes, pantry matching, Veg and Jain filters, and dinner ideas from what you already have in the kitchen.`,
-  },
-  {
-    question: 'Do I need grocery partner links to use Rasoi?',
-    answer:
-      'No. Recipes, pantry match, diet filters, and regional cuisines work on their own. Grocery partner checkout is an optional Plus feature rolling out by region.',
-  },
-  {
-    question: `Which grocery partners are coming to ${country}?`,
-    answer: `Rasoi is rolling out deep links to ${partners} so you can shop missing ingredients from a recipe. Core cooking features are available today on rasoiapplication.in.`,
   },
   {
     question: 'What makes Rasoi different from generic recipe sites?',
@@ -229,7 +217,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     geoCountryCodes: ['US'],
     title: 'Indian Home Cooking USA | Rasoi — Pantry Match & Regional Recipes',
     description:
-      `Rasoi helps Indian home cooks in the USA decide dinner from your pantry. ${RECIPE_LIBRARY_LABEL} regional recipes, pantry match %, Veg & Jain filters, and US grocery partners rolling out. Indian home cooking for the diaspora.`,
+      `Rasoi helps Indian home cooks in the USA decide dinner from your pantry. ${RECIPE_LIBRARY_LABEL} regional recipes, pantry match %, Veg & Jain filters. Indian home cooking for the diaspora.`,
     keywords: [
       'Indian home cooking USA',
       'Indian recipe guide USA',
@@ -242,14 +230,13 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'pantry Indian recipes',
       'Veg Indian recipes USA',
       'Jain recipes USA',
-      'Instacart Indian recipes',
       'Rasoi USA',
     ],
     heroBadge: 'Indian home cooking · USA',
     heroTitle: 'Indian home cooking for the United States',
     heroSubtitle: 'Cook from your pantry. Regional recipes for the diaspora.',
     heroBody:
-      `Rasoi helps Indian home cooks and the diaspora answer "what's for dinner?" Match recipes to ingredients you already have and explore ${RECIPE_LIBRARY_LABEL} regional dishes — with US grocery partner links rolling out.`,
+      `Rasoi helps Indian home cooks and the diaspora answer "what's for dinner?" Match recipes to ingredients you already have and explore ${RECIPE_LIBRARY_LABEL} regional dishes.`,
     phonePartners: ['Instacart', 'Amazon', 'DoorDash', 'Uber Eats'],
     partners: [
       { name: 'Instacart', note: 'Grocery delivery', color: '#43b02a' },
@@ -261,18 +248,13 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Rasoi Plus will open Instacart, Amazon, DoorDash, and Uber Eats with your missing ingredients pre-filled — the same one-tap flow Indian users love with Blinkit and Zepto.',
     partnersStatus: 'rolling_out',
     plusIntro:
-      'Rasoi Plus adds ad-free browsing and US grocery & delivery partner links as they roll out in your region.',
+      'Rasoi Plus adds ad-free browsing and pantry-aware recipe matching.',
     plusFeatures: [
       'Ad-free recipe browsing',
-      'Instacart & Amazon grocery links (rolling out)',
-      'DoorDash & Uber Eats delivery links (rolling out)',
       'Pantry-aware recipe matching',
     ],
     plusPricing: 'Plus plans vary by region — see Rasoi Plus on your regional page for details.',
-    faqs: WEB_INTERNATIONAL_FAQ_BASE(
-      'the United States',
-      'Instacart, Amazon, DoorDash, and Uber Eats',
-    ),
+    faqs: WEB_INTERNATIONAL_FAQ_BASE('the United States'),
     showSponsor: true,
     sponsorPhonePlaceholder: '+1 (415) 555-0100',
     sponsorBrandExample: "e.g. Rao's, MDH, Goya, Trader Joe's",
@@ -290,7 +272,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     geoCountryCodes: ['CA'],
     title: 'Indian Home Cooking Canada | Rasoi — Regional Recipes & Pantry Match',
     description:
-      'Rasoi helps Indian home cooks in Canada decide dinner from your pantry. Regional recipes, pantry match, Veg & Jain filters, and Canadian grocery partners rolling out.',
+      'Rasoi helps Indian home cooks in Canada decide dinner from your pantry. Regional recipes, pantry match, Veg & Jain filters.',
     keywords: [
       'Indian home cooking Canada',
       'Indian recipes Canada',
@@ -318,18 +300,13 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Rasoi Plus will connect your missing ingredients to Instacart, Amazon.ca, SkipTheDishes, and Uber Eats — one tap from any recipe.',
     partnersStatus: 'rolling_out',
     plusIntro:
-      'Rasoi Plus removes ads and unlocks Canadian grocery & delivery partner links as they roll out.',
+      'Rasoi Plus removes ads and adds pantry-aware recipe matching.',
     plusFeatures: [
       'Ad-free recipe browsing',
-      'Instacart & Amazon.ca grocery links',
-      'SkipTheDishes & Uber Eats delivery',
       'Pantry match for weeknight dinners',
     ],
     plusPricing: 'Plus plans vary by region — details on your Canadian Rasoi page.',
-    faqs: WEB_INTERNATIONAL_FAQ_BASE(
-      'Canada',
-      'Instacart, Amazon.ca, SkipTheDishes, and Uber Eats',
-    ),
+    faqs: WEB_INTERNATIONAL_FAQ_BASE('Canada'),
     showSponsor: true,
     sponsorPhonePlaceholder: '+1 (416) 555-0100',
     sponsorBrandExample: "e.g. President's Choice, Patak's, Natrel",
@@ -347,7 +324,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     geoCountryCodes: ['AU'],
     title: 'Indian Home Cooking Australia | Rasoi — Veg, Jain & Regional Dishes',
     description:
-      'Rasoi helps Indian home cooks in Australia decide dinner from your pantry. Regional recipes, pantry match %, Veg & Jain filters, and Australian grocery partners rolling out.',
+      'Rasoi helps Indian home cooks in Australia decide dinner from your pantry. Regional recipes, pantry match %, Veg & Jain filters.',
     keywords: [
       'Indian home cooking Australia',
       'Indian recipes Australia',
@@ -357,7 +334,6 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Melbourne Indian cooking',
       'pantry Indian recipes Australia',
       'Jain recipes Australia',
-      'Woolworths Indian recipes',
       'Rasoi Australia',
     ],
     heroBadge: 'Indian home cooking · Australia',
@@ -376,18 +352,13 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Rasoi Plus will open Woolworths, Coles, DoorDash, and Menulog with your missing ingredients — Australia\'s answer to quick grocery checkout from a recipe.',
     partnersStatus: 'rolling_out',
     plusIntro:
-      'Subscribe to Rasoi Plus for ad-free browsing and Australian grocery & delivery partner links when live.',
+      'Subscribe to Rasoi Plus for ad-free browsing and pantry-aware recipe matching.',
     plusFeatures: [
       'Ad-free recipe browsing',
-      'Woolworths & Coles grocery search links',
-      'DoorDash & Menulog delivery links',
       'Pantry match across 15 cuisines',
     ],
     plusPricing: 'Plus plans vary by region — details on your Australian Rasoi page.',
-    faqs: WEB_INTERNATIONAL_FAQ_BASE(
-      'Australia',
-      'Woolworths, Coles, DoorDash, and Menulog',
-    ),
+    faqs: WEB_INTERNATIONAL_FAQ_BASE('Australia'),
     showSponsor: true,
     sponsorPhonePlaceholder: '+61 412 345 678',
     sponsorBrandExample: "e.g. Patak's, Sharwood's, Woolworths Indian",
@@ -405,7 +376,7 @@ const MARKETS: Record<MarketId, MarketConfig> = {
     geoCountryCodes: ['NZ'],
     title: 'Indian Home Cooking New Zealand | Rasoi — Veg, Jain & Regional Dishes',
     description:
-      `Rasoi helps Indian home cooks in New Zealand decide dinner from your pantry. ${RECIPE_LIBRARY_LABEL} regional recipes, pantry match %, Veg & Jain filters, and NZ grocery partners rolling out.`,
+      `Rasoi helps Indian home cooks in New Zealand decide dinner from your pantry. ${RECIPE_LIBRARY_LABEL} regional recipes, pantry match %, Veg & Jain filters.`,
     keywords: [
       'indian home cooking new zealand',
       'indian recipes nz',
@@ -432,18 +403,13 @@ const MARKETS: Record<MarketId, MarketConfig> = {
       'Rasoi Plus will open Pak\'nSave, Countdown, and delivery apps with your missing ingredients — one tap from any recipe.',
     partnersStatus: 'rolling_out',
     plusIntro:
-      'Subscribe to Rasoi Plus for ad-free browsing and New Zealand grocery & delivery partner links when live.',
+      'Subscribe to Rasoi Plus for ad-free browsing and pantry-aware recipe matching.',
     plusFeatures: [
       'Ad-free recipe browsing',
-      "Pak'nSave & Countdown grocery search links",
-      'Uber Eats & Menulog delivery links',
       'Pantry match across 15 cuisines',
     ],
     plusPricing: 'Plus plans vary by region — details on your New Zealand Rasoi page.',
-    faqs: WEB_INTERNATIONAL_FAQ_BASE(
-      'New Zealand',
-      "Pak'nSave, Countdown, Uber Eats, and Menulog",
-    ),
+    faqs: WEB_INTERNATIONAL_FAQ_BASE('New Zealand'),
     showSponsor: true,
     sponsorPhonePlaceholder: '+64 21 123 4567',
     sponsorBrandExample: "e.g. Patak's, Countdown Indian range",

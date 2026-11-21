@@ -47,9 +47,11 @@ export default function MarketLanding({ market }: MarketLandingProps) {
             <a href="#faq" className="hover:text-landing-saffron">
               FAQ
             </a>
-            <a href="#partners" className="hover:text-landing-saffron">
-              Partners
-            </a>
+            {isIndia ? (
+              <a href="#partners" className="hover:text-landing-saffron">
+                Partners
+              </a>
+            ) : null}
             {market.showSponsor ? (
               <a href="#sponsor" className="hover:text-landing-saffron">
                 Sponsor with us
@@ -140,12 +142,6 @@ export default function MarketLanding({ market }: MarketLandingProps) {
                 ) : null}
               </div>
               <PublishedRecipeCount marketId={market.id} />
-              {market.partnersStatus === 'rolling_out' ? (
-                <p className="mt-4 rounded-xl border border-landing-border bg-landing-cream px-4 py-3 text-sm text-landing-muted">
-                  <span className="font-semibold text-landing-ink">Recipes work worldwide.</span>{' '}
-                  Grocery checkout links are rolling out in {market.countryName}.
-                </p>
-              ) : null}
             </div>
 
             <div className="landing-phone relative mx-auto w-full max-w-sm">
@@ -168,16 +164,18 @@ export default function MarketLanding({ market }: MarketLandingProps) {
                     ))}
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-center text-xs font-semibold">
-                  {market.phonePartners.map((name) => (
-                    <div
-                      key={name}
-                      className="rounded-xl border border-landing-border bg-white px-3 py-3 text-landing-ink"
-                    >
-                      {name}
-                    </div>
-                  ))}
-                </div>
+                {isIndia ? (
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-center text-xs font-semibold">
+                    {market.phonePartners.map((name) => (
+                      <div
+                        key={name}
+                        className="rounded-xl border border-landing-border bg-white px-3 py-3 text-landing-ink"
+                      >
+                        {name}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -280,17 +278,13 @@ export default function MarketLanding({ market }: MarketLandingProps) {
           </div>
         </section>
 
-        <section id="partners" className="mx-auto max-w-6xl px-5 py-16 lg:px-8">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
-            Partners
-          </p>
-          <h2 className="font-display mt-3 text-4xl font-semibold">Shop missing ingredients</h2>
-          <p className="mt-4 max-w-2xl text-landing-muted">{market.partnersIntro}</p>
-          {market.partnersStatus === 'rolling_out' ? (
-            <p className="mt-3 text-sm font-semibold text-landing-saffron">
-              Grocery partner links rolling out — recipes and pantry guides work today.
+        {isIndia ? (
+          <section id="partners" className="mx-auto max-w-6xl px-5 py-16 lg:px-8">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-landing-gold">
+              Partners
             </p>
-          ) : null}
+            <h2 className="font-display mt-3 text-4xl font-semibold">Shop missing ingredients</h2>
+            <p className="mt-4 max-w-2xl text-landing-muted">{market.partnersIntro}</p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {market.partners.map((partner) => (
               <div
@@ -303,7 +297,8 @@ export default function MarketLanding({ market }: MarketLandingProps) {
               </div>
             ))}
           </div>
-        </section>
+          </section>
+        ) : null}
 
         {market.showSponsor ? (
           <section id="sponsor" className="border-y border-landing-border bg-landing-cream">

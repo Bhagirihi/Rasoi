@@ -229,7 +229,7 @@ export const SEO_CITY_GUIDE_PAGES: SeoGuidePage[] = [
     ],
     h1: 'Indian cooking in Melbourne',
     intro:
-      'Melbourne’s Indian diaspora shops in Dandenong, Footscray, and suburban Coles and Woolworths stores. Rasoi helps Victorian home cooks plan regional dinners from ingredients already in the kitchen — with Australian partner links rolling out on Rasoi Plus.',
+      'Melbourne’s Indian diaspora shops in Dandenong, Footscray, and suburban Coles and Woolworths stores. Rasoi helps Victorian home cooks plan regional dinners from ingredients already in the kitchen.',
     sections: [
       {
         heading: 'Melbourne pantry staples',

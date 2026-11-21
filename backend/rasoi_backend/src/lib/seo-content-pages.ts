@@ -172,7 +172,7 @@ const CORE_SEO_GUIDE_PAGES: SeoGuidePage[] = [
     keywords: ['indian cooking in usa', 'indian diaspora cooking', 'indian recipes usa home'],
     h1: 'Indian cooking in the USA',
     intro:
-      'Cooking Indian food in the United States means adapting to American grocery aisles, busy weeknights, and the flavors you grew up with. Rasoi helps diaspora home cooks plan dinners from what is already in the kitchen — with US grocery partner links rolling out over time.',
+      'Cooking Indian food in the United States means adapting to American grocery aisles, busy weeknights, and the flavors you grew up with. Rasoi helps diaspora home cooks plan dinners from what is already in the kitchen.',
     sections: [
       {
         heading: 'Stock a diaspora pantry',
@@ -205,7 +205,7 @@ const CORE_SEO_GUIDE_PAGES: SeoGuidePage[] = [
     keywords: ['indian cooking canada', 'indian recipes canada home', 'south asian cooking canada'],
     h1: 'Indian cooking in Canada',
     intro:
-      'From Toronto to Vancouver, Indian home cooks balance regional traditions with Canadian grocery stores and long winters. Rasoi helps you plan dinners from your pantry with Canadian partner links rolling out over time.',
+      'From Toronto to Vancouver, Indian home cooks balance regional traditions with Canadian grocery stores and long winters. Rasoi helps you plan dinners from your pantry.',
     sections: [
       {
         heading: 'Pantry planning in Canadian cities',
@@ -233,7 +233,7 @@ const CORE_SEO_GUIDE_PAGES: SeoGuidePage[] = [
     keywords: ['indian cooking australia', 'indian recipes australia home', 'indian diaspora australia'],
     h1: 'Indian cooking in Australia',
     intro:
-      'Australian home cooks often shop Woolworths, Coles, and local Indian grocers. Rasoi helps you decide what to cook tonight from those ingredients — with Australian grocery partner links rolling out over time.',
+      'Australian home cooks often shop Woolworths, Coles, and local Indian grocers. Rasoi helps you decide what to cook tonight from those ingredients.',
     sections: [
       {
         heading: 'Weeknight reality in Australian kitchens',
@@ -266,7 +266,7 @@ const CORE_SEO_GUIDE_PAGES: SeoGuidePage[] = [
     ],
     h1: 'Indian cooking in New Zealand',
     intro:
-      'New Zealand home cooks shop at Pak\'nSave, Countdown, and local Indian grocers. Rasoi helps you decide what to cook tonight from those ingredients — with NZ grocery partner links rolling out over time.',
+      'New Zealand home cooks shop at Pak\'nSave, Countdown, and local Indian grocers. Rasoi helps you decide what to cook tonight from those ingredients.',
     sections: [
       {
         heading: 'Weeknight reality in Kiwi kitchens',

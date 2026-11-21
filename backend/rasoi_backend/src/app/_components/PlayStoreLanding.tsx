@@ -12,8 +12,16 @@ import {
   PLAY_STORE_SEO_PATH,
 } from '@/lib/app-download';
 import { PLAY_STORE_FAQ_ITEMS, PLAY_STORE_HIGHLIGHTS, PLAY_STORE_LOCALE_BLURBS, PLAY_STORE_TAGS } from '@/lib/seo';
+import { resolveRequestMarketId } from '@/lib/request-market';
 
-export default function PlayStoreLanding() {
+export default async function PlayStoreLanding() {
+  const marketId = await resolveRequestMarketId();
+  const isIndia = marketId === 'IN';
+  // Shop missing ingredients / partner checkout is India-only: hide its
+  // feature card from visitors outside India.
+  const features = isIndia
+    ? APP_FEATURES
+    : APP_FEATURES.filter((feature) => feature.title !== 'Partner checkout');
   return (
     <div className="landing-grain min-h-screen text-landing-ink">
       <header className="border-b border-landing-border bg-landing-cream/90 backdrop-blur-md">
@@ -159,7 +167,7 @@ export default function PlayStoreLanding() {
             </p>
             <h2 className="font-display mt-3 text-4xl font-semibold">What you get with Rasoi</h2>
             <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {APP_FEATURES.map((feature) => (
+              {features.map((feature) => (
                 <article
                   key={feature.title}
                   className="rounded-[1.25rem] border border-landing-border bg-white p-6 shadow-sm"
